@@ -20,7 +20,7 @@ namespace InventorySort
 
         public int getmaincate()
         {
-            if(mainsort_category >0 && mainsort_category <ALLCATE.Length)
+            if(mainsort_category <0 || mainsort_category >=ALLCATE.Length)
             {
                 mainsort_category = 0;
             }
@@ -29,7 +29,7 @@ namespace InventorySort
 
         public int getsubcate()
         {
-            if (subsort_category > 0 && subsort_category < ALLCATE.Length)
+            if (subsort_category < 0 || subsort_category >= ALLCATE.Length)
             {
                 subsort_category = 1;
             }
@@ -45,7 +45,6 @@ namespace InventorySort
         {
             new KeyValuePair<int, string>( 4, "主分类" ),
             new KeyValuePair<int, string>(  98, "次分类" ),
-            new KeyValuePair<int, string>(  0, "道具名"  ),
             new KeyValuePair<int, string>(   8, "品质/颜色"  ),
             new KeyValuePair<int, string>(  904, "物品价值" ),
         };
