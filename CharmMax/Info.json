@@ -1,0 +1,8 @@
+﻿{
+  "Id": "CharmMax",
+  "DisplayName": "天人合一",
+  "Author": "logicor",
+  "Version": "1.0.0",
+  "AssemblyName": "CharmMax.dll",
+  "EntryMethod": "CharmMax.Main.Load"
+}
