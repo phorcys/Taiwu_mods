@@ -17,8 +17,6 @@ namespace StorageCheck
         public bool displaybag = true;
         public bool displaywarehouse = true;
 
-
-
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -83,6 +81,32 @@ namespace StorageCheck
     [HarmonyPatch(typeof(WindowManage), "ShowItemMassage")]
     public static class WindowManage_ShowItemMassage_Patch
     {
+        private static bool getItemNumber(int actorid, int item_id, ref int num, ref int usenum )
+        {
+            num = 0;
+            usenum = 0;
+
+            num = DateFile.instance.GetItemNumber(actorid, item_id);
+
+            int itemtypeid = int.Parse(DateFile.instance.GetItemDate(item_id, 999, true));
+
+            if (itemtypeid >0)
+            {
+                foreach (int key in DateFile.instance.actorItemsDate[actorid].Keys)
+                {
+                    if(DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString())
+                    {
+                        num = num + 1;
+                        usenum = usenum + int.Parse(DateFile.instance.itemsDate.ContainsKey(key)? DateFile.instance.itemsDate[key][901]: DateFile.instance.GetItemDate(key, 902, true));
+                    }
+                }
+                if(num >1)
+                {
+                    num = num - 1;
+                }
+            }
+            return true;
+         }
 
         private static void Postfix(WindowManage __instance, int itemId, ref string ___baseWeaponMassage, ref Text ___informationMassage)
         {
@@ -93,11 +117,30 @@ namespace StorageCheck
             string text = ___baseWeaponMassage;
             if (Main.settings.displaybag  && DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].ContainsKey(itemId))
             {
-                text += DateFile.instance.SetColoer(20008, string.Format("\n 背包数量: {0} ", DateFile.instance.GetItemNumber(DateFile.instance.MianActorID(), itemId)), false);
+                int num = 0;int usecount = 0;
+                bool canstack = getItemNumber(DateFile.instance.MianActorID(), itemId,ref num , ref usecount);
+                if(!canstack)
+                {
+                    text += DateFile.instance.SetColoer(20008, string.Format("\n 背包数量: x {0} ", num));
+                }
+                else
+                {
+                    text += DateFile.instance.SetColoer(20008, string.Format("\n 背包数量: x {0}  使用次数: x {1}", num, usecount));
+                }
+                
             }
             if (Main.settings.displaywarehouse &&  DateFile.instance.actorItemsDate[-999].ContainsKey(itemId))
             {
-                text += DateFile.instance.SetColoer(20008, string.Format("\n 仓库数量: {0} \n", DateFile.instance.GetItemNumber(-999, itemId)), false);
+                int num = 0; int usecount = 0;
+                bool canstack = getItemNumber(-999, itemId, ref num, ref usecount);
+                if (canstack)
+                {
+                    text += DateFile.instance.SetColoer(20008, string.Format("\n 仓库数量: x {0} ", num));
+                }
+                else
+                {
+                    text += DateFile.instance.SetColoer(20008, string.Format("\n 仓库数量: x {0}  使用次数: x {1}", num, usecount));
+                }
             }
 
             ___baseWeaponMassage = text;

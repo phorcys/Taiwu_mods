@@ -178,12 +178,14 @@ namespace UseStorageMaterial
                     if (int.Parse(DateFile.instance.GetItemDate(___thirdItemId[j], 6, true)) > 0)
                     {
                         DateFile.instance.LoseItem(-999, ___thirdItemId[j], 1, true);
+                        //Main.Logger.Log(" poison use warehouse third item ,remove it");
                     }
                     else
                     {
                         DateFile.instance.ChangeItemHp(-999, ___thirdItemId[j], -1, 0, true);
+                       // Main.Logger.Log(" poison use warehouse third item , dec hp ");
                     }
-                    //Main.Logger.Log(" poison use warehouse third item ,remove it");
+                    
                 }
             }
             
@@ -195,20 +197,20 @@ namespace UseStorageMaterial
     /// <summary>
     ///  如果需要，销毁使用的强化材料，减少制造工具hp
     /// </summary>
-    [HarmonyPatch(typeof(MakeSystem), "SetMakeItem")]
-    public static class MakeSystem_MakeNewBuilding_Patch
+    [HarmonyPatch(typeof(MakeSystem), "StartChangeItem")]
+    public static class MakeSystem_StartChangeItem_Patch
     {
         //检测是否有道具
-        private static void Prefix(MakeSystem __instance, int ___mianItemId, int[] ___thirdItemId)
+        private static void Prefix(MakeSystem __instance, int ___secondItemId, int[] ___thirdItemId)
         {
 
             int actorId = DateFile.instance.MianActorID();
 
             //主工具
-            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___mianItemId))
+            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
             {
-                DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
-                //Main.Logger.Log(" poison use warehouse main item : ");
+                DateFile.instance.ChangeItemHp(-999, ___secondItemId, -1, 0, true);
+               // Main.Logger.Log(" poison use warehouse main item : ");
             }
 
 
