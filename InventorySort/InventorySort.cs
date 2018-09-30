@@ -10,7 +10,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
+
 
 namespace InventorySort
 {
@@ -93,38 +93,19 @@ namespace InventorySort
             }
 
             var df = DateFile.instance;
-            int counter = 0;
 
             IOrderedEnumerable<KeyValuePair<int, int>> val = null;
             if (Main.settings.isdesc == true)
             {
-                val = ___shopItems.OrderByDescending(kv => int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[0]], true)));
+                val = ___shopItems.OrderByDescending(kv => int.Parse(df.GetItemDate(kv.Key, 999, true))).OrderByDescending(kv => (10000* int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[0]], true)) 
+                                                             + int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[1]], true))));
             }
             else
             {
-                val = ___shopItems.OrderBy(kv => int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[0]], true)));
+                val = ___shopItems.OrderBy(kv => int.Parse(df.GetItemDate(kv.Key, 999, true))).OrderBy(kv => (10000 * int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[0]], true))
+                                                             + int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[1]], true))));
             }
 
-
-            while (counter < DateFile.instance.itemSortLists.Count - 1)
-            {
-                counter++;
-
-                if (counter >= df.itemSortLists.Count || Main.sorttypes.Count <= df.itemSortLists[counter])
-                {
-                    continue;
-                }
-
-                if (Main.settings.isdesc == true)
-                {
-                    val = val.ThenByDescending(kv => int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[counter]], true)));
-                }
-                else
-                {
-                    val = val.ThenBy(kv => int.Parse(df.GetItemDate(kv.Key, Main.sorttypes[df.itemSortLists[counter]], true)));
-                }
-
-            }
 
             ___shopItems = val.ToDictionary((KeyValuePair<int, int> o) => o.Key, (KeyValuePair<int, int> p) => p.Value);
             return;
@@ -141,34 +122,17 @@ namespace InventorySort
         public static List<int> new_sort(List<int> sort_items)
         {
             var df = DateFile.instance;
-            int counter = 0;
 
             IOrderedEnumerable<int> val = null;
             if (Main.settings.isdesc == true)
             {
-                val = sort_items.OrderByDescending(kv => int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[0]], true)));
+                val = sort_items.OrderByDescending(kv =>  int.Parse(df.GetItemDate(kv, 999, true))).OrderByDescending(kv => (10000 * int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[0]], true))
+                                                             + int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[1]], true))));
             }
             else
             {
-                val = sort_items.OrderBy(kv => int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[0]], true)));
-            }
-
-
-            while (counter < DateFile.instance.itemSortLists.Count - 1)
-            {
-                counter++;
-                if (counter >= df.itemSortLists.Count || Main.sorttypes.Count <= df.itemSortLists[counter])
-                {
-                    continue;
-                }
-                if (Main.settings.isdesc == true)
-                {
-                    val = val.ThenByDescending(kv => int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[counter]], true)));
-                }
-                else
-                {
-                    val = val.ThenBy(kv => int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[counter]], true)));
-                }
+                val = sort_items.OrderBy(kv => int.Parse(df.GetItemDate(kv, 999, true))).OrderBy(kv => (10000 * int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[0]], true))
+                                                             + int.Parse(df.GetItemDate(kv, Main.sorttypes[df.itemSortLists[1]], true))));
             }
 
             return val.ToList();
