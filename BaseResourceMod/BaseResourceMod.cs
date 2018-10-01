@@ -392,7 +392,7 @@ namespace BaseResourceMod
             //处理替换
             string ns = Regex.Replace(text, "\r", "");
             ns = Regex.Replace(ns, "C_D", "</color>");
-            ns = Regex.Replace(ns, @"C_\d+", delegate (Match match)
+            ns = Regex.Replace(ns, @"C_\d\d\d\d\d", delegate (Match match)
             {
                 string v = match.ToString();
                 int colorkey = int.Parse(v.Substring(2));
@@ -524,7 +524,7 @@ namespace BaseResourceMod
             //处理替换
             string ns = Regex.Replace(text, "\r", "");
             ns = Regex.Replace(ns, "C_D", "</color>");
-            ns = Regex.Replace(ns, @"C_\d+", delegate (Match match)
+            ns = Regex.Replace(ns, @"C_\d\d\d\d\d", delegate (Match match)
             {
                 string v = match.ToString();
                 int colorkey = int.Parse(v.Substring(2));
