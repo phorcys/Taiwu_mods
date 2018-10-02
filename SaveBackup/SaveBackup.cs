@@ -233,7 +233,7 @@ namespace SaveBackup
     }
 
     /// <summary>
-    ///  回合存档前自动备份游戏存档
+    ///  成功读档后自动备份游戏存档
     /// </summary>
     [HarmonyPatch(typeof(Loading), "LoadingScene")]
     public static class Loading_LoadingScene_Patch
