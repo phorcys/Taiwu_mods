@@ -405,7 +405,7 @@ namespace KeyBoardShortCut
 
             }
             //采集食物
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_FOOD))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_FOOD) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
@@ -416,7 +416,7 @@ namespace KeyBoardShortCut
 
             }
             //采集金石
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MINERAL))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MINERAL) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
@@ -426,7 +426,7 @@ namespace KeyBoardShortCut
 
             }
             //采集药草
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_HERB))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_HERB) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
@@ -437,7 +437,7 @@ namespace KeyBoardShortCut
 
             }
             //采集银钱
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MONEY))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MONEY) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
@@ -447,7 +447,7 @@ namespace KeyBoardShortCut
 
             }
             //采集织物
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_CLOTH))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_CLOTH) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
@@ -458,7 +458,7 @@ namespace KeyBoardShortCut
 
             }
             //采集木材
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_WOOD))
+            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_WOOD) && __instance.timeWorkWindow.active == false)
             {
                 if (__instance.partWorldMapWindow.active == false )
                 {
