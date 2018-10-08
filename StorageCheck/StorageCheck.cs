@@ -8,7 +8,6 @@ using UnityModManagerNet;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using System.Linq;
 using System.Reflection.Emit;
 
 namespace StorageCheck
@@ -224,7 +223,7 @@ namespace StorageCheck
                 {
                     foreach (int key in DateFile.instance.actorItemsDate[actorid].Keys)
                     {
-                        if (DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString() && key != itemId)
+                        if (DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString())
                         {
                             var pages = DateFile.instance.GetBookPage(key);
                             for (int z = 0; z < 10; z++)
@@ -237,10 +236,10 @@ namespace StorageCheck
                         }
                     }
                 }
-                if (bagpages.Sum() > 0)
+                if (curbookPage.Length >0)
                 {
                     text += "背包功法页已读统计:\n";
-                    for (int i = 0; i < playerlearned.Length; i++)
+                    for (int i = 0; i < curbookPage.Length; i++)
                     {
                         text += string.Format("{0}{1}{2}{3}{4}", new object[]
                         {
@@ -253,7 +252,7 @@ namespace StorageCheck
                                                    : DateFile.instance.SetColoer(20005, string.Format("  ({0})",
                                                           DateFile.instance.massageDate[7009][4].Split('|')[3]), false),
                         (bagpages[i] >= 1) ? DateFile.instance.SetColoer(20004, string.Format("  ○已有{0}页\n",bagpages[i]))
-                                                   : DateFile.instance.SetColoer(20010, string.Format("  ×无此页)\n"))
+                                                   : DateFile.instance.SetColoer(20010, string.Format("  ×无此页\n"))
                         });
                     }
                     text += "\n";
@@ -283,11 +282,12 @@ namespace StorageCheck
             }
             return text;
         }
+
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            Main.Logger.Log(" Transpiler init codes ");
+            
             var codes = new List<CodeInstruction>(instructions);
-
+            Main.Logger.Log(" Transpiler init codes: "+codes.Count);
             var foundtheforend = true;
             int startIndex = 0;
 
@@ -298,9 +298,10 @@ namespace StorageCheck
 
                 // 注入 IL code 
                 //
+
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldsfld, typeof(Main).GetField("enabled")));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldc_I4_0));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Beq_S,7));
+                injectedCodes.Add(new CodeInstruction(OpCodes.Beq_S,  7));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_0));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_1));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(WindowManage_ShowBookMassage_Patch).GetMethod("getBookInfo")));
@@ -313,12 +314,12 @@ namespace StorageCheck
                 Main.Logger.Log(" game changed ... this mod failed to find code to patch...");
             }
 
-            Main.Logger.Log(" dump the patch codes ");
+            //Main.Logger.Log(" dump the patch codes ");
 
-            for (int i = 0; i < codes.Count; i++)
-            {
-                Main.Logger.Log(String.Format("{0} : {1}  {2}", i, codes[i].opcode, codes[i].operand));
-            }
+            //for (int i = 0; i < codes.Count; i++)
+            //{
+            //    Main.Logger.Log(String.Format("{0} : {1}  {2}", i, codes[i].opcode, codes[i].operand));
+            //}
             return codes.AsEnumerable();
         }
     }

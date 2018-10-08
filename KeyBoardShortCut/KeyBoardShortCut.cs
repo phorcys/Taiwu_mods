@@ -84,7 +84,7 @@ namespace KeyBoardShortCut
     };
     public class Settings : UnityModManager.ModSettings
     {
-        public int tester = 1;
+        public bool close_with_right_mouse_button = false;
         public SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode, string>> hotkeys;
         public MODIFIER_KEY_TYPE qinggong_modifier_key = MODIFIER_KEY_TYPE.MKT_SHIFT;
         public MODIFIER_KEY_TYPE special_modifierkey = MODIFIER_KEY_TYPE.MKT_ALT;
@@ -219,7 +219,7 @@ namespace KeyBoardShortCut
             return true;
         }
 
-        static bool binding_key = false;
+        public static bool binding_key = false;
         static HK_TYPE current_binding_key = HK_TYPE.HK_NONE;
         static KeyCode last_key_code = KeyCode.None;
 
@@ -227,6 +227,8 @@ namespace KeyBoardShortCut
         {
             processKeyPress();
             GUILayout.BeginVertical("box");
+            settings.close_with_right_mouse_button = GUILayout.Toggle(settings.close_with_right_mouse_button, "是否使用鼠标右键关闭窗口");
+            
             GUILayout.Label("战斗中释放轻功技能的装饰键");
             settings.qinggong_modifier_key = (MODIFIER_KEY_TYPE)GUILayout.SelectionGrid((int)settings.qinggong_modifier_key, new string[] { "Shift", "Ctrl", "Alt" }, 3);
             GUILayout.Label("战斗中释放绝技的装饰键");
@@ -426,17 +428,17 @@ namespace KeyBoardShortCut
 
     public class EscClose : UnityEngine.MonoBehaviour
     {
-        Type ins;
-        string mname;
-        MethodInfo mi;
-        FieldInfo fi;
-        MonoBehaviour insobj;
+        protected Type ins;
+        protected string mname;
+        protected MethodInfo mi;
+        protected FieldInfo fi;
+        protected MonoBehaviour insobj;
 
-        Func<bool> testret = null;
+        protected Func<bool> testret = null;
 
         public void setparam(Type type_ins, string methodname, Func<bool> tester)
         {
-            Main.Logger.Log(" Regist " + type_ins.ToString() + "  method :" + methodname);
+            Main.Logger.Log(this.GetType().ToString()+" Regist " + type_ins.ToString() + "  method :" + methodname);
             mname = methodname;
             ins = type_ins;
             mi = ins.GetMethod(mname);
@@ -449,18 +451,20 @@ namespace KeyBoardShortCut
         public void Update()
         {
 
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
 
             if (insobj.gameObject.activeInHierarchy == true 
-                && Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true)
+                && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
+                    || (Main.settings.close_with_right_mouse_button == true && Input.GetMouseButtonDown(1) == true))
+                    )
             {
 
                 if (testret() == true)
                 {
-                    Main.Logger.Log(" Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
+                    Main.Logger.Log(this.GetType().ToString() + " Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
                     if (ins == typeof(ReadBook))
                     {
                         // ReadBook.CloseReadbookWindows need null as param
@@ -477,6 +481,39 @@ namespace KeyBoardShortCut
         }
     }
 
+    public class ConfirmConfirm :EscClose
+    {
+        public new void Update()
+        {
+
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+
+            if (insobj.gameObject.activeInHierarchy == true
+                && (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) == true
+                    || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2) == true)
+                    )
+            {
+
+                if (testret() == true)
+                {
+                    Main.Logger.Log(this.GetType().ToString() + " Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
+                    if (ins == typeof(ReadBook))
+                    {
+                        // ReadBook.CloseReadbookWindows need null as param
+                        mi.Invoke(insobj, new object[] { null });
+                    }
+                    else
+                    {
+                        mi.Invoke(insobj, null);
+                    }
+                }
+            }
+        }
+    }
+
     /// <summary>
     ///  worldmap 事件
     /// </summary>
@@ -488,7 +525,7 @@ namespace KeyBoardShortCut
 
         private static bool Prefix(WorldMapSystem __instance, bool ___moveButtonDown, bool ___isShowPartWorldMap)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return true;
             }
@@ -500,7 +537,9 @@ namespace KeyBoardShortCut
                 //处理关闭                                                         
                 if (YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled == true)
                 {
-                    if (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
+                    if ( (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
+                           || (Main.settings.close_with_right_mouse_button == true && Input.GetMouseButtonDown(1) == true))
+                        && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
                     {
                         YesOrNoWindow.instance.CloseYesOrNoWindow();
                         return false;
@@ -563,17 +602,20 @@ namespace KeyBoardShortCut
                 //治疗和采集 奇遇
                 if (__instance.partWorldMapWindow.activeInHierarchy == false  //世界地图未开启
                         && ActorMenu.instance.actorMenu.activeInHierarchy == false  //人物菜单未开启
-                        && HomeSystem.instance.homeSystem.activeInHierarchy == false) //村镇地图未开启
+                        && HomeSystem.instance.homeSystem.activeInHierarchy == false //村镇地图未开启
+                        && BattleSystem.instance.battleWindow.activeInHierarchy == false)  //非战斗状态
                 {
                     //治疗
-                    if (Main.GetKeyDown(HK_TYPE.HK_HEAL))
+                    if (Main.GetKeyDown(HK_TYPE.HK_HEAL) 
+                        && WorldMapSystem.instance.mapHealingButton[0].interactable == true)
                     {
 
                         WorldMapSystem.instance.MapHealing(0);
                         return false;
                     }
                     //治疗中毒
-                    if (Main.GetKeyDown(HK_TYPE.HK_POISON))
+                    if (Main.GetKeyDown(HK_TYPE.HK_POISON)
+                        && WorldMapSystem.instance.mapHealingButton[1].interactable == true)
                     {
                         WorldMapSystem.instance.MapHealing(1);
                         return false;
@@ -582,6 +624,8 @@ namespace KeyBoardShortCut
                     //采集食物
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_FOOD) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 0; // 0= 粮食
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -589,6 +633,8 @@ namespace KeyBoardShortCut
                     //采集金石
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MINERAL) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 2; // 2= 金石
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -596,7 +642,8 @@ namespace KeyBoardShortCut
                     //采集药草
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_HERB) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
-
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 4; // 4= 草药
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -604,6 +651,8 @@ namespace KeyBoardShortCut
                     //采集银钱
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MONEY) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 5; // 5= 银钱
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -611,6 +660,8 @@ namespace KeyBoardShortCut
                     //采集织物
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_CLOTH) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 3; // 3= 织物
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -618,6 +669,8 @@ namespace KeyBoardShortCut
                     //采集木材
                     if (Main.GetKeyDown(HK_TYPE.HK_GATHER_WOOD) && __instance.timeWorkWindow.activeInHierarchy == false)
                     {
+                        WorldMapSystem.instance.choosePartId = DateFile.instance.mianPartId;
+                        WorldMapSystem.instance.choosePlaceId = DateFile.instance.mianPlaceId;
                         WorldMapSystem.instance.chooseWorkTyp = 1; // 1=木材
                         WorldMapSystem.instance.ChooseTimeWork();
                         return false;
@@ -625,7 +678,8 @@ namespace KeyBoardShortCut
 
                     //奇遇
                     if (Main.GetKeyDown(HK_TYPE.HK_VISITEVENT)
-                        && DateFile.instance.HaveShow(DateFile.instance.mianPartId, DateFile.instance.mianPlaceId) > 0)
+                        && DateFile.instance.HaveShow(DateFile.instance.mianPartId, DateFile.instance.mianPlaceId) > 0
+                        && WorldMapSystem.instance.openToStoryButton.interactable == true)
                     {
 
                         WorldMapSystem.instance.OpenToStory();
@@ -682,12 +736,12 @@ namespace KeyBoardShortCut
 
         private static void Postfix(BattleSystem __instance, bool ___battleEnd)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
 
-            if (!___battleEnd)
+            if (!___battleEnd && __instance.battleWindow.activeInHierarchy == true)
             {
                 //轻功技能
                 int skillindex = Main.GetKeyListDown(Main.qinggongskilllist);
@@ -762,12 +816,12 @@ namespace KeyBoardShortCut
                 }
 
                 //治疗，治疗毒伤
-                if (Main.GetKeyDown(HK_TYPE.HK_HEAL) == true)
+                if (Main.GetKeyDown(HK_TYPE.HK_HEAL) == true && __instance.doHealButton.interactable == true)
                 {
                     BattleSystem.instance.ActorDoHeal(true);
                     return;
                 }
-                if (Main.GetKeyDown(HK_TYPE.HK_POISON) == true)
+                if (Main.GetKeyDown(HK_TYPE.HK_POISON) == true && __instance.doRemovePoisonButton.interactable == true)
                 {
                     BattleSystem.instance.ActorDoRemovePoison(true);
                 }
@@ -784,7 +838,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -804,7 +858,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -847,7 +901,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(HomeSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -910,7 +964,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(SystemSetting __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -931,7 +985,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(MakeSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -952,7 +1006,7 @@ namespace KeyBoardShortCut
 
         private static void Postfix(BookShopSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -972,7 +1026,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(ShopSystem __instance)
         {
-            if (!Main.enabled)
+            if (!Main.enabled && Main.binding_key)
             {
                 return;
             }
@@ -980,6 +1034,40 @@ namespace KeyBoardShortCut
             newobj.setparam(typeof(ShopSystem), "CloseShopWindow", () =>
             {
                 return ShopSystem.instance.shopWindow.activeInHierarchy;
+            });
+        }
+    }
+
+
+    /// <summary>
+    ///  关闭story/奇遇界面
+    /// </summary>
+    [HarmonyPatch(typeof(StorySystem), "Start")]
+    public static class StorySystem_CloseHomeSystem_Patch
+    {
+        private static void Postfix(StorySystem __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            ConfirmConfirm newobj = __instance.gameObject.AddComponent(typeof(ConfirmConfirm)) as ConfirmConfirm;
+            newobj.setparam(typeof(StorySystem), "OpenStory", () =>
+            {
+                //依次检测子窗口,顺序很重要
+
+                // 如果开始奇遇没有显示，则不处理
+                if (StorySystem.instance.toStoryIsShow != true)
+                {
+                    return false;
+                }
+                // 如果按钮不可以交互，不处理
+                if (StorySystem.instance.openStoryButton.interactable != true)
+                {
+                    return false;
+                }
+
+                return StorySystem.instance.openStoryButton.interactable;
             });
         }
     }
@@ -993,7 +1081,7 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int typ, int id)
     //    {
-    //if (!Main.enabled)
+    //if (!Main.enabled && Main.binding_key)
     //{
     //    return;
     //}
@@ -1035,7 +1123,7 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int id)
     //    {
-    //if (!Main.enabled)
+    //if (!Main.enabled && Main.binding_key)
     //{
     //    return;
     //}
