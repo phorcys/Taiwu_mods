@@ -13,17 +13,18 @@ using System.Xml.Serialization;
 
 namespace KeyBoardShortCut
 {
-    public enum MODIFIER_KEY_TYPE{
-        MKT_SHIFT=0,
-        MKT_CTRL=1,
-        MKT_ALT=2,
+    public enum MODIFIER_KEY_TYPE
+    {
+        MKT_SHIFT = 0,
+        MKT_CTRL = 1,
+        MKT_ALT = 2,
 
     };
 
     public enum HK_TYPE
     {
-        HK_NONE =0,
-        HK_CLOSE =1,
+        HK_NONE = 0,
+        HK_CLOSE = 1,
         HK_COMFIRM,
         HK_CONFIRM2,
 
@@ -38,6 +39,7 @@ namespace KeyBoardShortCut
 
         HK_ACTORMENU,
         HK_VILLAGE,
+        HK_LOCAL_VILLAGE,
         HK_WORLDMAP,
 
         HK_HEAL,
@@ -92,9 +94,24 @@ namespace KeyBoardShortCut
         {
             initDefaultHotKeys();
         }
+
+        public static bool testModifierKey(MODIFIER_KEY_TYPE key)
+        {
+            switch (key)
+            {
+                case MODIFIER_KEY_TYPE.MKT_SHIFT:
+                    return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                case MODIFIER_KEY_TYPE.MKT_ALT:
+                    return Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+                case MODIFIER_KEY_TYPE.MKT_CTRL:
+                    return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                default:
+                    return false;
+            }
+        }
         public void initDefaultHotKeys()
         {
-            hotkeys = new SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode,string> >()
+            hotkeys = new SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode, string>>()
             {
                 {HK_TYPE.HK_CLOSE, new KeyValuePair<KeyCode, string>(KeyCode.Escape, "关闭窗口快捷键") },
                 {HK_TYPE.HK_COMFIRM, new KeyValuePair<KeyCode, string>(KeyCode.Space, "确认按键1" ) },
@@ -110,7 +127,8 @@ namespace KeyBoardShortCut
                 {HK_TYPE.HK_RIGHT2, new KeyValuePair<KeyCode, string>( KeyCode.RightArrow, "向右移动2")},
 
                 {HK_TYPE.HK_ACTORMENU, new KeyValuePair<KeyCode, string>( KeyCode.C, "打开人物界面")},
-                {HK_TYPE.HK_VILLAGE, new KeyValuePair<KeyCode, string>( KeyCode.P, "打开产业地图")},
+                {HK_TYPE.HK_VILLAGE, new KeyValuePair<KeyCode, string>( KeyCode.P, "打开太吾村产业地图")},
+                {HK_TYPE.HK_LOCAL_VILLAGE, new KeyValuePair<KeyCode, string>( KeyCode.L, "打开本地产业地图")},
                 {HK_TYPE.HK_WORLDMAP, new KeyValuePair<KeyCode, string>( KeyCode.M, "打开世界地图")},
 
                 {HK_TYPE.HK_HEAL, new KeyValuePair<KeyCode, string>( KeyCode.H, "进行治疗")},
@@ -218,11 +236,11 @@ namespace KeyBoardShortCut
             GUILayout.BeginVertical("box", new GUILayoutOption[] { GUILayout.MinWidth(700.0f), GUILayout.MaxWidth(700.0f) });
             var keys = settings.hotkeys.Keys.ToArray();
 
-            for (int index =0;index < keys.Length;index ++)
+            for (int index = 0; index < keys.Length; index++)
             {
                 var key = keys[index];
                 var value = settings.hotkeys[key];
-                renderHK_GUI(key,value);
+                renderHK_GUI(key, value);
             }
             GUILayout.EndVertical();
         }
@@ -232,8 +250,8 @@ namespace KeyBoardShortCut
             Event e = Event.current;
             if (e.isKey && Input.anyKeyDown == true)
             {
-                
-                if (binding_key == true )
+
+                if (binding_key == true)
                 {
                     Main.Logger.Log("Detected key  while binding key ,key code: " + e.keyCode);
                     if (settings.hotkeys.ContainsKey(current_binding_key))
@@ -250,14 +268,14 @@ namespace KeyBoardShortCut
                     settings.Save();
                 }
             }
-          
+
         }
 
-        private static void renderHK_GUI(HK_TYPE key,  KeyValuePair<KeyCode, string> value)
+        private static void renderHK_GUI(HK_TYPE key, KeyValuePair<KeyCode, string> value)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label(value.Value,new GUILayoutOption[] { GUILayout.MinWidth(200.0f),GUILayout.MaxWidth(200.0f)});
-            var ret = GUILayout.Button(value.Key == KeyCode.None ? "请按下需要的按键":value.Key.ToString(), new GUILayoutOption[] { GUILayout.MinWidth(200.0f), GUILayout.MaxWidth(200.0f) });
+            GUILayout.Label(value.Value, new GUILayoutOption[] { GUILayout.MinWidth(200.0f), GUILayout.MaxWidth(200.0f) });
+            var ret = GUILayout.Button(value.Key == KeyCode.None ? "请按下需要的按键" : value.Key.ToString(), new GUILayoutOption[] { GUILayout.MinWidth(200.0f), GUILayout.MaxWidth(200.0f) });
             if (ret == true)
             {
                 if (binding_key == true)
@@ -282,14 +300,127 @@ namespace KeyBoardShortCut
 
         public static bool GetKeyDown(HK_TYPE hotkey_name)
         {
-            if(settings.hotkeys.ContainsKey(hotkey_name))
+            if (settings.hotkeys.ContainsKey(hotkey_name))
             {
-                if(Input.GetKeyDown(settings.hotkeys[hotkey_name].Key) )
+                if (Input.GetKeyDown(settings.hotkeys[hotkey_name].Key))
                 {
                     return true;
                 }
             }
             return false;
+        }
+
+        public static bool GetKey(HK_TYPE hotkey_name)
+        {
+            if (settings.hotkeys.ContainsKey(hotkey_name))
+            {
+                if (Input.GetKey(settings.hotkeys[hotkey_name].Key))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static List<HK_TYPE> mainskilllist = new List<HK_TYPE>()
+        {
+            HK_TYPE.HK_BATTEL_SKILL_1,
+            HK_TYPE.HK_BATTEL_SKILL_2,
+            HK_TYPE.HK_BATTEL_SKILL_3,
+            HK_TYPE.HK_BATTEL_SKILL_4,
+            HK_TYPE.HK_BATTEL_SKILL_5,
+            HK_TYPE.HK_BATTEL_SKILL_6,
+            HK_TYPE.HK_BATTEL_SKILL_7,
+            HK_TYPE.HK_BATTEL_SKILL_8,
+            HK_TYPE.HK_BATTEL_SKILL_9,
+        };
+        public static List<HK_TYPE> qinggongskilllist = new List<HK_TYPE>()
+        {
+            HK_TYPE.HK_BATTEL_QINGGONG_1,
+            HK_TYPE.HK_BATTEL_QINGGONG_2,
+            HK_TYPE.HK_BATTEL_QINGGONG_3,
+            HK_TYPE.HK_BATTEL_QINGGONG_4,
+            HK_TYPE.HK_BATTEL_QINGGONG_5,
+            HK_TYPE.HK_BATTEL_QINGGONG_6,
+            HK_TYPE.HK_BATTEL_QINGGONG_7,
+            HK_TYPE.HK_BATTEL_QINGGONG_8,
+            HK_TYPE.HK_BATTEL_QINGGONG_9,
+        };
+        public static List<HK_TYPE> specialskilllist = new List<HK_TYPE>()
+        {
+            HK_TYPE.HK_BATTEL_SPECIAL_1,
+            HK_TYPE.HK_BATTEL_SPECIAL_2,
+            HK_TYPE.HK_BATTEL_SPECIAL_3,
+            HK_TYPE.HK_BATTEL_SPECIAL_4,
+            HK_TYPE.HK_BATTEL_SPECIAL_5,
+            HK_TYPE.HK_BATTEL_SPECIAL_6,
+            HK_TYPE.HK_BATTEL_SPECIAL_7,
+            HK_TYPE.HK_BATTEL_SPECIAL_8,
+            HK_TYPE.HK_BATTEL_SPECIAL_9,
+        };
+
+        public static int GetKeyListDown(List<HK_TYPE> hotkey_name_list)
+        {
+            for (int i = 0; i < hotkey_name_list.Count; i++)
+            {
+                if (settings.hotkeys.ContainsKey(hotkey_name_list[i]))
+                {
+                    if (Input.GetKey(settings.hotkeys[hotkey_name_list[i]].Key))
+                    {
+                        return i;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public static string getmainskill_keystr(int index)
+        {
+            string ret = "";
+            if (index < mainskilllist.Count)
+            {
+                ret = settings.hotkeys[mainskilllist[index]].Key.ToString();
+                ret = ret.Replace("Alpha", "");
+            }
+            return ret;
+        }
+
+        public static string getmodifyerstr(MODIFIER_KEY_TYPE mkt)
+        {
+            switch (mkt)
+            {
+                case MODIFIER_KEY_TYPE.MKT_ALT:
+                    return "A+";
+                case MODIFIER_KEY_TYPE.MKT_SHIFT:
+                    return "S+";
+                case MODIFIER_KEY_TYPE.MKT_CTRL:
+                    return "C+";
+                default:
+                    return "";
+            }
+        }
+        public static string getqinggongskill_keystr(int index)
+        {
+            string ret = "";
+            ret = ret + getmodifyerstr(Main.settings.qinggong_modifier_key);
+            if (index < qinggongskilllist.Count)
+            {
+                ret = settings.hotkeys[mainskilllist[index]].Key.ToString();
+                ret = ret.Replace("Alpha", "");
+            }
+            return ret;
+        }
+
+        public static string getspecialskill_keystr(int index)
+        {
+            string ret = "";
+            ret = ret + getmodifyerstr(Main.settings.special_modifierkey);
+            if (index < mainskilllist.Count)
+            {
+                ret = settings.hotkeys[mainskilllist[index]].Key.ToString();
+                ret = ret.Replace("Alpha", "");
+            }
+            return ret;
         }
     }
 
@@ -320,155 +451,157 @@ namespace KeyBoardShortCut
     }
 
     /// <summary>
-    ///  YesOrNoWindow  是否提示确认键
+    ///  worldmap 事件
     /// </summary>
     [HarmonyPatch(typeof(WorldMapSystem), "Update")]
     public static class WorldMapSystem_Update_Patch
     {
         static MethodInfo GetMoveKey = typeof(WorldMapSystem).GetMethod("GetMoveKey",
-    BindingFlags.NonPublic | BindingFlags.Instance);
-        
+                                            BindingFlags.NonPublic | BindingFlags.Instance);
+
         private static bool Prefix(WorldMapSystem __instance, bool ___moveButtonDown, bool ___isShowPartWorldMap)
         {
-            if(YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled==true)
+            if (DateFile.instance.battleStart == false //无战斗
+                && UIDate.instance.trunChangeImage[0].gameObject.activeSelf == false //非回合结算
+                && SystemSetting.instance.SystemSettingWindow.activeInHierarchy == false) // 系统设置未开启
             {
-                if(Main.GetKeyDown(HK_TYPE.HK_CLOSE)==true && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
+                //处理关闭                                                         
+                if (YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled == true)
                 {
-                    YesOrNoWindow.instance.CloseYesOrNoWindow();
-                    return false;
-                }
-                if (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) == true|| Main.GetKeyDown(HK_TYPE.HK_CONFIRM2) == true)
-                {
-                    OnClick.instance.Index();
-                    YesOrNoWindow.instance.CloseYesOrNoWindow();
-                    return false;
+                    if (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
+                    {
+                        YesOrNoWindow.instance.CloseYesOrNoWindow();
+                        return false;
+                    }
+                    if (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) == true || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2) == true)
+                    {
+                        OnClick.instance.Index();
+                        YesOrNoWindow.instance.CloseYesOrNoWindow();
+                        return false;
+                    }
+
                 }
 
+                //界面快捷键  人物/世界地图/村子地图
+                if (YesOrNoWindow.instance.MaskShow() == false)  //无模态对话框
+                {
+                    if (Main.GetKeyDown(HK_TYPE.HK_ACTORMENU) && __instance.partWorldMapWindow.activeInHierarchy == false)
+                    {
+                        if (ActorMenu.instance.actorMenu.activeInHierarchy == false)
+                        {
+                            ActorMenu.instance.ShowActorMenu(false);
+                            return false;
+                        }
+                        else
+                        {
+                            ActorMenu.instance.CloseActorMenu();
+                            return false;
+                        }
+                    }
+                    if (Main.GetKeyDown(HK_TYPE.HK_VILLAGE) && __instance.partWorldMapWindow.activeInHierarchy == false)
+                    {
+                        if (HomeSystem.instance.homeSystem.activeInHierarchy == false)
+                        {
+                            HomeSystem.instance.ShowHomeSystem(true);
+                        }
+                        else
+                        {
+                            HomeSystem.instance.CloseHomeSystem();
+                            return false;
+                        }
+
+                    }
+                    if (Main.GetKeyDown(HK_TYPE.HK_WORLDMAP))
+                    {
+                        if (__instance.partWorldMapWindow.activeInHierarchy == false)
+                        {
+                            WorldMapSystem.instance.ShowPartWorldMapWindow(DateFile.instance.mianWorldId);
+                            return false;
+                        }
+                        else
+                        {
+                            WorldMapSystem.instance.ColsePartWorldMapWindow();
+                            return false;
+                        }
+
+                    }
+                }
+
+
+                //治疗和采集 奇遇
+                if (__instance.partWorldMapWindow.activeInHierarchy == false  //世界地图未开启
+                        && ActorMenu.instance.actorMenu.activeInHierarchy == false  //人物菜单未开启
+                        && HomeSystem.instance.homeSystem.activeInHierarchy == false) //村镇地图未开启
+                {
+                    //治疗
+                    if (Main.GetKeyDown(HK_TYPE.HK_HEAL))
+                    {
+
+                        WorldMapSystem.instance.MapHealing(0);
+                        return false;
+                    }
+                    //治疗中毒
+                    if (Main.GetKeyDown(HK_TYPE.HK_POISON))
+                    {
+                        WorldMapSystem.instance.MapHealing(1);
+                        return false;
+
+                    }
+                    //采集食物
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_FOOD) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+                        WorldMapSystem.instance.chooseWorkTyp = 0; // 0= 粮食
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+                    //采集金石
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MINERAL) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+                        WorldMapSystem.instance.chooseWorkTyp = 2; // 2= 金石
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+                    //采集药草
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_HERB) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+
+                        WorldMapSystem.instance.chooseWorkTyp = 4; // 4= 草药
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+                    //采集银钱
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MONEY) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+                        WorldMapSystem.instance.chooseWorkTyp = 5; // 5= 银钱
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+                    //采集织物
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_CLOTH) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+                        WorldMapSystem.instance.chooseWorkTyp = 3; // 3= 织物
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+                    //采集木材
+                    if (Main.GetKeyDown(HK_TYPE.HK_GATHER_WOOD) && __instance.timeWorkWindow.activeInHierarchy == false)
+                    {
+                        WorldMapSystem.instance.chooseWorkTyp = 1; // 1=木材
+                        WorldMapSystem.instance.ChooseTimeWork();
+                        return false;
+                    }
+
+                    //奇遇
+                    if (Main.GetKeyDown(HK_TYPE.HK_VISITEVENT)
+                        && DateFile.instance.HaveShow(DateFile.instance.mianPartId, DateFile.instance.mianPlaceId) > 0)
+                    {
+
+                        WorldMapSystem.instance.OpenToStory();
+                    }
+                }
             }
-            if(Main.GetKeyDown(HK_TYPE.HK_ACTORMENU))
-            {
-                if(ActorMenu.instance.actorMenu.activeSelf == false)
-                {
-                    ActorMenu.instance.ShowActorMenu(false);
-                    return false;
-                }
-                else
-                {
-                    ActorMenu.instance.CloseActorMenu();
-                    return false;
-                }
-            }
-            if ( Main.GetKeyDown(HK_TYPE.HK_VILLAGE))
-            {
-                if(HomeSystem.instance.homeSystem.activeSelf == false)
-                {
-                    HomeSystem.instance.ShowHomeSystem(true);
-                }
-                else
-                {
-                    HomeSystem.instance.CloseHomeSystem();
-                    return false;
-                }
 
-            }
-            if ( Main.GetKeyDown(HK_TYPE.HK_WORLDMAP))
-            {
-                if (__instance.partWorldMapWindow.active == false)
-                {
-                    WorldMapSystem.instance.ShowPartWorldMapWindow(DateFile.instance.mianWorldId);
-                    return false;
-                }
-                else
-                {
-                    WorldMapSystem.instance.ColsePartWorldMapWindow();
-                    return false;
-                }
-
-            }
-
-            if (Main.GetKeyDown(HK_TYPE.HK_HEAL))
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.MapHealing(0);
-                    return false;
-                }
-
-            }
-            if (Main.GetKeyDown(HK_TYPE.HK_POISON))
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.MapHealing(1);
-                    return false;
-                }
-
-            }
-            //采集食物
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_FOOD) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 0; // 0= 粮食
-                    WorldMapSystem.instance.ChooseTimeWork();
-                    return false;
-                }
-
-            }
-            //采集金石
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MINERAL) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 2; // 2= 金石
-                    WorldMapSystem.instance.ChooseTimeWork(); return false;
-                }
-
-            }
-            //采集药草
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_HERB) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 4; // 4= 草药
-                    WorldMapSystem.instance.ChooseTimeWork();
-                    return false;
-                }
-
-            }
-            //采集银钱
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_MONEY) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 5; // 5= 银钱
-                    WorldMapSystem.instance.ChooseTimeWork(); return false;
-                }
-
-            }
-            //采集织物
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_CLOTH) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 3; // 3= 织物
-                    WorldMapSystem.instance.ChooseTimeWork();
-                    return false;
-                }
-
-            }
-            //采集木材
-            if (Main.GetKeyDown(HK_TYPE.HK_GATHER_WOOD) && __instance.timeWorkWindow.active == false)
-            {
-                if (__instance.partWorldMapWindow.active == false )
-                {
-                    WorldMapSystem.instance.chooseWorkTyp = 1; // 1=木材
-                    WorldMapSystem.instance.ChooseTimeWork();
-                    return false;
-                }
-
-            }
-
+            //原有Update代码修改
             if (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2))
             {
                 UIDate.instance.ChangeTrunButton();
@@ -479,7 +612,7 @@ namespace KeyBoardShortCut
                 if (Main.GetKeyDown(HK_TYPE.HK_UP) || Main.GetKeyDown(HK_TYPE.HK_UP2))
                 {
                     ___moveButtonDown = true;
-                    GetMoveKey.Invoke(__instance, new object[] { 1});
+                    GetMoveKey.Invoke(__instance, new object[] { 1 });
                     return false;
                 }
                 else if (Main.GetKeyDown(HK_TYPE.HK_LEFT) || Main.GetKeyDown(HK_TYPE.HK_LEFT2))
@@ -501,15 +634,112 @@ namespace KeyBoardShortCut
                     return false;
                 }
             }
-
-
-
-
             return false;
+        }
+    }
+
+
+    /// <summary>
+    ///  BattleSystem 事件
+    /// </summary>
+    [HarmonyPatch(typeof(BattleSystem), "Update")]
+    public static class BattleSystem_Update_Patch
+    {
+        static MethodInfo GetMoveKey = typeof(BattleSystem).GetMethod("GetMoveKey",
+                                            BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static void Postfix(BattleSystem __instance, bool ___battleEnd)
+        {
+            if (!___battleEnd)
+
+            {
+                //轻功技能
+                int skillindex = Main.GetKeyListDown(Main.qinggongskilllist);
+                if (skillindex != -1 && Settings.testModifierKey(Main.settings.qinggong_modifier_key) == true)
+                {
+                    // actorGongFaHolder[1] = 轻功列表
+                    var allskill = __instance.actorGongFaHolder[1];
+                    if (allskill != null)
+                    {
+                        var btngo = allskill.childCount > skillindex ? allskill.GetChild(skillindex) : null;
+                        if (btngo != null)
+                        {
+                            // 功法存在
+                            int skillid = int.Parse(btngo.name.Split(new char[] { ',' })[1]);
+                            //按钮可按下
+                            if (btngo.Find("GongFaIcon," + skillid).GetComponent<Button>().interactable == true)
+                            {
+                                //施放技能
+                                BattleSystem.instance.SetUseGongFa(true, skillid);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                //特殊技能
+                skillindex = Main.GetKeyListDown(Main.specialskilllist);
+                if (skillindex != -1 && Settings.testModifierKey(Main.settings.special_modifierkey) == true)
+                {
+                    // actorGongFaHolder[2] = 绝技列表
+                    var allskill = __instance.actorGongFaHolder[2];
+                    if (allskill != null)
+                    {
+                        var btngo = allskill.childCount > skillindex ? allskill.GetChild(skillindex) : null;
+                        if (btngo != null)
+                        {
+                            // 功法存在
+                            int skillid = int.Parse(btngo.name.Split(new char[] { ',' })[1]);
+                            //按钮可按下
+                            if (btngo.Find("GongFaIcon," + skillid).GetComponent<Button>().interactable == true)
+                            {
+                                //施放技能
+                                BattleSystem.instance.SetUseGongFa(true, skillid);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                //主技能
+                skillindex = Main.GetKeyListDown(Main.mainskilllist);
+                if (skillindex != -1)
+                {
+                    // actorGongFaHolder[0] = 攻击技能列表
+                    var allskill = __instance.actorGongFaHolder[0];
+                    if (allskill != null)
+                    {
+                        var btngo = allskill.childCount > skillindex ? allskill.GetChild(skillindex) : null;
+                        if (btngo != null)
+                        {
+                            // 功法存在
+                            int skillid = int.Parse(btngo.name.Split(new char[] { ',' })[1]);
+                            //按钮可按下
+                            if (btngo.Find("GongFaIcon," + skillid).GetComponent<Button>().interactable == true)
+                            {
+                                //施放技能
+                                BattleSystem.instance.SetUseGongFa(true, skillid);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                //治疗，治疗毒伤
+                if (Main.GetKeyDown(HK_TYPE.HK_HEAL) == true)
+                {
+                    BattleSystem.instance.ActorDoHeal(true);
+                    return;
+                }
+                if (Main.GetKeyDown(HK_TYPE.HK_POISON) == true)
+                {
+                    BattleSystem.instance.ActorDoRemovePoison(true);
+                }
+
+            }
         }
 
     }
-
     /// <summary>
     ///  ActorMenu  关闭人物信息界面
     /// </summary>
@@ -548,4 +778,76 @@ namespace KeyBoardShortCut
             newobj.setparam(typeof(HomeSystem), "CloseHomeSystem");
         }
     }
+
+
+    ///// <summary>
+    /////  BattleSystem 战斗显示快捷键
+    ///// </summary>
+    //[HarmonyPatch(typeof(BattleSystem), "SetGongFa")]
+    //public static class BattleSystem_SetGongFa_Patch
+    //{
+    //    private static void Postfix(BattleSystem __instance, int typ, int id)
+    //    {
+    //        var gotrans = __instance.actorGongFaHolder[typ].Find("BattleGongFa," + id);
+    //        int index = 0;
+    //        for (int i = 0; i < __instance.actorGongFaHolder[typ].childCount; i++)
+    //        {
+    //            if (__instance.actorGongFaHolder[typ].GetChild(i) == gotrans)
+    //            {
+    //                index = i;
+    //            }
+    //        }
+
+    //        if (gotrans != null)
+    //        {
+    //            var go = new GameObject();
+    //            go.transform.parent = gotrans;
+    //            go.transform.localPosition = new Vector3(0.0f, -1.0f);
+    //            var text = go.gameObject.AddComponent<Text>();
+
+    //            if (typ ==1)
+    //            {
+    //                text.text = Main.getqinggongskill_keystr(index);
+    //            }else if( typ ==2)
+    //            {
+    //                text.text = Main.getspecialskill_keystr(index);
+    //            }
+                
+    //        }
+
+    //    }
+    //}
+
+    ///// <summary>
+    /////  BattleSystem 战斗显示快捷键
+    ///// </summary>
+    //[HarmonyPatch(typeof(BattleSystem), "SetAttackGongFa")]
+    //public static class BattleSystem_SetAttackGongFa_Patch
+    //{
+    //    private static void Postfix(BattleSystem __instance, int id)
+    //    {
+    //        Main.Logger.Log(" try add key info to attach skill " + id);
+    //        var gotrans = __instance.actorGongFaHolder[0].Find("BattleGongFa," + id);
+    //        int index = -1;
+    //        for (int i = 0; i < __instance.actorGongFaHolder[0].childCount; i++)
+    //        {
+    //            if (__instance.actorGongFaHolder[0].GetChild(i) == gotrans)
+    //            {
+    //                index = i;
+    //            }
+    //        }
+    //        Main.Logger.Log(" try add key info to attach skill " + id + " found index：" + index);
+    //        if (gotrans != null && index >= 0)
+    //        {
+    //            var go = new GameObject();
+    //            go.transform.parent = gotrans;
+    //            var text = go.gameObject.AddComponent<Text>();
+    //            text.text = Main.getmainskill_keystr(index);
+    //            go.transform.localPosition = new Vector3(0.0f, -1.0f);
+
+    //            Main.Logger.Log(" try add key info to attach skill " + id + " found index：" + index + " text:" + text.text);
+    //        }
+
+    //    }
+    //}
 }
