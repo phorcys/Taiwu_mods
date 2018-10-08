@@ -432,20 +432,42 @@ namespace KeyBoardShortCut
         FieldInfo fi;
         MonoBehaviour insobj;
 
-        public void setparam(Type type_ins, string methodname)
+        Func<bool> testret = null;
+
+        public void setparam(Type type_ins, string methodname, Func<bool> tester)
         {
+            Main.Logger.Log(" Regist " + type_ins.ToString() + "  method :" + methodname);
             mname = methodname;
             ins = type_ins;
             mi = ins.GetMethod(mname);
             fi = ins.GetField("instance", BindingFlags.Static | BindingFlags.Public);
             insobj = fi.GetValue(null) as MonoBehaviour;
+
+            testret = tester;
         }
 
         public void Update()
         {
-            if (insobj.gameObject.active == true && Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true)
+            
+            if (insobj.gameObject.activeInHierarchy == true 
+                && Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true)
             {
-                mi.Invoke(insobj, null);
+
+                if (testret() == true)
+                {
+                    Main.Logger.Log(" Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
+                    if (ins == typeof(ReadBook))
+                    {
+                        // ReadBook.CloseReadbookWindows need null as param
+                        mi.Invoke(insobj, new object[] { null });
+                    }
+                    else
+                    {
+                        mi.Invoke(insobj, null);
+                    }
+                }
+                
+                
             }
         }
     }
@@ -609,25 +631,25 @@ namespace KeyBoardShortCut
             }
             if (!___moveButtonDown)
             {
-                if (Main.GetKeyDown(HK_TYPE.HK_UP) || Main.GetKeyDown(HK_TYPE.HK_UP2))
+                if (Main.GetKey(HK_TYPE.HK_UP) || Main.GetKey(HK_TYPE.HK_UP2))
                 {
                     ___moveButtonDown = true;
                     GetMoveKey.Invoke(__instance, new object[] { 1 });
                     return false;
                 }
-                else if (Main.GetKeyDown(HK_TYPE.HK_LEFT) || Main.GetKeyDown(HK_TYPE.HK_LEFT2))
+                else if (Main.GetKey(HK_TYPE.HK_LEFT) || Main.GetKey(HK_TYPE.HK_LEFT2))
                 {
                     ___moveButtonDown = true;
                     GetMoveKey.Invoke(__instance, new object[] { 2 });
                     return false;
                 }
-                else if (Main.GetKeyDown(HK_TYPE.HK_DOWN) || Main.GetKeyDown(HK_TYPE.HK_DOWN2))
+                else if (Main.GetKey(HK_TYPE.HK_DOWN) || Main.GetKey(HK_TYPE.HK_DOWN2))
                 {
                     ___moveButtonDown = true;
                     GetMoveKey.Invoke(__instance, new object[] { 3 });
                     return false;
                 }
-                else if (Main.GetKeyDown(HK_TYPE.HK_RIGHT) || Main.GetKeyDown(HK_TYPE.HK_RIGHT2))
+                else if (Main.GetKey(HK_TYPE.HK_RIGHT) || Main.GetKey(HK_TYPE.HK_RIGHT2))
                 {
                     ___moveButtonDown = true;
                     GetMoveKey.Invoke(__instance, new object[] { 4 });
@@ -749,7 +771,10 @@ namespace KeyBoardShortCut
         private static void Postfix(WorldMapSystem __instance)
         {
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(ActorMenu), "CloseActorMenu");
+            newobj.setparam(typeof(ActorMenu), "CloseActorMenu", () =>
+            {
+                return ActorMenu.instance.actorMenu.activeInHierarchy;
+            });
         }
     }
 
@@ -762,7 +787,33 @@ namespace KeyBoardShortCut
         private static void Postfix(WorldMapSystem __instance)
         {
             EscClose newobj = __instance.partWorldMapWindow.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(WorldMapSystem), "ColsePartWorldMapWindow");
+            newobj.setparam(typeof(WorldMapSystem), "ColsePartWorldMapWindow", () =>
+            {
+                // 如果 剧情/奇遇 窗口开着，就不处理
+                if (StorySystem.instance.toStoryIsShow == true
+                        ||StorySystem.instance.storySystem.activeInHierarchy == true)
+                {
+                    return false;
+                }
+
+                // 如果制造窗口开着，就不处理
+                if (MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy == true)
+                {
+                    return false;
+                }
+                // 如果商店窗口开着，就不处理
+                if (ShopSystem.instance.shopWindow.activeInHierarchy == true
+                || BookShopSystem.instance.shopWindow.activeInHierarchy == true
+                || SystemSetting.instance.SystemSettingWindow.activeInHierarchy == true)
+                {
+                    return false;
+                }
+
+                //关闭工作窗口
+                //if(WorldMapSystem.instance.choo)
+
+                return WorldMapSystem.instance.partWorldMapWindow.activeInHierarchy;
+            });
         }
     }
 
@@ -775,7 +826,118 @@ namespace KeyBoardShortCut
         private static void Postfix(HomeSystem __instance)
         {
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(HomeSystem), "CloseHomeSystem");
+            newobj.setparam(typeof(HomeSystem), "CloseHomeSystem", () =>
+            {
+                //依次检测子窗口,顺序很重要
+
+                // 如果制造窗口开着，就不处理
+                if(MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy == true)
+                {
+                    return false;
+                }
+                // 如果商店窗口开着，就不处理
+                if (ShopSystem.instance.shopWindow.activeInHierarchy == true
+                || BookShopSystem.instance.shopWindow.activeInHierarchy == true
+                || SystemSetting.instance.SystemSettingWindow.activeInHierarchy == true)
+                {
+                    return false;
+                }
+
+                // setstudyWindow
+                if (HomeSystem.instance.setStudyWindow.gameObject.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseSetStudyWindow();
+                    return false;
+                }
+
+                // studywindow
+                if (HomeSystem.instance.studyWindow.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseStudyWindow();
+                    return false;
+                }
+
+
+                //bookWindow
+                if (HomeSystem.instance.bookWindow.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseBookWindow();
+                    return false;
+                }
+                //building window
+                if (HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseBuildingWindow();
+                    return false;
+                }
+
+                return HomeSystem.instance.homeSystem.activeInHierarchy;
+            });
+        }
+    }
+
+    /// <summary>
+    /// 关闭系统设置界面
+    /// </summary>
+    [HarmonyPatch(typeof(SystemSetting), "Start")]
+    public static class SystemSetting_CloseSystemSetting_Patch
+    {
+        private static void Postfix(SystemSetting __instance)
+        {
+            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
+            newobj.setparam(typeof(SystemSetting), "CloseSettingWindow", () =>
+            {
+                return SystemSetting.instance.SystemSettingWindow.activeInHierarchy;
+            });
+        }
+    }
+
+
+    /// <summary>
+    /// 关闭制造界面
+    /// </summary>
+    [HarmonyPatch(typeof(MakeSystem), "Start")]
+    public static class MakeSystem_CloseMakeSystem_Patch
+    {
+        private static void Postfix(MakeSystem __instance)
+        {
+            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
+            newobj.setparam(typeof(MakeSystem), "CloseMakeWindow", () =>
+            {
+                return MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy;
+            });
+        }
+    }
+
+    /// <summary>
+    /// 关闭书店界面
+    /// </summary>
+    [HarmonyPatch(typeof(BookShopSystem), "Start")]
+    public static class BookShopSystem_CloseBookShopSystem_Patch
+    {
+        private static void Postfix(BookShopSystem __instance)
+        {
+            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
+            newobj.setparam(typeof(BookShopSystem), "CloseShopWindow", () =>
+            {
+                return BookShopSystem.instance.shopWindow.activeInHierarchy;
+            });
+        }
+    }
+
+    /// <summary>
+    /// 关闭商店界面
+    /// </summary>
+    [HarmonyPatch(typeof(ShopSystem), "Start")]
+    public static class ShopSystem_CloseShopSystem_Patch
+    {
+        private static void Postfix(ShopSystem __instance)
+        {
+            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
+            newobj.setparam(typeof(ShopSystem), "CloseShopWindow", () =>
+            {
+                return ShopSystem.instance.shopWindow.activeInHierarchy;
+            });
         }
     }
 
@@ -812,7 +974,7 @@ namespace KeyBoardShortCut
     //            {
     //                text.text = Main.getspecialskill_keystr(index);
     //            }
-                
+
     //        }
 
     //    }
