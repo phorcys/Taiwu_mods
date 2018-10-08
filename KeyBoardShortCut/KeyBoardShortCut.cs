@@ -199,13 +199,13 @@ namespace KeyBoardShortCut
         {
             Logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
-
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
             settings = Settings.Load<Settings>(modEntry);
             settings.modee = modEntry;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+
 
             return true;
         }
@@ -448,7 +448,12 @@ namespace KeyBoardShortCut
 
         public void Update()
         {
-            
+
+            if (!Main.enabled)
+            {
+                return;
+            }
+
             if (insobj.gameObject.activeInHierarchy == true 
                 && Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true)
             {
@@ -483,6 +488,11 @@ namespace KeyBoardShortCut
 
         private static bool Prefix(WorldMapSystem __instance, bool ___moveButtonDown, bool ___isShowPartWorldMap)
         {
+            if (!Main.enabled)
+            {
+                return true;
+            }
+
             if (DateFile.instance.battleStart == false //无战斗
                 && UIDate.instance.trunChangeImage[0].gameObject.activeSelf == false //非回合结算
                 && SystemSetting.instance.SystemSettingWindow.activeInHierarchy == false) // 系统设置未开启
@@ -672,8 +682,12 @@ namespace KeyBoardShortCut
 
         private static void Postfix(BattleSystem __instance, bool ___battleEnd)
         {
-            if (!___battleEnd)
+            if (!Main.enabled)
+            {
+                return;
+            }
 
+            if (!___battleEnd)
             {
                 //轻功技能
                 int skillindex = Main.GetKeyListDown(Main.qinggongskilllist);
@@ -770,6 +784,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(ActorMenu), "CloseActorMenu", () =>
             {
@@ -786,6 +804,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.partWorldMapWindow.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(WorldMapSystem), "ColsePartWorldMapWindow", () =>
             {
@@ -825,6 +847,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(HomeSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(HomeSystem), "CloseHomeSystem", () =>
             {
@@ -884,6 +910,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(SystemSetting __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(SystemSetting), "CloseSettingWindow", () =>
             {
@@ -901,6 +931,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(MakeSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(MakeSystem), "CloseMakeWindow", () =>
             {
@@ -915,8 +949,13 @@ namespace KeyBoardShortCut
     [HarmonyPatch(typeof(BookShopSystem), "Start")]
     public static class BookShopSystem_CloseBookShopSystem_Patch
     {
+
         private static void Postfix(BookShopSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(BookShopSystem), "CloseShopWindow", () =>
             {
@@ -933,6 +972,10 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(ShopSystem __instance)
         {
+            if (!Main.enabled)
+            {
+                return;
+            }
             EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
             newobj.setparam(typeof(ShopSystem), "CloseShopWindow", () =>
             {
@@ -950,6 +993,10 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int typ, int id)
     //    {
+    //if (!Main.enabled)
+    //{
+    //    return;
+    //}
     //        var gotrans = __instance.actorGongFaHolder[typ].Find("BattleGongFa," + id);
     //        int index = 0;
     //        for (int i = 0; i < __instance.actorGongFaHolder[typ].childCount; i++)
@@ -988,6 +1035,10 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int id)
     //    {
+    //if (!Main.enabled)
+    //{
+    //    return;
+    //}
     //        Main.Logger.Log(" try add key info to attach skill " + id);
     //        var gotrans = __instance.actorGongFaHolder[0].Find("BattleGongFa," + id);
     //        int index = -1;
