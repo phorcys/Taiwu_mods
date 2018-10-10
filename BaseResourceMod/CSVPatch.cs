@@ -252,7 +252,7 @@ namespace BaseResourceMod
                         string ftype = filename.Substring(0, filename.IndexOf('.')).ToLower();
                         int num = 1000;
                         var m = Regex.Match(filename, @"\.txt\.(\d+)\.txt", RegexOptions.IgnoreCase);
-                        if (m != null)
+                        if (m != null && m.Length > 0)
                         {
                             string snum = m.Value.Substring(5, m.Value.Length - 9);
                             num = int.Parse(snum);
