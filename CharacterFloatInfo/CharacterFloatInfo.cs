@@ -18,6 +18,9 @@ namespace CharacterFloatInfo
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
         public bool addonInfo = false;
+        public bool shopName = false;
+        public bool healthStatus = false;
+        public bool workPlace = false;
     }
 
 
@@ -53,8 +56,18 @@ namespace CharacterFloatInfo
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.BeginHorizontal();
-            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "开启未加成信息", new GUILayoutOption[0]);
+            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示未加成信息", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.shopName = GUILayout.Toggle(Main.settings.shopName, "显示商人商会", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.healthStatus = GUILayout.Toggle(Main.settings.healthStatus, "显示健康状态", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.workPlace = GUILayout.Toggle(Main.settings.workPlace, "显示太吾村民工作地点", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+
 
         }
 
@@ -69,17 +82,20 @@ namespace CharacterFloatInfo
     public static class WorldMapSystem_UpdatePlaceActor_Patch
     {
 
-        static void Postfix(Transform ___actorHolder, int ___choosePlaceId, ref int ___showPlaceActorTyp, ref List<int> ___playerNeighbor)
+        static void Postfix(Transform ___actorHolder, ref int ___showPlaceActorTyp)
         {
             if (!Main.enabled)
             {
                 return;
             }
 
-            int child = ___actorHolder.childCount;
-            for (int i = 0; i < child; i++)
+            int count = ___actorHolder.childCount;
+            for (int i = 0; i < count; i++)
             {
-                ___actorHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
+               GameObject obj = ___actorHolder.GetChild(i).gameObject;
+                if (obj.GetComponent<PointerEnter>() == null && ___showPlaceActorTyp==1) {
+                    obj.AddComponent<PointerEnter>();
+                }
             }
 
         }
@@ -89,7 +105,7 @@ namespace CharacterFloatInfo
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
-        static void Postfix(WorldMapSystem __instance, ref GameObject tips, ref bool on, ref Text ___itemMoneyText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
+        static void Postfix(WorldMapSystem __instance, ref GameObject tips, ref bool on, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
         {
             if (!Main.enabled)
             {
@@ -111,6 +127,58 @@ namespace CharacterFloatInfo
                         int id = int.Parse(array[1]);
                         ___informationMassage.text = "";
                         ___informationName.text = DateFile.instance.GetActorName(id, true, false) + "（" + GetFame(id) + "）\n";
+                        if (Main.settings.shopName)
+                        {
+                            string shopName = GetShopName(id);
+                            if (Main.settings.healthStatus && shopName.Length > 0)
+                            {
+                                ___informationName.text += shopName + "\n";
+                            }
+                            else
+                            {
+                                ___informationName.text += shopName;
+                            }
+                        }
+                        if (Main.settings.workPlace)
+                        {
+                            string workPlace = GetWorkPlace(id);
+                            if (Main.settings.healthStatus && workPlace.Length != 0)
+                            {
+                            ___informationName.text += workPlace + "\n";
+                            }
+                            else
+                            {
+                                ___informationName.text += GetWorkPlace(id);
+                            }
+                        }
+                        if (Main.settings.healthStatus)
+                        {
+                            List<int> list = GetHPSP(id);
+                            List<int> list1 = GetPoison(id);
+                            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+                            {
+                                if (GetPoison(id)[0] == 1)
+                                {
+                                    if (list[0] != 0 || list[2] != 0)
+                                    {
+                                        ___informationName.text += DateFile.instance.SetColoer(20010, "受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
+
+                                    }
+                                    else
+                                    {
+                                        ___informationName.text += DateFile.instance.SetColoer(20007, "中毒");
+                                    }
+
+                                }
+                                else
+                                {
+                                    ___informationName.text += DateFile.instance.SetColoer(20010, "受伤");
+                                }
+
+                            }
+                            else { ___informationName.text += DateFile.instance.SetColoer(20004, "健康"); }
+                        }
+                        ___itemLevelText.text = string.Format("\t{0}({1})", GetAge(id), GetHealth(id));
                         ___itemMoneyText.text = GetChame(id, Main.settings.addonInfo);
                         Text text = ___informationMassage;
                         text.text += "\t立场：" + GetGoodness(id);
@@ -123,13 +191,13 @@ namespace CharacterFloatInfo
                             if (i < 14)
                             {
 
-                                text.text += string.Format("{0}\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
+                                text.text += string.Format("\t{0}\t\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
 
 
                             }
                             else
                             {
-                                text.text += string.Format("{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
+                                text.text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
                             }
                         }
 
@@ -224,5 +292,90 @@ namespace CharacterFloatInfo
 
         }
 
+        static string GetAge(int id)
+        {
+            int age = (int.Parse(DateFile.instance.GetActorDate(id, 11, false)));
+            return age.ToString();
+        }
+        static string GetHealth(int id)
+        {
+            int health = ActorMenu.instance.Health(id);
+            int maxhealth = ActorMenu.instance.MaxHealth(id);
+            string peopleHealthText = string.Format("{0}{1}</color> / {2}", ActorMenu.instance.Color3(health, maxhealth), health, maxhealth);
+            return peopleHealthText;
+        }
+
+        static List<int> GetHPSP(int id)
+        {
+            int Hp = ActorMenu.instance.Hp(id, false);
+            int maxHp = ActorMenu.instance.MaxHp(id);
+            int Sp = ActorMenu.instance.Sp(id, false);
+            int maxSp = ActorMenu.instance.MaxHp(id);
+            List<int> list = new List<int>
+            {Hp,
+            maxHp,
+            Sp,
+            maxSp
+            };
+            return list;
+        }
+
+        static List<int> GetPoison(int id)
+        {
+            List<int> list = new List<int> { 0 };
+
+            for (int i = 0; i < 6; i++)
+            {
+                int num = int.Parse(DateFile.instance.GetActorDate(id, 51 + i, false));
+                list[0] = num > 0 ? 1 : list[0];
+                list.Add(num);
+            }
+            return list;
+
+        }
+
+        static string GetShopName(int id)
+        {
+            string text = "";
+            if (GetGangLevelText(id) == "商人")
+            {
+                int typ = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(id, 9, false)), 16));
+                text = string.Format("{0}", DateFile.instance.storyShopDate[typ][0], DateFile.instance.massageDate[11][2]);
+            }
+            return text;
+        }
+
+        static string GetGangLevelText(int id)
+        {
+            int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
+            int num3 = int.Parse(DateFile.instance.GetActorDate(id, 20, false));
+            int key2 = (num3 >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(id, 14, false)));
+            int gangValueId = DateFile.instance.GetGangValueId(num2, num3);
+            string gang = DateFile.instance.presetGangGroupDateValue[gangValueId][key2];
+            return gang;
+        }
+
+        static string GetWorkPlace(int id)
+        {
+            // 返回 int[]{partid,placeid}
+            string text = "";
+            if (DateFile.instance.ActorIsWorking(id) != null)
+            {
+                
+                int[] place = DateFile.instance.ActorIsWorking(id);
+                List<int> list = new List<int>(DateFile.instance.actorsWorkingDate[place[0]][place[1]].Keys);
+                for (int i = 0; i < list.Count; i++)
+                {
+                    int key = list[i];
+                    if (DateFile.instance.actorsWorkingDate[place[0]][place[1]][key] == id)
+                    {
+                        int buildid = DateFile.instance.homeBuildingsDate[place[0]][place[1]][key][0];
+                        text = DateFile.instance.basehomePlaceDate[buildid][0];
+                    }
+                }
+               
+            }
+            return text;
+        }
     }
 }
