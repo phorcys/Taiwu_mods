@@ -22,9 +22,11 @@ namespace CharacterFloatInfo
         public bool healthStatus = false;
         public bool workPlace = false;
         public bool workerlist = false;
+        public bool hideShopInfo = true;//不显示商店的详细信息
+        public bool hideChameOfChildren = true;//不显示儿童的魅力
+        public bool hideShopNameOfNonBusiness = true;//不显示非商人的商店名
+        public bool useColorOfTeachingSkill = false;//用可以请教的技艺的颜色显示资质(120=红)
     }
-
-
 
     public static class Main
     {
@@ -60,7 +62,15 @@ namespace CharacterFloatInfo
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示未加成信息", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.shopName = GUILayout.Toggle(Main.settings.shopName, "显示商人商会", new GUILayoutOption[0]);
+            Main.settings.shopName = GUILayout.Toggle(Main.settings.shopName, "显示商会", new GUILayoutOption[0]);
+            Main.settings.hideShopNameOfNonBusiness = GUILayout.Toggle(Main.settings.hideShopNameOfNonBusiness, "隐藏非商人的商会", new GUILayoutOption[0]);
+            Main.settings.hideShopInfo = GUILayout.Toggle(Main.settings.hideShopInfo, "隐藏商店详细信息", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.hideChameOfChildren = GUILayout.Toggle(Main.settings.hideChameOfChildren, "儿童的魅力显示为年幼", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.healthStatus = GUILayout.Toggle(Main.settings.healthStatus, "显示健康状态", new GUILayoutOption[0]);
@@ -259,7 +269,7 @@ namespace CharacterFloatInfo
         static string GetChame(int id, bool shownoadd)
         {
             // 显示未加成数据 true
-            string text = ((int.Parse(DateFile.instance.GetActorDate(id, 11, false)) > 14) ? ((int.Parse(DateFile.instance.GetActorDate(id, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(id, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(id, 14, false)) - 1].Split(new char[]
+            string text = ((int.Parse(DateFile.instance.GetActorDate(id, 11, false)) > 14 || !Main.settings.hideChameOfChildren) ? ((int.Parse(DateFile.instance.GetActorDate(id, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(id, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(id, 14, false)) - 1].Split(new char[]
 {
                                         '|'
 })[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(id, 15, true)) / 100, 0, 9)] : DateFile.instance.massageDate[25][5].Split(new char[]
@@ -271,7 +281,7 @@ namespace CharacterFloatInfo
 })[0]);
             if (shownoadd)
             {
-                text += "（" + ((int.Parse(DateFile.instance.GetActorDate(id, 11, false)) > 14) ? ((int.Parse(DateFile.instance.GetActorDate(id, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(id, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(id, 14, false)) - 1].Split(new char[]
+                text += "（" + ((int.Parse(DateFile.instance.GetActorDate(id, 11, false)) > 14 || !Main.settings.hideChameOfChildren) ? ((int.Parse(DateFile.instance.GetActorDate(id, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(id, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(id, 14, false)) - 1].Split(new char[]
 {
                                         '|'
 })[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(id, 15, false)) / 100, 0, 9)] : DateFile.instance.massageDate[25][5].Split(new char[]
@@ -315,8 +325,9 @@ namespace CharacterFloatInfo
         {
             // 生活技能 0 战斗技能 1
             //显示未加成数据 true
+            int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
             int num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
-            string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - 20) / 10, 0, 8), string.Concat(new object[]
+            string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), string.Concat(new object[]
     {
                                                                 DateFile.instance.baseSkillDate[index+101*gongfa][0],
                                                                 DateFile.instance.massageDate[7003][4].Split(new char[]
@@ -331,7 +342,7 @@ namespace CharacterFloatInfo
             if (shownoadd)
             {
                 num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false));
-                text += "(" + DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - 20) / 10, 0, 8), num.ToString()) + ")";
+                text += "(" + DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), num.ToString()) + ")";
                 text += gongfa == 1 ? "" : num < 10 ? "\t" : num < 100 ? "\t" : "";
             }
 
@@ -385,10 +396,45 @@ namespace CharacterFloatInfo
         static string GetShopName(int id)
         {
             string text = "";
-            if (GetGangLevelText(id) == "商人")
+            if (GetGangLevelText(id) == "商人"||!Main.settings.hideShopNameOfNonBusiness)
             {
                 int typ = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(id, 9, false)), 16));
                 text = string.Format("{0}", DateFile.instance.storyShopDate[typ][0], DateFile.instance.massageDate[11][2]);
+                if(!Main.settings.hideShopInfo)
+                {
+                    //花费等级
+                    int moneyCost = 250;
+                    switch (DateFile.instance.GetActorGoodness(id))
+                    {
+                        case 1:
+                            moneyCost = 200;
+                            break;
+
+                        case 2:
+                            moneyCost = 0xe1;
+                            break;
+
+                        case 3:
+                            moneyCost = 0x113;
+                            break;
+
+                        case 4:
+                            moneyCost = 300;
+                            break;
+                    }
+                    //商品等级
+                    int level = DateFile.instance.GetActorValue(id, 0x1fa, false) * 10;
+                    //商队
+                    int shopTyp = int.Parse(DateFile.instance.GetGangDate(typ, 0x10));
+                    //商品等级Plus
+                    int newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + level;
+                    //实际花费
+                    int num = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), id, true, false);
+                    int shopSellCost = 30 + (num * 5);
+                    int shopSystemCost = moneyCost - (num * 15);
+                   
+                    text += "(Lv:" + DateFile.instance.storyShopLevel[shopTyp].ToString() + "+" + level.ToString() + ",Cost:" + shopSystemCost.ToString() + "/" + shopSellCost.ToString() + ")";
+                }
             }
             return text;
         }
