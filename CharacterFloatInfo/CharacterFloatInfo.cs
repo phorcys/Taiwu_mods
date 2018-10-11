@@ -21,6 +21,7 @@ namespace CharacterFloatInfo
         public bool shopName = false;
         public bool healthStatus = false;
         public bool workPlace = false;
+        public bool workerlist = false;
     }
 
 
@@ -67,7 +68,9 @@ namespace CharacterFloatInfo
             GUILayout.BeginHorizontal();
             Main.settings.workPlace = GUILayout.Toggle(Main.settings.workPlace, "显示太吾村民工作地点", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
-
+            GUILayout.BeginHorizontal();
+            Main.settings.workerlist = GUILayout.Toggle(Main.settings.workerlist, "村民分配工作界面启用", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
 
         }
 
@@ -81,26 +84,71 @@ namespace CharacterFloatInfo
     [HarmonyPatch(typeof(WorldMapSystem), "UpdatePlaceActor", new Type[] { typeof(int), typeof(int) })]
     public static class WorldMapSystem_UpdatePlaceActor_Patch
     {
-
-        static void Postfix(Transform ___actorHolder, ref int ___showPlaceActorTyp)
+        public static int index = 0;
+        static void Postfix(Transform ___actorHolder,ref int partId,ref int placeId,ref int ___showPlaceActorTyp,ref int ___choosePlaceId)
         {
             if (!Main.enabled)
             {
                 return;
             }
-
-            int count = ___actorHolder.childCount;
-            for (int i = 0; i < count; i++)
+            if (___showPlaceActorTyp == 1 && DateFile.instance.mianPlaceId== ___choosePlaceId)
             {
-               GameObject obj = ___actorHolder.GetChild(i).gameObject;
-                if (obj.GetComponent<PointerEnter>() == null && ___showPlaceActorTyp==1) {
-                    obj.AddComponent<PointerEnter>();
+                int count = ___actorHolder.childCount;
+                for (int i = index; i < count; i++)
+                {
+                    ___actorHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
                 }
+                index = count;
             }
-
         }
     }
 
+    //返回主界面从新计数
+    [HarmonyPatch(typeof(SystemSetting), "BackToStartMenu")]
+    public static class SystemSetting_BackToStartMenu_Patch
+    {
+
+        static void Postfix()
+        {
+            if (!Main.enabled)
+            {
+                return;
+            }
+            WorldMapSystem_UpdatePlaceActor_Patch.index = 0;
+        }
+    }
+
+    //防止今后更新启用这个函数
+    [HarmonyPatch(typeof(WorldMapSystem), "RemoveActor")]
+    public static class WorldMapSystem_RemoveActor_Patch
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled)
+            {
+                return;
+            }
+            WorldMapSystem_UpdatePlaceActor_Patch.index = 0;
+        }
+    }
+
+    //每次打开窗口之前obj已全部销毁
+    [HarmonyPatch(typeof(HomeSystem), "GetActor")]
+    public static class HomeSystem_GetActor_Patch
+    {       
+        static void Postfix(Transform ___listActorsHolder)
+        {
+            if (!Main.enabled || !Main.settings.workerlist)
+            {
+                return;
+            }
+            int count = ___listActorsHolder.childCount;
+            for (int i = 0; i < count; i++)
+            {
+                ___listActorsHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
@@ -239,7 +287,7 @@ namespace CharacterFloatInfo
 
         static string GetFame(int id)
         {
-            string text = ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, false)));
+            string text = ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
             return text;
         }
 
