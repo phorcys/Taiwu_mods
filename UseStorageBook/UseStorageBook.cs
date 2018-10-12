@@ -24,6 +24,7 @@ namespace UseStorageBook
             Main.logger.Log("success!");
             return list;
         }
+
         public static void NewSetBook()
         {
             var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -101,6 +102,7 @@ namespace UseStorageBook
                 __state = -1;
             }
         }
+
         static void Postfix(ref int __state)
         {
             if (__state > 0)
