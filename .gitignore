@@ -336,3 +336,4 @@ Properties
 *.dll
 *.exe
 *.sln
+build
