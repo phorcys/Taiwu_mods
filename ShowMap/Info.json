@@ -1,0 +1,8 @@
+﻿{
+  "Id": "ShowMap",
+  "DisplayName": "ShowMap",
+  "Author": "xiaoye1024",
+  "Version": "1.0.0",
+  "AssemblyName": "ShowMap.dll",
+  "EntryMethod": "ShowMap.Main.Load"
+}
