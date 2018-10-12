@@ -22,6 +22,7 @@ namespace CharacterFloatInfo
         public bool healthStatus = false;
         public bool workPlace = false;
         public bool workerlist = false;
+        public bool showMood = false;//显示心情
         public bool hideShopInfo = true;//不显示商店的详细信息
         public bool hideChameOfChildren = true;//不显示儿童的魅力
         public bool hideShopNameOfNonBusiness = true;//不显示非商人的商店名
@@ -67,7 +68,7 @@ namespace CharacterFloatInfo
             Main.settings.hideShopInfo = GUILayout.Toggle(Main.settings.hideShopInfo, "隐藏商店详细信息", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.hideChameOfChildren = GUILayout.Toggle(Main.settings.hideChameOfChildren, "儿童的魅力显示为年幼", new GUILayoutOption[0]);
+            Main.settings.hideChameOfChildren = GUILayout.Toggle(Main.settings.hideChameOfChildren, "隐藏儿童的真实魅力", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
@@ -76,12 +77,14 @@ namespace CharacterFloatInfo
             Main.settings.healthStatus = GUILayout.Toggle(Main.settings.healthStatus, "显示健康状态", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
+            Main.settings.showMood = GUILayout.Toggle(Main.settings.showMood, "显示心情", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             Main.settings.workPlace = GUILayout.Toggle(Main.settings.workPlace, "显示太吾村民工作地点", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.workerlist = GUILayout.Toggle(Main.settings.workerlist, "村民分配工作界面启用", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
-
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -169,10 +172,12 @@ namespace CharacterFloatInfo
             {
                 return;
             }
-
             if (tips != null && ___anTips == false && on)
             {
 
+                bool needShow=false;
+                int id = -1;
+                //建筑/地图左边的列表
                 string[] array = tips.name.Split(new char[]
 {
                                         ','
@@ -182,88 +187,104 @@ namespace CharacterFloatInfo
                     int typ = int.Parse(typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(WorldMapSystem.instance).ToString());
                     if (typ == 1 && WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId)
                     {
-                        int id = int.Parse(array[1]);
-                        ___informationMassage.text = "";
-                        ___informationName.text = DateFile.instance.GetActorName(id, true, false) + "（" + GetFame(id) + "）\n";
-                        if (Main.settings.shopName)
+                        id = int.Parse(array[1]);
+                        needShow = true;
+                    }
+                }
+                //对话窗口的人物头像
+                else if(array[0] == "FaceHolder")
+                {
+                    id = MassageWindow.instance.eventMianActorId;
+                    needShow = true;
+                }
+                if (needShow)
+                {
+                    ___informationMassage.text = "";
+                    ___informationName.text = DateFile.instance.GetActorName(id, true, false) + "（" + GetFame(id) +
+                                                                                   (!Main.settings.showMood ? "" : "," + GetMood(id))+"）\n";
+                    if (Main.settings.shopName)
+                    {
+                        string shopName = GetShopName(id);
+                        if (Main.settings.healthStatus && shopName.Length > 0)
                         {
-                            string shopName = GetShopName(id);
-                            if (Main.settings.healthStatus && shopName.Length > 0)
-                            {
-                                ___informationName.text += shopName + "\n";
-                            }
-                            else
-                            {
-                                ___informationName.text += shopName;
-                            }
+                            ___informationName.text += shopName + "\n";
                         }
-                        if (Main.settings.workPlace)
+                        else
                         {
-                            string workPlace = GetWorkPlace(id);
-                            if (Main.settings.healthStatus && workPlace.Length != 0)
-                            {
-                            ___informationName.text += workPlace + "\n";
-                            }
-                            else
-                            {
-                                ___informationName.text += GetWorkPlace(id);
-                            }
+                            ___informationName.text += shopName;
                         }
-                        if (Main.settings.healthStatus)
+                    }
+                    if (Main.settings.workPlace)
+                    {
+                        string workPlace = GetWorkPlace(id);
+                        if (Main.settings.healthStatus && workPlace.Length != 0)
                         {
-                            List<int> list = GetHPSP(id);
-                            List<int> list1 = GetPoison(id);
-                            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+                        ___informationName.text += workPlace + "\n";
+                        }
+                        else
+                        {
+                            ___informationName.text += GetWorkPlace(id);
+                        }
+                    }
+                    if (Main.settings.healthStatus)
+                    {
+                        List<int> list = GetHPSP(id);
+                        List<int> list1 = GetPoison(id);
+                        if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+                        {
+                            if (GetPoison(id)[0] == 1)
                             {
-                                if (GetPoison(id)[0] == 1)
+                                if (list[0] != 0 || list[2] != 0)
                                 {
-                                    if (list[0] != 0 || list[2] != 0)
-                                    {
-                                        ___informationName.text += DateFile.instance.SetColoer(20010, "受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
-
-                                    }
-                                    else
-                                    {
-                                        ___informationName.text += DateFile.instance.SetColoer(20007, "中毒");
-                                    }
+                                    ___informationName.text += DateFile.instance.SetColoer(20010, "受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
 
                                 }
                                 else
                                 {
-                                    ___informationName.text += DateFile.instance.SetColoer(20010, "受伤");
+                                    ___informationName.text += DateFile.instance.SetColoer(20007, "中毒");
                                 }
-
-                            }
-                            else { ___informationName.text += DateFile.instance.SetColoer(20004, "健康"); }
-                        }
-                        ___itemLevelText.text = string.Format("\t{0}({1})", GetAge(id), GetHealth(id));
-                        ___itemMoneyText.text = GetChame(id, Main.settings.addonInfo);
-                        Text text = ___informationMassage;
-                        text.text += "\t立场：" + GetGoodness(id);
-                        text.text += "\t\t\t喜好：" + Gethobby(id, 0);
-                        text.text += "\t\t\t厌恶：" + Gethobby(id, 1) + "\n\n";
-                        string text1 = Main.settings.addonInfo ? "\t\t\t\t" : "\t";
-
-                        for (int i = 0; i < 16; i++)
-                        {
-                            if (i < 14)
-                            {
-
-                                text.text += string.Format("\t{0}\t\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
-
 
                             }
                             else
                             {
-                                text.text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
+                                ___informationName.text += DateFile.instance.SetColoer(20010, "受伤");
                             }
+
                         }
-
-
-                        ___anTips = true;
+                        else { ___informationName.text += DateFile.instance.SetColoer(20004, "健康"); }
                     }
+                    ___itemLevelText.text = string.Format("\t{0}({1})", GetAge(id), GetHealth(id));
+                    ___itemMoneyText.text = GetChame(id, Main.settings.addonInfo);
+                    Text text = ___informationMassage;
+                    text.text += "\t立场：" + GetGoodness(id);
+                    text.text += "\t\t\t喜好：" + Gethobby(id, 0);
+                    text.text += "\t\t\t厌恶：" + Gethobby(id, 1) + "\n\n";
+                    string text1 = Main.settings.addonInfo ? "\t\t\t\t" : "\t";
+
+                    for (int i = 0; i < 16; i++)
+                    {
+                        if (i < 14)
+                        {
+
+                            text.text += string.Format("\t{0}\t\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
+
+
+                        }
+                        else
+                        {
+                            text.text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
+                        }
+                    }
+
+
+                    ___anTips = true;
                 }
             }
+        }
+        //心情
+        static string GetMood(int id)
+        {
+            return ActorMenu.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
         }
 
         static string GetChame(int id, bool shownoadd)
