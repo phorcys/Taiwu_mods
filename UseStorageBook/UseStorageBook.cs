@@ -12,6 +12,11 @@ namespace UseStorageBook
     [HarmonyPatch(typeof(HomeSystem), "SetBook")]
     public static class HomeSystem_SetBook_Patch
     {
+        /// <summary>
+        /// 将HomeSystem.SetBook 修改为 NewSetBook
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             Main.logger.Log("start to patch SetBook");
@@ -25,6 +30,9 @@ namespace UseStorageBook
             return list;
         }
 
+        /// <summary>
+        /// 在加载主角背包中的书同时加载仓库中的书
+        /// </summary>
         public static void NewSetBook()
         {
             var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -68,6 +76,9 @@ namespace UseStorageBook
     [HarmonyPatch(typeof(ReadBook), "CloseReadBook")]
     public static class ReadBook_CloseReadBook_Patch
     {
+        /// <summary>
+        /// 仓库中的书耐久为0时将其移除
+        /// </summary>
         static void Prefix()
         {
             var df = DateFile.instance;
@@ -87,9 +98,18 @@ namespace UseStorageBook
         }
     }
 
+    /// <summary>
+    /// 解决鼠标放在书本上不显示仓库中书上时，不显示仓库中书的阅读状态的BUG
+    /// （暂时将书加入背包）
+    /// </summary>
     [HarmonyPatch(typeof(WindowManage), "ShowBookMassage")]
     public static class WindowsManage_ShowBookMassage_Patch
     {
+        /// <summary>
+        /// 记录当前书的id，并将仓库中的书暂时加入背包
+        /// </summary>
+        /// <param name="itemId"></param>
+        /// <param name="__state"></param>
         static void Prefix(ref int itemId, ref int __state)
         {
             if (DateFile.instance.actorItemsDate[-999].ContainsKey(itemId))
@@ -103,6 +123,10 @@ namespace UseStorageBook
             }
         }
 
+        /// <summary>
+        /// 将书从背包中移除
+        /// </summary>
+        /// <param name="__state"></param>
         static void Postfix(ref int __state)
         {
             if (__state > 0)
