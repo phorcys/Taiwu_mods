@@ -5,8 +5,8 @@ cd /build/Taiwu_Mods
 
 # Download pre-compiled llvm libs
 echo "downloading dep dll packs...."
-#curl -sLO https://github.com/phorcys/Taiwu_mods/releases/download/dlls/dlls-181013.zip
-#unzip ./dlls-181013.zip -d ..
+curl -sLO https://github.com/phorcys/Taiwu_mods/releases/download/dlls/dlls-181013.zip
+unzip ./dlls-181013.zip -d ..
 
 
 mkdir -p build ; cd build

@@ -1,17 +1,9 @@
-##
-## $Id$
-## It is part of the SolidOpt Copyright Policy (see Copyright.txt)
-## For further details see the nearest License.txt
-##
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
 
 if (WIN32)
-# TODO: Implement it as project(SolidOpt CS), it should need just renaming of
-# the existing modules
 
 cmake_minimum_required(VERSION 3.11)
-
 project("Taiwu_Mods" CSharp)
 set(CMAKE_CSharp_FLAGS "/langversion:6")
 include(CSharpUtilities)
@@ -104,8 +96,8 @@ MACRO(SUBDIRLIST result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
   SET(dirlist "")
   FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child} AND  (NOT ${child} STREQUAL "build") AND (NOT ${child} STREQUAL ".git") AND (NOT ${child} STREQUAL "CMakeModules") AND (NOT ${child} STREQUAL ".travis"))
-	  message(STATUS "Found Mod: " ${child})
+    IF(IS_DIRECTORY ${curdir}/${child} AND  (NOT ${child} STREQUAL "build") AND (NOT ${child} STREQUAL ".git") AND (NOT ${child} STREQUAL "CMakeModules") AND (NOT ${child} STREQUAL ".travis") AND (EXISTS ${curdir}/${child}/Info.json))
+      message(STATUS "Found Mod: " ${child})
       LIST(APPEND dirlist ${child})
     ENDIF()
   ENDFOREACH()
@@ -185,6 +177,7 @@ MACRO(CREATEMOD moddir)
 		${STEAMDIR}${DLLPATH}UnityEngine.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.CoreModule.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.ImageConversionModule.dll
+		${STEAMDIR}${DLLPATH}UnityEngine.TextRenderingModule.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.IMGUIModule.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.UI.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.UIElementsModule.dll
@@ -292,6 +285,7 @@ using System.Runtime.Versioning\;
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine "${STEAMDIR}${DLLPATH}UnityEngine.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.CoreModule "${STEAMDIR}${DLLPATH}UnityEngine.CoreModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${STEAMDIR}${DLLPATH}UnityEngine.ImageConversionModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${STEAMDIR}${DLLPATH}UnityEngine.TextRenderingModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.IMGUIModule "${STEAMDIR}${DLLPATH}UnityEngine.IMGUIModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UI "${STEAMDIR}${DLLPATH}UnityEngine.UI.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIElementsModule "${STEAMDIR}${DLLPATH}UnityEngine.UIElementsModule.dll")
