@@ -3,4 +3,4 @@ mono:
   - latest
 install:
   - sudo apt-get install -y zip curl cmake
-script: '/bin/bash -ex TaiwuMods/.travis/build-linux.bash'
+script: '/bin/bash -ex phorcys/TaiwuMods/.travis/build-linux.bash'
