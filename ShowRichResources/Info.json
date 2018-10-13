@@ -1,0 +1,8 @@
+﻿{
+  "Id": "ShowRichResources",
+  "DisplayName": "ShowRichResources",
+  "Author": " ",
+  "Version": "1.0.0",
+  "AssemblyName": "ShowRichResources.dll",
+  "EntryMethod": "ShowRichResources.Main.Load"
+}
