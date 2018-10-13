@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.11)
 project("Taiwu_Mods" CSharp)
 
 SET(DLLPATH "The Scroll Of Taiwu Alpha V1.0_Data\\Managed\\")
