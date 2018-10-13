@@ -1,6 +1,6 @@
 ﻿{
   "Id": "AutoChooseAttackPart",
-  "DisplayName": "AutoChooseAttackPart",
+  "DisplayName": "自动变招",
   "Author": "xyzkljl1",
   "Version": "1.0.0",
   "AssemblyName": "AutoChooseAttackPart.dll",
