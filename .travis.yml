@@ -1,0 +1,13 @@
+language: csharp
+matrix:
+    include:
+        - os: linux
+          env:
+            - NAME="Linux build"
+          dist: trusty
+          services: docker
+          install: "docker pull phorcys/taiwumodbuild:1.0"
+          script: 'travis_wait docker run -v $(pwd):/build/Taiwu_Mods -e TRAVIS_PULL_REQUEST -e TRAVIS_BRANCH -e UPLOAD_URL phorcys/taiwumodbuild:1.0 /bin/bash -ex /TaiwuMods/.travis/build-linux.bash'
+git:
+  depth: false # Unshallow clone to obtain proper GIT_VERSION
+  submodules: false
