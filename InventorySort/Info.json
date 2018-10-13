@@ -1,0 +1,8 @@
+﻿{
+  "Id": "InventorySort",
+  "DisplayName": "商店重新排序",
+  "Author": "phorcys",
+  "Version": "1.0.5",
+  "AssemblyName": "InventorySort.dll",
+  "EntryMethod": "InventorySort.Main.Load"
+}

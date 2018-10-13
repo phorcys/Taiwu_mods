@@ -1,0 +1,8 @@
+﻿{
+  "Id": "SelectBattleReward",
+  "DisplayName": "选择战利品",
+  "Author": "phorcys",
+  "Version": "1.0.2",
+  "AssemblyName": "SelectBattleReward.dll",
+  "EntryMethod": "SelectBattleReward.Main.Load"
+}

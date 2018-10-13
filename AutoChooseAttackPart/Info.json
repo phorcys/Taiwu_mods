@@ -1,0 +1,8 @@
+﻿{
+  "Id": "AutoChooseAttackPart",
+  "DisplayName": "AutoChooseAttackPart",
+  "Author": "xyzkljl1",
+  "Version": "1.0.0",
+  "AssemblyName": "AutoChooseAttackPart.dll",
+  "EntryMethod": "AutoChooseAttackPart.Main.Load"
+}
