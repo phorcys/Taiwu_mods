@@ -1,0 +1,8 @@
+﻿{
+  "Id": "BaseResourceMod",
+  "DisplayName": "基础资源框架",
+  "Author": "phorcys",
+  "Version": "1.0.3",
+  "AssemblyName": "BaseResourceMod.dll",
+  "EntryMethod": "BaseResourceMod.Main.Load"
+}

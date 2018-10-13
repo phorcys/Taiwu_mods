@@ -1,0 +1,9 @@
+﻿{
+  "Id": "HerbRecipes",
+  "DisplayName": "药引烹饪配方精制材料说明",
+  "Author": "phorcys",
+  "Version": "2.3.0",
+  "AssemblyName": "HerbRecipes.dll",
+  "EntryMethod": "HerbRecipes.Main.Load",
+  "Requirements": ["BaseResourceMod"]
+}
