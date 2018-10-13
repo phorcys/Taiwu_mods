@@ -1,7 +1,7 @@
 ﻿{
   "Id": "ShowRichResources",
   "DisplayName": "ShowRichResources",
-  "Author": " ",
+  "Author": "xiaoye1024",
   "Version": "1.0.0",
   "AssemblyName": "ShowRichResources.dll",
   "EntryMethod": "ShowRichResources.Main.Load"
