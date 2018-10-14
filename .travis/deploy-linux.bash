@@ -25,7 +25,7 @@ do
 	
 	echo "Processing Mod $modname commit $lastcommit , last build commit $lastbuildcommit \n   last commit time: $lastcommittime   last build commit time : $lastbuildcommittime"
 	
-	if [ "$lastcommit" != "$lastbuildcommit" ]
+	if [ "$lastcommit" != "$lastbuildcommit" ] || [ "$lastbuildcommit" = "" ]
 	then
 		COMM_TAG="$(git describe --tags $(git rev-list --tags --max-count=1))"
 		modurl="https://github.com/phorcys/Taiwu_mods/releases/download/${COMM_TAG}/${modzip}"
@@ -37,7 +37,7 @@ do
 		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/ | true
 		echo "Published Mod  ${modfullname} to Github Release page, Release tag : ${COMM_TAG}"
 	fi
-	\cp -Rf ${HOME}/.taiwu/Mods_publish/ ../Mods_publish/
+	\cp -Rf ${HOME}/.taiwu/Mods_publish/* ../Mods_publish/
 
 	echo "List Published Mods:"
 	ls -al ../Mods_publish/

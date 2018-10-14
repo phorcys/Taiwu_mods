@@ -21,4 +21,5 @@ cd ..
 
 # If it compiled succesfully let's deploy
 echo "build finished , result : $? , TRAVIS_BRANCH $TRAVIS_BRANCH , TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST"
-if [ $? -eq 0 ] && [ "$TRAVIS_BRANCH" = "master" ]  && [ "$TRAVIS_PULL_REQUEST" = false ]; then /bin/bash -ex .travis/deploy-linux.bash ; fi
+/bin/bash -ex .travis/deploy-linux.bash
+
