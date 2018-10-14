@@ -20,6 +20,9 @@ namespace NpcScan
         int genderValue = 0;
         int charmValue = 0;
         int samsaraCount = 0;
+        int healthValue = 1;
+        bool desc = true;
+        int sortIndex = 0;
 
         //从属gangText
         string gangValue = "";
@@ -87,6 +90,7 @@ namespace NpcScan
                 Debug.LogException(e);
             }
             return false;
+            GUILayout.Button("");
         }
 
         private static UI mInstance = null;
@@ -235,10 +239,11 @@ namespace NpcScan
                 new Column {name = "年龄", width = 30},
                 new Column {name = "性别", width = 30},
                 new Column {name = "位置", width = 130},
-                new Column {name = "魅力", width = 60},
+                new Column {name = "魅力", width = 70},
                 new Column {name = "从属", width = 60},//从属gangText
                 new Column {name = "身份", width = 70},//身份gangLevelText
                 new Column {name = "立场", width = 30},//立场goodnessText
+                new Column {name = "健康", width = 60},
                 new Column {name = "膂力", width = 30},
                 new Column {name = "体质", width = 30},
                 new Column {name = "灵敏", width = 30},
@@ -350,6 +355,9 @@ namespace NpcScan
             GUILayout.Space(5);
             GUILayout.Label("魅力:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(charmValue.ToString(), 10, GUILayout.Width(30)), out charmValue);
+            GUILayout.Space(5);
+            GUILayout.Label("健康:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(healthValue.ToString(), 10, GUILayout.Width(30)), out healthValue);
             GUILayout.Space(5);
             GUILayout.Label("轮回次数:", GUILayout.Width(60));
             int.TryParse(GUILayout.TextField(samsaraCount.ToString(), 10, GUILayout.Width(30)), out samsaraCount);
@@ -495,6 +503,7 @@ namespace NpcScan
                     int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
                     int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, true));
                     int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
+                    int health = ActorMenu.instance.Health(index);
 
                     if (inv >= intValue
                         && str >= strValue
@@ -504,6 +513,7 @@ namespace NpcScan
                         && pat >= patValue
                         && charm >= charmValue
                         && age >= minage
+                        && health >= healthValue
                         && samsara >= samsaraCount
                         && (maxage == 0 || age <= maxage)
                         && (genderValue == 0 || gender == genderValue)
@@ -602,6 +612,7 @@ namespace NpcScan
                                 dateFile.GetGangDate(groupid, 0),//从属gangText
                                 dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false),//身份gangLevelText
                                 gn,//立场goodnessText
+                                GetHealth(index),//健康
                                 str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
                                 GetLevel(index, 0, 1),
                                 GetLevel(index, 1, 1) ,
@@ -645,7 +656,7 @@ namespace NpcScan
 
             if (actorList.Count > 0)
             {
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(40), GUILayout.Width(Screen.width * 0.8f - 40f));
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(80), GUILayout.Width(Screen.width * 0.8f - 40f));
                 GUILayout.BeginVertical("Box");
                 GUILayout.BeginHorizontal("box");
                 var amountWidth = mColumns.Where(x => !x.skip).Sum(x => x.width);
@@ -660,6 +671,20 @@ namespace NpcScan
                     if (mColumns[i].skip)
                         continue;
                     GUILayout.Label(mColumns[i].name, colWidth[i]);
+                }
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal("box");
+                for (int i = 0; i < mColumns.Count; i++)
+                {
+                    if (mColumns[i].skip)
+                        continue;
+                    if (GUILayout.Button("O", colWidth[i]))
+                    {
+                        Debug.Log("Clicked the " + mColumns[i].name);
+                        sortIndex = i;
+                        actorList.Sort(SortList);
+                        desc = !desc;
+                    }
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.EndVertical();
@@ -768,6 +793,70 @@ namespace NpcScan
         static int GetLevelValue(int id, int index, int gongfa)
         {
             return int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
+        }
+        static string GetHealth(int key, int value = 0)
+        {
+            int num = ActorMenu.instance.Health(key);
+            int num2 = ActorMenu.instance.MaxHealth(key);
+            if (value > 0 && num2 - num > value)
+            {
+                value = Mathf.Max(value / 5, 1);
+            }
+            int num3 = Mathf.Clamp(num + value, 0, num2);
+            DateFile.instance.actorsDate[key][12] = num3.ToString();
+            if (int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1)
+            {
+                return "??? / ???";
+            }
+            else
+            {
+                return string.Format("{0}{1}</color> / {2}", ActorMenu.instance.Color3(num3, num2), num3, num2);
+            }
+        }
+        private int SortList(string[] a, string[] b)
+        {
+            int m = 0;
+            int n = 0;
+            string s1 = a[sortIndex];
+            string s2 = b[sortIndex];
+            if (s1.Contains("color"))
+            {
+                if (s1.Contains("("))
+                {
+                    s1 = System.Text.RegularExpressions.Regex.Replace(s1, "\\(.*?\\)", "");
+                    s2 = System.Text.RegularExpressions.Regex.Replace(s2, "\\(.*?\\)", "");
+                }
+                else
+                {
+                    s1 = System.Text.RegularExpressions.Regex.Replace(s1, "<.*?>", "");
+                    s2 = System.Text.RegularExpressions.Regex.Replace(s2, "<.*?>", "");
+                }
+            }
+            int.TryParse(s1, out m);
+            int.TryParse(s2, out n);
+            if (desc)
+            {
+                if (m > n)
+                {
+                    return -1;
+                }
+                else if (m < n)
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                if (m > n)
+                {
+                    return 1;
+                }
+                else if (m < n)
+                {
+                    return -1;
+                }
+            }
+            return 0;
         }
 
     }
