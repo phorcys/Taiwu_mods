@@ -12,8 +12,16 @@ do
 	modversion=`echo $modfullname |sed -e "s/.*-//g"`
 	lastcommit=`git log ../../${modname}|  head -n 1 | awk  '{print $2}'`
 	lastcommittime=`git log ../../${modname}|  head -n 3 |tail -n 1| sed -e "s/Date:\s*//g"`
-	lastbuildcommit=`cat ${HOME}/.taiwu/${modname}.commit`
-	lastbuildcommittime=`cat ${HOME}/.taiwu/${modname}.commit.time`
+	lastbuildcommit=""
+	if [ -f ${HOME}/.taiwu/${modname}.commit ]
+	then 
+		lastbuildcommit=`cat ${HOME}/.taiwu/${modname}.commit` | true
+	fi
+	lastbuildcommittime=
+	if [ -f ${HOME}/.taiwu/${modname}.commit.time ]
+	then
+		lastbuildcommittime=`cat ${HOME}/.taiwu/${modname}.commit.time` | true
+	fi
 	
 	echo "Processing Mod $modname commit $lastcommit , last build commit $lastbuildcommit \n   last commit time: $lastcommittime   last build commit time : $lastbuildcommittime"
 	
@@ -25,8 +33,8 @@ do
 		# mods that need publish and regenerate json
 		python ../../.travis/addnewrelease.py ${HOME}/.taiwu/${modname}.json "${modname}" "${modversion}" "${modurl}"
 		
-		\cp -Rf ${modzip} ${HOME}/.taiwu/Mods_publish/
-		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/
+		\cp -Rf ${modzip} ${HOME}/.taiwu/Mods_publish/ | true
+		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/ | true
 		echo "Published Mod  ${modfullname} to Github Release page, Release tag : ${COMM_TAG}"
 	fi
 	\cp -Rf ${HOME}/.taiwu/Mods_publish/ ../Mods_publish/
