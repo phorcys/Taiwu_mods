@@ -20,11 +20,56 @@ namespace NpcScan
         int genderValue = 0;
         int charmValue = 0;
         int samsaraCount = 0;
+
+        //从属gangText
+        string gangValue = "";
+        //身份gangLevelText
+        string gangLevelValue = "";
+        //立场goodnessText
+        bool[] goodness = new bool[] { true, false, false, false, false, false };
+        string[] goodnessValue = new string[] { "全部", "刚正", "仁善", "中庸", "叛逆", "唯我" };
+        //内功
+        //身法
+        //绝技
+        //拳掌
+        //指法
+        //腿法
+        //暗器
+        //剑法
+        //刀法
+        //长兵
+        //奇门
+        //软兵
+        //御射
+        //乐器
+        int[] gongfa = new int[14];
+
+        //音律
+        //弈棋
+        //诗书
+        //绘画
+        //术数
+        //品鉴
+        //锻造
+        //制木
+        //医术
+        //毒术
+        //织锦
+        //巧匠
+        //道法
+        //佛学
+        //厨艺
+        //杂学
+        int[] life = new int[16];
+
+
+
         string name = "";
 
         List<string[]> actorList = new List<string[]>();
 
         Vector2 scrollPosition = new Vector2(0, 0);
+        Vector2 scrollPosition2 = new Vector2(0, 0);
 
         bool isall = true;
         bool isman = false;
@@ -189,8 +234,11 @@ namespace NpcScan
                 new Column {name = "姓名", width = 60},
                 new Column {name = "年龄", width = 30},
                 new Column {name = "性别", width = 30},
-                new Column {name = "位置", width = 120},
+                new Column {name = "位置", width = 130},
                 new Column {name = "魅力", width = 60},
+                new Column {name = "从属", width = 60},//从属gangText
+                new Column {name = "身份", width = 70},//身份gangLevelText
+                new Column {name = "立场", width = 30},//立场goodnessText
                 new Column {name = "膂力", width = 30},
                 new Column {name = "体质", width = 30},
                 new Column {name = "灵敏", width = 30},
@@ -235,7 +283,7 @@ namespace NpcScan
         private void CalculateWindowPos()
         {
 
-            mWindowRect = new Rect(200f, 50f, 0, 0);
+            mWindowRect = new Rect(Screen.width * 0.1f, 50f, Screen.width * 0.8f, 0);
         }
 
         private void WindowFunction(int windowId)
@@ -256,7 +304,7 @@ namespace NpcScan
             int.TryParse(GUILayout.TextField(minage.ToString(), 3, GUILayout.Width(30)), out minage);
             GUILayout.Label("--", GUILayout.Width(10));
             int.TryParse(GUILayout.TextField(maxage.ToString(), 3, GUILayout.Width(30)), out maxage);
-            GUILayout.Space(5);
+            GUILayout.Space(10);
             GUILayout.Label("性别:", GUILayout.Width(30));
             GUILayout.Space(5);
             isall = GUILayout.Toggle(isall, "全部", GUILayout.Width(45));
@@ -304,12 +352,130 @@ namespace NpcScan
             int.TryParse(GUILayout.TextField(charmValue.ToString(), 10, GUILayout.Width(30)), out charmValue);
             GUILayout.Space(5);
             GUILayout.Label("轮回次数:", GUILayout.Width(60));
-            int.TryParse(GUILayout.TextField(samsaraCount.ToString(), 10, GUILayout.MinWidth(30)), out samsaraCount);
+            int.TryParse(GUILayout.TextField(samsaraCount.ToString(), 10, GUILayout.Width(30)), out samsaraCount);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("内功:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[0].ToString(), 10, GUILayout.Width(30)), out gongfa[0]);
+            GUILayout.Space(5);
+            GUILayout.Label("身法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[1].ToString(), 10, GUILayout.Width(30)), out gongfa[1]);
+            GUILayout.Space(5);
+            GUILayout.Label("绝技:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[2].ToString(), 10, GUILayout.Width(30)), out gongfa[2]);
+            GUILayout.Space(5);
+            GUILayout.Label("拳掌:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[3].ToString(), 10, GUILayout.Width(30)), out gongfa[3]);
+            GUILayout.Space(5);
+            GUILayout.Label("指法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[4].ToString(), 10, GUILayout.Width(30)), out gongfa[4]);
+            GUILayout.Space(5);
+            GUILayout.Label("腿法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[5].ToString(), 10, GUILayout.Width(30)), out gongfa[5]);
+            GUILayout.Space(5);
+            GUILayout.Label("暗器:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[6].ToString(), 10, GUILayout.Width(30)), out gongfa[6]);
+            GUILayout.Space(5);
+            GUILayout.Label("剑法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[7].ToString(), 10, GUILayout.Width(30)), out gongfa[7]);
+            GUILayout.Space(5);
+            GUILayout.Label("刀法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[8].ToString(), 10, GUILayout.Width(30)), out gongfa[8]);
+            GUILayout.Space(5);
+            GUILayout.Label("长兵:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[9].ToString(), 10, GUILayout.Width(30)), out gongfa[9]);
+            GUILayout.Space(5);
+            GUILayout.Label("奇门:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[10].ToString(), 10, GUILayout.Width(30)), out gongfa[10]);
+            GUILayout.Space(5);
+            GUILayout.Label("软兵:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[11].ToString(), 10, GUILayout.Width(30)), out gongfa[11]);
+            GUILayout.Space(5);
+            GUILayout.Label("御射:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[12].ToString(), 10, GUILayout.Width(30)), out gongfa[12]);
+            GUILayout.Space(5);
+            GUILayout.Label("乐器:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(gongfa[13].ToString(), 10, GUILayout.Width(30)), out gongfa[13]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("音律:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[0].ToString(), 10, GUILayout.Width(30)), out life[0]);
+            GUILayout.Space(5);
+            GUILayout.Label("弈棋:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[1].ToString(), 10, GUILayout.Width(30)), out life[1]);
+            GUILayout.Space(5);
+            GUILayout.Label("诗书:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[2].ToString(), 10, GUILayout.Width(30)), out life[2]);
+            GUILayout.Space(5);
+            GUILayout.Label("绘画:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[3].ToString(), 10, GUILayout.Width(30)), out life[3]);
+            GUILayout.Space(5);
+            GUILayout.Label("术数:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[4].ToString(), 10, GUILayout.Width(30)), out life[4]);
+            GUILayout.Space(5);
+            GUILayout.Label("品鉴:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[5].ToString(), 10, GUILayout.Width(30)), out life[5]);
+            GUILayout.Space(5);
+            GUILayout.Label("锻造:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[6].ToString(), 10, GUILayout.Width(30)), out life[6]);
+            GUILayout.Space(5);
+            GUILayout.Label("制木:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[7].ToString(), 10, GUILayout.Width(30)), out life[7]);
+            GUILayout.Space(5);
+            GUILayout.Label("医术:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[8].ToString(), 10, GUILayout.Width(30)), out life[8]);
+            GUILayout.Space(5);
+            GUILayout.Label("毒术:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[9].ToString(), 10, GUILayout.Width(30)), out life[9]);
+            GUILayout.Space(5);
+            GUILayout.Label("织锦:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[10].ToString(), 10, GUILayout.Width(30)), out life[10]);
+            GUILayout.Space(5);
+            GUILayout.Label("巧匠:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[11].ToString(), 10, GUILayout.Width(30)), out life[11]);
+            GUILayout.Space(5);
+            GUILayout.Label("道法:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[12].ToString(), 10, GUILayout.Width(30)), out life[12]);
+            GUILayout.Space(5);
+            GUILayout.Label("佛学:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[13].ToString(), 10, GUILayout.Width(30)), out life[13]);
+            GUILayout.Space(5);
+            GUILayout.Label("厨艺:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[14].ToString(), 10, GUILayout.Width(30)), out life[14]);
+            GUILayout.Space(5);
+            GUILayout.Label("杂学:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(life[15].ToString(), 10, GUILayout.Width(30)), out life[15]);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("姓名（包括前世）:", GUILayout.Width(120));
             name = GUILayout.TextField(name, 10, GUILayout.Width(80));
+            //从属gangText
+            GUILayout.Label("从属:", GUILayout.Width(50));
+            gangValue = GUILayout.TextField(gangValue, 10, GUILayout.Width(60));
+            //身份gangLevelText
+            //GUILayout.Label("从属:", GUILayout.Width(50));
+            //gangValue = GUILayout.TextField(gangValue, 10, GUILayout.Width(60));
+            //立场goodnessText
+            string goodnessText = "";
+            GUILayout.Label("立场:", GUILayout.Width(30));
+            for (int i = 0; i < goodness.Length; i++)
+            {
+                goodness[i] = GUILayout.Toggle(goodness[i], goodnessValue[i].ToString(), GUILayout.Width(45));
+                if (goodness[i])
+                {
+                    for (int j = 0; j < goodness.Length; j++)
+                    {
+                        if (i != j)
+                        {
+                            goodness[j] = false;
+                            goodnessText = goodnessValue[i].ToString();
+                        }
+                    }
+                }
+            }
+
             GUILayout.Space(30);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
             {
@@ -387,10 +553,56 @@ namespace NpcScan
                         {
                             samsaraNames = samsaraNames + " " + dateFile.GetActorName(samsaraId);
                         }
-                        if (actorName.Contains(name) || samsaraNames.Contains(name))
+                        if (GetLevelValue(index, 0, 1) >= gongfa[0]
+                            && GetLevelValue(index, 1, 1) >= gongfa[1]
+                            && GetLevelValue(index, 1, 1) >= gongfa[1]
+                            && GetLevelValue(index, 2, 1) >= gongfa[2]
+                            && GetLevelValue(index, 3, 1) >= gongfa[3]
+                            && GetLevelValue(index, 4, 1) >= gongfa[4]
+                            && GetLevelValue(index, 5, 1) >= gongfa[5]
+                            && GetLevelValue(index, 6, 1) >= gongfa[6]
+                            && GetLevelValue(index, 7, 1) >= gongfa[7]
+                            && GetLevelValue(index, 8, 1) >= gongfa[8]
+                            && GetLevelValue(index, 9, 1) >= gongfa[9]
+                            && GetLevelValue(index, 10, 1) >= gongfa[10]
+                            && GetLevelValue(index, 11, 1) >= gongfa[11]
+                            && GetLevelValue(index, 12, 1) >= gongfa[12]
+                            && GetLevelValue(index, 13, 1) >= gongfa[13]
+                            && GetLevelValue(index, 0, 0) >= life[0]
+                            && GetLevelValue(index, 1, 0) >= life[1]
+                            && GetLevelValue(index, 2, 0) >= life[2]
+                            && GetLevelValue(index, 3, 0) >= life[3]
+                            && GetLevelValue(index, 4, 0) >= life[4]
+                            && GetLevelValue(index, 5, 0) >= life[5]
+                            && GetLevelValue(index, 6, 0) >= life[6]
+                            && GetLevelValue(index, 7, 0) >= life[7]
+                            && GetLevelValue(index, 8, 0) >= life[8]
+                            && GetLevelValue(index, 9, 0) >= life[9]
+                            && GetLevelValue(index, 10, 0) >= life[10]
+                            && GetLevelValue(index, 11, 0) >= life[11]
+                            && GetLevelValue(index, 12, 0) >= life[12]
+                            && GetLevelValue(index, 13, 0) >= life[13]
+                            && GetLevelValue(index, 14, 0) >= life[14]
+                            && GetLevelValue(index, 15, 0) >= life[15]
+                            )
                         {
+                            string gn = dateFile.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(index)];
+                            int groupid = int.Parse(DateFile.instance.GetActorDate(index, 19, false));//身份组ID
+                            if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                            {
+                                if ((actorName.Contains(name) || samsaraNames.Contains(name)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)))
+                                {
 
-                            actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,charm + "(" + charmText + ")" , str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
+                                    int gangLevel = int.Parse(DateFile.instance.GetActorDate(index, 20, false));//身份等级
+                                    int gangValueId = DateFile.instance.GetGangValueId(groupid, gangLevel);
+                                    int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
+
+                                    actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
+                                charm + "(" + charmText + ")" ,//魅力
+                                dateFile.GetGangDate(groupid, 0),//从属gangText
+                                dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false),//身份gangLevelText
+                                gn,//立场goodnessText
+                                str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
                                 GetLevel(index, 0, 1),
                                 GetLevel(index, 1, 1) ,
                                 GetLevel(index, 2, 1),
@@ -423,6 +635,8 @@ namespace NpcScan
                                 GetLevel(index, 15, 0),
                                 samsaraNames});
 
+                                }
+                            }
                         }
                     }
                 }
@@ -431,7 +645,8 @@ namespace NpcScan
 
             if (actorList.Count > 0)
             {
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.ExpandHeight(false));
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(40), GUILayout.Width(Screen.width * 0.8f - 40f));
+                GUILayout.BeginVertical("Box");
                 GUILayout.BeginHorizontal("box");
                 var amountWidth = mColumns.Where(x => !x.skip).Sum(x => x.width);
                 var expandWidth = mColumns.Where(x => x.expand && !x.skip).Sum(x => x.width);
@@ -447,7 +662,10 @@ namespace NpcScan
                     GUILayout.Label(mColumns[i].name, colWidth[i]);
                 }
                 GUILayout.EndHorizontal();
-
+                GUILayout.EndVertical();
+                GUILayout.EndScrollView();
+                scrollPosition2 = GUILayout.BeginScrollView(scrollPosition2, GUILayout.ExpandHeight(false));
+                scrollPosition = new Vector2(scrollPosition2.x, 0);
                 GUILayout.BeginVertical("box");
                 int c = mods.Count;
                 c = c > 50 ? 50 : c;
@@ -545,6 +763,11 @@ namespace NpcScan
             int num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), num.ToString(), false);
             return text;
+        }
+
+        static int GetLevelValue(int id, int index, int gongfa)
+        {
+            return int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
         }
 
     }
