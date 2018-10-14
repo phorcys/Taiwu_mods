@@ -3,7 +3,7 @@ cd build
 mkdir -p Mods_publish
 cd Mods
 
-mkdir -p ${HOME}/.taiwu
+mkdir -p ${HOME}/.taiwu/Mods_publish
 
 for modzip in `ls *.zip`
 do
@@ -26,8 +26,13 @@ do
 		# mods that need publish and regenerate json
 		python ../../.travis/addnewrelease.py ${HOME}/.taiwu/${modname}.json "${modname}" "${modversion}" "${modurl}"
 		
-		cp  ${modzip} ../Mods_publish/
-		cp  ${HOME}/.taiwu/${modname}.json ../Mods_publish/
+		\cp -Rf ${modzip} ${HOME}/.taiwu/Mods_publish/
+		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/
 		echo "Published Mod  ${modfullname} to Github Release page, Release tag : ${COMM_TAG}"
 	fi
+	\cp -Rf ${HOME}/.taiwu/Mods_publish/ ../Mods_publish/
+
+	echo "List Published Mods:"
+	ls -al ../Mods_publish/
+
 fi

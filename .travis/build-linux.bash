@@ -14,6 +14,9 @@ mkdir -p build ; cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 
+echo "List builded Mods:"
+ls -al Mods
+
 cd ..
 
 # If it compiled succesfully let's deploy
