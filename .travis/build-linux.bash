@@ -17,4 +17,4 @@ cmake --build .
 cd ..
 
 # If it compiled succesfully let's deploy
-if [ $? -eq 0 ] && [ -n "$UPLOAD_URL" ] && [ "$TRAVIS_BRANCH" = "master" ]  && [ "$TRAVIS_PULL_REQUEST" = false ]; then /bin/bash -ex .travis/deploy-linux.bash ; fi
+if [ $? -eq 0 ] && [ "$TRAVIS_BRANCH" = "master" ]  && [ "$TRAVIS_PULL_REQUEST" = false ]; then /bin/bash -ex .travis/deploy-linux.bash ; fi

@@ -1,6 +1,18 @@
 language: csharp
 mono:
-  - latest
+- latest
+cache:
+  directories:
+  - "$HOME/.taiwu"
 install:
-  - sudo apt-get install -y zip curl cmake
-script: 'pwd && ls && sh .travis/build-linux.bash'
+- sudo apt-get install -y zip curl cmake
+script: pwd && ls && sh .travis/build-linux.bash
+deploy:
+  provider: releases
+  api_key:
+    secure: o6S14ViNl7DCSqJPVRzaxEpcF3fOwMOGJQALQdoJ7Asce2L1oLFYfGQXPVBoit5/ruamEYErTbbzHeg3YeWpVduRXp0jvIf7ShQONcJUI5VJDLoZUKBk0dYq/rajTmilhLeJQ3n8e+agyhnoGavI8+0EiuqgCuvb9d43xy6cOo8FK+Ugbsqjynpz7E2cKNcS3cWea4iMCC0iKuRV+zpeoyVGqQTYsk0qr4sZDEdfb9Iuo103mBOII/5UXpRMc5KIYmDiZMYRz0W7h8cZBGmNNQso+PHDIaMZ/dSiDsBv9UTz6d+z1yQw8G77WCjDJZ9GjfCVQ/aZsQeeKEpQDoJcRuaK33aqqMMXE8IWDaDgvOg0Ov92Epl56cHNGGcNjH6AAAiJJxXy5wVSgX0J1ql0A4G8wdvT7TGxe/54Jo0280LSORQ1WTTCVW0CsOQUMRuNds9f/A8bmX0Vmz0MIo1XJVjgOQekPxzxN4ii2L2z3yB0plSkTE5y3kxyUCPRuvYzJ0z6/6wVnBbJLt1X3o9/PIBDfpECmXQfR0FEvykabPfOo4LHj8Qowf/85rjMwep0znCPkXaNOJW7BmYWU24Tbyqnds01c/eMwomV7ImbEgGtL6AGx2Wc9WLcuJxdWzdDFLWIC31T07qMmu4WkcBKNKWXA1aSk0xOY3RaRpa4oHk=
+  file_glob: true
+  file: build/Mods_Publish/*
+  on:
+    repo: phorcys/Taiwu_mods
+    tags: true
