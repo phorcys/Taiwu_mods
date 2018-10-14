@@ -23,6 +23,7 @@ namespace SamsaraLock
         public bool lockGenderAlter = false;
         public bool lockFaceTaiwu = true;
         public bool lockFaceAll = false;
+        public bool lockFaceFuta = true;
         public uint taiwuPreemptRate = 5;
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -102,6 +103,8 @@ namespace SamsaraLock
 
                          SEX = 14,
                          CHARM = 15,
+
+                         FUTA = 17,
 
                          FACE_COMPONENTS = 995,
                          FACE_COLORS = 996;
@@ -372,10 +375,7 @@ namespace SamsaraLock
                     predecessor[CharDataIndex.OPINION] = succession.opinion.ToString();
 
                     // 标记前代为死亡太吾
-                    if (Main.settings.lockFaceTaiwu)
-                    {
-                        DeadTaiwuManager.instance.setAsDeadTaiwu(succession.predecessor);
-                    }
+                    DeadTaiwuManager.instance.setAsDeadTaiwu(succession.predecessor);
                 }
             }
             catch (Exception ex)
@@ -426,12 +426,14 @@ namespace SamsaraLock
                         {
                             string face_components = __instance.GetActorDate(previousLifeId, CharDataIndex.FACE_COMPONENTS, false);
                             string face_colors = __instance.GetActorDate(previousLifeId, CharDataIndex.FACE_COLORS, false);
+                            string futa = __instance.GetActorDate(previousLifeId, CharDataIndex.FUTA, false);
 
                             int charm = __instance.GetFaceCharm(gender, Array.ConvertAll(face_components.Split(new char[] { '|' }), int.Parse));
 
                             __instance.actorsDate[childId][CharDataIndex.FACE_COMPONENTS] = face_components;
                             __instance.actorsDate[childId][CharDataIndex.FACE_COLORS] = face_colors;
                             __instance.actorsDate[childId][CharDataIndex.CHARM] = charm.ToString();
+                            __instance.actorsDate[childId][CharDataIndex.FUTA] = futa;
                             __instance.MakeActorName(childId, int.Parse(__instance.GetActorDate(childId, 29, false)), __instance.GetActorDate(childId, 5, false), true);
                         }
                     }
