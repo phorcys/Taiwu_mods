@@ -20,7 +20,6 @@ do
 	if [ "$lastcommit" != "$lastbuildcommit" ]
 	then
 		COMM_TAG="$(git describe --tags $(git rev-list --tags --max-count=1))"
-		releasecommit=${lastcommit:0:8}
 		modurl="https://github.com/phorcys/Taiwu_mods/releases/download/${COMM_TAG}/${modzip}"
 	
 		# mods that need publish and regenerate json
@@ -34,5 +33,5 @@ do
 
 	echo "List Published Mods:"
 	ls -al ../Mods_publish/
+done
 
-fi
