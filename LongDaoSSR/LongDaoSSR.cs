@@ -47,8 +47,8 @@ namespace LongDaoSSR
             GUILayout.Label("  修改了一些龙岛忠仆的特性，让忠仆更适合太吾村的发展!");
             GUILayout.Label("<color=#8FBAE7FF>【志同道合】</color> 龙岛忠仆的处世立场与玩家获得忠仆时的立场相同.");
             GUILayout.Label("<color=#F28234FF>【龙神赐寿】</color> 每个龙岛忠仆都被龙神赋予更长的阳寿，终生侍奉主人.");
-            GUILayout.Label("<color=#E4504DFF>【天资·艺】</color> 化全身资质于一道，大幅增强一项技艺的资质，其他所有技艺资质和武学资质归0.");
-            GUILayout.Label("<color=#E4504DFF>【天资·武】</color> 化全身资质于一道，大幅增强一项进攻武学的资质，中幅增强内功身法绝技的资质，其他所有技艺资质和武学资质归0.");
+            GUILayout.Label("<color=#E4504DFF>【天资·艺】</color> 化全身资质于一道，大幅增强一项技艺的资质.");
+            GUILayout.Label("<color=#E4504DFF>【天资·武】</color> 化全身资质于一道，大幅增强一项进攻武学的资质，中幅增强内功身法绝技的资质.");
             GUILayout.Label("  注: 天资特性只会是人物原本资质最好的一项");
             GUILayout.Label("  <color=#FF0000FF>如果要删除本MOD，请在对应存档内按下清除新特性的按钮并存档，避免坏档，清除新特性只影响显示效果，忠仆不会消失</color>");
             //检测存档
@@ -236,33 +236,29 @@ namespace LongDaoSSR
             npc[651] = "2";
 
             //挑选最出众的资质
-            int wuyiID = 501;
-            int wuyi = 0;
+            int yiID = 501;
             for (int i = 0; i < 16; i++)
             {
-                if (Int32.Parse(npc[wuyiID]) < Int32.Parse(npc[501 + i]))
+                if (Int32.Parse(npc[yiID]) < Int32.Parse(npc[501 + i]))
                 {
-                    wuyiID = 501 + i;
-                    wuyi = 0;
+                    yiID = 501 + i;
                 }
             }
+            int wuID = 604;
             for (int i = 0; i < 11; i++)
             {
-                if (Int32.Parse(npc[wuyiID]) < Int32.Parse(npc[604 + i]))
+                if (Int32.Parse(npc[wuID]) < Int32.Parse(npc[604 + i]))
                 {
-                    wuyiID = 604 + i;
-                    wuyi = 1;
+                    wuID = 604 + i;
                 }
             }
 
-            //3.【精于一道·艺】化全身资质于一道，大幅增强一项技艺的资质，其他所有技艺资质和武学资质归0
-            if (wuyi == 0)
-            {
+            //3.【精于一道·艺】化全身资质于一道，大幅增强一项技艺的资质
                 //求其他技艺资质的平均值
                 int jiyiAver = 0;
                 for (int i = 0; i < 16; i++)
                 {
-                    if (wuyiID != 501 + i)
+                    if (yiID != 501 + i)
                     {
                         jiyiAver += Int32.Parse(npc[501 + i]);
                     }
@@ -276,67 +272,20 @@ namespace LongDaoSSR
                 }
                 wuxueAver /= 13;
                 //增强的技艺资质 = 原技艺资质 + jiyiAver * 0.3 + wuxueAver * 0.2;
-                npc[wuyiID] = ((int)(Int32.Parse(npc[wuyiID]) + jiyiAver * 0.5 + wuxueAver * 0.4)).ToString();
-                //清空其他资质
-                //技艺
-                for (int i = 0; i < 16; i++)
-                {
-                    if (wuyiID == 501 + i) continue;
-                    npc[501 + i] = "0";
-                }
-                //武学
-                for (int i = 0; i < 14; i++)
-                {
-                    npc[601 + i] = "0";
-                }
-                npc[101] += "|" + (3507 + wuyiID).ToString(); //添加资质
-            }
+                npc[yiID] = ((int)(Int32.Parse(npc[yiID]) + jiyiAver * 0.4 + wuxueAver * 0.3)).ToString();
+                npc[101] += "|" + (3507 + yiID).ToString(); //添加资质
+            
 
-            //4.【精于一道·武】化全身资质于一道，大幅增强一项进攻武学的资质，中幅增强内功身法绝技的资质，其他所有技艺资质和武学资质归0
-            if (wuyi == 1)
-            {
-                //求其他武学资质的平均值
-                int wuxueAver = 0;
-                for (int i = 0; i < 11; i++)
-                {
-                    if (wuyiID != 604 + i)
-                    {
-                        wuxueAver += Int32.Parse(npc[604 + i]);
-                    }
-                }
-                wuxueAver /= 10;
-                //求技艺资质平均值
-                int jiyiAver = 0;
-                for (int i = 0; i < 16; i++)
-                {
-                    if (jiyiAver != 501 + i)
-                    {
-                        jiyiAver += Int32.Parse(npc[501 + i]);
-                    }
-                }
+            //4.【精于一道·武】化全身资质于一道，大幅增强一项进攻武学的资质，中幅增强内功身法绝技的资质
                 jiyiAver /= 15;
                 //增强的武学资质 = 原武学资质 + wuxueAver * 0.3 + jiyiAver * 0.2;
-                npc[wuyiID] = ((int)(Int32.Parse(npc[wuyiID]) + wuxueAver * 0.5 + jiyiAver * 0.4)).ToString();
+                npc[wuID] = ((int)(Int32.Parse(npc[wuID]) + wuxueAver * 0.4 + jiyiAver * 0.3)).ToString();
                 //中幅增强内功身法绝技
                 npc[601] = ((int)(Int32.Parse(npc[601]) + wuxueAver * 0.2 + jiyiAver * 0.2)).ToString();
                 npc[602] = ((int)(Int32.Parse(npc[601]) + wuxueAver * 0.2 + jiyiAver * 0.2)).ToString();
                 npc[603] = ((int)(Int32.Parse(npc[601]) + wuxueAver * 0.2 + jiyiAver * 0.2)).ToString();
-
-                //清空其他资质
-                //技艺
-                for (int i = 0; i < 16; i++)
-                {
-                    npc[501 + i] = "0";
-                }
-                //武学
-                for (int i = 0; i < 11; i++)
-                {
-                    if (wuyiID == 604 + i) continue;
-                    npc[604 + i] = "0";
-                }
-
-                npc[101] += "|" + (3420 + wuyiID).ToString(); //添加资质
-            }
+                npc[101] += "|" + (3420 + wuID).ToString(); //添加资质
+            
 
             DateFile.instance.actorsFeatureCache.Remove(id); //刷新特性
 
