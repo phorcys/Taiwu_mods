@@ -11,9 +11,10 @@ do
 	modname=`echo $modfullname |sed -e "s/-.*//g"`
 	modversion=`echo $modfullname |sed -e "s/.*-//g"`
 	lastcommit=`git log ../../${modname}|  head -n 1 | awk  '{print $2}'`
-	lastcommittime=`git log ../../InventorySort|  head -n 3 |tail -n 1| sed -e "s/Date:\s*//g"`
+	lastcommittime=`git log ../../${modname}|  head -n 3 |tail -n 1| sed -e "s/Date:\s*//g"`
 	lastbuildcommit=`cat ${HOME}/.taiwu/${modname}.commit`
 	lastbuildcommittime=`cat ${HOME}/.taiwu/${modname}.commit.time`
+	
 	echo "Processing Mod $modname commit $lastcommit , last build commit $lastbuildcommit \n   last commit time: $lastcommittime   last build commit time : $lastbuildcommittime"
 	
 	if [ "$lastcommit" != "$lastbuildcommit" ]
