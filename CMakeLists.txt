@@ -259,6 +259,7 @@ using System.Runtime.Versioning\;
 	add_library(${moddir}
 		SHARED
 		${FILELIST}
+		${moddir}/Info.json
 		)
 	#项目版本 .net 3.5
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v3.5")
