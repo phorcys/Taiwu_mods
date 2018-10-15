@@ -286,7 +286,7 @@ using System.Runtime.Versioning\;
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine "${STEAMDIR}${DLLPATH}UnityEngine.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.CoreModule "${STEAMDIR}${DLLPATH}UnityEngine.CoreModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${STEAMDIR}${DLLPATH}UnityEngine.ImageConversionModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${STEAMDIR}${DLLPATH}UnityEngine.TextRenderingModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.TextRenderingModule "${STEAMDIR}${DLLPATH}UnityEngine.TextRenderingModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.IMGUIModule "${STEAMDIR}${DLLPATH}UnityEngine.IMGUIModule.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UI "${STEAMDIR}${DLLPATH}UnityEngine.UI.dll")
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIElementsModule "${STEAMDIR}${DLLPATH}UnityEngine.UIElementsModule.dll")
@@ -317,8 +317,9 @@ using System.Runtime.Versioning\;
 	#生成后事件，copy dll到游戏Mods目录
 	ADD_CUSTOM_COMMAND(TARGET ${moddir}
 		POST_BUILD
-		COMMAND copy $(TargetPATH) ${STEAMDIR}Mods\\${moddir}/
-		COMMAND copy ..\\..\\${moddir}\\Info.json ${STEAMDIR}Mods\\${moddir}/
+		COMMAND if not exist "${STEAMDIR}Mods\\${moddir}/" mkdir "${STEAMDIR}Mods\\${moddir}/"
+		COMMAND copy "$(TargetPATH)" "${STEAMDIR}Mods\\${moddir}/"
+		COMMAND copy "..\\..\\${moddir}\\Info.json" "${STEAMDIR}Mods\\${moddir}/"
 		COMMAND echo "copy dll file ${moddir}.dll ok"
 		COMMENT "copy dll file to steam game" 
 	)

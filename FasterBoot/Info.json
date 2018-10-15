@@ -1,8 +1,0 @@
-﻿{
-  "Id": "FasterBoot",
-  "DisplayName": "快速启动",
-  "Author": "phorcys",
-  "Version": "1.0.0",
-  "AssemblyName": "FasterBoot.dll",
-  "EntryMethod": "FasterBoot.Main.Load"
-}

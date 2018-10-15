@@ -1,8 +1,0 @@
-﻿{
-  "Id": "UseStorageBlueprint",
-  "DisplayName": "仓库蓝图建造-使用仓库蓝图进行建造",
-  "Author": "phorcys",
-  "Version": "1.0.0",
-  "AssemblyName": "UseStorageBlueprint.dll",
-  "EntryMethod": "UseStorageBlueprint.Main.Load"
-}
