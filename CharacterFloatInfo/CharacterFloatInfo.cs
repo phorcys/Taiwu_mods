@@ -208,7 +208,11 @@ namespace CharacterFloatInfo
                     {
                         ___informationName.text += " • " + shopName;
                     }
-
+                    string workDate = GetWorkingData(id);
+                    if(workDate!=null)
+                    {
+                        ___informationName.text += " • " + workDate;
+                    }
                     string workPlace = GetWorkPlace(id);
                     if (workPlace.Length != 0)
                     {
@@ -697,6 +701,79 @@ namespace CharacterFloatInfo
             }
 
             return text;
+        }
+        //工作效率,null代表无法获得
+        private static string GetWorkingData(int workerId)
+        {
+            if (HomeSystem.instance == null)
+                return null;
+            if (!HomeSystem.instance.buildingWindowOpend)
+                return null;
+            int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
+            int partId = -1;
+            int placeId = -1;
+            List<int> list = new List<int>(DateFile.instance.baseHomeDate.Keys);
+            foreach (var x_pair in DateFile.instance.baseHomeDate)
+            {
+                int x = x_pair.Key;
+                foreach (var y_pair in x_pair.Value)
+                {
+                    int y = y_pair.Key;
+                    if (DateFile.instance.baseHomeDate[x][y] != 0)
+                    {
+                        partId = x;
+                        placeId = y;
+                        break;
+                    }
+                }
+                if (partId >= 0)
+                    break;
+            }
+            if (partId < 0 || placeId < 0)
+                return null;
+            int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
+            int unknown = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
+            int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
+            int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
+            int moodFavorAddup = 40 + favorLvl * 10;
+            if (mood <= 0)
+            {
+                moodFavorAddup -= 30;
+            }
+            else if (mood <= 20)
+            {
+                moodFavorAddup -= 20;
+            }
+            else if (mood <= 40)
+            {
+                moodFavorAddup -= 10;
+            }
+            else if (mood >= 100)
+            {
+                moodFavorAddup += 30;
+            }
+            else if (mood >= 80)
+            {
+                moodFavorAddup += 20;
+            }
+            else if (mood >= 60)
+            {
+                moodFavorAddup += 10;
+            }
+            int num5 = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(workerId, unknown, true));
+            if (unknown == 18)
+            {
+                num5 += 100;
+            }
+            int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
+            num5 = num5 * Mathf.Max(moodFavorAddup, 0) / 100;
+
+            int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
+            int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);
+            if (total > 0)
+                return string.Format("{0}%", efficiency * 100 / total);
+            else
+                return null;
         }
     }
 }
