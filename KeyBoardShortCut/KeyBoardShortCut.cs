@@ -39,7 +39,7 @@ namespace KeyBoardShortCut
 
         HK_ACTORMENU,
         HK_VILLAGE,
-        HK_LOCAL_VILLAGE,
+        HK_VILLAGE_LOCAL,
         HK_WORLDMAP,
 
         HK_HEAL,
@@ -128,7 +128,7 @@ namespace KeyBoardShortCut
 
                 {HK_TYPE.HK_ACTORMENU, new KeyValuePair<KeyCode, string>( KeyCode.C, "打开人物界面")},
                 {HK_TYPE.HK_VILLAGE, new KeyValuePair<KeyCode, string>( KeyCode.P, "打开太吾村产业地图")},
-                {HK_TYPE.HK_LOCAL_VILLAGE, new KeyValuePair<KeyCode, string>( KeyCode.L, "打开本地产业地图")},
+                {HK_TYPE.HK_VILLAGE_LOCAL, new KeyValuePair<KeyCode, string>( KeyCode.L, "打开本地产业地图")},
                 {HK_TYPE.HK_WORLDMAP, new KeyValuePair<KeyCode, string>( KeyCode.M, "打开世界地图")},
 
                 {HK_TYPE.HK_HEAL, new KeyValuePair<KeyCode, string>( KeyCode.H, "进行治疗")},
@@ -175,6 +175,12 @@ namespace KeyBoardShortCut
 
 
             };
+
+            foreach(var kv in hotkeys)
+            {
+                Main.Logger.Log(String.Format("Hotkey : {0} , key: {1}  , desc : {2}", kv.Key, kv.Value.Key, kv.Value.Value));
+            }
+            Main.Logger.Log("hotkey count:" + hotkeys.Count);
         }
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -193,6 +199,9 @@ namespace KeyBoardShortCut
         public static bool enabled;
         public static Settings settings;
 
+        public static bool notify_reset_key = false;
+        public static GameObject _go_gongfatree = null;
+
         public static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -200,13 +209,21 @@ namespace KeyBoardShortCut
             Logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
             settings = Settings.Load<Settings>(modEntry);
+            Main.Logger.Log("hotkey count:" + Main.settings.hotkeys.Count);
             settings.modee = modEntry;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-
+            Main.Logger.Log("hotkey count:" + Main.settings.hotkeys.Count);
+            if(Main.settings.hotkeys.Count < 51)
+            {
+                Main.settings.initDefaultHotKeys();
+                notify_reset_key = true;
+                Main.settings.Save();
+                Main.Logger.Log("hotkey  new count:" + Main.settings.hotkeys.Count);
+            }
             return true;
         }
 
@@ -225,6 +242,7 @@ namespace KeyBoardShortCut
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            Main.Logger.Log("hotkey count:" + Main.settings.hotkeys.Count);
             processKeyPress();
             GUILayout.BeginVertical("box");
             settings.close_with_right_mouse_button = GUILayout.Toggle(settings.close_with_right_mouse_button, "是否使用鼠标右键关闭窗口");
@@ -513,6 +531,24 @@ namespace KeyBoardShortCut
             }
         }
     }
+    /// <summary>
+    ///  重置配置提醒
+    /// </summary>
+    [HarmonyPatch(typeof(MainMenu), "CloseStartMask")]
+    public static class MainMenu_CloseStartMask_Patch
+    {
+        private static void Prefix()
+        {
+            if(Main.notify_reset_key == true)
+            {
+                Main.notify_reset_key = false;
+                Main.Logger.Log("display  keyboard shotcut reset message...");
+                DateFile.instance.massageDate[8013][0]="键盘快捷键配置更新|由于键盘快捷键升级，配置文件已经重置为默认，如有需要请重新配置快捷键";
+            }
+            
+        }
+    }
+
 
     /// <summary>
     ///  worldmap 事件
@@ -591,7 +627,23 @@ namespace KeyBoardShortCut
                         }
                         else
                         {
-                            WorldMapSystem.instance.ColsePartWorldMapWindow();
+                            if (Main._go_gongfatree == null || Main._go_gongfatree.activeInHierarchy == false)
+                            {
+                                WorldMapSystem.instance.ColsePartWorldMapWindow();
+                                return false;
+                            }
+                        }
+
+                    }
+                    if (Main.GetKeyDown(HK_TYPE.HK_VILLAGE_LOCAL))
+                    {
+                        if (HomeSystem.instance.homeSystem.activeInHierarchy == false)
+                        {
+                            HomeSystem.instance.ShowHomeSystem(false);
+                        }
+                        else
+                        {
+                            HomeSystem.instance.CloseHomeSystem();
                             return false;
                         }
 
@@ -603,7 +655,9 @@ namespace KeyBoardShortCut
                 if (__instance.partWorldMapWindow.activeInHierarchy == false  //世界地图未开启
                         && ActorMenu.instance.actorMenu.activeInHierarchy == false  //人物菜单未开启
                         && HomeSystem.instance.homeSystem.activeInHierarchy == false //村镇地图未开启
-                        && BattleSystem.instance.battleWindow.activeInHierarchy == false)  //非战斗状态
+                        && BattleSystem.instance.battleWindow.activeInHierarchy == false//非战斗状态
+                        && StorySystem.instance.storySystem.activeInHierarchy == false  //奇遇
+                        && StorySystem.instance.toStoryMenu.activeInHierarchy == false)  //奇遇开启
                 {
                     //治疗
                     if (Main.GetKeyDown(HK_TYPE.HK_HEAL) 
@@ -885,6 +939,11 @@ namespace KeyBoardShortCut
                     return false;
                 }
 
+                //功法树窗口开着就不关
+                if(Main._go_gongfatree != null && Main._go_gongfatree.activeInHierarchy == true)
+                {
+                    return false;
+                }
                 //关闭工作窗口
                 //if(WorldMapSystem.instance.choo)
 
@@ -923,6 +982,22 @@ namespace KeyBoardShortCut
                     return false;
                 }
 
+
+                //Warehouse window
+                if (Warehouse.instance.warehouseWindow.gameObject.activeInHierarchy == true)
+                {
+                    Warehouse.instance.CloseWarehouse();
+                    return false;
+                }
+
+                //bookWindow
+                if (HomeSystem.instance.bookWindow.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseBookWindow();
+                    return false;
+                }
+
+
                 // setstudyWindow
                 if (HomeSystem.instance.setStudyWindow.gameObject.activeInHierarchy == true)
                 {
@@ -938,12 +1013,6 @@ namespace KeyBoardShortCut
                 }
 
 
-                //bookWindow
-                if (HomeSystem.instance.bookWindow.activeInHierarchy == true)
-                {
-                    HomeSystem.instance.CloseBookWindow();
-                    return false;
-                }
                 //building window
                 if (HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy == true)
                 {
@@ -1072,6 +1141,167 @@ namespace KeyBoardShortCut
         }
     }
 
+    /// <summary>
+    ///  确定 关闭 过时节
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "Start")]
+    public static class UIDate_CloseTurnchange_Patch
+    {
+        private static void Postfix(UIDate __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            ConfirmConfirm newobj = __instance.gameObject.AddComponent(typeof(ConfirmConfirm)) as ConfirmConfirm;
+            newobj.setparam(typeof(UIDate), "CloseTrunChangeWindow", () =>
+            {
+                //依次检测子窗口,顺序很重要
+
+                // 如果开始奇遇没有显示，则不处理
+                if (UIDate.instance.trunChangeWindow.activeInHierarchy != true)
+                {
+                    return false;
+                }
+
+                return UIDate.instance.trunChangeWindow.activeInHierarchy;
+            });
+        }
+    }
+
+    /// <summary>
+    ///  确定 确认建筑
+    /// </summary>
+    [HarmonyPatch(typeof(HomeSystem), "Start")]
+    public static class HomeSystem_Confirm_Patch
+    {
+        private static void Postfix(UIDate __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            ConfirmConfirm newobj = __instance.gameObject.AddComponent(typeof(ConfirmConfirm)) as ConfirmConfirm;
+            newobj.setparam(typeof(HomeSystem), "StartNewBuilding", () =>
+            {
+                //依次检测子窗口,顺序很重要
+                if(HomeSystem.instance.homeSystem.activeInHierarchy == false)
+                {
+                    return false;
+                }
+
+                if(HomeSystem.instance.buildingUPWindowBack.activeInHierarchy== true && HomeSystem.instance.buildingUpCanBuildingButton.interactable)
+                {
+                    HomeSystem.instance.StartBuildingUp();
+                    return false;
+                }
+                if (HomeSystem.instance.buildingRemoveCanBuildingButton.gameObject.transform.parent.gameObject.activeInHierarchy == true 
+                && HomeSystem.instance.buildingRemoveCanBuildingButton.interactable)
+                {
+                    HomeSystem.instance.StartBuildingRemove();
+                    return false;
+                }
+                if(HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy == true )
+                {
+                    return HomeSystem.instance.canBuildingButton.interactable;
+                }
+                return false;
+                
+            });
+        }
+    }
+
+    /// <summary>
+    ///  确定 确认 购买
+    /// </summary>
+    [HarmonyPatch(typeof(ShopSystem), "Start")]
+    public static class ShopSystem_Confirm_Patch
+    {
+        private static void Postfix(UIDate __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            ConfirmConfirm newobj = __instance.gameObject.AddComponent(typeof(ConfirmConfirm)) as ConfirmConfirm;
+            newobj.setparam(typeof(ShopSystem), "ShopOK", () =>
+            {
+                //依次检测子窗口,顺序很重要
+
+                // 如果开始奇遇没有显示，则不处理
+                if (ShopSystem.instance.shopWindow.activeInHierarchy != true)
+                {
+                    return false;
+                }
+
+                return ShopSystem.instance.shopOkButton.interactable;
+            });
+        }
+    }
+
+    /// <summary>
+    ///  确定 bookshop 确认 购买
+    /// </summary>
+    [HarmonyPatch(typeof(BookShopSystem), "Start")]
+    public static class BookShopSystem_Confirm_Patch
+    {
+        private static void Postfix(UIDate __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            ConfirmConfirm newobj = __instance.gameObject.AddComponent(typeof(ConfirmConfirm)) as ConfirmConfirm;
+            newobj.setparam(typeof(BookShopSystem), "ShopOK", () =>
+            {
+                //依次检测子窗口,顺序很重要
+
+                // 如果开始奇遇没有显示，则不处理
+                if (BookShopSystem.instance.shopWindow.activeInHierarchy != true)
+                {
+                    return false;
+                }
+
+                return BookShopSystem.instance.shopOkButton.interactable;
+            });
+        }
+    }
+
+
+    public class EscCloseNoneSingleton :EscClose
+    {
+        public new void setparam(Type type_ins, string methodname, Func<bool> tester)
+        {
+            Main.Logger.Log(this.GetType().ToString() + " Regist " + type_ins.ToString() + "  method :" + methodname);
+            mname = methodname;
+            ins = type_ins;
+            mi = ins.GetMethod(mname);
+            insobj = gameObject.GetComponent(ins) as MonoBehaviour;
+            testret = tester;
+        }
+    }
+
+    /// <summary>
+    ///  确定 确认建筑
+    /// </summary>
+    [HarmonyPatch(typeof(GongFaTreeWindow), "Start")]
+    public static class GongFaTreeWindow_EscCloseNonSingleton_Patch
+    {
+        private static void Postfix(GongFaTreeWindow __instance)
+        {
+            if (!Main.enabled && Main.binding_key)
+            {
+                return;
+            }
+            EscCloseNoneSingleton newobj = __instance.gameObject.AddComponent(typeof(EscCloseNoneSingleton)) as EscCloseNoneSingleton;
+            Main._go_gongfatree = __instance.gameObject;
+            newobj.setparam(typeof(GongFaTreeWindow), "CloseGongFaTreeWindow", () =>
+            {
+
+                return __instance.gongFaTreeWindow.activeInHierarchy;
+            });
+        }
+    }
 
     ///// <summary>
     /////  BattleSystem 战斗显示快捷键
