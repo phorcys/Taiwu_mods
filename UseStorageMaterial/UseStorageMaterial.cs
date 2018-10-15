@@ -140,7 +140,11 @@ namespace UseStorageMaterial
 
             if ( (__state & 1) == 1)
             {
-                DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
+                if(0== int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)))
+                {
+                    DateFile.instance.LoseItem(-999, ___mianItemId, -1,true);
+                }
+                
             }
             if ((__state & 2) == 2)
             {
@@ -159,14 +163,22 @@ namespace UseStorageMaterial
     public static class MakeSystem_StartPoisonItem_Patch
     {
         //检测是否有道具
-        private static void Prefix(MakeSystem __instance, int ___mianItemId, int[] ___thirdItemId)
+        private static bool Prefix(MakeSystem __instance, int ___mianItemId, int[] ___thirdItemId, int ___secondItemId, ref int __state)
         {
+            __state = -1;
             //主工具
             int actorId = DateFile.instance.MianActorID();
+
+            //主工具
             if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___mianItemId))
             {
-                DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
-                //Main.Logger.Log(" poison use warehouse main item : ");
+                //仅当hp为1时，移除mianitem, 其余情况不扣hp，否则会扣两次
+                if (int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)) == 1)
+                {
+                    DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
+                }
+
+                // Main.Logger.Log(" StartChangeItem use warehouse main item : ");
             }
 
 
@@ -183,17 +195,38 @@ namespace UseStorageMaterial
                     else
                     {
                         DateFile.instance.ChangeItemHp(-999, ___thirdItemId[j], -1, 0, true);
-                       // Main.Logger.Log(" poison use warehouse third item , dec hp ");
+                        //Main.Logger.Log(" poison use warehouse third item , dec hp ");
                     }
-                    
+
                 }
             }
-            
+
+            //被强化物品
+            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
+            {
+                //被强化物品在仓库，先挪 到背包里
+                __state = ___secondItemId;
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1);
+                //Main.Logger.Log(" poison use warehouse second item : " + ___secondItemId + " move to bag");
+            }
+            return true;
+        }
+
+        //把移动到背包的物品，如果有需要，移动回去
+        private static void Postfix(int __state)
+        {
+            //被强化物品
+            int actorId = DateFile.instance.MianActorID();
+            Main.Logger.Log(" poison use warehouse second item : " + __state + " state:" + __state + " move back to warehouse");
+            if (__state >0  && DateFile.instance.actorItemsDate[actorId].ContainsKey(__state))
+            {
+                //Main.Logger.Log(" poison use warehouse second item : " + __state + " move back to warehouse");
+                //被强化物品原来在仓库，需要挪回去仓库里
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1);
+            }
         }
 
     }
-
-
     /// <summary>
     ///  如果需要，销毁使用的强化材料，减少制造工具hp
     /// </summary>
@@ -201,16 +234,22 @@ namespace UseStorageMaterial
     public static class MakeSystem_StartChangeItem_Patch
     {
         //检测是否有道具
-        private static void Prefix(MakeSystem __instance, int ___secondItemId, int[] ___thirdItemId)
+        private static bool Prefix(MakeSystem __instance, int ___mianItemId, int ___secondItemId, int[] ___thirdItemId, ref int __state)
         {
 
+            __state = -1;
             int actorId = DateFile.instance.MianActorID();
 
             //主工具
-            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
+            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___mianItemId))
             {
-                DateFile.instance.ChangeItemHp(-999, ___secondItemId, -1, 0, true);
-               // Main.Logger.Log(" poison use warehouse main item : ");
+                //仅当hp为1时，移除mianitem, 其余情况不扣hp，否则会扣两次
+                if( int.Parse(DateFile.instance.GetItemDate(___mianItemId,901)) == 1)
+                {
+                    DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
+                }
+
+                // Main.Logger.Log(" StartChangeItem use warehouse main item : ");
             }
 
 
@@ -224,8 +263,29 @@ namespace UseStorageMaterial
                 }
             }
 
+            //被强化物品
+            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
+            {
+                //被强化物品在仓库，先挪 到背包里
+                __state = ___secondItemId;
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1);
+                //Main.Logger.Log(" 强化 use warehouse second item : " + ___secondItemId + " move to bag");
+            }
+            return true;
         }
 
+        //把移动到背包的物品，如果有需要，移动回去
+        private static void Postfix(int __state)
+        {
+            //被强化物品
+            int actorId = DateFile.instance.MianActorID();
+            if (__state > 0 && DateFile.instance.actorItemsDate[actorId].ContainsKey(__state))
+            {
+                //Main.Logger.Log(" 强化 use warehouse second item : " + __state + " move back to warehouse");
+                //被强化物品原来在仓库，需要挪回去仓库里
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1);
+            }
+        }
     }
 
 }
