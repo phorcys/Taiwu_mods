@@ -18,8 +18,8 @@ namespace ShowBiographyOfTheDead
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
         public bool HolmesMode = false;//随机扰乱
-        public bool saveToFile = false;//将生平(全部)保存到文件
-        public int logCount = 10;//将生平的最后几行显示在log
+        public bool saveToFile = true;//将生平(全部)保存到文件
+        public int logCount = 20;//将生平的最后几行显示在log
     }
 
     public static class Main
@@ -166,6 +166,7 @@ namespace ShowBiographyOfTheDead
         {
             actorMessages.Clear();
             int mainActorId = DateFile.instance.MianActorID();
+            //出生？
             actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·", false) + " {0}{1}{2}{3}{4}\n", new object[]
             {
             DateFile.instance.massageDate[8010][1].Split(new char[]
@@ -201,13 +202,7 @@ namespace ShowBiographyOfTheDead
                 {
                     DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString(), false) + DateFile.instance.massageDate[16][3],
                     DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0], false)
-                };
-                    if (id != mainActorId && DateFile.instance.GetActorFavor(false, mainActorId, id, false, false) < 30000 * int.Parse(DateFile.instance.actorMassageDate[key2][4]) / 100)
-                    {
-                        list.Add(DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2], false));
-                        actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·", false) + " {0}{1}：{2}\n", list.ToArray()));
-                    }
-                    else
+                };                    
                     {
                         list.Add(DateFile.instance.SetColoer(10001, DateFile.instance.GetNewMapDate(array[3], array[4], 98) + DateFile.instance.GetNewMapDate(array[3], array[4], 0), false));
                         for (int j = 0; j < array3.Length; j++)
@@ -254,6 +249,7 @@ namespace ShowBiographyOfTheDead
                     }
                 }
             }
+            //死亡
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 26, false));
             if (num2 > 0)
             {
