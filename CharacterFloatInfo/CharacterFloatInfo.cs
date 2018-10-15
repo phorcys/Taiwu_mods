@@ -770,8 +770,10 @@ namespace CharacterFloatInfo
 
             int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
             int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);
-
-            return string.Format("{0}%", efficiency * 100 / total);
+            if (total > 0)
+                return string.Format("{0}%", efficiency * 100 / total);
+            else
+                return null;
         }
     }
 }
