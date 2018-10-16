@@ -1,13 +1,8 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace LKX_GongFaSizeToOne
 {
@@ -142,7 +137,7 @@ namespace LKX_GongFaSizeToOne
         {
             GUIStyle redLabelStyle = new GUIStyle();
             redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
-            GUILayout.Label("如果status亮红灯代表mod失效,如重新开启mod需要重启游戏！", redLabelStyle);
+            GUILayout.Label("如果status亮红灯代表mod失效,如重新开启mod需要重启游戏！游戏过程中修改了mod配置需要重新开启游戏让mod生效！", redLabelStyle);
             Main.settings.gongFaGuiType = GUILayout.SelectionGrid(Main.settings.gongFaGuiType, new string[] { "全功法1格", "自定义功法1格" }, 2);
 
             if (Main.settings.gongFaGuiType == 1)
