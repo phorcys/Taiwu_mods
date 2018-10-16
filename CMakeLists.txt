@@ -317,9 +317,9 @@ using System.Runtime.Versioning\;
 	#生成后事件，copy dll到游戏Mods目录
 	ADD_CUSTOM_COMMAND(TARGET ${moddir}
 		POST_BUILD
-		COMMAND if not exist "${STEAMDIR}Mods\\${moddir}/" mkdir "${STEAMDIR}Mods\\${moddir}/"
-		COMMAND copy "$(TargetPATH)" "${STEAMDIR}Mods\\${moddir}/"
-		COMMAND copy "..\\..\\${moddir}\\Info.json" "${STEAMDIR}Mods\\${moddir}/"
+		COMMAND if not exist "${STEAMDIR}Mods\\${moddir}" mkdir "${STEAMDIR}Mods\\${moddir}"
+		COMMAND copy "$(TargetPATH)" "${STEAMDIR}Mods\\${moddir}"
+		COMMAND copy "..\\..\\${moddir}\\Info.json" "${STEAMDIR}Mods\\${moddir}"
 		COMMAND echo "copy dll file ${moddir}.dll ok"
 		COMMENT "copy dll file to steam game" 
 	)

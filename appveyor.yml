@@ -1,0 +1,92 @@
+#---------------------------------#
+#      general configuration      #
+#---------------------------------#
+
+# version format
+version: 1.0.{build}
+
+# branches to build
+branches:
+  # whitelist
+  only:
+    - master
+
+# Do not build on tags (GitHub and BitBucket)
+skip_tags: true
+
+# Do not build feature branch with open Pull Requests
+skip_branch_with_pr: true
+
+# Maximum number of concurrent jobs for the project
+max_jobs: 1
+
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+image: Visual Studio 2017
+
+# fetch repository as zip archive
+shallow_clone: true
+
+# build cache to preserve files/folders between builds
+cache:
+  - dlls/The Scroll Of Taiwu Alpha V1.0_Data/Managed -> .appveyor/get-dlls.sh
+
+# scripts that run after cloning repository
+install:
+  - sh .appveyor/get-dlls.sh
+
+#---------------------------------#
+#       build configuration       #
+#---------------------------------#
+
+# build platform, i.e. x86, x64, Any CPU. This setting is optional.
+platform: Any CPU
+
+# build Configuration, i.e. Debug, Release, etc.
+configuration: Release
+
+# Build settings, not to be confused with "before_build" and "after_build".
+# "project" is relative to the original build directory and not influenced by directory changes in "before_build".
+build:
+  parallel: true                     # enable MSBuild parallel builds
+  project: build/ALL_BUILD.vcxproj   # path to Visual Studio solution or project
+
+  # MSBuild verbosity level
+  verbosity: minimal
+
+# scripts to run before build
+before_build:
+  - sh .appveyor/prepare.sh 
+
+#---------------------------------#
+#       tests configuration       #
+#---------------------------------#
+
+# to disable automatic tests
+test: off
+
+#---------------------------------#
+#      artifacts configuration    #
+#---------------------------------#
+
+artifacts:
+  - path: dlls\Mods
+    name: Mods-packed.$(appveyor_build_version)
+
+#---------------------------------#
+#     deployment configuration    #
+#---------------------------------#
+
+deploy:
+  # Deploy to GitHub Releases
+  - provider: GitHub
+    auth_token:
+      secure: 6Jw1HZU3mF2CMu/+BXVHaXEdtKM69hbivKfapHgB5ChyaSQWh/Ythrw4IQ+4d/1t
+    tag: $(appveyor_build_version)
+    release: 自动发布 v$(appveyor_build_version)
+    prerelease: true
+    on:
+      branch: master
