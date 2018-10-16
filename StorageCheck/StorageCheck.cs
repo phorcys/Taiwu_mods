@@ -113,7 +113,7 @@ namespace StorageCheck
                 {
                     if(DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString())
                     {
-                        num = num + 1;
+                        num = num + localGetItemNumber(actorid,key);
                         usenum = usenum + int.Parse(DateFile.instance.itemsDate.ContainsKey(key)? DateFile.instance.itemsDate[key][901]: DateFile.instance.GetItemDate(key, 902, true));
                         totalcount = totalcount + int.Parse(DateFile.instance.itemsDate.ContainsKey(key) ? DateFile.instance.itemsDate[key][902] : DateFile.instance.GetItemDate(key, 902, true));
                     }
