@@ -244,28 +244,32 @@ namespace CharacterFloatInfo
 
             List<int> list = GetHPSP(id);
             List<int> list1 = GetPoison(id);
-            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
-            {
-                if (GetPoison(id)[0] == 1)
-                {
-                    if (list[0] != 0 || list[2] != 0)
-                    {
-                        text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
-                    }
-                    else
-                    {
-                        text += DateFile.instance.SetColoer(20007, "\n中毒");
-                    }
-                }
-                else
-                {
-                    text += DateFile.instance.SetColoer(20010, "\n受伤");
-                }
-            }
-            else
-            {
-                text += DateFile.instance.SetColoer(20004, "\n健康");
-            }
+                            int dmg=math.max(list[0]/list[1],list[2]/list[3]);
+                            int dmgtyp=0;
+                            if (dmg>=25)
+                                {
+                                dmgtyp=1;
+                                }
+                            if (GetPoison(id)[0] == 1)
+                                {
+                                dmgtyp+=2;
+                                }
+
+                           switch (dmgtyp)
+                                {
+                                case 1:
+                                text += DateFile.instance.SetColoer(20010, "受伤");
+                                break;
+                                case 2:
+                                text += DateFile.instance.SetColoer(20007, "中毒");
+                                break;
+                                case 3:
+                                text += DateFile.instance.SetColoer(20010, "受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
+                                break;
+                                default:
+                                text += DateFile.instance.SetColoer(20004, "健康");
+                                break;
+                                }
             return text;
         }
 
