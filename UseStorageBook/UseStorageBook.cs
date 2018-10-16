@@ -19,6 +19,10 @@ namespace UseStorageBook
         /// <returns></returns>
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
+            if (!Main.enabled)
+            {
+                return instructions;
+            }
             Main.logger.Log("start to patch SetBook");
             List<CodeInstruction> list = new List<CodeInstruction>(instructions);
             list.InsertRange(0, new CodeInstruction[]

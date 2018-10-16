@@ -1,6 +1,7 @@
 # Taiwu_mods
 太吾绘卷游戏Mod
 
+[![Build Status](https://travis-ci.com/phorcys/Taiwu_mods.svg?branch=master)](https://travis-ci.com/phorcys/Taiwu_mods)
 
 #编译依赖
 

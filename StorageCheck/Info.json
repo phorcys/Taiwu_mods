@@ -2,7 +2,7 @@
   "Id": "StorageCheck",
   "DisplayName": "库存检查-检查背包仓库是否有此物品",
   "Author": "phorcys",
-  "Version": "1.0.4",
+  "Version": "1.0.7",
   "AssemblyName": "StorageCheck.dll",
   "EntryMethod": "StorageCheck.Main.Load"
 }

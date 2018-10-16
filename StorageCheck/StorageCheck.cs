@@ -105,15 +105,7 @@ namespace StorageCheck
             num = 0;
             usenum = 0;
 
-            num = localGetItemNumber(actorid, item_id);
-
             int itemtypeid = int.Parse(DateFile.instance.GetItemDate(item_id, 999, true));
-            if (num > 0)
-            {
-                usenum = int.Parse(DateFile.instance.itemsDate.ContainsKey(item_id) ? DateFile.instance.itemsDate[item_id][901] : DateFile.instance.GetItemDate(item_id, 902, true));
-                totalcount = int.Parse(DateFile.instance.itemsDate.ContainsKey(item_id) ? DateFile.instance.itemsDate[item_id][902] : DateFile.instance.GetItemDate(item_id, 902, true));
-            }
-
 
             if (itemtypeid >0)
             {
@@ -121,14 +113,10 @@ namespace StorageCheck
                 {
                     if(DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString())
                     {
-                        num = num + 1;
+                        num = num + localGetItemNumber(actorid,key);
                         usenum = usenum + int.Parse(DateFile.instance.itemsDate.ContainsKey(key)? DateFile.instance.itemsDate[key][901]: DateFile.instance.GetItemDate(key, 902, true));
                         totalcount = totalcount + int.Parse(DateFile.instance.itemsDate.ContainsKey(key) ? DateFile.instance.itemsDate[key][902] : DateFile.instance.GetItemDate(key, 902, true));
                     }
-                }
-                if(num >1)
-                {
-                    num = num - 1;
                 }
             }
             return usenum>0;
