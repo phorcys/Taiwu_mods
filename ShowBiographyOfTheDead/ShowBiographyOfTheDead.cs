@@ -43,7 +43,7 @@ namespace ShowBiographyOfTheDead
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
-            return enabled;
+            return true;
         }
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
