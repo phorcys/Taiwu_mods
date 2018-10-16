@@ -24,11 +24,11 @@ namespace CharacterFloatInfo
         public bool workPlace = false;
         public bool workerlist = false;
         public bool talkMessage = false;
+        public bool enableShortMode = true;//在工作界面和对话框只显示部分信息
         public bool showMood = false; //显示心情
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
-        public bool hideShopNameOfNonBusiness = true; //不显示非商人的商店名
         public bool useColorOfTeachingSkill = false; //用可以请教的技艺的颜色显示资质(120=红)
         public bool lifeMessage = false; //人物经历
     }
@@ -53,8 +53,6 @@ namespace CharacterFloatInfo
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
 
             enabled = value;
 
@@ -64,6 +62,7 @@ namespace CharacterFloatInfo
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             //GUILayout.BeginHorizontal();
+            Main.settings.enableShortMode = GUILayout.Toggle(Main.settings.enableShortMode, "在对话/分配工作界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示未加成信息", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
@@ -155,7 +154,13 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int actorId = 0;
-
+        public enum WindowType
+        {
+            MapActorList,
+            Dialog,
+            BuildingWindow
+        };
+        public static WindowType windowType= WindowType.MapActorList;
         public static void Postfix(GameObject tips, bool on, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
         {
             if (!Main.enabled)
@@ -179,6 +184,7 @@ namespace CharacterFloatInfo
                     {
                         id = int.Parse(array[1]);
                         needShow = true;
+                        windowType = HomeSystem.instance.buildingWindowOpend?WindowType.BuildingWindow:WindowType.MapActorList;
                     }
                 }
                 //对话窗口的人物头像
@@ -186,6 +192,7 @@ namespace CharacterFloatInfo
                 {
                     id = MassageWindow.instance.eventMianActorId;
                     needShow = true;
+                    windowType = WindowType.Dialog;
                 }
 
                 if (needShow)
@@ -273,6 +280,8 @@ namespace CharacterFloatInfo
         public static string SetInfoMassage(int id, GameObject tips)
         {
             string text = "";
+            if (windowType != WindowType.MapActorList && Main.settings.enableShortMode)
+                return text;
             text += "\t立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id) + "次";
             if (GetAge(id) > 14)
             {
