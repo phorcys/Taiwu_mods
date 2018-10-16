@@ -1175,7 +1175,7 @@ namespace KeyBoardShortCut
     [HarmonyPatch(typeof(HomeSystem), "Start")]
     public static class HomeSystem_Confirm_Patch
     {
-        private static void Postfix(UIDate __instance)
+        private static void Postfix(UIDate __instance )
         {
             if (!Main.enabled && Main.binding_key)
             {
@@ -1185,7 +1185,7 @@ namespace KeyBoardShortCut
             newobj.setparam(typeof(HomeSystem), "StartNewBuilding", () =>
             {
                 //依次检测子窗口,顺序很重要
-                if(HomeSystem.instance.homeSystem.activeInHierarchy == false)
+                if(HomeSystem.instance.homeSystem.activeInHierarchy == false )
                 {
                     return false;
                 }
@@ -1201,7 +1201,7 @@ namespace KeyBoardShortCut
                     HomeSystem.instance.StartBuildingRemove();
                     return false;
                 }
-                if(HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy == true )
+                if(HomeSystem.instance.buildingWindow.Find("NewBuildingWindowBack").gameObject.activeInHierarchy == true )
                 {
                     return HomeSystem.instance.canBuildingButton.interactable;
                 }
@@ -1209,6 +1209,7 @@ namespace KeyBoardShortCut
                 
             });
         }
+
     }
 
     /// <summary>
@@ -1282,7 +1283,7 @@ namespace KeyBoardShortCut
     }
 
     /// <summary>
-    ///  确定 确认建筑
+    ///  功法树关闭
     /// </summary>
     [HarmonyPatch(typeof(GongFaTreeWindow), "Start")]
     public static class GongFaTreeWindow_EscCloseNonSingleton_Patch
