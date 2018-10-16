@@ -25,6 +25,7 @@ namespace CharacterFloatInfo
         public bool workerlist = false;
         public bool talkMessage = false;
         public bool showMood = false; //显示心情
+        public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
         public bool hideShopNameOfNonBusiness = true; //不显示非商人的商店名
@@ -66,6 +67,7 @@ namespace CharacterFloatInfo
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示未加成信息", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
+            Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "显示村民工作效率", new GUILayoutOption[0]);
             Main.settings.workerlist = GUILayout.Toggle(Main.settings.workerlist, "村民分配工作界面启用", new GUILayoutOption[0]);
             Main.settings.talkMessage = GUILayout.Toggle(Main.settings.talkMessage, "对话界面启用", new GUILayoutOption[0]);
             //GUILayout.EndHorizontal();
@@ -83,23 +85,19 @@ namespace CharacterFloatInfo
     {
         public static int index = 0;
 
-        static void Postfix(Transform ___actorHolder, int ___showPlaceActorTyp, int ___choosePlaceId)
+        static void Postfix(Transform ___actorHolder)
         {
             if (!Main.enabled)
             {
                 return;
             }
-
-            if (___showPlaceActorTyp == 1 && DateFile.instance.mianPlaceId == ___choosePlaceId)
+            int count = ___actorHolder.childCount;
+            for (int i = index; i < count; i++)
             {
-                int count = ___actorHolder.childCount;
-                for (int i = index; i < count; i++)
-                {
-                    ___actorHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
-                }
-
-                index = count;
+                ___actorHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
             }
+
+            index = count;
         }
     }
 
@@ -155,10 +153,10 @@ namespace CharacterFloatInfo
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
-        static List<string> actorMassage = new List<string>();
-        static int actorId = 0;
+        public static List<string> actorMassage = new List<string>();
+        public static int actorId = 0;
 
-        static void Postfix(GameObject tips, bool on, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
+        public static void Postfix(GameObject tips, bool on, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
         {
             if (!Main.enabled)
             {
@@ -191,101 +189,127 @@ namespace CharacterFloatInfo
                 }
 
                 if (needShow)
-                {
-                    int age = GetAge(id);
-                    ___itemLevelText.text = string.Format("\t{0}({1})", age, GetHealth(id));
-                    ___itemMoneyText.text = GetChame(id, Main.settings.addonInfo);
-                    ___informationMassage.text = "";
-                    ___informationName.text = DateFile.instance.GetActorName(id, true, false) + GetSamsaraName(id);
-                    ___informationName.text += "\n" + GetMood(id) + " • " + GetFame(id);
-                    if (age > 14) //低于14岁不显示婚姻状况
-                    {
-                        ___informationName.text += " • " + GetSpouse(id);
-                    }
-
-                    string shopName = GetShopName(id);
-                    if (shopName.Length != 0)
-                    {
-                        ___informationName.text += " • " + shopName;
-                    }
-                    string workDate = GetWorkingData(id);
-                    if(workDate!=null)
-                    {
-                        ___informationName.text += " • " + workDate;
-                    }
-                    string workPlace = GetWorkPlace(id);
-                    if (workPlace.Length != 0)
-                    {
-                        ___informationName.text += " • " + workPlace;
-                    }
-
-
-                    List<int> list = GetHPSP(id);
-                    List<int> list1 = GetPoison(id);
-                    if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
-                    {
-                        if (GetPoison(id)[0] == 1)
-                        {
-                            if (list[0] != 0 || list[2] != 0)
-                            {
-                                ___informationName.text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
-                            }
-                            else
-                            {
-                                ___informationName.text += DateFile.instance.SetColoer(20007, "\n中毒");
-                            }
-                        }
-                        else
-                        {
-                            ___informationName.text += DateFile.instance.SetColoer(20010, "\n受伤");
-                        }
-                    }
-                    else
-                    {
-                        ___informationName.text += DateFile.instance.SetColoer(20004, "\n健康");
-                    }
-
-
-                    Text text = ___informationMassage;
-                    text.text += "\t立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id) + "次";
-                    if (age > 14)
-                    {
-                        text.text += "\t\t\t子嗣：" + DateFile.instance.GetActorSocial(id, 310, false).Count;
-                    }
-
-                    text.text += "\n\n\t喜好：" + Gethobby(id, 0);
-                    text.text += "\t\t\t厌恶：" + Gethobby(id, 1) + "\n\n";
-
-                    for (int i = 0; i < 16; i++)
-                    {
-                        if (i < 14)
-                        {
-                            text.text += string.Format("\t{0}\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
-                        }
-                        else
-                        {
-                            text.text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
-                        }
-                    }
-
-                    if (Main.settings.lifeMessage && tips.transform.parent == WorldMapSystem.instance.actorHolder)//只在大地图显示经历
-                    {                      
-                        text.text += GetLifeMessage(id, 3);
-                    }
-
+                {                   
+                    ___itemLevelText.text =SetLevelText(id);
+                    ___itemMoneyText.text = SetMoneyText(id);
+                    ___informationName.text = SetInfoName(id);
+                    ___informationMassage.text = SetInfoMassage(id, tips);
                     ___anTips = true;
                 }
             }
         }
 
+        //标题栏左侧小字号文本
+        public static string SetLevelText(int id)
+        {
+            return string.Format("\t{0}({1})", GetAge(id), GetHealth(id));
+        }
+
+        //标题栏右侧侧小字号文本
+        public static string SetMoneyText(int id)
+        {
+            return GetChame(id, Main.settings.addonInfo);
+        }
+
+        //标题栏
+        public static string SetInfoName(int id)
+        {
+            string text = "";
+            int age = GetAge(id);
+            text = DateFile.instance.GetActorName(id, true, false);
+            string samsaraNmae = GetSamsaraName(id);
+            text += samsaraNmae.Length > 0 ? " ◆ " + samsaraNmae : "";
+            text += "\n" + GetMood(id) + " • " + GetFame(id);
+            if (age > 14) //低于14岁不显示婚姻状况
+            {
+                text += " • " + GetSpouse(id);
+            }
+
+            string shopName = GetShopName(id);
+            if (shopName.Length != 0)
+            {
+                text += " • " + shopName;
+            }
+            string workDate = GetWorkingData(id);
+            if (workDate != null&&Main.settings.workEfficiency)
+            {
+                text += " • " + workDate;
+            }
+            string workPlace = GetWorkPlace(id);
+            if (workPlace.Length != 0)
+            {
+                text += " • " + workPlace;
+            }
+
+
+            List<int> list = GetHPSP(id);
+            List<int> list1 = GetPoison(id);
+            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+            {
+                if (GetPoison(id)[0] == 1)
+                {
+                    if (list[0] != 0 || list[2] != 0)
+                    {
+                        text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
+                    }
+                    else
+                    {
+                        text += DateFile.instance.SetColoer(20007, "\n中毒");
+                    }
+                }
+                else
+                {
+                    text += DateFile.instance.SetColoer(20010, "\n受伤");
+                }
+            }
+            else
+            {
+                text += DateFile.instance.SetColoer(20004, "\n健康");
+            }
+            return text;
+        }
+
+        //文本
+        public static string SetInfoMassage(int id, GameObject tips)
+        {
+            string text = "";
+            text += "\t立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id) + "次";
+            if (GetAge(id) > 14)
+            {
+                text += "\t\t\t子嗣：" + DateFile.instance.GetActorSocial(id, 310, false).Count;
+            }
+
+            text += "\n\n\t喜好：" + Gethobby(id, 0);
+            text += "\t\t\t厌恶：" + Gethobby(id, 1) + "\n\n";
+
+            for (int i = 0; i < 16; i++)
+            {
+                if (i < 14)
+                {
+                    text += string.Format("\t{0}\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
+                }
+                else
+                {
+                    text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
+                }
+            }
+
+            if (Main.settings.lifeMessage && tips.transform.parent == WorldMapSystem.instance.actorHolder)//只在大地图显示经历
+            {
+                text += GetLifeMessage(id, 3);
+            }
+            return text;
+        }
+
+
         //心情
-        static string GetMood(int id)
+        public static string GetMood(int id)
         {
             return ActorMenu.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
         }
 
         //魅力
-        static string GetChame(int id, bool shownoadd)
+        public static string GetChame(int id, bool shownoadd)
         {
             // 显示未加成数据 true
             string text = ((int.Parse(DateFile.instance.GetActorDate(id, 11, false)) > 14 || !Main.settings.hideChameOfChildren)
@@ -324,14 +348,14 @@ namespace CharacterFloatInfo
         }
 
         //名誉
-        static string GetFame(int id)
+        public static string GetFame(int id)
         {
             string text = ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
             return text;
         }
 
         //立场
-        static string GetGoodness(int id)
+        public static string GetGoodness(int id)
         {
             string text = DateFile.instance.massageDate[9][0].Split(new char[]
             {
@@ -341,7 +365,7 @@ namespace CharacterFloatInfo
         }
 
         //喜好
-        static string Gethobby(int id, int hobby)
+        public static string Gethobby(int id, int hobby)
         {
             //喜欢 0 讨厌 1
             string text = ((int.Parse(DateFile.instance.GetActorDate(id, 207 + hobby, false)) != 1)
@@ -359,7 +383,7 @@ namespace CharacterFloatInfo
         }
 
         //资质
-        static string GetLevel(int id, int index, int gongfa, bool shownoadd)
+        public static string GetLevel(int id, int index, int gongfa, bool shownoadd)
         {
             // 生活技能 0 战斗技能 1
             //显示未加成数据 true
@@ -399,14 +423,14 @@ namespace CharacterFloatInfo
         }
 
         //年龄
-        static int GetAge(int id)
+        public static int GetAge(int id)
         {
             int age = (int.Parse(DateFile.instance.GetActorDate(id, 11, false)));
             return age;
         }
 
         //健康值
-        static string GetHealth(int id)
+        public static string GetHealth(int id)
         {
             int health = ActorMenu.instance.Health(id);
             int maxhealth = ActorMenu.instance.MaxHealth(id);
@@ -415,7 +439,7 @@ namespace CharacterFloatInfo
         }
 
         //红蓝条
-        static List<int> GetHPSP(int id)
+        public static List<int> GetHPSP(int id)
         {
             int Hp = ActorMenu.instance.Hp(id, false);
             int maxHp = ActorMenu.instance.MaxHp(id);
@@ -432,7 +456,7 @@ namespace CharacterFloatInfo
         }
 
         //毒素
-        static List<int> GetPoison(int id)
+        public static List<int> GetPoison(int id)
         {
             List<int> list = new List<int> {0};
 
@@ -447,7 +471,7 @@ namespace CharacterFloatInfo
         }
 
         //商会
-        static string GetShopName(int id)
+        public static string GetShopName(int id)
         {
             string text = "";
             if (GetGangLevelText(id) == "商人")
@@ -496,7 +520,7 @@ namespace CharacterFloatInfo
         }
 
         //人物在组织中等级
-        static string GetGangLevelText(int id)
+        public static string GetGangLevelText(int id)
         {
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
             int num3 = int.Parse(DateFile.instance.GetActorDate(id, 20, false));
@@ -507,7 +531,7 @@ namespace CharacterFloatInfo
         }
 
         //村民工作地点
-        static string GetWorkPlace(int id)
+        public static string GetWorkPlace(int id)
         {
             string text = "";
             if (DateFile.instance.ActorIsWorking(id) != null)
@@ -529,7 +553,7 @@ namespace CharacterFloatInfo
         }
 
         //转世次数
-        static string GetSamsara(int id)
+        public static string GetSamsara(int id)
         {
             if (DateFile.instance.HaveLifeDate(id, 801))
             {
@@ -542,20 +566,20 @@ namespace CharacterFloatInfo
         }
 
         //前世名字
-        static string GetSamsaraName(int id)
+        public static string GetSamsaraName(int id)
         {
             string text = "";
             if (DateFile.instance.HaveLifeDate(id, 801))
             {
                 List<int> list = DateFile.instance.GetLifeDateList(id, 801);
-                text = string.Format(" ◆ {0}", DateFile.instance.GetActorName(list[list.Count - 1], true, false));
+                text = string.Format("{0}", DateFile.instance.GetActorName(list[list.Count - 1], true, false));
             }
 
             return text;
         }
 
         //婚姻状况
-        static string GetSpouse(int id)
+        public static string GetSpouse(int id)
         {
             List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
             List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true);
@@ -582,7 +606,7 @@ namespace CharacterFloatInfo
         }
 
         //人物经历
-        static string GetLifeMessage(int id, int shownum) //shownum控制显示几条信息
+        public static string GetLifeMessage(int id, int shownum) //shownum控制显示几条信息
         {
             string text = "";
             int index = 0;
@@ -703,7 +727,7 @@ namespace CharacterFloatInfo
             return text;
         }
         //工作效率,null代表无法获得
-        private static string GetWorkingData(int workerId)
+        public static string GetWorkingData(int workerId)
         {
             if (HomeSystem.instance == null)
                 return null;

@@ -43,12 +43,8 @@ namespace AutoChooseAttackPart//变招时自动选择变招
         
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
-
             enabled = value;
-
-            return true;
+            return value;
         }
 
 
@@ -71,18 +67,21 @@ namespace AutoChooseAttackPart//变招时自动选择变招
     {
         static void Postfix(BattleSystem __instance)
         {
-            if (__instance.attackPartChooseButton.Count() < Settings.PartCount)
+            if (Main.enabled)
             {
-                Main.Logger.Log("AutoChooseAttackPart Mod Down\n");
-                return;
+                if (__instance.attackPartChooseButton.Count() < Settings.PartCount)
+                {
+                    Main.Logger.Log("AutoChooseAttackPart Mod Down\n");
+                    return;
+                }
+                int index = Settings.NoPart;//默认=不变招=button[7]
+                if (Main.settings.priorityPart != Settings.NoPart)
+                    if (__instance.attackPartChooseButton[Main.settings.priorityPart].IsInteractable())
+                        index = Main.settings.priorityPart;
+                BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
+                Type type = __instance.attackPartChooseButton[index].GetType();
+                type.GetMethod("Press", flag).Invoke(__instance.attackPartChooseButton[index], null);
             }
-            int index = Settings.NoPart;//默认=不变招=button[7]
-            if (Main.settings.priorityPart != Settings.NoPart)
-                if (__instance.attackPartChooseButton[Main.settings.priorityPart].IsInteractable())
-                    index = Main.settings.priorityPart;
-            BindingFlags flag = BindingFlags.Instance | BindingFlags.NonPublic;
-            Type type = __instance.attackPartChooseButton[index].GetType();
-            type.GetMethod("Press", flag).Invoke(__instance.attackPartChooseButton[index], null);
         }
     }
 }
