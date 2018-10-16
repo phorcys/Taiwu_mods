@@ -53,8 +53,6 @@ namespace CharacterFloatInfo
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
 
             enabled = value;
 
