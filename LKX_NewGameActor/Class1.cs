@@ -89,7 +89,8 @@ namespace LKX_NewGameActor
         /// <param name="value">是否激活</param>
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            return Main.enabled = value;
+            Main.enabled = value;
+            return true;
         }
 
         /// <summary>
@@ -100,7 +101,7 @@ namespace LKX_NewGameActor
         {
             GUIStyle redLabelStyle = new GUIStyle();
             redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
-            GUILayout.Label("如果status亮红灯代表失效，重新开启这个mod需要重启游戏！正常状态下保存设置不需要重启！", redLabelStyle);
+            GUILayout.Label("如果status亮红灯代表失效！", redLabelStyle);
             Main.settings.lockAbilityNum = GUILayout.Toggle(Main.settings.lockAbilityNum, "锁定新建人物时的特性点");
             Main.settings.featureType = GUILayout.SelectionGrid(Main.settings.featureType, new string[]{ "关闭", "全3级特性", "自定义" }, 3);
 
