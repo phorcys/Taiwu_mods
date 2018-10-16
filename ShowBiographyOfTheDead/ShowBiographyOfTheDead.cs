@@ -42,11 +42,7 @@ namespace ShowBiographyOfTheDead
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
-
             enabled = value;
-
             return true;
         }
 
@@ -83,6 +79,8 @@ namespace ShowBiographyOfTheDead
 
         static void Prefix(DateFile __instance,List<int> actorId,bool die,bool showRemove)
         {
+            if (!Main.enabled)
+                return;
             if (!die)
                 return;
             List<int> deadFollower = new List<int>();//死亡村民id

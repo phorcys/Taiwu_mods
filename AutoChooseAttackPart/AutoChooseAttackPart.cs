@@ -44,7 +44,7 @@ namespace AutoChooseAttackPart//变招时自动选择变招
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
-            return value;
+            return true;
         }
 
 
