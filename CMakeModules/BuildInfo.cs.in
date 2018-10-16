@@ -1,0 +1,43 @@
+namespace SolidOpt.BuildInformation {
+  /// <summary>
+  /// Information exported from the buildsystem.
+  /// </summary>
+  ///
+  public static class BuildInfo {
+    /// <summary>
+    /// The directory where the build will put all libraries.
+    /// </summary>
+    ///
+    public const string LibraryOutputDir = "@CMAKE_LIBRARY_OUTPUT_DIR@";
+
+    /// <summary>
+    /// The directory where the build will put all executables.
+    /// </summary>
+    /// 
+    public const string ExecutableOutputDir = "@CMAKE_RUNTIME_OUTPUT_DIR@";
+
+    /// <summary>
+    /// The directory where is the source code.
+    /// </summary>
+    /// 
+    public const string SourceDir = "@CMAKE_SOURCE_DIR@";
+
+    /// <summary>
+    /// The directory where is the build.
+    /// </summary>
+    /// 
+    public const string BinaryDir = "@CMAKE_BINARY_DIR@";
+
+    /// <summary>
+    /// The full path to the ILASM compiler binary.
+    /// </summary>
+    /// 
+    public const string ILASMCompiler = "@ILASM@";
+
+    /// <summary>
+    /// The full path to the C# compiler binary.
+    /// </summary>
+    /// 
+    public const string CSCCompiler = "@CSC@";
+  }
+}

@@ -1,0 +1,8 @@
+﻿{
+  "Id": "ShowBiographyOfTheDead",
+  "DisplayName": "复仇",
+  "Author": "xyzkljl1",
+  "Version": "1.0.1",
+  "AssemblyName": "ShowBiographyOfTheDead.dll",
+  "EntryMethod": "ShowBiographyOfTheDead.Main.Load"
+}
