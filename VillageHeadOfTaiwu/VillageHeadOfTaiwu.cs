@@ -3,10 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityModManagerNet;
-using DG.Tweening;
 
 namespace VillageHeadOfTaiwu
 {
@@ -32,10 +30,10 @@ namespace VillageHeadOfTaiwu
         }
 
         readonly string[] work_string = {
-            "食物",
+            "食材",
             "木材",
             "金石",
-            "丝绸",
+            "织物",
             "药材",
             "银钱"
         };
@@ -49,7 +47,7 @@ namespace VillageHeadOfTaiwu
         Vector2 scrollPosition;
 
         bool open;
-        bool collapse;
+        //bool collapse;
 
         GUIStyle windowStyle;
         GUIStyle collapseStyle;
@@ -81,7 +79,7 @@ namespace VillageHeadOfTaiwu
             Main.logger.Log("start");
 
             open = false;
-            collapse = false;
+            //collapse = false;
 
             windowRect = new Rect(Screen.width * 0.85f, 50f, Screen.width * 0.15f, 0);
             scrollPosition = Vector2.zero;
@@ -151,11 +149,11 @@ namespace VillageHeadOfTaiwu
         {
             GUILayout.BeginScrollView(scrollPosition, scrollStyle);
             GUILayout.BeginVertical("box");
-            if (GUILayout.Button("收起", collapseStyle))
-            {
-                collapse = !collapse;
-            }
-            if (!collapse)
+            //if (GUILayout.Button("收起", collapseStyle))
+            //{
+            //    collapse = !collapse;
+            //}
+            //if (!collapse)
             {
                 for (int i = 0; i < 6; i++)
                 {
@@ -171,7 +169,8 @@ namespace VillageHeadOfTaiwu
                             var manpowerList = DateFile.instance.manpowerUseList;
                             if (manpowerList.ContainsKey(worker.part) &&
                                 manpowerList[worker.part].ContainsKey(worker.place))
-                                UIDate.instance.UPlistRemove(worker.type, worker.part, worker.place);
+                                UIDate.instance.UPlistRemove(
+                                    worker.type, worker.part, worker.place);
                         }
                     }
                 } 
@@ -215,13 +214,16 @@ namespace VillageHeadOfTaiwu
             {
                 foreach (var place in list[part].Keys)
                 {
-                    var position = df.GetNewMapDate(part, place, 98) + df.GetNewMapDate(part, place, 0);
+                    var position = df.GetNewMapDate(part, place, 98) +
+                        df.GetNewMapDate(part, place, 0);
                     var manpower = list[part][place][1];
                     var type = (int)work;
                     var resource = UIDate.instance.GetWorkPower(type, part, place);
                     var worker = new Worker
                     {
-                        content = $"{df.SetColoer(10003, position)}：+{df.SetColoer(10002, resource.ToString())}/{df.SetColoer(10005, manpower.ToString())}人 /时节",
+                        content = $"{df.SetColoer(10003, position)}：+" +
+                            $"{df.SetColoer(10002, resource.ToString())}/" +
+                            $"{df.SetColoer(10005, manpower.ToString())}人 /时节",
                         part = part,
                         place = place,
                         manpower = manpower,
