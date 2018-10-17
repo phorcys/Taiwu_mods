@@ -163,20 +163,31 @@ namespace VillageHeadOfTaiwu
                     var wokers = new List<Worker>(GetWorkers(work));
                     foreach (var worker in wokers)
                     {
-                        //Main.logger.Log(worker.content);
                         if (GUILayout.Button(worker.content, buttonStyle))
                         {
-                            var manpowerList = DateFile.instance.manpowerUseList;
-                            if (manpowerList.ContainsKey(worker.part) &&
-                                manpowerList[worker.part].ContainsKey(worker.place))
-                                UIDate.instance.UPlistRemove(
-                                    worker.type, worker.part, worker.place);
+                            CancelWork(worker);
                         }
                     }
-                } 
+                }
             }
             GUILayout.EndVertical();
             GUILayout.EndScrollView();
+        }
+
+        private void CancelWork(Worker worker)
+        {
+            var manpowerList = DateFile.instance.manpowerUseList;
+            if (manpowerList.ContainsKey(worker.part) &&
+                manpowerList[worker.part].ContainsKey(worker.place))
+            {
+                var wms = WorldMapSystem.instance;
+                var type = typeof(WorldMapSystem);
+                type.GetField("removeWorkPart", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(wms, worker.part);
+                type.GetField("removeWorkPlace", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(wms, worker.place);
+                wms.IconRemoveWorkingDate();
+            }
         }
 
         private IEnumerable<Worker> GetWorkers(WorkType work)
@@ -259,7 +270,7 @@ namespace VillageHeadOfTaiwu
             if (open)
             {
                 canvas = new GameObject("", typeof(Canvas), typeof(GraphicRaycaster));
-                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
                 canvas.GetComponent<Canvas>().sortingOrder = short.MaxValue;
                 DontDestroyOnLoad(canvas);
                 var panel = new GameObject("", typeof(Image));
