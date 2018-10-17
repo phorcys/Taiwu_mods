@@ -31,5 +31,7 @@
 3. 除 最后一行 Requirements 外，其他为必填
 4. 运行genvsproj.cmd 生成工程，开始mod开发
 
-#讨论，qq群 90311 09 62
+#Mods 开发辅助工具 repo：
+
+https://github.com/phorcys/Taiwu_Mods_Tools.git
 
