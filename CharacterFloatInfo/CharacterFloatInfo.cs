@@ -24,7 +24,8 @@ namespace CharacterFloatInfo
         public bool workPlace = false;
         public bool workerlist = false;
         public bool talkMessage = false;
-        public bool enableShortMode = true;//在工作界面和对话框只显示部分信息
+        public bool enableTalkShortMode = true;//在对话框只显示部分信息
+        public bool enableListShortMode = true;//在工作界面只显示部分信息
         public bool showMood = false; //显示心情
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
@@ -62,8 +63,9 @@ namespace CharacterFloatInfo
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             //GUILayout.BeginHorizontal();
-            Main.settings.enableShortMode = GUILayout.Toggle(Main.settings.enableShortMode, "在对话/分配工作界面只显示部分信息", new GUILayoutOption[0]);
-            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示未加成信息", new GUILayoutOption[0]);
+            Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
+            Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
+            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
             Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "显示村民工作效率", new GUILayoutOption[0]);
@@ -184,7 +186,13 @@ namespace CharacterFloatInfo
                     {
                         id = int.Parse(array[1]);
                         needShow = true;
-                        windowType = HomeSystem.instance.buildingWindowOpend?WindowType.BuildingWindow:WindowType.MapActorList;
+                        windowType = WindowType.MapActorList;
+                    }
+                    if (HomeSystem.instance.buildingWindowOpend)
+                    {
+                        id = int.Parse(array[1]);
+                        needShow = true;
+                        windowType = WindowType.BuildingWindow;
                     }
                 }
                 //对话窗口的人物头像
@@ -280,7 +288,9 @@ namespace CharacterFloatInfo
         public static string SetInfoMassage(int id, GameObject tips)
         {
             string text = "";
-            if (windowType != WindowType.MapActorList && Main.settings.enableShortMode)
+            if (windowType == WindowType.Dialog && Main.settings.enableTalkShortMode)
+                return text;
+            if (windowType == WindowType.BuildingWindow && Main.settings.enableListShortMode)
                 return text;
             text += "\t立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id) + "次";
             if (GetAge(id) > 14)
@@ -295,7 +305,7 @@ namespace CharacterFloatInfo
             {
                 if (i < 14)
                 {
-                    text += string.Format("\t{0}\t\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
+                    text += string.Format("\t{0}\t\t{1}\n", GetLevel(id, i, 0, Main.settings.addonInfo), GetLevel(id, i, 1, Main.settings.addonInfo));
                 }
                 else
                 {
@@ -303,7 +313,7 @@ namespace CharacterFloatInfo
                 }
             }
 
-            if (Main.settings.lifeMessage && tips.transform.parent == WorldMapSystem.instance.actorHolder)//只在大地图显示经历
+            if (Main.settings.lifeMessage && windowType == WindowType.MapActorList)//只在大地图显示经历
             {
                 text += GetLifeMessage(id, 3);
             }
@@ -409,7 +419,6 @@ namespace CharacterFloatInfo
                 WindowManage.instance.Mut(),
                 num
             }), false);
-
             text += num < 10 ? "\t\t" : num < 100 ? "\t" : "";
             if (shownoadd)
             {
@@ -425,7 +434,7 @@ namespace CharacterFloatInfo
             }
             else
             {
-                text += "\t\t\t";
+                text += "\t\t";
             }
 
             return text;
