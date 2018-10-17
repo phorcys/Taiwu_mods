@@ -111,11 +111,12 @@ namespace LKX_NewGameActor
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("自定义特性文件名：", GUILayout.Width(130));
-                string s = GUILayout.TextArea(Main.settings.file);
-                if (GUI.changed) Main.settings.file = s;
+                string featureFilename = "";
+                featureFilename = GUILayout.TextArea(Main.settings.file);
+                if (GUI.changed) Main.settings.file = featureFilename;
 
                 GUILayout.EndHorizontal();
-                if ((s != null || s != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file)))
+                if ((featureFilename != null || featureFilename != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file)))
                 {
                     GUILayout.Label("文件存在！");
                 }
