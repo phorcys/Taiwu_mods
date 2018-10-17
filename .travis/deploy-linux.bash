@@ -37,7 +37,6 @@ do
 		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/ | true
 		echo "Published Mod  ${modfullname} to Github Release page, Release tag : ${COMM_TAG}"
 	fi
-	\cp -Rf ${HOME}/.taiwu/Mods_publish/* ../Mods_publish/
 
 	echo "List Published Mods:"
 	ls -al ../Mods_publish/
