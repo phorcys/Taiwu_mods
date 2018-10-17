@@ -8,18 +8,17 @@ using UnityModManagerNet;
 
 namespace Samsara1k
 {
-    // [HarmonyPatch(typeof(ActorMenu), "NewMianActor")]
-    // public class ActorMenu_NewMainActor_Patch
-    // {
-    //     public static void Prefix()
-    //     {
-    //         if (Main.enabled)
-    //         {
-    //             DateFile.instance.samsara += 999;
-    //             Main.logger.Log(DateFile.instance.samsara.ToString());
-    //         }
-    //     }
-    // }
+    [HarmonyPatch(typeof(ActorMenu), "NewMianActor")]
+    public class ActorMenu_NewMainActor_Patch
+    {
+        public static void Prefix()
+        {
+            if (Main.enabled)
+            {
+                DateFile.instance.samsara += 999;
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(MassageWindow), "EndEvent11_1")]
     public class MassageWindow_EndEvent11_1_Patch
@@ -31,7 +30,6 @@ namespace Samsara1k
                 if (MassageWindow.instance.eventValue[1] == 1)
                 {
                     DateFile.instance.samsara += 999;
-                    Main.logger.Log(DateFile.instance.samsara.ToString());
                 }
             }
         }
