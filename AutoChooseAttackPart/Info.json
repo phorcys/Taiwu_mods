@@ -2,7 +2,7 @@
   "Id": "AutoChooseAttackPart",
   "DisplayName": "自动变招",
   "Author": "xyzkljl1",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "AssemblyName": "AutoChooseAttackPart.dll",
   "EntryMethod": "AutoChooseAttackPart.Main.Load"
 }
