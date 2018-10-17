@@ -116,7 +116,7 @@ namespace LKX_NewGameActor
                 if (GUI.changed) Main.settings.file = featureFilename;
 
                 GUILayout.EndHorizontal();
-                if ((featureFilename != null || featureFilename != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file)))
+                if ((Main.settings.file != null || Main.settings.file != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file)))
                 {
                     GUILayout.Label("文件存在！");
                 }
