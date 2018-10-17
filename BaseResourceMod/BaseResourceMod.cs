@@ -126,15 +126,15 @@ namespace BaseResourceMod
             { 10005,"<color=#FFE100FF>"},
             { 10006,"<color=#FF44A7FF>"},
             { 20001,"<color=#E1CDAAFF>"},
-            { 20002,"<color=#8E8E8EFF>"},
-            { 20003,"<color=#FBFBFBFF>"},
-            { 20004,"<color=#6DB75FFF>"},
-            { 20005,"<color=#8FBAE7FF>"},
-            { 20006,"<color=#63CED0FF>"},
-            { 20007,"<color=#AE5AC8FF>"},
-            { 20008,"<color=#E3C66DFF>"},
-            { 20009,"<color=#F28234FF>"},
-            { 20010,"<color=#E4504DFF>"},
+            { 20002,"<color=#8E8E8EFF>"}, //九品灰
+            { 20003,"<color=#FBFBFBFF>"}, //八品白
+            { 20004,"<color=#6DB75FFF>"}, //七品绿
+            { 20005,"<color=#8FBAE7FF>"}, //六品青
+            { 20006,"<color=#63CED0FF>"}, //五品蓝
+            { 20007,"<color=#AE5AC8FF>"}, //四品紫
+            { 20008,"<color=#E3C66DFF>"}, //三品金
+            { 20009,"<color=#F28234FF>"}, //二品橙
+            { 20010,"<color=#E4504DFF>"}, //一品红
             { 20011,"<color=#EDA723FF>"},
         };
 
