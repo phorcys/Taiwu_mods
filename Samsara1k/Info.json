@@ -1,0 +1,8 @@
+﻿{
+    "Id": "Samsara1k",
+    "DisplayName": "轮回1k次",
+    "Author": "sth4nothing",
+    "Version": "1.0.0",
+    "AssemblyName": "Samsara1k.dll",
+    "EntryMethod": "Samsara1k.Main.Load"
+}
