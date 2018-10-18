@@ -29,7 +29,7 @@ namespace CharacterFloatInfo
         public bool hideChameOfChildren = true; //不显示儿童的魅力
         public bool useColorOfTeachingSkill = false; //用可以请教的技艺的颜色显示资质(120=红)
         public bool lifeMessage = false; //人物经历
-        public bool showCharacteristic = true; //人物特質
+        public bool showCharacteristic = true; //人物特性
         public bool showIV = false; //显示被隐藏了的人物特性
     }
 
@@ -157,6 +157,7 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
+        private static Transform actorFeatureHolder;
         public enum WindowType
         {
             MapActorList,
@@ -168,6 +169,22 @@ namespace CharacterFloatInfo
         {
             if (!Main.enabled) return;
             if (___informationWindow == null || ___informationWindow.transform == null || ActorMenu.instance == null) return; //未入GAME
+            actorFeatureHolder = ___informationWindow.transform.Find("actorFeatureHolder");
+            if (actorFeatureHolder == null)
+            {
+                actorFeatureHolder = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.actorFeatureHolder.gameObject, new Vector3(20f, -170f, 0), Quaternion.identity).transform;
+                actorFeatureHolder.SetParent(___informationWindow.transform, false);
+                actorFeatureHolder.name = "actorFeatureHolder";
+                actorFeatureHolder.localScale = new Vector3(.65f, .65f, .65f);
+                actorFeatureHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(338f, 200f);
+            }
+            else if (actorFeatureHolder.childCount > 0)
+            {
+                for (int i = 0; i < actorFeatureHolder.childCount; i++)
+                {
+                    UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
+                }
+            }
 
             if (tips != null && ___anTips == false && on)
             {
@@ -299,23 +316,6 @@ namespace CharacterFloatInfo
 
             if (Main.settings.showCharacteristic)
             {
-                Transform actorFeatureHolder = ___informationWindow.transform.Find("actorFeatureHolder");
-                if (actorFeatureHolder == null)
-                {
-                    actorFeatureHolder = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.actorFeatureHolder.gameObject, new Vector3(20f, -170f, 0), Quaternion.identity).transform;
-                    actorFeatureHolder.SetParent(___informationWindow.transform, false);
-                    actorFeatureHolder.name = "actorFeatureHolder";
-                    actorFeatureHolder.localScale = new Vector3(.65f, .65f, .65f);
-                    actorFeatureHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(338f, 200f);
-                }
-                else if (actorFeatureHolder.childCount > 0)
-                {
-                    for (int i = 0; i < actorFeatureHolder.childCount; i++)
-                    {
-                        UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
-                    }
-                }
-
                 text += "\n\n";
                 List<int> featureIDs = DateFile.instance.GetActorFeature(id);
                 int shown = 0;
