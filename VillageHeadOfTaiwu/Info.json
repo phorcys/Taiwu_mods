@@ -1,0 +1,8 @@
+﻿{
+    "Id": "VillageHeadOfTaiwu",
+    "DisplayName": "太吾村支书",
+    "Author": "sth4nothing",
+    "Version": "1.0.2",
+    "AssemblyName": "VillageHeadOfTaiwu.dll",
+    "EntryMethod": "VillageHeadOfTaiwu.Main.Load"
+}

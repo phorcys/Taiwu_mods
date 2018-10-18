@@ -409,6 +409,12 @@ namespace CharacterFloatInfo
             int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
             int num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false));
+            Main.Logger.Log(string.Format("getLevel-{0}-{1}-{2}--{3}",
+                num, 
+                DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true),
+                num2, 
+                DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false)
+                ));
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), string.Concat(new object[]
             {
                 DateFile.instance.baseSkillDate[index + 101 * gongfa][0],
