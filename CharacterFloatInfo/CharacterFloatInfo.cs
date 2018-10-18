@@ -409,6 +409,12 @@ namespace CharacterFloatInfo
             int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
             int num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false));
+            Main.Logger.Log(string.Format("getLevel-{0}-{1}-{2}--{3}",
+                num, 
+                DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true),
+                num2, 
+                DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false)
+                ));
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), string.Concat(new object[]
             {
                 DateFile.instance.baseSkillDate[index + 101 * gongfa][0],
@@ -537,7 +543,17 @@ namespace CharacterFloatInfo
             return text;
         }
 
-        //人物在组织中等级
+
+        //人物在组织中等级ID
+        public static int GetGangLevelId(int id)
+        {
+            int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
+            int num3 = int.Parse(DateFile.instance.GetActorDate(id, 20, false));
+            int gangValueId = DateFile.instance.GetGangValueId(num2, num3);
+            return gangValueId;
+        }
+
+        //人物在组织中等级名称
         public static string GetGangLevelText(int id)
         {
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
@@ -590,9 +606,22 @@ namespace CharacterFloatInfo
             if (DateFile.instance.HaveLifeDate(id, 801))
             {
                 List<int> list = DateFile.instance.GetLifeDateList(id, 801);
-                text = string.Format("{0}", DateFile.instance.GetActorName(list[list.Count - 1], true, false));
+                int samsaraId = list[list.Count - 1];
+                int levelId = GetGangLevelId(samsaraId);
+                text = string.Format("{0}", DateFile.instance.GetActorName(samsaraId, true, false));
+                //1为太吾村村民为特殊。2-10为无名邪道不会转世。太吾村村民不再特殊处理，跟人物姓名同一颜色即为村民
+                if (levelId > 10) 
+                {
+                    if (levelId == 99) //99为太吾传人，给予特殊的明黄色。
+                    {
+                        text = DateFile.instance.SetColoer(10005, text);
+                    }
+                    else   //其他的按照品级给予颜色
+                    {
+                        text = DateFile.instance.SetColoer(20011 - levelId % 10, text);
+                    }                    
+                }
             }
-
             return text;
         }
 
