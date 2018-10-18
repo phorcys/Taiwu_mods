@@ -1,8 +1,0 @@
-{
-  "Id": "AutoWalk",
-  "DisplayName": "自动寻路",
-  "Author": "Mengluu B站ID：零势面的尴尬",
-  "Version": "1.0.5",
-  "AssemblyName": "AutoWalk.dll",
-  "EntryMethod": "AutoWalk.Main.Load"
-}
