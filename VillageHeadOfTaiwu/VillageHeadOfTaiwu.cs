@@ -29,7 +29,7 @@ namespace VillageHeadOfTaiwu
             MONEY
         }
 
-        readonly string[] work_string = {
+        readonly string[] workString = {
             "食材",
             "木材",
             "金石",
@@ -55,6 +55,8 @@ namespace VillageHeadOfTaiwu
         GUIStyle buttonStyle;
         GUIStyle scrollStyle;
 
+        DateFile df;
+
         public static bool Load()
         {
             try
@@ -68,12 +70,14 @@ namespace VillageHeadOfTaiwu
             }
             return true;
         }
+
         private void Awake()
         {
             Main.logger.Log("awake");
             instance = this;
             DontDestroyOnLoad(this);
         }
+
         public void Start()
         {
             Main.logger.Log("start");
@@ -125,6 +129,8 @@ namespace VillageHeadOfTaiwu
                 stretchHeight = true,
                 stretchWidth = false,
             };
+
+            df = DateFile.instance;
         }
 
         public void OnGUI()
@@ -157,10 +163,13 @@ namespace VillageHeadOfTaiwu
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    var work_type = work_string[i];
-                    var work = (WorkType)i;
-                    GUILayout.Label(work_type, labelStyle);
-                    var wokers = new List<Worker>(GetWorkers(work));
+                    var workStr = workString[i];
+                    var type = (WorkType)i;
+                    if (GUILayout.Button(workStr, labelStyle))
+                    {
+                        ArrangeWork(type);
+                    }
+                    var wokers = new List<Worker>(GetWorkers(type));
                     foreach (var worker in wokers)
                     {
                         if (GUILayout.Button(worker.content, buttonStyle))
@@ -172,6 +181,49 @@ namespace VillageHeadOfTaiwu
             }
             GUILayout.EndVertical();
             GUILayout.EndScrollView();
+        }
+
+        private bool Explored(int part, int place)
+        {
+            return (df.mapPlaceShowDate.ContainsKey(part)
+                && df.mapPlaceShowDate[part].ContainsKey(place)
+                && df.mapPlaceShowDate[part][place] > 0);
+        }
+
+        private void ArrangeWork(WorkType workType)
+        {
+            var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]); // size of map
+            var part = df.mianPartId;
+
+            var maxPlace = -1;
+            var maxRes = 0;
+
+            for (int place = 0; place < size * size; place++)
+            {
+                if (Explored(part, place) && !df.PlaceIsBad(part, place))
+                {
+                    var res = UIDate.instance.GetWorkPower((int)workType, part, place);
+                    if (res > maxRes)
+                    {
+                        maxRes = res;
+                        maxPlace = place;
+                    }
+                }
+            }
+            if (maxRes > 0 && maxPlace >= 0)
+            {
+                var manPool = UIDate.instance.GetUseManPower();
+                var manNeed = int.Parse(df.GetNewMapDate(part, maxPlace, 12));
+                if (manPool >= manNeed)
+                {
+                    WorldMapSystem.instance.choosePartId = part;
+                    WorldMapSystem.instance.choosePlaceId = maxPlace;
+                    WorldMapSystem.instance.chooseWorkTyp = (int)workType;
+                    WorldMapSystem.instance.DoManpowerWork();
+                    return;
+                }
+            }
+
         }
 
         private void CancelWork(Worker worker)
@@ -192,7 +244,6 @@ namespace VillageHeadOfTaiwu
 
         private IEnumerable<Worker> GetWorkers(WorkType work)
         {
-            var df = DateFile.instance;
             Dictionary<int, Dictionary<int, int[]>> list = null;
             switch (work)
             {
