@@ -200,7 +200,7 @@ namespace VillageHeadOfTaiwu
 
             for (int place = 0; place < size * size; place++)
             {
-                if (Explored(part, place) && !df.PlaceIsBad(part, place))
+                if (Explored(part, place) && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
                 {
                     var res = UIDate.instance.GetWorkPower((int)workType, part, place);
                     if (res > maxRes)
