@@ -2,7 +2,7 @@
   "Id": "NoMoreTrash",
   "DisplayName": "自动丢弃垃圾",
   "Author": "xyzkljl1",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "AssemblyName": "NoMoreTrash.dll",
   "EntryMethod": "NoMoreTrash.Main.Load"
 }

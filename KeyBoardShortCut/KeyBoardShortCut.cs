@@ -1012,7 +1012,18 @@ namespace KeyBoardShortCut
                     return false;
                 }
 
-
+                //working actor 
+                if(HomeSystem.instance.actorListWindow.activeInHierarchy == true)
+                {
+                    HomeSystem.instance.CloseActorWindow();
+                    return false;
+                }
+                //ququbox 
+                if (QuquBox.instance.ququBoxWindow.activeInHierarchy == true)
+                {
+                    QuquBox.instance.CloseQuquBox();
+                    return false;
+                }
                 //building window
                 if (HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy == true)
                 {

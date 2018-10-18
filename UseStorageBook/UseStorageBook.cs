@@ -19,10 +19,6 @@ namespace UseStorageBook
         /// <returns></returns>
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (!Main.enabled)
-            {
-                return instructions;
-            }
             Main.logger.Log("start to patch SetBook");
             List<CodeInstruction> list = new List<CodeInstruction>(instructions);
             list.InsertRange(0, new CodeInstruction[]
@@ -43,7 +39,10 @@ namespace UseStorageBook
             RemoveBook.Invoke(HomeSystem.instance, null);
             int key = DateFile.instance.MianActorID();
             List<int> list = new List<int>(ActorMenu.instance.GetActorItems(key, 0).Keys);
-            list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
+            if (Main.enabled)
+            {
+                list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
+            }
             list = DateFile.instance.GetItemSort(list);
             for (int i = 0; i < list.Count; i++)
             {
@@ -149,7 +148,7 @@ namespace UseStorageBook
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
-            return value;
+            return true;
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)

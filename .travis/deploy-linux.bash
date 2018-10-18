@@ -5,6 +5,11 @@ cd Mods
 
 mkdir -p ${HOME}/.taiwu/Mods_publish
 
+echo "Cached mod dir file list:"
+ls -al ${HOME}/.taiwu/ | true
+
+echo "Cached mod list:"
+ls -al ${HOME}/.taiwu/Mods_publish | true
 for modzip in `ls *.zip`
 do
 	modfullname=`echo $modzip |sed -e "s/\.zip//g"`
@@ -37,9 +42,11 @@ do
 		\cp -Rf  ${HOME}/.taiwu/${modname}.json ${HOME}/.taiwu/Mods_publish/ | true
 		echo "Published Mod  ${modfullname} to Github Release page, Release tag : ${COMM_TAG}"
 	fi
-	\cp -Rf ${HOME}/.taiwu/Mods_publish/* ../Mods_publish/
-
-	echo "List Published Mods:"
-	ls -al ../Mods_publish/
+	\cp -Rf ${modzip} ../Mods_publish/ | true
+	if [ -f ${HOME}/.taiwu/${modname}.json ]
+	then
+		\cp -Rf ${HOME}/.taiwu/${modname}.json ../Mods_publish/ | true
+	fi
 done
-
+echo "List Published Mods:"
+ls -al ../Mods_publish/

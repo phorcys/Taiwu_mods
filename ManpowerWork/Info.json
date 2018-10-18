@@ -1,0 +1,8 @@
+﻿{
+  "Id": "ManpowerWork",
+  "DisplayName": "任意资源格子使用人力",
+  "Author": "skeu",
+  "Version": "1.0.0",
+  "AssemblyName": "ManpowerWork.dll",
+  "EntryMethod": "ManpowerWork.Main.Load"
+}
