@@ -26,7 +26,7 @@ namespace CharacterFloatInfo
         public bool talkMessage = false;
         public bool enableTalkShortMode = true;//在对话框只显示部分信息
         public bool enableListShortMode = true;//在工作界面只显示部分信息
-        public bool showBestItem = true; //显示身上品质最高的物品
+        public bool showBest = true; //显示身上品质最高的物品与功法
         public bool showMood = false; //显示心情
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
@@ -67,7 +67,7 @@ namespace CharacterFloatInfo
             Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息", new GUILayoutOption[0]);
-            Main.settings.showBestItem = GUILayout.Toggle(Main.settings.showBestItem, "显示最佳物品", new GUILayoutOption[0]);
+            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与功法", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
             Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "显示村民工作效率", new GUILayoutOption[0]);
@@ -314,9 +314,10 @@ namespace CharacterFloatInfo
                     text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
                 }
             }
-            if(Main.settings.showBestItem)
+            if(Main.settings.showBest)
             {
                 text += GetBestItems(id);
+                text += GetBestGongfa(id);
             }
 
             if (Main.settings.lifeMessage && windowType == WindowType.MapActorList)//只在大地图显示经历
@@ -561,17 +562,64 @@ namespace CharacterFloatInfo
             string gang = DateFile.instance.presetGangGroupDateValue[gangValueId][key2];
             return gang;
         }
+        //人物身上最高级功法获取
+        public static string GetBestGongfa(int id)
+        {
 
-        //人物身上的最佳物品获取，多个同品级物品时只显示其一。
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+            if (gongFas.Count == 0)
+            {
+                return "\n\t最佳功法: 他还没来得及学";
+            }
+            string bestName = "";
+            int bestLevel = 0;
+            int count = 1;
+            for (int i = 0; i < gongFas.Count; i++)
+            {
+                int gongFaId = gongFas[i];
+                string gongFaName = DateFile.instance.gongFaDate[gongFaId][0];
+                string level = DateFile.instance.gongFaDate[gongFaId][2];
+                int intLevel = int.Parse(level);
+                if (intLevel > bestLevel)
+                {
+                    bestLevel = intLevel;
+                    bestName = gongFaName;
+                    count = 1;
+                }
+                else
+                {
+                    if(intLevel == bestLevel)
+                    {
+                        count += 1;
+                    }
+                }
+               // Main.Logger.Log(string.Format("gongfas-{0}-{1}-{2}-{3}", i, gongFaId, gongFaName,level));
+            }
+            //Main.Logger.Log(string.Format("gongfas-final-{0}-{1}", bestLevel,bestName));
+            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
+            string after = "";
+            if (count > 1)
+            {
+                after = " 等" + count + "种."; 
+            }
+      
+            return "\n\t最佳功法: " + bestName + after;
+        }
+
+        //人物身上的最佳物品获取
         public static string GetBestItems(int id)
         {
             List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 0).Keys);
+            if (list.Count == 0)
+            {
+                return "\n\t最佳物品: 这是个穷光蛋";
+            }
             string bestName = "";
             int bestLevel = 0;
+            int count = 1;
             for (int i = 0; i < list.Count; i++)
             {
                 int itemId = list[i];
-                string nid = DateFile.instance.GetItemDate(itemId, 999, true);
                 string itemName = DateFile.instance.GetItemDate(itemId, 0, true);
                 string level = DateFile.instance.GetItemDate(itemId, 8, true);
                 int intLevel = int.Parse(level);
@@ -579,13 +627,27 @@ namespace CharacterFloatInfo
                 {
                     bestLevel = intLevel;
                     bestName = itemName;
+                    count = 1;
+                }
+                else
+                {
+                    if (intLevel == bestLevel)
+                    {
+                        count += 1;
+                    }
                 }
             }
             //获得的物品名格式为xx\n下九品，需去掉后缀，改用颜色进行标识。
             int index = bestName.IndexOf("\n");
             bestName = bestName.Substring(0, index);
-            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);  
-            return "\n最佳物品:" + bestName + "\n";
+            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
+            string after = "";
+            if (count > 1)
+            {
+                after = " 等" + count + "种.";
+            }
+
+            return "\n\t最佳物品: " + bestName + after;
         }
 
         //村民工作地点
