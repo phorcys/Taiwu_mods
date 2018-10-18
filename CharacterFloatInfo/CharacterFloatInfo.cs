@@ -259,28 +259,33 @@ namespace CharacterFloatInfo
 
             List<int> list = GetHPSP(id);
             List<int> list1 = GetPoison(id);
-            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+            int dmg = Math.Max(list[0] * 100 / list[1], list[2] * 100 / list[3]);
+            int dmgtyp = 0;
+            if (dmg >= 20) dmgtyp = 1;
+            for (int i = 0; i < 6; i++)
             {
-                if (GetPoison(id)[0] == 1)
+                if (list1[i] >= 100)
                 {
-                    if (list[0] != 0 || list[2] != 0)
-                    {
-                        text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
-                    }
-                    else
-                    {
-                        text += DateFile.instance.SetColoer(20007, "\n中毒");
-                    }
+                    dmgtyp += 2;
+                    break;
                 }
-                else
-                {
+            }
+            switch (dmgtyp)
+            {
+                case 1:
                     text += DateFile.instance.SetColoer(20010, "\n受伤");
-                }
+                    break;
+                case 2:
+                    text += DateFile.instance.SetColoer(20007, "\n中毒");
+                    break;
+                case 3:
+                    text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
+                    break;
+                default:
+                    text += DateFile.instance.SetColoer(20004, "\n健康");
+                    break;
             }
-            else
-            {
-                text += DateFile.instance.SetColoer(20004, "\n健康");
-            }
+            //text += "\n烈毒" + list1[0] + "/郁毒" + list1[1] + "/寒毒" + list1[2] + "/赤毒" + list1[3] + "/腐毒" + list1[4] + "/幻毒" + list1[5];
             return text;
         }
 
@@ -476,12 +481,12 @@ namespace CharacterFloatInfo
         //毒素
         public static List<int> GetPoison(int id)
         {
-            List<int> list = new List<int> {0};
+            List<int> list = new List<int> {};
 
             for (int i = 0; i < 6; i++)
             {
                 int num = int.Parse(DateFile.instance.GetActorDate(id, 51 + i, false));
-                list[0] = num > 0 ? 1 : 0;
+       
                 list.Add(num);
             }
 
