@@ -1,8 +1,0 @@
-﻿{
-  "Id": "ToTraditionalChinese",
-  "DisplayName": "简繁切换",
-  "Author": "yyuueexxiinngg",
-  "Version": "1.0.0",
-  "AssemblyName": "ToTraditionalChinese.dll",
-  "EntryMethod": "ToTraditionalChinese.Main.Load"
-}

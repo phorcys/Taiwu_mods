@@ -1,1 +1,0 @@
-{ "Id": "LKX_NewGameActor", "DisplayName": "新游戏人物加特性", "Author": "小枫泡泡", "Version": "1.0.1", "AssemblyName": "LKX_NewGameActor.dll", "EntryMethod": "LKX_NewGameActor.Main.Load"}
