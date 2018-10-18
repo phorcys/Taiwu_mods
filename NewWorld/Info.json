@@ -1,0 +1,8 @@
+﻿{
+  "Id": "NewWorld",
+  "DisplayName": "新世界",
+  "Author": "xyzkljl1",
+  "Version": "0.0.5",
+  "AssemblyName": "NewWorld.dll",
+  "EntryMethod": "NewWorld.Main.Load"
+}
