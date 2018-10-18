@@ -216,10 +216,18 @@ namespace VillageHeadOfTaiwu
                 var manNeed = int.Parse(df.GetNewMapDate(part, maxPlace, 12));
                 if (manPool >= manNeed)
                 {
+                    var choosePartId = WorldMapSystem.instance.choosePartId;
+                    var choosePlaceId = WorldMapSystem.instance.choosePlaceId;
+                    var chooseWorkTyp = WorldMapSystem.instance.chooseWorkTyp;
+
                     WorldMapSystem.instance.choosePartId = part;
                     WorldMapSystem.instance.choosePlaceId = maxPlace;
                     WorldMapSystem.instance.chooseWorkTyp = (int)workType;
                     WorldMapSystem.instance.DoManpowerWork();
+
+                    WorldMapSystem.instance.choosePartId = choosePartId;
+                    WorldMapSystem.instance.choosePlaceId = choosePlaceId;
+                    WorldMapSystem.instance.chooseWorkTyp = chooseWorkTyp;
                     return;
                 }
             }
