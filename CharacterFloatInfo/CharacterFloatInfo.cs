@@ -23,6 +23,7 @@ namespace CharacterFloatInfo
         public bool talkMessage = false;
         public bool enableTalkShortMode = true;//在对话框只显示部分信息
         public bool enableListShortMode = true;//在工作界面只显示部分信息
+        public bool showBest = true; //显示身上品质最高的物品与功法
         public bool showMood = false; //显示心情
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
@@ -65,6 +66,7 @@ namespace CharacterFloatInfo
             Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息", new GUILayoutOption[0]);
+            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与功法", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "显示人物特性", new GUILayoutOption[0]);
             Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示被隐藏了的人物特性", new GUILayoutOption[0]);
@@ -272,28 +274,33 @@ namespace CharacterFloatInfo
 
             List<int> list = GetHPSP(id);
             List<int> list1 = GetPoison(id);
-            if (list[0] != 0 || list[2] != 0 || GetPoison(id)[0] == 1)
+            int dmg = Math.Max(list[0] * 100 / list[1], list[2] * 100 / list[3]);
+            int dmgtyp = 0;
+            if (dmg >= 20) dmgtyp = 1;
+            for (int i = 0; i < 6; i++)
             {
-                if (GetPoison(id)[0] == 1)
+                if (list1[i] >= 100)
                 {
-                    if (list[0] != 0 || list[2] != 0)
-                    {
-                        text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
-                    }
-                    else
-                    {
-                        text += DateFile.instance.SetColoer(20007, "\n中毒");
-                    }
+                    dmgtyp += 2;
+                    break;
                 }
-                else
-                {
+            }
+            switch (dmgtyp)
+            {
+                case 1:
                     text += DateFile.instance.SetColoer(20010, "\n受伤");
-                }
+                    break;
+                case 2:
+                    text += DateFile.instance.SetColoer(20007, "\n中毒");
+                    break;
+                case 3:
+                    text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
+                    break;
+                default:
+                    text += DateFile.instance.SetColoer(20004, "\n健康");
+                    break;
             }
-            else
-            {
-                text += DateFile.instance.SetColoer(20004, "\n健康");
-            }
+            //text += "\n烈毒" + list1[0] + "/郁毒" + list1[1] + "/寒毒" + list1[2] + "/赤毒" + list1[3] + "/腐毒" + list1[4] + "/幻毒" + list1[5];
             return text;
         }
 
@@ -377,6 +384,11 @@ namespace CharacterFloatInfo
                 {
                     text += string.Format("\t{0}\n", GetLevel(id, i, 0, Main.settings.addonInfo));
                 }
+            }
+            if(Main.settings.showBest)
+            {
+                text += GetBestItems(id);
+                text += GetBestGongfa(id);
             }
 
             if (Main.settings.lifeMessage && windowType == WindowType.MapActorList)//只在大地图显示经历
@@ -542,12 +554,13 @@ namespace CharacterFloatInfo
         //毒素
         public static List<int> GetPoison(int id)
         {
-            List<int> list = new List<int> { 0 };
+
+            List<int> list = new List<int> {};
 
             for (int i = 0; i < 6; i++)
             {
                 int num = int.Parse(DateFile.instance.GetActorDate(id, 51 + i, false));
-                list[0] = num > 0 ? 1 : 0;
+       
                 list.Add(num);
             }
 
@@ -620,6 +633,93 @@ namespace CharacterFloatInfo
             int gangValueId = DateFile.instance.GetGangValueId(num2, num3);
             string gang = DateFile.instance.presetGangGroupDateValue[gangValueId][key2];
             return gang;
+        }
+        //人物身上最高级功法获取
+        public static string GetBestGongfa(int id)
+        {
+
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+            if (gongFas.Count == 0)
+            {
+                return "\n\t最佳功法: 他还没来得及学";
+            }
+            string bestName = "";
+            int bestLevel = 0;
+            int count = 1;
+            for (int i = 0; i < gongFas.Count; i++)
+            {
+                int gongFaId = gongFas[i];
+                string gongFaName = DateFile.instance.gongFaDate[gongFaId][0];
+                string level = DateFile.instance.gongFaDate[gongFaId][2];
+                int intLevel = int.Parse(level);
+                if (intLevel > bestLevel)
+                {
+                    bestLevel = intLevel;
+                    bestName = gongFaName;
+                    count = 1;
+                }
+                else
+                {
+                    if(intLevel == bestLevel)
+                    {
+                        count += 1;
+                    }
+                }
+               // Main.Logger.Log(string.Format("gongfas-{0}-{1}-{2}-{3}", i, gongFaId, gongFaName,level));
+            }
+            //Main.Logger.Log(string.Format("gongfas-final-{0}-{1}", bestLevel,bestName));
+            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
+            string after = "";
+            if (count > 1)
+            {
+                after = " 等" + count + "种."; 
+            }
+      
+            return "\n\t最佳功法: " + bestName + after;
+        }
+
+        //人物身上的最佳物品获取
+        public static string GetBestItems(int id)
+        {
+            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 0).Keys);
+            if (list.Count == 0)
+            {
+                return "\n\t最佳物品: 这是个穷光蛋";
+            }
+            string bestName = "";
+            int bestLevel = 0;
+            int count = 1;
+            for (int i = 0; i < list.Count; i++)
+            {
+                int itemId = list[i];
+                string itemName = DateFile.instance.GetItemDate(itemId, 0, true);
+                string level = DateFile.instance.GetItemDate(itemId, 8, true);
+                int intLevel = int.Parse(level);
+                if (intLevel > bestLevel)
+                {
+                    bestLevel = intLevel;
+                    bestName = itemName;
+                    count = 1;
+                }
+                else
+                {
+                    if (intLevel == bestLevel)
+                    {
+                        count += 1;
+                    }
+                }
+            }
+            //获得的物品名格式为xx\n下九品，需去掉后缀，改用颜色进行标识。
+            int index = bestName.IndexOf("\n");
+            bestName = bestName.Substring(0, index);
+            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
+            string after = "";
+            if (count > 1)
+            {
+                after = " 等" + count + "种.";
+            }
+
+            return "\n\t最佳物品: " + bestName + after;
         }
 
         //村民工作地点
