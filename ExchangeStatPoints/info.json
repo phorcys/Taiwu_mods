@@ -1,0 +1,7 @@
+﻿{
+  "Id": "ExchangeStatPoints",
+  "DisplayName": "属性转换",
+  "Version": "1.0.8",
+  "AssemblyName": "ExchangeStatPoints.dll",
+  "EntryMethod": "ExchangeStatPoints.Main.Load"
+}
