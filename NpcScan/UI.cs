@@ -250,6 +250,9 @@ namespace NpcScan
                 new Column {name = "从属", width = 60},//从属gangText
                 new Column {name = "身份", width = 70},//身份gangLevelText
                 new Column {name = "立场", width = 30},//立场goodnessText
+                new Column {name = "婚姻", width = 30},//
+                new Column {name = "技能成长", width = 70},
+                new Column {name = "功法成长", width = 70},
                 new Column {name = "健康", width = 60},
                 new Column {name = "膂力", width = 30},
                 new Column {name = "体质", width = 30},
@@ -287,7 +290,16 @@ namespace NpcScan
                 new Column {name = "佛学", width = 30},
                 new Column {name = "厨艺", width = 30},
                 new Column {name = "杂学", width = 30},
-                new Column {name = "前世", width = 120}
+                //七元
+                new Column {name = "细腻", width = 30},
+                new Column {name = "聪颖", width = 30},
+                new Column {name = "水性", width = 30},
+                new Column {name = "勇壮", width = 30},
+                new Column {name = "坚毅", width = 30},
+                new Column {name = "冷静", width = 30},
+                new Column {name = "福缘", width = 30},
+                new Column {name = "前世", width = 120},
+                new Column {name = "特性", width = 500}
             };
 
         private float mLogTimer = 0;
@@ -547,7 +559,7 @@ namespace NpcScan
                 scrollPosition = new Vector2(scrollPosition2.x, 0);
                 GUILayout.BeginVertical("box");
                 int c = mods.Count;
-                c = c > 50 * page ? 50 * page : c - ((50 * page) - 1);
+                c = c > 50 * page ? 50 * page : c;
                 for (int i = (page - 1) * 50; i < c; i++)
                 {
                     GUILayout.BeginVertical("box");
@@ -732,6 +744,11 @@ namespace NpcScan
                 int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, true));
                 int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
                 int health = ActorMenu.instance.Health(index);
+                int cv = charmValue;
+                if (charmValue == 0)
+                {
+                    cv = -999;
+                }
 
                 if (inv >= intValue
                     && str >= strValue
@@ -739,7 +756,7 @@ namespace NpcScan
                     && agi >= agiValue
                     && bon >= bonValue
                     && pat >= patValue
-                    && charm >= charmValue
+                    && charm >= cv
                     && age >= minage
                     && health >= healthValue
                     && samsara >= samsaraCount
@@ -791,6 +808,9 @@ namespace NpcScan
                     {
                         samsaraNames = samsaraNames + " " + dateFile.GetActorName(samsaraId);
                     }
+
+                    int[] actorResources = ActorMenu.instance.GetActorResources(index);
+
                     if (GetLevelValue(index, 0, 1) >= gongfa[0]
                         && GetLevelValue(index, 1, 1) >= gongfa[1]
                         && GetLevelValue(index, 1, 1) >= gongfa[1]
@@ -840,6 +860,9 @@ namespace NpcScan
                                 dateFile.GetGangDate(groupid, 0),//从属gangText
                                 gangLevelText,//身份gangLevelText
                                 gn,//立场goodnessText
+                                GetSpouse(index),//
+                                GetSkillDevelopText(index),
+                                GetGongFaDevelopText(index),
                                 GetHealth(index),//健康
                                 str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
                                 GetLevel(index, 0, 1),
@@ -872,7 +895,15 @@ namespace NpcScan
                                 GetLevel(index, 13, 0),
                                 GetLevel(index, 14, 0),
                                 GetLevel(index, 15, 0),
-                                samsaraNames});
+                                actorResources[0].ToString(),
+                                actorResources[1].ToString(),
+                                actorResources[2].ToString(),
+                                actorResources[3].ToString(),
+                                actorResources[4].ToString(),
+                                actorResources[5].ToString(),
+                                actorResources[6].ToString(),
+                                samsaraNames,
+                                GetActorFeatureNameText(index)});
 
                             }
                         }
@@ -880,8 +911,71 @@ namespace NpcScan
                 }
             }
         }
+        //婚姻状况
+        public static string GetSpouse(int id)
+        {
+            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
+            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true);
+            bool flag = actorSocial2.Count == 0;
+            string result;
+            if (flag)
+            {
+                result = DateFile.instance.SetColoer(20004, "未婚", false);
+            }
+            else
+            {
+                bool flag2 = actorSocial.Count == 0;
+                if (flag2)
+                {
+                    result = DateFile.instance.SetColoer(20007, "丧偶", false);
+                }
+                else
+                {
+                    result = DateFile.instance.SetColoer(20010, "已婚", false);
+                }
+            }
 
+            return result;
+        }
+
+        private static string GetSkillDevelopText(int key)
+        {
+            int num = DateFile.instance.MianActorID();
+            int num2 = Mathf.Max(int.Parse(DateFile.instance.GetActorDate(key, 551, false)), 2);
+            int num3 = int.Parse(DateFile.instance.ageDate[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(key, 11, false)), 0, 100)][num2]);
+            string text = ((num2 == 0) ? DateFile.instance.massageDate[7006][0] : string.Format("{0} {1}", DateFile.instance.massageDate[2002][2].Split(new char[]
+            {
+            '|'
+            })[num2], (num3 <= 0) ? ((num3 != 0) ? DateFile.instance.SetColoer(20010, "-" + Mathf.Abs(num3), false) : DateFile.instance.SetColoer(20002, "+" + num3, false)) : DateFile.instance.SetColoer(20005, "+" + num3, false)));
+            return text;
+        }
+        private static string GetGongFaDevelopText(int key)
+        {
+            int num = DateFile.instance.MianActorID();
+            int num2 = Mathf.Max(int.Parse(DateFile.instance.GetActorDate(key, 651, false)), 2);
+            int num3 = int.Parse(DateFile.instance.ageDate[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(key, 11, false)), 0, 100)][num2 + 3]);
+            string text = ((num2 == 0) ? DateFile.instance.massageDate[7006][0] : string.Format("{0} {1}", DateFile.instance.massageDate[2002][2].Split(new char[]
+            {
+            '|'
+            })[num2], (num3 <= 0) ? ((num3 != 0) ? DateFile.instance.SetColoer(20010, "-" + Mathf.Abs(num3), false) : DateFile.instance.SetColoer(20002, "+" + num3, false)) : DateFile.instance.SetColoer(20005, "+" + num3, false)));
+            return text;
+        }
+        private static string GetActorFeatureNameText(int key)
+        {
+            List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
+            string[] text = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+            {
+                int num4 = list[i];
+                if (int.Parse(DateFile.instance.actorFeaturesDate[num4][95]) != 1)
+                {
+                    text[i] = DateFile.instance.actorFeaturesDate[num4][0];
+                }
+            }
+            return string.Join(",", text);
+        }
     }
+
 
     //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
     static class Screen_lockCursor_Patch
