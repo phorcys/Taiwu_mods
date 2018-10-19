@@ -95,6 +95,7 @@ namespace HomeShopSort
                 int id = sort_list[i].Key;
                 HomeSystem.instance.listActorsHolder.GetChild(i).name = "Actor," + id;
                 HomeSystem.instance.listActorsHolder.GetChild(i).GetComponent<SetWorkActorIcon>().SetActor(id, _skillTyp, favorChange);
+                HomeSystem.instance.listActorsHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
             }
         }
 
