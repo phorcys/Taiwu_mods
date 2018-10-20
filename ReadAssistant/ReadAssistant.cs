@@ -21,8 +21,9 @@ namespace ReadAssistant
     static class Main
     {
         public static bool enabled;
+        public static bool isRead = false;
         public static Settings settings;
-        public static int[,] powerNum = new int[,] { { 15, 16, 9 }, { 43, 15, 11 }, { 109, 16, 10 }, { 233, 15, 12 }, { 485, 14, 14 }, { 491, 16, 11 }, { 999, 15, 13 }, { 2019, 14, 15 }, { 2025, 16, 12 }, { 4069, 15, 14 }, { 8161, 14, 16 }, { 8167, 16, 13 }, { 16355, 15, 15 }, { 32741, 16, 14 }, { 65511, 17, 13 }, { 131049, 18, 12 } };
+        public static int[,] powerNum = new int[,] { { 15, 9, 16 }, { 43, 11, 15 }, { 109, 10, 16 }, { 233, 12, 15 }, { 485, 14, 14 }, { 491, 11, 16 }, { 999, 13, 15 }, { 2019, 15, 14 }, { 2025, 12, 16 }, { 4069, 14, 15 }, { 8161, 16, 14 }, { 8167, 13, 16 }, { 16355, 15, 15 }, { 32741, 14, 16 }, { 65511, 13, 17 }, { 131049, 12, 18 } };
         public static int[] power36Num = { 0, 0, 0, 0 };//3总数|3使用|6总数|6使用
 
         static bool Load(UnityModManager.ModEntry modEntry)
@@ -53,6 +54,7 @@ namespace ReadAssistant
 
             GUILayout.Label("说明： ");
             GUILayout.Label("根据玩家初始耐心选取最优刷历练方案并自动实施，刷历练期间请不要手动释放技能。");
+            GUILayout.Label("仅对已读完且阅读难度为50%的书籍有效。");
             GUILayout.EndVertical();
         }
 
@@ -69,14 +71,66 @@ namespace ReadAssistant
         {
             if (!Main.enabled)
                 return;
-            
-            int i = 16;
-            while (Main.powerNum[i, 0] > ReadBook.instance.GetMaxPatience())
+
+            int bookId= int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
+            if (DateFile.instance.gongFaBookPages.ContainsKey(bookId))
             {
-                i--;
+                Main.isRead = true;
+                for(int i = 0; i < 10; i++)
+                {
+                    if(DateFile.instance.gongFaBookPages[bookId][i] == 0)
+                    {
+                        Main.isRead = false;
+                    }
+                }
             }
-            Main.power36Num[0] = Main.powerNum[i, 1];
-            Main.power36Num[2] = Main.powerNum[i, 2];
+            //判断是否读完
+            
+            Main.power36Num[0] = 0;
+            Main.power36Num[2] = 0;
+            if (Main.isRead)
+            {
+                int maxPatience = ReadBook.instance.GetMaxPatience();
+                int canUseInt = DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) / 2;
+                int num3 = 0, num6 = 0;
+                int maxIncome = 0;
+                for (int i = 0; i < 31; i++)
+                {
+                    for (int j = 0; j <= 30 - i && j <= (i + 1) / 2; j++)
+                    {
+                        //i - 温的次数，j - 补充耐心的独的个数
+                        int patienceNeed = (((i - 2 * j - 1) < 0) ? 0 : (1 << (i - 2 * j - 1))) + 1 - 2 * (30 - i - j);
+                        //需求耐心下限
+                        num3 = 30 - i - j;
+                        num6 = i;
+                        int intNeed = 2 * (10 * (30 - i - j) - 20 * ((30 - i - j + 2) / 3) + 10);
+                        //需求初始悟性下限=悟性/2
+                        int income = 0;
+                        for (int k = 0; k < 10; k++)
+                        {
+                            income += 2 * (1 + (i < (27 - 3 * k) ? i : (27 - 3 * k)));
+                        }
+                        //无加成部分收益
+                        income += (30 - i - j) * (i + 1);
+                        //开场加成部分
+                        for (int k = 0; k < j; k++)
+                        {
+                            income += 2 * k + 3;
+                        }
+                        //补充加成部分
+                        if ((intNeed - canUseInt + 9) / 10 > 0)
+                        {
+                            income -= (intNeed - canUseInt + 9) / 10;
+                        }//悟性不足修正
+                        if (maxPatience >= patienceNeed && income > maxIncome)
+                        {
+                            maxIncome = income;
+                            Main.power36Num[0] = num3;
+                            Main.power36Num[2] = num6;
+                        }
+                    }
+                }
+            }
             Main.power36Num[1] = 0;
             Main.power36Num[3] = 0;
         }
@@ -95,9 +149,9 @@ namespace ReadAssistant
             int readSkillId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
             int needInt = HomeSystem.instance.GetNeedInt(actorValue, readSkillId);
 
-            if (needInt != 50 || !Main.settings.autoRead)
+            if (!Main.settings.autoRead || !Main.isRead || needInt != 50 || DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) < 40)
                 return;
-            
+
 
             int readLevel = (int)type.InvokeMember("readLevel", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
             int patience = (int)type.InvokeMember("patience", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
