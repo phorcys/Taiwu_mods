@@ -29,18 +29,20 @@ namespace ReadAssistant
         public static int[,] powerNum = new int[,] { { 15, 9, 16 }, { 43, 11, 15 }, { 109, 10, 16 }, { 233, 12, 15 }, { 485, 14, 14 }, { 491, 11, 16 }, { 999, 13, 15 }, { 2019, 15, 14 }, { 2025, 12, 16 }, { 4069, 14, 15 }, { 8161, 16, 14 }, { 8167, 13, 16 }, { 16355, 15, 15 }, { 32741, 14, 16 }, { 65511, 13, 17 }, { 131049, 12, 18 } };
         public static int[] power36Num = { 0, 0, 0, 0 };//3总数|3使用|6总数|6使用
 
+        public static List<int[]> pageState=new List<int[]>();
+
         public static void GetReadNum()
         {
             int bookId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
-            if (DateFile.instance.gongFaBookPages.ContainsKey(bookId))
+            int[] bookPages=(HomeSystem.instance.studySkillTyp != 17) 
+                ? ((!DateFile.instance.skillBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.skillBookPages[bookId]) 
+                : ((!DateFile.instance.gongFaBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.gongFaBookPages[bookId]);
+            Main.readNum = 0;
+            for (int i = 0; i < 10; i++)
             {
-                Main.readNum = 0;
-                for (int i = 0; i < 10; i++)
+                if (bookPages[i] != 0)
                 {
-                    if (DateFile.instance.gongFaBookPages[bookId][i] != 0)
-                    {
-                        Main.readNum++;
-                    }
+                    Main.readNum++;
                 }
             }
             //计算已读页数}
@@ -78,12 +80,12 @@ namespace ReadAssistant
 
             GUILayout.Label("实验性功能：");
             settings.autoUsePower4 = GUILayout.Toggle(settings.autoUsePower4, "自动使用【唯融融】或【唯妙妙】");
-            GUILayout.Label("遇到残卷时，若悟性足够则根据已读章节数自动使用【唯融融】或【唯妙妙】");
-            GUILayout.Label("想要使用【大智若愚】跳过残卷时不要开启");
+            GUILayout.Label("遇到残卷时，若悟性足够则根据已读章节数自动使用【唯融融】或【唯妙妙】。");
+            GUILayout.Label("想要使用【大智若愚】跳过残卷时不要开启。");
             settings.autoUsePower5 = GUILayout.Toggle(settings.autoUsePower5, "自动使用【迁思回虑】");
             GUILayout.Label("说明： ");
             GUILayout.Label("在耐心开始下降的前一时刻自动使用【迁思回虑】。");
-            GUILayout.Label("有可能出现90%进度放技能下一时刻跳到100%的情况。");
+            GUILayout.Label("有可能出现90%进度放技能，下一时刻就跳到100%的情况。");
             GUILayout.EndVertical();
         }
 
@@ -188,22 +190,27 @@ namespace ReadAssistant
                 int cost3 = int.Parse(DateFile.instance.readBookDate[3][1]) * needInt / 100;
                 int cost6 = int.Parse(DateFile.instance.readBookDate[6][1]) * needInt / 100;
 
-
                 if (readLevel == 50)
                 {
-                    while (Main.power36Num[0] > Main.power36Num[1] && readPageIndex <= 4 && pageState[readPageIndex][2] == 0 && canUseInt >= cost3)
+                    for (int i = 0; i < 3; i++)
                     {
-                        ReadBook.instance.UseIntPower(3);
-                        Main.power36Num[1]++;
+                        if (Main.power36Num[0] > Main.power36Num[1] && readPageIndex * 3 + i + 1 < 30 - Main.power36Num[2] && pageState[readPageIndex][i] == 0 && canUseInt >= 10)
+                        {
+                            ReadBook.instance.UseIntPower(3);
+                            Main.power36Num[1]++;
+                            canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
+                        }
                     }
                     if (patience == 1)
                     {
                         ReadBook.instance.UseIntPower(3);
+                        canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                     }
                     if (Main.power36Num[2] > Main.power36Num[3] && readPageIndex == (9 - (Main.power36Num[3] / 3)))
                     {
                         ReadBook.instance.UseIntPower(6);
                         Main.power36Num[3]++;
+                        canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                     }
                 }
             }
@@ -213,10 +220,14 @@ namespace ReadAssistant
                 if (Main.settings.autoUsePower5 && readPageTime > 24)
                 {
                     ReadBook.instance.UseIntPower(5);
+                    canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                 }
                 int bookId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
+                int[] bookPages = (HomeSystem.instance.studySkillTyp != 17)
+                    ? ((!DateFile.instance.skillBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.skillBookPages[bookId])
+                    : ((!DateFile.instance.gongFaBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.gongFaBookPages[bookId]);
                 int[] bookPage = DateFile.instance.GetBookPage(HomeSystem.instance.readBookId);
-                if (Main.settings.autoUsePower4 && bookPage[readPageIndex] == 0 && DateFile.instance.gongFaBookPages[bookId][readPageIndex] == 0)
+                if (Main.settings.autoUsePower4 && bookPage[readPageIndex] == 0 && bookPages[readPageIndex] == 0)
                 {
                     if (canUseInt > 140 * needInt / 100)
                     {
@@ -225,12 +236,14 @@ namespace ReadAssistant
                             ReadBook.instance.UseIntPower(4);
                             ReadBook.instance.UseIntPower(7);
                             ReadBook.instance.UseIntPower(7);
+                            canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                         }
                         else
                         {
                             ReadBook.instance.UseIntPower(4);
                             ReadBook.instance.UseIntPower(8);
                             ReadBook.instance.UseIntPower(8);
+                            canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                         }
                     }
                 }
