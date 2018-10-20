@@ -76,7 +76,7 @@ namespace ShowRichResources
             GUILayout.BeginHorizontal();
             GUILayout.Label("显示阈值:", GUILayout.Width(60));
             int thresh = 0;
-            if (int.TryParse(GUILayout.TextArea(settings.yuZhi.ToString(), GUILayout.Width(50)), out thresh) && thresh > 0 && thresh <= 150)
+            if (int.TryParse(GUILayout.TextArea(settings.yuZhi.ToString(), GUILayout.Width(50)), out thresh) && thresh > 0 && thresh <= 200)
             {
                 settings.yuZhi = thresh;
             }
