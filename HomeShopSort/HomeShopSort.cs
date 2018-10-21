@@ -17,8 +17,11 @@ namespace HomeShopSort
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+        public bool showEfficiencyAsMyWay = false;//显示效率占理论效率的最大值
+        public bool showEfficienctInBottom = true;//显示在正下方
+        public bool showEfficienctUsingDifferentColor = true;//用不同颜色显示
     }
-    
+
     public static class Main
     {
         public static bool enabled;
@@ -45,8 +48,11 @@ namespace HomeShopSort
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            //GUILayout.BeginHorizontal();
-            //GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showEfficiencyAsMyWay = GUILayout.Toggle(Main.settings.showEfficiencyAsMyWay, "用占最大效率的百分比显示效率", new GUILayoutOption[0]);
+            Main.settings.showEfficienctInBottom = GUILayout.Toggle(Main.settings.showEfficienctInBottom, "显示在建筑名上而非左上角", new GUILayoutOption[0]);
+            Main.settings.showEfficienctUsingDifferentColor = GUILayout.Toggle(Main.settings.showEfficienctUsingDifferentColor, "用不同颜色显示效率", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -55,15 +61,64 @@ namespace HomeShopSort
         }
     }
     //立即移除上次显示的物体，防止和这次的弄混
-    [HarmonyPatch(typeof(HomeSystem), "RemoveActor", new Type[] {  })]
+    [HarmonyPatch(typeof(HomeSystem), "RemoveActor", new Type[] { })]
     public static class HomeSystem_Remove_Patch
     {
         static void Prefix()
         {
             if (!Main.enabled)
                 return;
-            while(HomeSystem.instance.listActorsHolder.childCount>0)
+            while (HomeSystem.instance.listActorsHolder.childCount > 0)
                 UnityEngine.Object.DestroyImmediate(HomeSystem.instance.listActorsHolder.GetChild(0).gameObject);
+        }
+    }
+    //将显示人物的物体重排序(实际上是对每个物体重新设置了内容)
+    [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding", new Type[] { })]
+    public static class HomeBuilding_UpdateBuilding_Patch
+    {
+        static void Postfix(HomeBuilding __instance)
+        {
+            if (!Main.enabled)
+                return;
+            string[] array = __instance.name.Split(new char[]{','});
+            int partId = int.Parse(array[1]);
+            int placeId = int.Parse(array[2]);
+            int buildingId = int.Parse(array[3]);
+            int[] buildingDate = DateFile.instance.homeBuildingsDate[partId][placeId][buildingId];
+            if (buildingDate[0] > 0 && int.Parse(DateFile.instance.basehomePlaceDate[buildingDate[0]][3]) == 1 && buildingDate[3] <= 0)
+                if (DateFile.instance.actorsWorkingDate.ContainsKey(partId) && DateFile.instance.actorsWorkingDate[partId].ContainsKey(placeId) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(buildingId))
+                {
+                    int eff = HomeSystem.instance.GetBuildingLevelPct(partId,placeId,buildingId);
+                    int total= int.Parse(DateFile.instance.basehomePlaceDate[buildingDate[0]][91]);
+                    if (total > 0)
+                    {
+                        string text = "";
+                        int color = 20002+6;
+                        if(Main.settings.showEfficienctUsingDifferentColor)
+                        {
+                            int percent = eff / 2;
+                            if (percent >= 90)
+                                color = 20002 + 2;
+                            else if (percent >= 70)
+                                color = 20002 + 1;
+                            else if (percent >= 50)
+                                color = 20002 + 7;
+                            else
+                                color = 20002 + 8;
+                        }
+                        if (Main.settings.showEfficiencyAsMyWay)
+                            text ="("+ (eff / 2).ToString()+"%)";
+                        else
+                            text ="(" +(100*eff / total).ToString() + "%)";
+                        if(!Main.settings.showEfficienctInBottom)
+                            __instance.pctText.text += DateFile.instance.SetColoer(color,
+                                                     text, false);
+                        else
+                            __instance.placeName.text += DateFile.instance.SetColoer(color,
+                                                     text, false);
+                    }
+                }
+
         }
     }
     //将显示人物的物体重排序(实际上是对每个物体重新设置了内容)
