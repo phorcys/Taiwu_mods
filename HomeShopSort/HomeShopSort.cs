@@ -67,15 +67,32 @@ namespace HomeShopSort
         }
     }
     //将显示人物的物体重排序(实际上是对每个物体重新设置了内容)
-    [HarmonyPatch(typeof(HomeSystem), "GetActor", new Type[] {typeof(int),typeof(bool) })]
-    public static class HomeSystem_GetActor_Patch
+    [HarmonyPatch(typeof(HomeSystem), "ShowWorkingAcotrWindow", new Type[] { })]
+    public static class HomeSystem_ShowWorkingAcotrWindow_Patch
     {
-        public static void Postfix(int _skillTyp, bool favorChange)
+        public static void Postfix()
         {
             if (!Main.enabled)
                 return;
             if (!HomeSystem.instance.buildingWindowOpend)
                 return;
+            int key = HomeSystem.instance.homeMapPartId;
+            int key2 = HomeSystem.instance.homeMapPlaceId;
+            int key3 = HomeSystem.instance.homeMapbuildingIndex;
+            int[] array = DateFile.instance.homeBuildingsDate[key][key2][key3];
+            int _skillTyp=0;
+            bool favorChange=false;
+            int num = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);
+            if (num > 0)
+            {
+                _skillTyp = num;
+                favorChange = false;
+            }
+            else if (float.Parse(DateFile.instance.basehomePlaceDate[array[0]][62]) > 0f)
+            {
+                _skillTyp = 3;
+                favorChange = true;
+            }
 
             var sort_list =new List<KeyValuePair<int, int>>();
             for (int i = 0; i < HomeSystem.instance.listActorsHolder.childCount; i++)
@@ -95,6 +112,7 @@ namespace HomeShopSort
                 int id = sort_list[i].Key;
                 HomeSystem.instance.listActorsHolder.GetChild(i).name = "Actor," + id;
                 HomeSystem.instance.listActorsHolder.GetChild(i).GetComponent<SetWorkActorIcon>().SetActor(id, _skillTyp, favorChange);
+                HomeSystem.instance.listActorsHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
             }
         }
 
