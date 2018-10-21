@@ -160,80 +160,92 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
-        private static Transform actorFeatureHolder;
         public enum WindowType
         {
             MapActorList,
             Dialog,
-            BuildingWindow
+            BuildingWindow,
+            TeamActor,
         };
         public static WindowType windowType = WindowType.MapActorList;
-        public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref GameObject ___informationWindow, ref int ___tipsW)
+        public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW)
         {
-            if (!Main.enabled) return;
-            if (___informationWindow == null || ___informationWindow.transform == null || ActorMenu.instance == null) return; //未入GAME
-            actorFeatureHolder = ___informationWindow.transform.Find("actorFeatureHolder");
-            if (actorFeatureHolder == null)
+            if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
+
+            bool needShow = false;
+            int id = -1;
+
+            string[] array = tips.name.Split(',');
+
+            //大地圖下面的太吾自己的頭像
+            if (array[0] == "PlayerFaceButton")
             {
-                //actorFeatureHolder = new GameObject().transform;
-                actorFeatureHolder = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.actorFeatureHolder.gameObject, new Vector3(22f, -125f, 1), Quaternion.identity).transform;
-                actorFeatureHolder.name = "actorFeatureHolder";
-                actorFeatureHolder.SetParent(___informationWindow.transform, false);
-                actorFeatureHolder.localScale = new Vector3(.73f, .73f, 1);
-                actorFeatureHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(800f, 0);
+                id = DateFile.instance.mianActorId;
+                needShow = true;
+                windowType = WindowType.TeamActor;
+            }
+            else
+            //大地圖下面的隊友頭像
+            if (tips.tag == "TeamActor")
+            {
+                id = DateFile.instance.acotrTeamDate[array[1].Length > 0 ? int.Parse(array[1]) : 0];
+                needShow = true;
+                windowType = WindowType.TeamActor;
+            }
+            else
+            //建筑/地图左边的列表
+            if (array[0] == "Actor")
+            {
+                int typ = int.Parse(typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(WorldMapSystem.instance).ToString());
+                if (typ == 1 && WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId)
+                {
+                    id = int.Parse(array[1]);
+                    needShow = true;
+                    windowType = WindowType.MapActorList;
+                }
+                if (HomeSystem.instance.buildingWindowOpend)
+                {
+                    id = int.Parse(array[1]);
+                    needShow = true;
+                    windowType = WindowType.BuildingWindow;
+                }
+            }
+            //对话窗口的人物头像
+            else if (array[0] == "FaceHolder" && Main.settings.talkMessage)
+            {
+                id = MassageWindow.instance.eventMianActorId;
+                needShow = true;
+                windowType = WindowType.Dialog;
+            }
+
+            if (needShow)
+            {
+                ___tipsW = 680;
                 ___itemLevelText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
                 ___itemMoneyText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
+
+                ___itemLevelText.text = SetLevelText(id);
+                ___itemMoneyText.text = SetMoneyText(id);
+                ___informationName.text = SetInfoName(id);
+                ___informationMassage.text = SetInfoMessage(id, ref ___tipsW);
+                ___anTips = true;
             }
-            else if (actorFeatureHolder.childCount > 0)
+            else
             {
-                for (int i = 0; i < actorFeatureHolder.childCount; i++)
+                Transform resourceHolder = WindowManage.instance.informationWindow.transform.Find("ResourceHolder");
+                if (resourceHolder != null)
                 {
-                    UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
+                    UnityEngine.Object.Destroy(resourceHolder.gameObject);
                 }
-            }
-
-            if (tips != null && ___anTips == false && on)
-            {
-                bool needShow = false;
-                int id = -1;
-
-                //建筑/地图左边的列表
-                string[] array = tips.name.Split(',');
-                if (array[0] == "Actor")
+                Transform actorFeatureHolder = WindowManage.instance.informationWindow.transform.Find("ActorFeatureHolder");
+                if (actorFeatureHolder != null)
                 {
-                    int typ = int.Parse(typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(WorldMapSystem.instance).ToString());
-                    if (typ == 1 && WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId)
+                    if (actorFeatureHolder.childCount > 0)
                     {
-                        id = int.Parse(array[1]);
-                        needShow = true;
-                        windowType = WindowType.MapActorList;
+                        for (int i = 0; i < actorFeatureHolder.childCount; i++)
+                            UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
                     }
-                    if (HomeSystem.instance.buildingWindowOpend)
-                    {
-                        id = int.Parse(array[1]);
-                        needShow = true;
-                        windowType = WindowType.BuildingWindow;
-                    }
-
-                }
-
-                //对话窗口的人物头像
-                else if (array[0] == "FaceHolder" && Main.settings.talkMessage)
-                {
-                    id = MassageWindow.instance.eventMianActorId;
-                    needShow = true;
-                    windowType = WindowType.Dialog;
-                }
-
-                if (needShow)
-                {
-                    ___tipsW = 680;
-                    ___itemLevelText.text = SetLevelText(id);
-                    ___itemMoneyText.text = SetMoneyText(id);
-                    //___itemMoneyText.text = ___itemMoneyText.GetComponent<RectTransform>().sizeDelta.x.ToString() +"x"+ ___itemMoneyText.GetComponent<RectTransform>().sizeDelta.y.ToString();
-                    ___informationName.text = SetInfoName(id);
-                    ___informationMassage.text = SetInfoMessage(id, ref ___tipsW);
-                    ___anTips = true;
+                    UnityEngine.Object.Destroy(actorFeatureHolder.gameObject);
                 }
             }
         }
@@ -279,7 +291,6 @@ namespace CharacterFloatInfo
             {
                 text += " • " + workPlace;
             }
-
 
             List<int> list = GetHPSP(id);
             List<int> list1 = GetPoison(id);
@@ -343,15 +354,34 @@ namespace CharacterFloatInfo
             string text = "";
             if (Main.settings.showCharacteristic)
             {
+                Transform actorFeatureHolder = WindowManage.instance.informationWindow.transform.Find("ActorFeatureHolder");
+                if (actorFeatureHolder == null)
+                {
+                    actorFeatureHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.actorFeatureHolder, new Vector3(22f, -125f, 1), Quaternion.identity);
+                    actorFeatureHolder.name = "ActorFeatureHolder";
+                    actorFeatureHolder.SetParent(WindowManage.instance.informationWindow.GetComponent<RectTransform>(), false);
+                    actorFeatureHolder.localScale = new Vector3(.73f, .73f, 1);
+                    actorFeatureHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(800f, 0);
+                }
+                else if (actorFeatureHolder.childCount > 0)
+                {
+                    if (actorFeatureHolder.childCount > 0)
+                    {
+                        for (int i = 0; i < actorFeatureHolder.childCount; i++)
+                            UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
+                    }
+                }
+
                 text += "\n\n\n";
                 List<int> featureIDs = DateFile.instance.GetActorFeature(id);
                 int shown = 0;
                 foreach (int featureID in featureIDs)
                     if (DateFile.instance.actorFeaturesDate[featureID][95] != "1" || Main.settings.showIV) //判斷是否顯示隱藏的特性
                     {
+
                         shown++;
-                        GameObject actorFeature = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.actorFeature, Vector3.zero, Quaternion.identity);
-                        actorFeature.transform.SetParent(actorFeatureHolder.transform, false);
+                        GameObject actorFeature = UnityEngine.Object.Instantiate(ActorMenu.instance.actorFeature, Vector3.zero, Quaternion.identity);
+                        actorFeature.transform.SetParent(actorFeatureHolder, false);
                         actorFeature.name = "ActorFeatureIcon," + featureID;
                         actorFeature.transform.Find("ActorFeatureNameText").GetComponent<Text>().text = DateFile.instance.actorFeaturesDate[featureID][0];
                         Transform ActorFeatureStarHolder = actorFeature.transform.Find("ActorFeatureStarHolder");
@@ -359,39 +389,40 @@ namespace CharacterFloatInfo
                         string att = DateFile.instance.actorFeaturesDate[featureID][1];
                         if (att.IndexOf('|') > -1 || att != "0") foreach (string j in att.Split('|'))
                             {
-                                GameObject gameObject2 = UnityEngine.Object.Instantiate<GameObject>(
+                                GameObject gameObject2 = UnityEngine.Object.Instantiate(
                                     ActorMenu.instance.actorAttackFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity);
                                 gameObject2.transform.SetParent(ActorFeatureStarHolder, false);
                             }
                         string def = DateFile.instance.actorFeaturesDate[featureID][2];
                         if (def.IndexOf('|') > -1 || def != "0") foreach (string j in def.Split('|'))
                             {
-                                GameObject gameObject2 = UnityEngine.Object.Instantiate<GameObject>(
+                                GameObject gameObject2 = UnityEngine.Object.Instantiate(
                                     ActorMenu.instance.actorDefFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity);
                                 gameObject2.transform.SetParent(ActorFeatureStarHolder, false);
                             }
                         string spd = DateFile.instance.actorFeaturesDate[featureID][3];
                         if (spd.IndexOf('|') > -1 || spd != "0") foreach (string j in spd.Split('|'))
                             {
-                                GameObject gameObject2 = UnityEngine.Object.Instantiate<GameObject>(
+                                GameObject gameObject2 = UnityEngine.Object.Instantiate(
                                     ActorMenu.instance.actorPlanFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity);
                                 gameObject2.transform.SetParent(ActorFeatureStarHolder, false);
                             }
                         if (att == "0" && def == "0" && spd == "0")
                         {
-                            UnityEngine.Object.Instantiate<GameObject>
-                                (ActorMenu.instance.actorAttackFeatureStarIcons[3], Vector3.zero, Quaternion.identity)
-                                .transform.SetParent(ActorFeatureStarHolder, false);
-                            UnityEngine.Object.Instantiate<GameObject>
-                                (ActorMenu.instance.actorDefFeatureStarIcons[3], Vector3.zero, Quaternion.identity)
-                                .transform.SetParent(ActorFeatureStarHolder, false);
-                            UnityEngine.Object.Instantiate<GameObject>
-                                (ActorMenu.instance.actorPlanFeatureStarIcons[3], Vector3.zero, Quaternion.identity)
-                                .transform.SetParent(ActorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate(ActorMenu.instance.actorAttackFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(ActorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate(ActorMenu.instance.actorDefFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(ActorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate (ActorMenu.instance.actorPlanFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(ActorFeatureStarHolder, false);
                         }
-
                     }
-                if (shown > 7) ___tipsW += (shown - 7) * 90;
+                    Component[] componentsInChildren = WindowManage.instance.informationWindow.GetComponentsInChildren<Component>();
+                    foreach (Component component2 in componentsInChildren)
+                    {
+                        if (component2 is Graphic)
+                        {
+                            (component2 as Graphic).CrossFadeAlpha(1f, 0.2f, true);
+                        }
+                    }
+                    if (shown > 7) ___tipsW += (shown - 7) * 90;
             }
             return text;
         }
@@ -400,7 +431,8 @@ namespace CharacterFloatInfo
         public static string SetInfoMessage3(int id)
         {
             string text = "\n";
-            foreach (int i in DateFile.instance.baseSkillDate.Keys) {
+            foreach (int i in DateFile.instance.baseSkillDate.Keys)
+            {
                 var canStudy =
                 text += CanTeach(id, i) ? "※" : "　";
                 text += GetLevel(id, i, Main.settings.addonInfo);
@@ -409,21 +441,56 @@ namespace CharacterFloatInfo
             }
             return text + "\n";
         }
-        // 根據NPC的門派或職業,配斷能否傳授你這生活藝能
-        public static bool CanTeach(int id, int i)
-        {
-            bool result = false;
-            // todo 
-            // 下九流38教12,13,14,15; 手艺人37教6,7,10,11; 大夫36教8,9; 文人34教0,1,2,3,4,5
-            // 少林??教??;
 
-            return result;
+        // 根據NPC的門派或職業,配斷能否傳授你這生活藝能
+        public static bool CanTeach(int actorID, int skillID)
+        {
+            int eventID;
+            List<int> eventIDs;
+
+            if (skillID >= 0 && skillID <= 5)
+                eventID = 931900001 + skillID;
+            else if (skillID == 6 || skillID == 7)
+                eventID = 932200001 + skillID - 6;
+            else if (skillID == 8 || skillID == 9)
+                eventID = 932900001 + skillID - 8;
+            else if (skillID == 10 || skillID == 11)
+                eventID = 932200003 + skillID - 10;
+            else if (skillID >= 12 && skillID <= 15)
+                eventID = 932300001 + skillID - 12;
+            else
+                return false;
+
+            int gangValueId = GetGangLevelId(actorID);
+            bool isVillager = gangValueId < 100;
+
+            if (isVillager)
+            {
+                eventIDs = DateFile.instance.presetGangGroupDateValue[gangValueId][818].Split('|').Select(int.Parse).ToList();
+                if (eventIDs.Count() > 1)  //大夫
+                { }
+                else if (eventIDs[0] == 0)  // 無教技藝
+                { }
+                else
+                {
+                    int messageID = int.Parse(DateFile.instance.eventDate[eventIDs[0]][7]);
+                    eventIDs = DateFile.instance.eventDate[messageID][5].Split('|').Select(int.Parse).ToList();
+                }
+            }
+            else
+            {
+                eventIDs = DateFile.instance.presetGangGroupDateValue[gangValueId][813].Split('|').Select(int.Parse).ToList();
+            }
+            return eventIDs.Contains(eventID);
         }
 
         // 最佳 裝備 & 物品 & 武功
         public static string SetInfoMessage4(int id)
         {
             string text = "";
+
+            text += "\n" + GetResource(id);
+
             if (Main.settings.showBest)
             {
                 text += "\n" + GetEquipments(id);
@@ -437,7 +504,7 @@ namespace CharacterFloatInfo
         public static string SetInfoMessage5(int id)
         {
             string text = "";
-            if (Main.settings.lifeMessage && windowType == WindowType.MapActorList)//只在大地图显示经历
+            if (Main.settings.lifeMessage) // 只要用者設定了就顯示. 
             {
                 text += "\n" + GetLifeMessage(id, 3) + "\n";
             }
@@ -526,7 +593,6 @@ namespace CharacterFloatInfo
         {
             int health = ActorMenu.instance.Health(id);
             int maxhealth = ActorMenu.instance.MaxHealth(id);
-            // string peopleHealthText = string.Format("{0}{1}</color> / {2}", ActorMenu.instance.Color3(health, maxhealth), health, maxhealth);
             int totalAge = GetAge(id) + maxhealth;
             int ageReduced = health - maxhealth;
             int ageGrade = Mathf.Clamp((int)Math.Floor((decimal)totalAge / 10), 0, 8);
@@ -656,30 +722,27 @@ namespace CharacterFloatInfo
         //人物身上裝備
         public static string GetEquipments(int id)
         {
-            List<string> autorEquipments = new List<string>{};
-            //List<int> itemSort = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(id, 4).Keys));
-            //            Dictionary<int, int> itemSort = ActorMenu.instance.GetActorItems(id, 4);
-            // List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 4).Keys);
+            List<string> autorEquipments = new List<string> { };
             for (int i = 301; i <= 310; i++)
             {
                 int itemID = int.Parse(DateFile.instance.GetActorDate(id, i, false));
-                if (itemID != 0){
+                if (itemID != 0)
+                {
                     autorEquipments.Add(GetItemColorName(itemID));
                 }
             }
-            return "人物裝備: " + (autorEquipments.Count() == 0 ? 
-                DateFile.instance.SetColoer(20002, GetGenderTA(id) + "赤身裸体在你眼前") : 
+            return "人物裝備: " + (autorEquipments.Count() == 0 ?
+                DateFile.instance.SetColoer(20002, GetGenderTA(id) + "赤身裸体在你眼前") :
                 string.Join(" / ", autorEquipments.ToArray())) + "\n";
         }
 
         //人物身上最高级功法获取
         public static string GetBestGongfa(int id)
         {
-
             List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
             if (gongFas.Count == 0)
             {
-                return "最佳功法: 他还没来得及学";
+                return "最佳功法: " + GetGenderTA(id) + "还没来得及学";
             }
             string bestName = "";
             int bestLevel = 0;
@@ -726,7 +789,8 @@ namespace CharacterFloatInfo
                 }
                 else if (itemGrade == bestGrade)
                 {
-                    if (!bestItems.ToList().Contains(itemName)) {
+                    if (!bestItems.ToList().Contains(itemName))
+                    {
                         bestItems.Add(itemName);
                     }
                 }
@@ -990,14 +1054,32 @@ namespace CharacterFloatInfo
         //人物賦性
         public static string GetResource(int id)
         {
-            string result = "";
             int[] actorResources = ActorMenu.instance.GetActorResources(id);  //401~407
-            for (int i = 0; i < actorResources.Count(); i++)
+
+            Transform resourceHolder = WindowManage.instance.informationWindow.transform.Find("ResourceHolder");
+            if (resourceHolder == null)
             {
-                result += DateFile.instance.SetColoer(20001 + i, DateFile.instance.massageDate[1002][2].Split('|')[i+1] + actorResources[i].ToString());
+                resourceHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.teamResourcesText[0].transform.parent.transform, new Vector3(58f, -380f, 1), Quaternion.identity);
+                resourceHolder.name = "ResourceHolder";
+                resourceHolder.SetParent(WindowManage.instance.informationWindow.transform, false);
+            }
+            Text[] resourcesText = resourceHolder.GetComponentsInChildren<Text>();
+
+            for (int j = 0; j < resourcesText.Length; j++)
+            {
+                resourcesText[j].text = actorResources[j].ToString();
+                Main.Logger.Log(resourcesText[j].name);
+            }
+            Component[] componentsInChildren = WindowManage.instance.informationWindow.GetComponentsInChildren<Component>();
+            foreach (Component component2 in componentsInChildren)
+            {
+                if (component2 is Graphic)
+                {
+                    (component2 as Graphic).CrossFadeAlpha(1f, 0.2f, true);
+                }
             }
 
-            return result;
+            return "\n\n";
         }
 
 
