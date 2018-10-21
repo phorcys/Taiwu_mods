@@ -96,7 +96,7 @@ namespace HomeShopSort
                         int color = 20002+6;
                         if(Main.settings.showEfficienctUsingDifferentColor)
                         {
-                            int percent = eff / 2;
+                            int percent = 100*(eff*100 / total)/(200*100/total);
                             if (percent >= 90)
                                 color = 20002 + 2;
                             else if (percent >= 70)
