@@ -511,6 +511,8 @@ namespace NpcScan
                     }
                 }
             }
+            GUILayout.Label("人物特性:", GUILayout.Width(60));
+            actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
 
             GUILayout.Space(30);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
@@ -851,6 +853,8 @@ namespace NpcScan
                         int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
                         string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
 
+                        if (ScanFeature(index, GetFeatureKey(actorFeatureText)) || actorFeatureText == "")
+                        {
                         if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
                         {
                             if ((actorName.Contains(name) || samsaraNames.Contains(name)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
@@ -910,6 +914,7 @@ namespace NpcScan
                     }
                 }
             }
+        }
         }
         //婚姻状况
         public static string GetSpouse(int id)
@@ -975,7 +980,43 @@ namespace NpcScan
             return string.Join(",", text);
         }
     }
+        private static List<int> GetFeatureKey(string str)
+        {
 
+            List<int> fKey = new List<int>(DateFile.instance.actorFeaturesDate.Keys);
+            List<int> list = new List<int>();
+            for (int i = 0; i < fKey.Count; i++)
+            {
+                int j = fKey[i];
+                if (int.Parse(DateFile.instance.actorFeaturesDate[j][8]) >= 3)
+                {
+                    //Main.Logger.Log(DateFile.instance.actorFeaturesDate[j][0]);
+                    if (DateFile.instance.actorFeaturesDate[j][0].Equals(str))
+                    {
+                        int k = int.Parse(DateFile.instance.actorFeaturesDate[j][5]);
+                        list.Add(k);
+                        list.Add(k + 1);
+                        list.Add(k + 2);//查询同组正特质的编号
+                        Main.Logger.Log("k:"+k.ToString());
+                    }
+                }
+            }
+            return list;
+        }
+        private static bool ScanFeature(int key, List<int> slist)
+        {
+
+            List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
+            for (int i = 0; i < list.Count; i++)
+            {
+                //Main.Logger.Log("人物特性"+list[i].ToString());
+                if (slist.Contains(list[i]))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
     //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
     static class Screen_lockCursor_Patch
