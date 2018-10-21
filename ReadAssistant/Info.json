@@ -1,7 +1,7 @@
 ﻿{
   "Id": "ReadAssistant",
   "DisplayName": "读书助手",
-  "Version": "1.0.4",
+  "Version": "1.0.6",
   "AssemblyName": "ReadAssistant.dll",
   "EntryMethod": "ReadAssistant.Main.Load"
 }
