@@ -9,16 +9,25 @@ using Harmony12;
 using UnityModManagerNet;
 using System.Reflection;
 
-namespace TurnChangeEvent
+namespace DoNotDisTurb
 {
+
+    public class Settings : UnityModManager.ModSettings
+    {
+        public override void Save(UnityModManager.ModEntry modEntry)
+        {
+            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
+        }
+        public  bool disableEvent = true;
+        public  bool skillbattleTips = true;
+        public  bool disableBeg = true;
+    }
     public static class Main
     {
         public static bool enabled;
         public static UnityModManager.ModEntry.ModLogger logger;
+        public static Settings settings;
 
-        public static bool disableEvent = true;
-        public static bool skillbattleTips = true;
-        public static bool disableBeg = true;
 
         public static string AskTips;
         public static string ReAskTips;
@@ -34,10 +43,12 @@ namespace TurnChangeEvent
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            settings = Settings.Load<Settings>(modEntry);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
 
             return true;
         }
@@ -51,10 +62,14 @@ namespace TurnChangeEvent
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            disableEvent = GUILayout.Toggle(disableEvent, "屏蔽入魔事件", new GUILayoutOption[0]);
-            disableBeg = GUILayout.Toggle(disableBeg, "屏蔽乞讨事件", new GUILayoutOption[0]);
-            skillbattleTips = GUILayout.Toggle(skillbattleTips, "开启较艺提示", new GUILayoutOption[0]);
+            settings.disableEvent = GUILayout.Toggle(settings.disableEvent, "屏蔽入魔事件", new GUILayoutOption[0]);
+            settings.disableBeg = GUILayout.Toggle(settings.disableBeg, "屏蔽乞讨事件", new GUILayoutOption[0]);
+            settings.skillbattleTips = GUILayout.Toggle(settings.skillbattleTips, "开启较艺提示", new GUILayoutOption[0]);
 
+        }
+        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            settings.Save(modEntry);
         }
 
         [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
@@ -62,7 +77,7 @@ namespace TurnChangeEvent
         {
             static void Prefix()
             {
-                if (!Main.disableEvent)
+                if (!settings.disableEvent)
                     return;
                 for (int index = UIDate.instance.changTrunEvents.Count - 1; index >= 0; index--)
                 {
@@ -82,7 +97,7 @@ namespace TurnChangeEvent
         {
             static void Postfix(PeopleLifeAI __instance,ref int typ , ref int[] aiEventDate, ref Dictionary<int, Dictionary<int, List<int[]>>> ___eventDate)
             {
-                if (!Main.disableBeg)
+                if (!settings.disableBeg)
                     return;
                 
                //乞讨事件屏蔽
@@ -157,7 +172,7 @@ namespace TurnChangeEvent
         {
             static void Postfix(WorldMapSystem __instance, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
             {
-                if (!Main.enabled && !Main.skillbattleTips)
+                if (!Main.enabled && !settings.skillbattleTips)
                 {
                     return;
                 }
