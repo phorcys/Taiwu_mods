@@ -183,9 +183,11 @@ namespace SaveBackup
         // 压缩到备份路径
         private static void BackupFolderToFile(string pathToBackup, string targetFile)
         {
-            var zip = new ZipFile();
-            zip.AddDirectory(pathToBackup);
-            zip.Save(targetFile);
+            using(var zip = new ZipFile())
+            {
+                zip.AddDirectory(pathToBackup);
+                zip.Save(targetFile);
+            }
         }
 
         // 返回存档备份存储路径
