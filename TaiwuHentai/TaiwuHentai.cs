@@ -132,7 +132,7 @@ namespace TaiwuHentai
 
     }
 
-    /** [HarmonyPatch(typeof(DateFile), "GetActorDate")]
+    [HarmonyPatch(typeof(DateFile), "GetActorDate")]
      public static class DateFile_GetActorDate_Patch
      {
          private static void Postfix(DateFile __instance, ref string __result, int id, int index, bool addValue = true)
@@ -189,7 +189,7 @@ namespace TaiwuHentai
 
 
 
-     }**/
+     }
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
@@ -373,6 +373,7 @@ namespace TaiwuHentai
         }
 
     }
+    /**
     [HarmonyPatch(typeof(ActorMenu), "SetActorAttr")]
     public static class ActorMenu_SetActorAttr_Patch
     {
@@ -449,7 +450,7 @@ namespace TaiwuHentai
 
 
 
-    }
+    }**/
     [HarmonyPatch(typeof(MassageWindow), "SetMassageWindow")]
     public static class MassageWindow_SetMassageWindow_Patch
     {
