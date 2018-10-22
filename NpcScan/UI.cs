@@ -67,6 +67,7 @@ namespace NpcScan
         //厨艺
         //杂学
         int[] life = new int[16];
+        string actorFeatureText = "";
 
         float windowWidth = Screen.width * 0.8f;
 
@@ -855,11 +856,11 @@ namespace NpcScan
 
                         if (ScanFeature(index, GetFeatureKey(actorFeatureText)) || actorFeatureText == "")
                         {
-                        if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
-                        {
-                            if ((actorName.Contains(name) || samsaraNames.Contains(name)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                            if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
                             {
-                                actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
+                                if ((actorName.Contains(name) || samsaraNames.Contains(name)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                                {
+                                    actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
                                 charm + "(" + charmText + ")" ,//魅力
                                 dateFile.GetGangDate(groupid, 0),//从属gangText
                                 gangLevelText,//身份gangLevelText
@@ -908,14 +909,14 @@ namespace NpcScan
                                 actorResources[6].ToString(),
                                 samsaraNames,
                                 GetActorFeatureNameText(index)});
-
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        }
+
         //婚姻状况
         public static string GetSpouse(int id)
         {
@@ -979,7 +980,7 @@ namespace NpcScan
             }
             return string.Join(",", text);
         }
-    }
+
         private static List<int> GetFeatureKey(string str)
         {
 
@@ -997,7 +998,7 @@ namespace NpcScan
                         list.Add(k);
                         list.Add(k + 1);
                         list.Add(k + 2);//查询同组正特质的编号
-                        Main.Logger.Log("k:"+k.ToString());
+                        Main.Logger.Log("k:" + k.ToString());
                     }
                 }
             }
@@ -1018,21 +1019,22 @@ namespace NpcScan
             return false;
         }
 
-    //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
-    static class Screen_lockCursor_Patch
-    {
-        static bool Prefix(bool value)
+        //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
+        static class Screen_lockCursor_Patch
         {
-            if (UI.Instance != null && UI.Instance.Opened)
+            static bool Prefix(bool value)
             {
-                UI.Instance.GameCursorLocked = value;
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-                return false;
+                if (UI.Instance != null && UI.Instance.Opened)
+                {
+                    UI.Instance.GameCursorLocked = value;
+                    Cursor.visible = true;
+                    Cursor.lockState = CursorLockMode.None;
+                    return false;
+                }
+
+                return true;
             }
-
-            return true;
         }
-    }
 
+    }
 }
