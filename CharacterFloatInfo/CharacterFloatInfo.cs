@@ -66,7 +66,7 @@ namespace CharacterFloatInfo
             //GUILayout.BeginHorizontal();
             Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
-            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息的差異", new GUILayoutOption[0]);
+            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息的差异", new GUILayoutOption[0]);
             Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与功法", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "显示人物特性", new GUILayoutOption[0]);
@@ -189,7 +189,7 @@ namespace CharacterFloatInfo
             if (tips.tag == "TeamActor")
             {
                 id = DateFile.instance.acotrTeamDate[array[1].Length > 0 ? int.Parse(array[1]) : 0];
-                needShow = true;
+                needShow = id>0?true:false;
                 windowType = WindowType.TeamActor;
             }
             else
@@ -217,7 +217,7 @@ namespace CharacterFloatInfo
                 needShow = true;
                 windowType = WindowType.Dialog;
             }
-
+            
             if (needShow)
             {
                 ___tipsW = 680;
@@ -299,7 +299,7 @@ namespace CharacterFloatInfo
             if (dmg >= 20) dmgtyp = 1;
             for (int i = 0; i < 6; i++)
             {
-                if (list1[i] >= 100)
+                if (list1[i] >= 50)
                 {
                     dmgtyp += 2;
                     break;
@@ -337,7 +337,7 @@ namespace CharacterFloatInfo
                 return text;
             if (windowType == WindowType.BuildingWindow && Main.settings.enableListShortMode)
                 return text;
-            text += "立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id) + "次";
+            text += "立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id);
             if (GetAge(id) > ConstValue.actorMinAge)
             {
                 text += "\t\t\t子嗣：" + DateFile.instance.GetActorSocial(id, 310, false).Count;
@@ -365,11 +365,11 @@ namespace CharacterFloatInfo
                 }
                 else if (actorFeatureHolder.childCount > 0)
                 {
-                    if (actorFeatureHolder.childCount > 0)
-                    {
                         for (int i = 0; i < actorFeatureHolder.childCount; i++)
+                        {
+                            actorFeatureHolder.GetChild(i).gameObject.SetActive(false);//destroy不会立即销毁，原子节点全部禁用
                             UnityEngine.Object.Destroy(actorFeatureHolder.GetChild(i).gameObject);
-                    }
+                        }
                 }
 
                 text += "\n\n\n";
@@ -1054,15 +1054,20 @@ namespace CharacterFloatInfo
         //人物賦性
         public static string GetResource(int id)
         {
+            if (!Main.settings.showCharacteristic)
+                return "";
             int[] actorResources = ActorMenu.instance.GetActorResources(id);  //401~407
 
             Transform resourceHolder = WindowManage.instance.informationWindow.transform.Find("ResourceHolder");
             if (resourceHolder == null)
             {
                 resourceHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.teamResourcesText[0].transform.parent.transform, new Vector3(58f, -380f, 1), Quaternion.identity);
+                //resourceHolder.position = Main.settings.showCharacteristic ? new Vector3(58f, -380f, 1) : new Vector3(58f, -340f, 1);
                 resourceHolder.name = "ResourceHolder";
                 resourceHolder.SetParent(WindowManage.instance.informationWindow.transform, false);
+                
             }
+
             Text[] resourcesText = resourceHolder.GetComponentsInChildren<Text>();
 
             for (int j = 0; j < resourcesText.Length; j++)
