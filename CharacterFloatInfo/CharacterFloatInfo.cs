@@ -1068,7 +1068,6 @@ namespace CharacterFloatInfo
             for (int j = 0; j < resourcesText.Length; j++)
             {
                 resourcesText[j].text = actorResources[j].ToString();
-                Main.Logger.Log(resourcesText[j].name);
             }
             Component[] componentsInChildren = WindowManage.instance.informationWindow.GetComponentsInChildren<Component>();
             foreach (Component component2 in componentsInChildren)
