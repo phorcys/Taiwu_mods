@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using Harmony12;
@@ -6,7 +7,7 @@ using UnityEngine;
 using UnityModManagerNet;
 
 /// <summary>
-/// 新游戏人物加特性MOD
+/// 开始新游戏锁定和自定义特质MOD
 /// </summary>
 namespace LKX_NewGameActor
 {
@@ -46,6 +47,31 @@ namespace LKX_NewGameActor
         public int developmentActor;
 
         /// <summary>
+        /// 传家宝id列表
+        /// </summary>
+        public List<int> newItemsId;
+
+        /// <summary>
+        /// 选择类型
+        /// </summary>
+        public int itemsType;
+
+        /// <summary>
+        /// 是否义父所制
+        /// </summary>
+        public bool isStepfatherCreate;
+
+        /// <summary>
+        /// 同伴是否拥有
+        /// </summary>
+        public bool friendItemCreate;
+
+        /// <summary>
+        /// 传家宝数量
+        /// </summary>
+        public uint itemsCount;
+
+        /// <summary>
         /// 保存设置
         /// </summary>
         /// <param name="modEntry"></param>
@@ -66,6 +92,8 @@ namespace LKX_NewGameActor
         /// mod设置
         /// </summary>
         public static Settings settings;
+
+        public static Dictionary<int, string> tempItemsId = new Dictionary<int, string>();
 
         /// <summary>
         /// 获取mod根目录
@@ -102,7 +130,7 @@ namespace LKX_NewGameActor
         /// 确定是否激活mod
         /// </summary>
         /// <param name="modEntry">umm</param>
-        /// <param name="value">是否激活</param>
+        /// <param name="value">是否激活mod</param>
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             Main.enabled = value;
@@ -122,8 +150,8 @@ namespace LKX_NewGameActor
             Main.settings.talentActor = GUILayout.Toggle(Main.settings.talentActor, "开启新建人物高悟性选项（新建人物特性里自己找找）。");
             GUILayout.Label("选择人物成长，随机是MOD随机选择，关闭是系统自行选择，会同时修改技艺和武艺的成长但不会增加其数值。");
             Main.settings.developmentActor = GUILayout.SelectionGrid(Main.settings.developmentActor, new string[] { "关闭", "随机", "均衡", "早熟", "晚成" }, 5);
+            
             Main.settings.featureType = GUILayout.SelectionGrid(Main.settings.featureType, new string[]{ "关闭", "全3级特性", "自定义" }, 3);
-
             if (Main.settings.featureType != 0) Main.settings.friend = GUILayout.Toggle(Main.settings.friend, "是否给初始伙伴分配这些特性");
             if (Main.settings.featureType == 1) GUILayout.Label("全3级特性会使游戏可玩性降低", redLabelStyle);
             if (Main.settings.featureType == 2)
@@ -135,14 +163,63 @@ namespace LKX_NewGameActor
                 if (GUI.changed) Main.settings.file = featureFilename;
 
                 GUILayout.EndHorizontal();
-                if ((Main.settings.file != null || Main.settings.file != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file)))
-                {
+
+                if ((Main.settings.file != null || Main.settings.file != "") && File.Exists(@Path.Combine(Main.path, Main.settings.file))) {
                     GUILayout.Label("文件存在！");
-                }
-                else
-                {
+
+                } else {
                     GUILayout.Label("文件不存在，请检查文件是否存放在" + Main.path + "目录中");
+
                 }
+            }
+
+            GUILayout.Label("传家宝选择，关闭是系统自带。传家宝直接mod内选择后添加，与特质选择不相关。");
+            Main.settings.itemsType = GUILayout.SelectionGrid(Main.settings.itemsType, new string[] { "关闭", "全部", "自定义" }, 3);
+            if (Main.settings.itemsType == 2)
+            {
+                List<int> tempList = new List<int>();
+
+                GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+                int countNum = (Main.tempItemsId.Count / 5) + 1;
+                int i = 0;
+                foreach (KeyValuePair<int, string> itemKV in Main.tempItemsId)
+                {
+                    if (i == 0) GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
+
+                    if (GUILayout.Toggle(Main.settings.newItemsId.Contains(itemKV.Key), itemKV.Value)) {
+                        tempList.Add(itemKV.Key);
+
+                    } else {
+                        tempList.Remove(itemKV.Key);
+
+                    }
+                    if (i == Main.tempItemsId.Count - 1) {
+                        GUILayout.EndVertical();
+                        break;
+
+                    }
+                    if (i % 5 == 0 && i != 0) {
+                        GUILayout.EndVertical();
+                        GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
+                    }
+                    i++;
+                }
+                GUILayout.EndHorizontal();
+
+                if (GUI.changed) Main.settings.newItemsId = tempList;
+            }
+
+            if (Main.settings.itemsType != 0)
+            {
+                GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+                Main.settings.isStepfatherCreate = GUILayout.Toggle(Main.settings.isStepfatherCreate, "是否义父所制");
+                Main.settings.friendItemCreate = GUILayout.Toggle(Main.settings.friendItemCreate, "同伴也有同样传家宝");
+                GUILayout.EndHorizontal();
+
+                GUILayout.Label("义父所制会覆盖原有道具效果。");
+                GUILayout.Label("传家宝数量：" + Main.settings.itemsCount.ToString());
+                uint itemsCount = (uint)GUILayout.HorizontalScrollbar(Main.settings.itemsCount, 1, 1, 10);
+                if (GUI.changed) Main.settings.itemsCount = itemsCount;
             }
         }
 
@@ -155,7 +232,32 @@ namespace LKX_NewGameActor
             Main.settings.Save(modEntry);
         }
     }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
+    public static class GetTempItemsId_For_Loading_LoadGameBaseDateStart
+    {
 
+        static void Postfix()
+        {
+            if (Main.enabled)
+            {
+                List<string> keys = new List<string>(GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(','));
+                int indexTypeNum = keys.IndexOf("5");
+                int indexLevelNum = keys.IndexOf("8");
+
+                foreach (string items in GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(new string[] { "\r\n" }, StringSplitOptions.None))
+                {
+                    string[] theItemParams = items.Trim().Split(',');
+                    if (theItemParams[indexLevelNum] == "9" && theItemParams[indexTypeNum] == "13")
+                            Main.tempItemsId[int.Parse(theItemParams[0])] = theItemParams[2];
+                }
+            }
+        }
+    }
+    
     /// <summary>
     /// 新建人物的特性点数锁定为10
     /// </summary>
@@ -179,12 +281,14 @@ namespace LKX_NewGameActor
             if (Main.enabled && Main.settings.talentActor)
             {
                 Dictionary<int, Dictionary<int, string>> abilityDate = DateFile.instance.abilityDate;
+                if (abilityDate.ContainsKey(1001)) return;
+
                 abilityDate.Add(1001, new Dictionary<int, string>());
                 abilityDate[1001].Add(0, "见经识经");
                 abilityDate[1001].Add(1, "0");
                 abilityDate[1001].Add(2, "1");
                 abilityDate[1001].Add(3, "0");
-                abilityDate[1001].Add(99, "见经识经，见书识书，你从小就非常聪明，具有非常高的悟性！（来自新游戏人物加特性MOD）");
+                abilityDate[1001].Add(99, "见经识经，见书识书，你从小就非常聪明，具有非常高的悟性！（来自开始新游戏锁定和自定义特质MOD）");
             }
         }
     }
@@ -231,7 +335,68 @@ namespace LKX_NewGameActor
                 if (___chooseAbility.Contains(6)) ProcessingDevelopmentDate(10003);
             }
 
+            //处理传家宝
+            if (Main.settings.itemsType != 0)
+            {
+                ProcessingItemsDate(10001);
+                if (___chooseAbility.Contains(6) && Main.settings.friendItemCreate) ProcessingItemsDate(10003);
+            }
+
             return;
+        }
+
+        /// <summary>
+        /// 处理传家宝
+        /// </summary>
+        /// <param name="actorId">游戏人物的ID</param>
+        static void ProcessingItemsDate(int actorId)
+        {
+            if (Main.settings.itemsType == 1)
+            {
+                //全选的
+                foreach (int itemId in Main.tempItemsId.Keys)
+                {
+                    int forNum = Main.settings.itemsCount > 0 || Main.settings.itemsCount < 10 ? int.Parse(Main.settings.itemsCount.ToString()) : 1;
+                    for (int i = 0; i < forNum; i++)
+                    {
+                        int itemMake = DateFile.instance.MakeNewItem(itemId, 0, 0, 100, 20);
+                        DateFile.instance.GetItem(actorId, itemMake, int.Parse(Main.settings.itemsCount.ToString()), false, -1, 0);
+                        DateFile.instance.ChangItemDate(itemMake, 92, 900, false);
+                        DateFile.instance.ChangItemDate(itemMake, 93, 1800, false);
+
+                        if (Main.settings.isStepfatherCreate)
+                        {
+                            int itemDurable = int.Parse(DateFile.instance.GetItemDate(int.Parse(DateFile.instance.GetItemDate(itemMake, 999, true)), 902, true)) * 2;
+                            DateFile.instance.itemsDate[itemMake][901] = itemDurable.ToString();
+                            DateFile.instance.itemsDate[itemMake][902] = itemDurable.ToString();
+                            DateFile.instance.itemsDate[itemMake][504] = "50001";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //自定义的
+                foreach (int itemId in Main.settings.newItemsId)
+                {
+                    int forNum = Main.settings.itemsCount > 0 || Main.settings.itemsCount < 10 ? int.Parse(Main.settings.itemsCount.ToString()) : 1;
+                    for (int i = 0; i < forNum; i++)
+                    {
+                        int itemMake = DateFile.instance.MakeNewItem(itemId, 0, 0, 100, 20);
+                        DateFile.instance.GetItem(actorId, itemMake, int.Parse(Main.settings.itemsCount.ToString()), false, -1, 0);
+                        DateFile.instance.ChangItemDate(itemMake, 92, 900, false);
+                        DateFile.instance.ChangItemDate(itemMake, 93, 1800, false);
+
+                        if (Main.settings.isStepfatherCreate)
+                        {
+                            int itemDurable = int.Parse(DateFile.instance.GetItemDate(int.Parse(DateFile.instance.GetItemDate(itemMake, 999, true)), 902, true)) * 2;
+                            DateFile.instance.itemsDate[itemMake][901] = itemDurable.ToString();
+                            DateFile.instance.itemsDate[itemMake][902] = itemDurable.ToString();
+                            DateFile.instance.itemsDate[itemMake][504] = "50001";
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -245,7 +410,7 @@ namespace LKX_NewGameActor
             if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
             {
                 int randDevelopment = Main.settings.developmentActor;
-                if (Main.settings.developmentActor == 1) randDevelopment = Random.Range(2, 4);
+                if (Main.settings.developmentActor == 1) randDevelopment = UnityEngine.Random.Range(2, 4);
                 actor[551] = randDevelopment.ToString();
                 actor[651] = randDevelopment.ToString();
             }
