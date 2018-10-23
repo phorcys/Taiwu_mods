@@ -1,0 +1,8 @@
+{
+    "Id": "SaveLoadBtns",
+    "DisplayName": "儲存載入按鈕",
+    "Author": "Eiffel",
+    "Version": "1.0.0",
+    "AssemblyName": "SaveLoadBtns.dll",
+    "EntryMethod": "SaveLoadBtns.Main.Load"
+}
