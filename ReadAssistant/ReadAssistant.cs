@@ -103,8 +103,6 @@ namespace ReadAssistant
             GUILayout.Label("说明： ");
             GUILayout.Label("在耐心开始下降的前一时刻自动使用【迁思回虑】。");
             GUILayout.Label("有可能出现90%进度放技能，下一时刻就跳到100%的情况。");
-            GUILayout.Label(Main.plan.power3Num[0].ToString() + "|" + Main.plan.power6Num[0].ToString() + "|" + Main.plan.addPower3Num[0].ToString() + "|" + Main.plan.addPower4Num[0].ToString());
-            GUILayout.Label(Main.plan.power3Num[1].ToString() + "|" + Main.plan.power6Num[1].ToString() + "|" + Main.plan.addPower3Num[1].ToString() + "|" + Main.plan.addPower4Num[1].ToString());
             GUILayout.EndVertical();
         }
 
@@ -202,7 +200,7 @@ namespace ReadAssistant
             if (Main.isRead)
             {
                 int cost6 = int.Parse(DateFile.instance.readBookDate[6][1]) * needInt / 100;
-                if (!Main.settings.autoRead || (Main.settings.just50Hard && needInt <= 50) || DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) < cost6)
+                if (!Main.settings.autoRead || (Main.settings.just50Hard && needInt > 50) || DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) < cost6)
                     return;
 
 
