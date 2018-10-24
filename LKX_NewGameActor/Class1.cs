@@ -49,7 +49,7 @@ namespace LKX_NewGameActor
         /// <summary>
         /// 传家宝id列表
         /// </summary>
-        public List<int> newItemsId;
+        public List<int> newItemsId = new List<int>();
 
         /// <summary>
         /// 选择类型
@@ -177,6 +177,7 @@ namespace LKX_NewGameActor
             Main.settings.itemsType = GUILayout.SelectionGrid(Main.settings.itemsType, new string[] { "关闭", "全部", "自定义" }, 3);
             if (Main.settings.itemsType == 2)
             {
+
                 List<int> tempList = new List<int>();
 
                 GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
