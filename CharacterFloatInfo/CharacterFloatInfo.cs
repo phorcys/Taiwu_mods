@@ -113,7 +113,7 @@ namespace CharacterFloatInfo
         {
             if (!Main.enabled)
             {
-                //return;
+                return;
             }
 
             WorldMapSystem_UpdatePlaceActor_Patch.index = 0;
@@ -637,14 +637,10 @@ namespace CharacterFloatInfo
             return gang;
         }
        
-
+        //获取列表中品级最高功法的名字与数量
         private static string getBestGongfaText(List <int>gongFas)
         {
                 
-            if (gongFas.Count == 0)
-            {
-                return "\n\t他还没来得及学";
-            }
             string bestName = "";
             int bestLevel = 0;
             int count = 1;
@@ -671,7 +667,6 @@ namespace CharacterFloatInfo
                         }
                     }
                 }
-
             }
             bestName = (bestName == "") ? "无" : bestName;
             bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);            
@@ -685,15 +680,11 @@ namespace CharacterFloatInfo
         {
 
             List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
-            if (gongFas.Count == 0)
-            {
-                return "\n\t最佳功法: 他还没来得及学";
-            }
+            //及时任何功法未学也会有一个吐纳法，不再判断列表为空的情况
             string bestName = getBestGongfaText(gongFas);
             return "\n\t最佳功法: " + bestName;
         }
 
-  
         //人物身上可被太吾修习的功法获取
         public static string getLearnableGongfa(int id)
         {
@@ -708,8 +699,7 @@ namespace CharacterFloatInfo
                 if (TGongFas.Find((t) => t == gongFaId) == 0)
                 {
                     nGongFas.Add(gongFaId);
-                }
-                 Main.Logger.Log(string.Format("Gongfa-{0}-{1}-{2}",id, gongFaId, TGongFas.Find((t) => t == gongFaId)));
+                }                
             }
             string bestName = getBestGongfaText(nGongFas);            
             return "\n\t可学功法: " + bestName;
