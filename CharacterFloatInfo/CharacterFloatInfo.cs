@@ -23,8 +23,7 @@ namespace CharacterFloatInfo
         public bool workerlist = false;
         public bool talkMessage = false;
         public bool enableTalkShortMode = true;//在对话框只显示部分信息
-        public bool enableListShortMode = true;//在工作界面只显示部分信息
-        public bool showBest = true; //显示身上品质最高的物品与功法
+        public bool enableListShortMode = true;//在工作界面只显示部分信息        
         public bool showMood = false; //显示心情
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
@@ -33,6 +32,9 @@ namespace CharacterFloatInfo
         public bool lifeMessage = false; //人物经历
         public bool showCharacteristic = true; //人物特性
         public bool showIV = false; //显示被隐藏了的人物特性
+        public bool showBest = true; //显示身上品质最高的物品与功法及可学功法
+
+
     }
 
     public static class Main
@@ -67,7 +69,6 @@ namespace CharacterFloatInfo
             Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息的差异", new GUILayoutOption[0]);
-            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与功法", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
             Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "显示人物特性", new GUILayoutOption[0]);
             Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示被隐藏了的人物特性", new GUILayoutOption[0]);
@@ -75,6 +76,8 @@ namespace CharacterFloatInfo
             Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "显示村民工作效率", new GUILayoutOption[0]);
             Main.settings.workerlist = GUILayout.Toggle(Main.settings.workerlist, "村民分配工作界面启用", new GUILayoutOption[0]);
             Main.settings.talkMessage = GUILayout.Toggle(Main.settings.talkMessage, "对话界面启用", new GUILayoutOption[0]);
+            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与最佳功法", new GUILayoutOption[0]);
+
             //GUILayout.EndHorizontal();
         }
 
@@ -489,13 +492,14 @@ namespace CharacterFloatInfo
         {
             string text = "";
 
-            text += "\n" + GetResource(id);
+            text += "\n" + GetResource(id) +"\n";
 
             if (Main.settings.showBest)
             {
                 text += "\n" + GetEquipments(id);
                 text += "\n" + GetBestItems(id);
                 text += "\n" + GetBestGongfa(id);
+                text += "\n" + getLearnableGongfa(id);
             }
             return text;
         }
@@ -736,14 +740,9 @@ namespace CharacterFloatInfo
                 string.Join(" / ", autorEquipments.ToArray())) + "\n";
         }
 
-        //人物身上最高级功法获取
-        public static string GetBestGongfa(int id)
-        {
-            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
-            if (gongFas.Count == 0)
-            {
-                return "最佳功法: " + GetGenderTA(id) + "还没来得及学";
-            }
+        //获取列表中品级最高功法的名字与数量
+        private static string getBestGongfaText(List <int>gongFas)
+        {                
             string bestName = "";
             int bestLevel = 0;
             int count = 1;
@@ -753,23 +752,66 @@ namespace CharacterFloatInfo
                 string gongFaName = DateFile.instance.gongFaDate[gongFaId][0];
                 string level = DateFile.instance.gongFaDate[gongFaId][2];
                 int intLevel = int.Parse(level);
-                if (intLevel > bestLevel)
+                //每个目标身上均有一个ID为0的吐纳法，这个功法不可见且不可修习
+                if (gongFaId != 0)
                 {
-                    bestLevel = intLevel;
-                    bestName = gongFaName;
-                    count = 1;
-                }
-                else
-                {
-                    if (intLevel == bestLevel)
+                    if (intLevel > bestLevel)
                     {
-                        bestName += " / " + gongFaName;
-                        count += 1;
+                        bestLevel = intLevel;
+                        bestName = gongFaName;
+                        count = 1;
+                    }
+                    else
+                    {
+                        if (intLevel == bestLevel)
+                        {
+                            bestName += " / " + gongFaName;
+                            count += 1;
+                        }
                     }
                 }
             }
-            return "最佳功法: " + DateFile.instance.SetColoer(20001 + bestLevel, bestName) + "\n";
+            if (bestName == "")
+            {
+                return "无";
+            }
+            else
+            {
+                bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
+                return bestName;
+            }                
         }
+        
+        //人物身上最高级功法获取
+        public static string GetBestGongfa(int id)
+        {
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+             //即使任何功法未学也会有一个吐纳法，不再判断列表为空的情况
+            string bestName = getBestGongfaText(gongFas);
+            bestName = (bestName == "无" )? DateFile.instance.SetColoer(20002, GetGenderTA(id) + "还没来得及学") : bestName;
+            return "最佳功法: " + bestName + "\n";
+        }
+
+        //人物身上可被太吾修习的功法获取
+        public static string getLearnableGongfa(int id)
+        {
+            List<int> TGongFas = new List<int>(DateFile.instance.actorGongFas[DateFile.instance.MianActorID()].Keys);
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+            List<int> nGongFas = new List<int> { };
+            //挑出目标人物身上太吾未学会的功法
+            for (int i = 0; i < gongFas.Count; i++)
+            {
+                int gongFaId = gongFas[i];
+                
+                if (TGongFas.Find((t) => t == gongFaId) == 0)
+                {
+                    nGongFas.Add(gongFaId);
+                }                
+            }
+            string bestName = getBestGongfaText(nGongFas);
+            bestName = (bestName == "无") ? DateFile.instance.SetColoer(20002, GetGenderTA(id) + "会的你都会" ): bestName;
+            return "可学功法: " + bestName;
+        }   
 
         //人物身上的最佳物品获取
         public static string GetBestItems(int id)
