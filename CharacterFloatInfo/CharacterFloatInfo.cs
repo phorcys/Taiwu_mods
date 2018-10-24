@@ -680,7 +680,7 @@ namespace CharacterFloatInfo
         {
 
             List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
-            //及时任何功法未学也会有一个吐纳法，不再判断列表为空的情况
+            //即使任何功法未学也会有一个吐纳法，不再判断列表为空的情况
             string bestName = getBestGongfaText(gongFas);
             return "\n\t最佳功法: " + bestName;
         }
