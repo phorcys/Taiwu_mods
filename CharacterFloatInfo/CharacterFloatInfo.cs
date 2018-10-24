@@ -113,7 +113,7 @@ namespace CharacterFloatInfo
         {
             if (!Main.enabled)
             {
-                return;
+                //return;
             }
 
             WorldMapSystem_UpdatePlaceActor_Patch.index = 0;
@@ -389,6 +389,7 @@ namespace CharacterFloatInfo
             {
                 text += GetBestItems(id);
                 text += GetBestGongfa(id);
+                text += getLearnableGongfa(id);
             }
 
             if (Main.settings.lifeMessage && windowType == WindowType.MapActorList)//只在大地图显示经历
@@ -624,6 +625,7 @@ namespace CharacterFloatInfo
             int gangValueId = DateFile.instance.GetGangValueId(num2, num3);
             return gangValueId;
         }
+        
         //人物在组织中等级名称
         public static string GetGangLevelText(int id)
         {
@@ -634,14 +636,14 @@ namespace CharacterFloatInfo
             string gang = DateFile.instance.presetGangGroupDateValue[gangValueId][key2];
             return gang;
         }
-        //人物身上最高级功法获取
-        public static string GetBestGongfa(int id)
-        {
+       
 
-            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+        private static string getBestGongfaText(List <int>gongFas)
+        {
+                
             if (gongFas.Count == 0)
             {
-                return "\n\t最佳功法: 他还没来得及学";
+                return "\n\t他还没来得及学";
             }
             string bestName = "";
             int bestLevel = 0;
@@ -652,30 +654,65 @@ namespace CharacterFloatInfo
                 string gongFaName = DateFile.instance.gongFaDate[gongFaId][0];
                 string level = DateFile.instance.gongFaDate[gongFaId][2];
                 int intLevel = int.Parse(level);
-                if (intLevel > bestLevel)
+                //每个目标身上均有一个ID为0的吐纳法，这个功法不可见且不可修习
+                if (gongFaId != 0)
                 {
-                    bestLevel = intLevel;
-                    bestName = gongFaName;
-                    count = 1;
-                }
-                else
-                {
-                    if(intLevel == bestLevel)
+                    if (intLevel > bestLevel)
                     {
-                        count += 1;
+                        bestLevel = intLevel;
+                        bestName = gongFaName;
+                        count = 1;
+                    }
+                    else
+                    {
+                        if (intLevel == bestLevel)
+                        {
+                            count += 1;
+                        }
                     }
                 }
-               // Main.Logger.Log(string.Format("gongfas-{0}-{1}-{2}-{3}", i, gongFaId, gongFaName,level));
+
             }
-            //Main.Logger.Log(string.Format("gongfas-final-{0}-{1}", bestLevel,bestName));
-            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);
-            string after = "";
-            if (count > 1)
+            bestName = (bestName == "") ? "无" : bestName;
+            bestName = DateFile.instance.SetColoer(20001 + bestLevel, bestName);            
+            string after = (count > 1) ? string.Format("等{0}种",count) : "";
+  
+            return  bestName + after;
+        }
+
+        //人物身上最高级功法获取
+        public static string GetBestGongfa(int id)
+        {
+
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+            if (gongFas.Count == 0)
             {
-                after = " 等" + count + "种."; 
+                return "\n\t最佳功法: 他还没来得及学";
             }
-      
-            return "\n\t最佳功法: " + bestName + after;
+            string bestName = getBestGongfaText(gongFas);
+            return "\n\t最佳功法: " + bestName;
+        }
+
+  
+        //人物身上可被太吾修习的功法获取
+        public static string getLearnableGongfa(int id)
+        {
+            List<int> TGongFas = new List<int>(DateFile.instance.actorGongFas[DateFile.instance.MianActorID()].Keys);
+            List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
+            List<int> nGongFas = new List<int> { };
+            //挑出目标人物身上太吾未学会的功法
+            for (int i = 0; i < gongFas.Count; i++)
+            {
+                int gongFaId = gongFas[i];
+                
+                if (TGongFas.Find((t) => t == gongFaId) == 0)
+                {
+                    nGongFas.Add(gongFaId);
+                }
+                 Main.Logger.Log(string.Format("Gongfa-{0}-{1}-{2}",id, gongFaId, TGongFas.Find((t) => t == gongFaId)));
+            }
+            string bestName = getBestGongfaText(nGongFas);            
+            return "\n\t可学功法: " + bestName;
         }
 
         //人物身上的最佳物品获取
