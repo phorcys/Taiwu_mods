@@ -1086,25 +1086,12 @@ namespace CharacterFloatInfo
             if (HomeSystem.instance == null) return null;
             if (!HomeSystem.instance.buildingWindowOpend) return null;
             int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
-            int partId = -1;
-            int placeId = -1;
-            List<int> list = new List<int>(DateFile.instance.baseHomeDate.Keys);
-            foreach (var x_pair in DateFile.instance.baseHomeDate)
-            {
-                int x = x_pair.Key;
-                foreach (var y_pair in x_pair.Value)
-                {
-                    int y = y_pair.Key;
-                    if (DateFile.instance.baseHomeDate[x][y] != 0)
-                    {
-                        partId = x;
-                        placeId = y;
-                        break;
-                    }
-                }
-                if (partId >= 0)
-                    break;
-            }
+            int partId = HomeSystem.instance.homeMapPartId;
+            int placeId = HomeSystem.instance.homeMapPlaceId;
+            if ((!DateFile.instance.baseHomeDate.ContainsKey(partId))
+                || (!DateFile.instance.baseHomeDate[partId].ContainsKey(placeId))
+                || DateFile.instance.baseHomeDate[partId][placeId] == 0)
+                return null;
             if (partId < 0 || placeId < 0) return null;
             int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int unknown = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
