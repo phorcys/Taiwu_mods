@@ -20,11 +20,8 @@ namespace CharacterFloatInfo
         public bool shopName = false;
         public bool healthStatus = false;
         public bool workPlace = false;
-        public bool workerlist = false;
-        public bool talkMessage = false;
-        public bool enableTalkShortMode = true;//在对话框只显示部分信息
-        public bool enableListShortMode = true;//在工作界面只显示部分信息        
         public bool showMood = false; //显示心情
+        public bool showLevel = false;
         public bool workEfficiency = false; //显示工作效率
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
@@ -33,8 +30,19 @@ namespace CharacterFloatInfo
         public bool showCharacteristic = true; //人物特性
         public bool showIV = false; //显示被隐藏了的人物特性
         public bool showBest = true; //显示身上品质最高的物品与功法及可学功法
-
-
+        public bool deadActor = false;//死亡人物显示信息
+        public bool enableMAL = false;
+        public bool enableDI = false;
+        public bool enableBW = false;
+        public bool enableTA = false;
+        public bool enableAM = false;
+        public bool enableRI = false;
+        public bool shortMAL = false;
+        public bool shortDI = false;
+        public bool shortBW = false;
+        public bool shortTA = false;
+        public bool shortAM = false;
+        public bool shortRI = false;
     }
 
     public static class Main
@@ -65,20 +73,45 @@ namespace CharacterFloatInfo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            //GUILayout.BeginHorizontal();
-            Main.settings.enableTalkShortMode = GUILayout.Toggle(Main.settings.enableTalkShortMode, "在对话界面只显示部分信息", new GUILayoutOption[0]);
-            Main.settings.enableListShortMode = GUILayout.Toggle(Main.settings.enableListShortMode, "在分配工作界面只显示部分信息", new GUILayoutOption[0]);
-            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "显示原始信息的差异", new GUILayoutOption[0]);
-            Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "显示人物经历", new GUILayoutOption[0]);
-            Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "显示人物特性", new GUILayoutOption[0]);
-            Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示被隐藏了的人物特性", new GUILayoutOption[0]);
-            Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "使用可请教的技艺的颜色显示资质", new GUILayoutOption[0]);
-            Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "显示村民工作效率", new GUILayoutOption[0]);
-            Main.settings.workerlist = GUILayout.Toggle(Main.settings.workerlist, "村民分配工作界面启用", new GUILayoutOption[0]);
-            Main.settings.talkMessage = GUILayout.Toggle(Main.settings.talkMessage, "对话界面启用", new GUILayoutOption[0]);
-            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "显示最佳物品与最佳功法", new GUILayoutOption[0]);
-
-            //GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("浮窗显示区域");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物列表", new GUILayoutOption[0]);
+            Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主角及同道头像", new GUILayoutOption[0]);
+            Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话界面", new GUILayoutOption[0]);
+            Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配界面", new GUILayoutOption[0]);
+            Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "人物信息界面", new GUILayoutOption[0]);
+            Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系界面", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("简约显示");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.shortMAL = GUILayout.Toggle(Main.settings.shortMAL, "地块人物列表", new GUILayoutOption[0]);
+            Main.settings.shortTA = GUILayout.Toggle(Main.settings.shortTA, "主角及同道头像", new GUILayoutOption[0]);
+            Main.settings.shortDI = GUILayout.Toggle(Main.settings.shortDI, "对话界面", new GUILayoutOption[0]);
+            Main.settings.shortBW = GUILayout.Toggle(Main.settings.shortBW, "村民分配界面", new GUILayoutOption[0]);
+            Main.settings.shortAM = GUILayout.Toggle(Main.settings.shortAM, "人物信息界面", new GUILayoutOption[0]);
+            Main.settings.shortRI = GUILayout.Toggle(Main.settings.shortRI, "人物关系界面", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("展示信息");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showLevel = GUILayout.Toggle(Main.settings.showLevel, "人物资质", new GUILayoutOption[0]);
+            Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "人物特性与七元", new GUILayoutOption[0]);
+            Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "隐藏的人物特性", new GUILayoutOption[0]);
+            Main.settings.workEfficiency = GUILayout.Toggle(Main.settings.workEfficiency, "村民工作效率", new GUILayoutOption[0]);
+            Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "最佳物品、功法", new GUILayoutOption[0]);
+            Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "人物经历", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("其他");
+            GUILayout.EndHorizontal();
+            Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "比对原始信息", new GUILayoutOption[0]);
+            Main.settings.deadActor = GUILayout.Toggle(Main.settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
+            Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "以请教阈值显示资质", new GUILayoutOption[0]);
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -97,8 +130,8 @@ namespace CharacterFloatInfo
             GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
             if (actor.GetComponents<PointerEnter>().Count() == 0)
             {
-                string npcname = actor.GetComponent<SetSamsaraActor>().listActorNameText.text;
-                Debug.Log("SetSamsaraActor_SetActor_Patch add " + actor.name + " " + npcname);
+                //string npcname = actor.GetComponent<SetSamsaraActor>().listActorNameText.text;
+                //Debug.Log("SetSamsaraActor_SetActor_Patch add " + actor.name + " " + npcname);
                 actor.AddComponent<PointerEnter>();
             }
         }
@@ -114,8 +147,8 @@ namespace CharacterFloatInfo
             GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
             if (actor.GetComponents<PointerEnter>().Count() == 0)
             {
-                string npcname = actor.GetComponent<SetListActor>().listActorNameText.text;
-                Debug.Log("SetListActor_SetActor_Patch add " + actor.name + " " + npcname);
+                //string npcname = actor.GetComponent<SetListActor>().listActorNameText.text;
+                //Debug.Log("SetListActor_SetActor_Patch add " + actor.name + " " + npcname);
                 actor.AddComponent<PointerEnter>();
             }
         }
@@ -132,8 +165,8 @@ namespace CharacterFloatInfo
                 GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
                 if (actor.GetComponents<PointerEnter>().Count() == 0)
                 {
-                    string npcname = actor.GetComponent<SetPlaceActor>().listActorNameText.text;
-                    Debug.Log("HomeSystem_GetActor_Patch add " + actor.name + " " + npcname);
+                    //string npcname = actor.GetComponent<SetPlaceActor>().listActorNameText.text;
+                    //Debug.Log("HomeSystem_GetActor_Patch add " + actor.name + " " + npcname);
                     actor.AddComponent<PointerEnter>();
                 }
             }
@@ -146,7 +179,7 @@ namespace CharacterFloatInfo
     {
         static void Postfix(Transform ___listActorsHolder)
         {
-            if (!Main.enabled || !Main.settings.workerlist)
+            if (!Main.enabled || !Main.settings.enableBW)
             {
                 return;
             }
@@ -169,11 +202,13 @@ namespace CharacterFloatInfo
             Dialog,
             BuildingWindow,
             TeamActor,
+            ActorMenu,
+            Relationship
         };
         public static WindowType windowType = WindowType.MapActorList;
         public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW)
         {
-            if (!Main.enabled || ActorMenu.instance == null || tips == null) return;
+            if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
 
             bool needShow = false;
             int id = -1;
@@ -181,7 +216,7 @@ namespace CharacterFloatInfo
             string[] array = tips.name.Split(',');
 
             //大地圖下面的太吾自己的頭像
-            if (array[0] == "PlayerFaceButton")
+            if (array[0] == "PlayerFaceButton" && Main.settings.enableTA)
             {
                 id = DateFile.instance.mianActorId;
                 needShow = true;
@@ -189,7 +224,7 @@ namespace CharacterFloatInfo
             }
             else
             //大地圖下面的隊友頭像
-            if (tips.tag == "TeamActor")
+            if (tips.tag == "TeamActor" && Main.settings.enableTA)
             {
                 id = DateFile.instance.acotrTeamDate[array[1].Length > 0 ? int.Parse(array[1]) : 0];
                 needShow = id > 0;
@@ -199,26 +234,53 @@ namespace CharacterFloatInfo
             //建筑/地图左边的列表
             if (array[0] == "Actor")
             {
-                int typ = int.Parse(typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(WorldMapSystem.instance).ToString());
-                if (typ == 1 && WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId)
+
+                id = int.Parse(array[1]);
+                if (DateFile.instance.actorsDate.ContainsKey(id)) //检查人物列表 以排除大地图第三列无名敌人引起的错误
                 {
-                    id = int.Parse(array[1]);
-                    needShow = true;
-                    windowType = WindowType.MapActorList;
-                }
-                if (HomeSystem.instance.buildingWindowOpend)
-                {
-                    id = int.Parse(array[1]);
-                    needShow = true;
-                    windowType = WindowType.BuildingWindow;
+                    if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId && Main.settings.enableMAL) //当前格显示
+                    {
+                        needShow = true;
+                        windowType = WindowType.MapActorList;
+                    }
+                    if (HomeSystem.instance.buildingWindowOpend && Main.settings.enableBW)
+                    {
+                        needShow = true;
+                        windowType = WindowType.BuildingWindow;
+                    }
+                    if (ActorMenu.instance.actorMenu.activeSelf && Main.settings.enableAM)
+                    {
+                        needShow = true;
+                        windowType = WindowType.ActorMenu;
+                        if (!Main.settings.enableRI&& tips.tag == "PeopleActor")
+                        {
+                            needShow = false;
+                        }
+                    }
+                    if (ActorMenu.instance.actorMenu.activeSelf && ActorMenu.instance.actorMenuIndex == 7 && Main.settings.enableRI)
+                    {
+                        needShow = true;
+                        windowType = WindowType.Relationship;
+                        Main.Logger.Log(tips.tag);
+                        if (!Main.settings.enableAM && tips.tag != "PeopleActor")
+                        {
+                            needShow = false;
+                        }
+
+                    }
                 }
             }
             //对话窗口的人物头像
-            else if (array[0] == "FaceHolder" && Main.settings.talkMessage)
+            else if (array[0] == "FaceHolder" && Main.settings.enableDI)
             {
                 id = MassageWindow.instance.eventMianActorId;
                 needShow = true;
                 windowType = WindowType.Dialog;
+            }
+
+            if (int.Parse(DateFile.instance.GetActorDate(id, 26, false))>0 && !Main.settings.deadActor)
+            {
+                needShow = false;
             }
 
             if (needShow)
@@ -254,6 +316,7 @@ namespace CharacterFloatInfo
         //标题栏右侧侧小字号文本
         public static string SetMoneyText(int id)
         {
+
             return GetActorGang(id) + GetGangLevelColorText(id) + "\n" + GetChame(id);
         }
 
@@ -325,16 +388,24 @@ namespace CharacterFloatInfo
         //文本
         public static string SetInfoMessage(int id, ref int ___tipsW)
         {
+            if (CheckShort()) return "";
             return SetInfoMessage1(id) + "\n" + SetInfoMessage2(id, ref ___tipsW) + SetInfoMessage3(id) + SetInfoMessage4(id) + SetInfoMessage5(id);
+        }
+
+        public static bool CheckShort()
+        {
+            if (windowType == WindowType.MapActorList && Main.settings.shortMAL) return true;
+            if (windowType == WindowType.Dialog && Main.settings.shortDI) return true;
+            if (windowType == WindowType.BuildingWindow && Main.settings.shortBW) return true;
+            if (windowType == WindowType.TeamActor && Main.settings.shortTA) return true;
+            if (windowType == WindowType.ActorMenu && Main.settings.shortAM) return true;
+            if (windowType == WindowType.Relationship && Main.settings.shortRI) return true;
+            return false;
         }
 
         public static string SetInfoMessage1(int id)
         {
             string text = "";
-            if (windowType == WindowType.Dialog && Main.settings.enableTalkShortMode)
-                return text;
-            if (windowType == WindowType.BuildingWindow && Main.settings.enableListShortMode)
-                return text;
             text += "立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id);
             if (GetAge(id) > ConstValue.actorMinAge)
             {
@@ -402,10 +473,10 @@ namespace CharacterFloatInfo
         // 才能
         public static string SetInfoMessage3(int id)
         {
+            if (!Main.settings.showLevel) return "";
             string text = "\n";
             foreach (int i in DateFile.instance.baseSkillDate.Keys)
             {
-                var canStudy =
                 text += CanTeach(id, i) ? "※" : "　";
                 text += GetLevel(id, i, Main.settings.addonInfo);
                 text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : "\t\t";
@@ -464,12 +535,16 @@ namespace CharacterFloatInfo
             text += GetResource(id);
 
 
-            if (Main.settings.showBest && !DateFile.instance.deadActors.Contains(id))
+            if (Main.settings.showBest)
             {
                 text += "\n" + GetEquipments(id);
                 text += "\n" + GetBestItems(id);
-                text += "\n" + GetBestGongfa(id);
-                text += "\n" + getLearnableGongfa(id);
+                if (DateFile.instance.actorGongFas.ContainsKey(id))
+                {
+                    text += "\n" + GetBestGongfa(id);
+                    text += "\n" + getLearnableGongfa(id);
+                }
+
             }
             return text;
         }
@@ -551,7 +626,7 @@ namespace CharacterFloatInfo
                 string.Format("{0}{1,3}{2}<color=#606060ff>{3,3}</color>{4}",
                     DateFile.instance.baseSkillDate[index][0],
                     num.ToString(), (num < 10 ? " " : "") + (num < 100 ? "  " : ""),
-                    shownoadd ? (num2 < 0 ? "" : "+") + num2.ToString() : "    ", shownoadd && Math.Abs(num2) < 10 ? " " : ""));
+                    shownoadd ? (num2 < 0 ? "" : "+") + num2.ToString() : "    ", shownoadd?(Math.Abs(num2) < 10 ? " " :""):(num<100?"": "    ")));
             return text;
         }
 
@@ -705,7 +780,7 @@ namespace CharacterFloatInfo
                     autorEquipments.Add(GetItemColorName(itemID));
                 }
             }
-            return "人物裝備: " + (autorEquipments.Count() == 0 ?
+            return "人物装备: " + (autorEquipments.Count() == 0 ?
                 DateFile.instance.SetColoer(20002, GetGenderTA(id) + "赤身裸体在你眼前") :
                 string.Join(" / ", autorEquipments.ToArray())) + "\n";
         }
@@ -713,18 +788,7 @@ namespace CharacterFloatInfo
 
         //获取列表中品级最高功法的名字与数量
         public static string getBestGongfaText(List <int>gongFas)
-        {                
-
-        //人物身上最高级功法获取
-        //public static string GetBestGongfa(int id)
-        //{
-           // if (!DateFile.instance.actorGongFas.ContainsKey(id)) return ""; // 無功法/ 已死之人
-           // List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
-           // if (gongFas.Count == 0)
-           // {
-                //return "最佳功法: " + GetGenderTA(id) + "还没来得及学";
-            //}
-
+        {
             string bestName = "";
             int bestLevel = 0;
             int count = 1;
@@ -766,7 +830,7 @@ namespace CharacterFloatInfo
         
         //人物身上最高级功法获取
         public static string GetBestGongfa(int id)
-        {
+        {           
             List<int> gongFas = new List<int>(DateFile.instance.actorGongFas[id].Keys);
              //即使任何功法未学也会有一个吐纳法，不再判断列表为空的情况
             string bestName = getBestGongfaText(gongFas);
@@ -792,7 +856,7 @@ namespace CharacterFloatInfo
             }
             string bestName = getBestGongfaText(nGongFas);
             bestName = (bestName == "无") ? DateFile.instance.SetColoer(20002, GetGenderTA(id) + "会的你都会" ): bestName;
-            return "可学功法: " + bestName;
+            return "可学功法: " + bestName + "\n";
         }   
 
         //人物身上的最佳物品获取
@@ -807,6 +871,7 @@ namespace CharacterFloatInfo
             {
                 string itemName = GetItemColorName(itemID);
                 int itemGrade = int.Parse(DateFile.instance.GetItemDate(itemID, 8, false));
+                if (int.Parse(DateFile.instance.GetItemDate(itemID, 98, false))==86) continue;//跳过碎片
                 if (itemGrade > bestGrade)
                 {
                     bestGrade = itemGrade;
@@ -822,7 +887,7 @@ namespace CharacterFloatInfo
             }
             return "最佳物品: " + (bestItems.Count() == 0 ?
                 DateFile.instance.SetColoer(20002, GetGenderTA(id) + "是个穷光蛋") :
-                string.Join(" / ", bestItems.ToArray())) + "\t" + GetItemWeight(id) + "\n";
+                string.Join(" / ", bestItems.ToArray())) + "\t\t" + GetItemWeight(id) + "\n";
         }
 
         //村民工作地点
