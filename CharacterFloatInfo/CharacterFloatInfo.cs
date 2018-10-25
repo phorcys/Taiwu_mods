@@ -197,6 +197,7 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
+        public static bool isPeopleActor;
         public enum WindowType
         {
             MapActorList,
@@ -213,7 +214,7 @@ namespace CharacterFloatInfo
 
             bool needShow = false;
             int id = -1;
-
+            isPeopleActor = tips.tag == "PeopleActor";
             string[] array = tips.name.Split(',');
 
             //大地圖下面的太吾自己的頭像
@@ -253,7 +254,7 @@ namespace CharacterFloatInfo
                     {
                         needShow = true;
                         windowType = WindowType.ActorMenu;
-                        if (!Main.settings.enableRI && tips.tag == "PeopleActor")
+                        if (!Main.settings.enableRI && isPeopleActor)
                         {
                             needShow = false;
                         }
@@ -262,8 +263,7 @@ namespace CharacterFloatInfo
                     {
                         needShow = true;
                         windowType = WindowType.Relationship;
-                        Main.Logger.Log(tips.tag);
-                        if (!Main.settings.enableAM && tips.tag != "PeopleActor")
+                        if (!Main.settings.enableAM && !isPeopleActor)
                         {
                             needShow = false;
                         }
@@ -375,7 +375,7 @@ namespace CharacterFloatInfo
                     text += DateFile.instance.SetColoer(20007, "\n中毒");
                     break;
                 case 3:
-                    text += DateFile.instance.SetColoer(20010, "\n受伤") + ", " + DateFile.instance.SetColoer(20007, "中毒");
+                    text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
                     break;
                 default:
                     text += DateFile.instance.SetColoer(20004, "\n健康");
@@ -394,12 +394,21 @@ namespace CharacterFloatInfo
 
         public static bool CheckShort()
         {
-            if (windowType == WindowType.MapActorList && Main.settings.shortMAL) return true;
-            if (windowType == WindowType.Dialog && Main.settings.shortDI) return true;
-            if (windowType == WindowType.BuildingWindow && Main.settings.shortBW) return true;
-            if (windowType == WindowType.TeamActor && Main.settings.shortTA) return true;
-            if (windowType == WindowType.ActorMenu && Main.settings.shortAM) return true;
-            if (windowType == WindowType.Relationship && Main.settings.shortRI) return true;
+            switch (windowType)
+            {
+                case WindowType.MapActorList when Main.settings.shortMAL:
+                    return true;
+                case WindowType.Dialog when Main.settings.shortDI:
+                    return true;
+                case WindowType.BuildingWindow when Main.settings.shortBW:
+                    return true;
+                case WindowType.TeamActor when Main.settings.shortTA:
+                    return true;
+                case WindowType.ActorMenu when Main.settings.shortAM:
+                    return true;
+                case WindowType.Relationship when Main.settings.shortRI:
+                    return true;
+            }
             return false;
         }
 
@@ -558,7 +567,7 @@ namespace CharacterFloatInfo
             string text = "";
             if (Main.settings.lifeMessage) // 只要用者設定了就顯示. 
             {
-                text += "\n" + GetLifeMessage(id, 3) + "\n";
+                text += "\n" + GetLifeMessage(id, 3) + (isPeopleActor?"\n":"");
             }
             return text;
         }
@@ -796,6 +805,7 @@ namespace CharacterFloatInfo
             int bestLevel = -1;
             foreach (int id in gongFas)
             {
+                if (id == 0) continue;
                 if (GetGongfaLevel(id) == bestLevel)
                 {
                     bestName += ", " + GetGongfaColorText(id);
@@ -821,7 +831,7 @@ namespace CharacterFloatInfo
 
         public static string GetGongfaColorText(int id)
         {
-            return id > 0 ? DateFile.instance.SetColoer(20001 + GetGongfaLevel(id), GetGongfaText(id)) : "";
+            return DateFile.instance.SetColoer(20001 + GetGongfaLevel(id), GetGongfaText(id));
         }
 
         public static List<int> GetGongfaList(int id)
