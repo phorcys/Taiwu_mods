@@ -33,8 +33,14 @@ namespace ExchangeStatPoints
             {551,"技艺成长"},{651,"功法成长"},//2均衡3早熟4晚成
         };
         private static int[] changedHeirloom = { 0, 0 };//changedItemId|changedBuffId
-        private static int[] heirloomId = { 50809, 50909, 80809, 80818, 80827, 80909, 80918, 80927, 70209, 70309, 74009, 60809, 60909, 61009, 61109, 61209, 61309, 61409, 61509, 61609, 61709, 61809, 61909, 62009, 62109 };
-        private static Dictionary<int, int> heirloomIdIndex = new Dictionary<int, int> { { 50809, 0 }, { 50909, 1 }, { 80809, 2 }, { 80818, 3 }, { 80827, 4 }, { 80909, 5 }, { 80918, 6 }, { 80927, 7 }, { 70209, 8 }, { 70309, 9 }, { 74009, 10 }, { 60809, 11 }, { 60909, 12 }, { 61009, 13 }, { 61109, 14 }, { 61209, 15 }, { 61309, 16 }, { 61409, 17 }, { 61509, 18 }, { 61609, 19 }, { 61709, 20 }, { 61809, 21 }, { 61909, 22 }, { 62009, 23 }, { 62109, 24 }, };
+        private static int[] heirloomId =
+        {
+            50809, 50909, 80809, 80818, 80827, 80909, 80918, 80927, 70209, 70309, 74009, 60809, 60909, 61009, 61109, 61209, 61309, 61409, 61509, 61609, 61709, 61809, 61909, 62009, 62109
+        };
+        private static Dictionary<int, int> heirloomIdIndex = new Dictionary<int, int>
+        {
+            {50809, 0 }, { 50909, 1 }, { 80809, 2 }, { 80818, 3 }, { 80827, 4 }, { 80909, 5 }, { 80918, 6 }, { 80927, 7 }, { 70209, 8 }, { 70309, 9 }, { 74009, 10 }, { 60809, 11 }, { 60909, 12 }, { 61009, 13 }, { 61109, 14 }, { 61209, 15 }, { 61309, 16 }, { 61409, 17 }, { 61509, 18 }, { 61609, 19 }, { 61709, 20 }, { 61809, 21 }, { 61909, 22 }, { 62009, 23 }, { 62109, 24 },
+        };
         private static Dictionary<int, string> heirloomData = new Dictionary<int, string> {
             {50809,"造成外伤：+20%"},//降龙玄铁戒
             {50909,"内功发挥：-20%"},//玄离金册
@@ -65,23 +71,18 @@ namespace ExchangeStatPoints
         private static int featureId = 0;//0抓周，1-7一般
         private static List<int> featureList = new List<int>();
         private static int[,] changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
-        private static int changedCharm = 0;
+        private static bool[] changedSexy = { false, false };
         private static int changedMoney = 0;
+        private static int changedCharm = 0;
         private static int changedPrestige = 0;
+        private static bool isRejuvenation = false;
+        private static int changedGrace = 0;
 
-        //{5,"姓"},{0,"名"},{16,"人物立场"},
+        //{16,"人物立场"},
         ////0刚正，每200一段？
-
-        //{101,"人物特性"},
-
-        //{11,"年龄"},{12,"健康"},{13,"寿命"},
-
         //{202,"喜爱"},{203,"厌恶"},
         ////无|针匣|对刺|暗器|箫笛|掌套|短杵|拂尘|长鞭|剑|刀|长兵|瑶琴|宝物|冠饰|鞋子|护甲|衣着|代步|促织|图纸|书籍|工具|食材|木材|金铁|宝石|织物|毒物|药材|毒药|丹药|杂物|蛰罐|素食|荤食|神兵|酒|机关|毒器|令符|茶
-
-        //{15,"魅力"},{18,"名誉"},
-
-        //{14,"性别"},{17,"性转外貌"},//可能没有该项
+        //{18,"名誉"},
         //{995,"捏脸部件"},{996,"捏脸颜色"},
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -110,9 +111,11 @@ namespace ExchangeStatPoints
                 changedHeirloom = new int[] { 0, 0 };
                 featureId = 0;//0抓周，1-7一般
                 changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
+                changedSexy = new bool[] { false, false };
                 changedCharm = 0;
                 changedMoney = 0;
                 changedPrestige = 0;
+                isRejuvenation = false;
                 if (cond)
                 {
                     dateId = 0;
@@ -133,27 +136,21 @@ namespace ExchangeStatPoints
         {
             var tbl = DateFile.instance;
             bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label(pointDate[pointId]);
-            if (cond)
+            GUILayout.Label(tbl.actorsDate[tbl.mianActorId][pointId] + "\t" + (changedPoint[pointId] == 0 ? "" : ChangedPoint(pointId).ToString("+#;-#;0")) + "\t");
+            //GUILayout.FlexibleSpace();
+            if (GUILayout.Button("-", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 1)
             {
-                GUILayout.Label("未读取存档", GUILayout.ExpandWidth(true));
+                changedPoint[pointId] -= 2;
+                freePoint[index]++;
             }
-            else
+            if (GUILayout.Button("+", GUILayout.Width(30)) && freePoint[index] > 0
+                && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + ChangedPoint(pointId) < (pointId < 67 ? 80 : 100) + 10 * (tbl.actorsDate[tbl.mianActorId].ContainsKey(901) ? int.Parse(tbl.actorsDate[tbl.mianActorId][901]) : 0))
             {
-                GUILayout.Label(tbl.GetActorDate(tbl.mianActorId, pointId, false) + "\t" + (changedPoint[pointId] == 0 ? "" : ChangedPoint(pointId).ToString("+#;-#;0")) + "\t");
-                //GUILayout.FlexibleSpace();
-                if (GUILayout.Button("-", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 1)
-                {
-                    changedPoint[pointId] -= 2;
-                    freePoint[index]++;
-                }
-                if (GUILayout.Button("+", GUILayout.Width(30)) && freePoint[index] > 0
-                    && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + ChangedPoint(pointId) < (pointId < 67 ? 80 : 100) + 10 * (tbl.actorsDate[tbl.mianActorId].ContainsKey(901) ? int.Parse(tbl.actorsDate[tbl.mianActorId][901]) : 0))
-                {
-                    changedPoint[pointId] += 2;
-                    freePoint[index]--;
-                }
+                changedPoint[pointId] += 2;
+                freePoint[index]--;
             }
             GUILayout.EndHorizontal();
         }
@@ -161,32 +158,26 @@ namespace ExchangeStatPoints
         {
             var tbl = DateFile.instance;
             bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label(pointDate[pointId]);
-            if (cond)
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 2)
             {
-                GUILayout.Label("未读取存档", GUILayout.ExpandWidth(true));
+                if (changedPoint[pointId] == 0)
+                    freePoint[index] -= 20;
+                changedPoint[pointId]--;
+                if (changedPoint[pointId] == 0)
+                    freePoint[index] += 20;
             }
-            else
+            GUILayout.Label(int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 2 ? "均衡" : int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 3 ? "早熟" : "晚成");
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] < 4)
             {
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 2)
-                {
-                    if (changedPoint[pointId] == 0)
-                        freePoint[index] -= 20;
-                    changedPoint[pointId]--;
-                    if (changedPoint[pointId] == 0)
-                        freePoint[index] += 20;
-                }
-                GUILayout.Label(int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 2 ? "均衡" : int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 3 ? "早熟" : "晚成");
-                if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] < 4)
-                {
-                    if (changedPoint[pointId] == 0)
-                        freePoint[index] -= 20;
-                    changedPoint[pointId]++;
-                    if (changedPoint[pointId] == 0)
-                        freePoint[index] += 20;
-                }
+                if (changedPoint[pointId] == 0)
+                    freePoint[index] -= 20;
+                changedPoint[pointId]++;
+                if (changedPoint[pointId] == 0)
+                    freePoint[index] += 20;
             }
             GUILayout.EndHorizontal();
         }
@@ -202,6 +193,138 @@ namespace ExchangeStatPoints
                 changedPoint[key] = 0;
             }
         }
+
+        //private static void ChangeName()
+        //{
+        //    //{5,"姓"},{0,"名"},
+        //}
+
+        private static void ChangeSexy()
+        {
+            //{14,"性别"},{17,"性转外貌"},//可能没有该项
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
+            GUILayout.BeginHorizontal("Box");
+            if (GUILayout.Button("性别:" + ((tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0]) ? "男" : "女")))
+            {
+                changedSexy[0] = !changedSexy[0];
+            }
+            if (GUILayout.Button("外貌：" + ((tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0]) ^ (tbl.GetActorDate(tbl.mianActorId, 17, false) != "0" ^ changedSexy[1]) ? "男" : "女")))
+            {
+                changedSexy[1] = !changedSexy[1];
+            }
+            GUILayout.EndHorizontal();
+        }
+        private static void SetChangedSexy()
+        {
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
+            if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(14))
+            {
+                tbl.actorsDate[tbl.mianActorId].Add(14, "1");
+            }
+            if (tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0])
+            {
+                tbl.actorsDate[tbl.mianActorId][14] = "1";
+            }
+            else
+            {
+                tbl.actorsDate[tbl.mianActorId][14] = "2";
+            }
+
+            if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(17))
+            {
+                tbl.actorsDate[tbl.mianActorId].Add(14, "1");
+            }
+            if (tbl.GetActorDate(tbl.mianActorId, 17, false) != "0" ^ changedSexy[1])
+            {
+                tbl.actorsDate[tbl.mianActorId][17] = "1";
+            }
+            else
+            {
+                tbl.actorsDate[tbl.mianActorId][17] = "0";
+            }
+
+            changedSexy = new bool[] { false, false };
+        }
+
+        private static void ChangeCharm()
+        {
+            //{15,"魅力"},
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("金钱：" + tbl.actorsDate[tbl.mianActorId][406] + " " + changedMoney.ToString("+#;-#;"));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            if (GUILayout.Button("-10", GUILayout.Width(40)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 10)
+            {
+                if (changedCharm >= 10)
+                {
+                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * 10 - 45;
+                }
+                else if (changedCharm > 0)
+                {
+                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * changedCharm - (changedCharm * (changedCharm - 1) / 2);
+                }
+                changedCharm -= 10;
+            }
+            if (GUILayout.Button("-1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 1)
+            {
+                if (changedCharm > 0)
+                {
+                    changedMoney += int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm;
+                }
+                changedCharm--;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("魅力：" + tbl.actorsDate[tbl.mianActorId][15] + changedCharm.ToString("+#;-#;"));
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("+1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 899
+                && (changedCharm < 0 || int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney >= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1)))
+            {
+                if (changedCharm >= 0)
+                {
+                    changedMoney -= int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1;
+                }
+                changedCharm++;
+            }
+            if (GUILayout.Button("+10", GUILayout.Width(40)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 890
+                && (changedCharm <= -10 || changedCharm >= 0
+                ? ((int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45))
+                : (int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2))))
+            {
+                if (changedCharm >= 0)
+                {
+                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45;
+                }
+                else if (changedCharm > -10)
+                {
+                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2);
+                }
+                changedCharm += 10;
+            }
+            GUILayout.EndHorizontal();
+        }
+        private static void SetChangedCharm()
+        {
+            if (changedMoney != 0)
+            {
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) + changedMoney).ToString();
+                changedMoney = 0;
+            }
+            if (changedCharm != 0)
+            {
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][15] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm).ToString();
+                changedCharm = 0;
+            }
+        }
+
         private static int GetHeirloomId()
         {
             var tbl = DateFile.instance;
@@ -234,113 +357,116 @@ namespace ExchangeStatPoints
         {
             var tbl = DateFile.instance;
             bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
-            GUILayout.Label("");
+            if (cond) return;
             GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("威望：" + tbl.actorsDate[tbl.mianActorId][407] + " " + changedPrestige.ToString("+#;-#;"));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
             GUILayout.Label("家传宝物：");
-            if (cond)
-            {
-                GUILayout.Label("未读取存档", GUILayout.ExpandWidth(true));
-            }
-            else
-            {
-                bool noHeirloom = !tbl.actorItemsDate[tbl.mianActorId].ContainsKey(GetHeirloomId()) && tbl.GetActorDate(tbl.mianActorId, 308, false) != GetHeirloomId().ToString()
-                    && tbl.GetActorDate(tbl.mianActorId, 309, false) != GetHeirloomId().ToString() && tbl.GetActorDate(tbl.mianActorId, 310, false) != GetHeirloomId().ToString();
-                GUILayout.Label(GetHeirloomId() == -1 ? "没有家传宝物" : noHeirloom ? "家传宝物已遗失" : tbl.presetitemDate[int.Parse(tbl.itemsDate[GetHeirloomId()][999])][0], GUILayout.ExpandWidth(true));
-            }
+            bool noHeirloom = !tbl.actorItemsDate[tbl.mianActorId].ContainsKey(GetHeirloomId()) && tbl.GetActorDate(tbl.mianActorId, 308, false) != GetHeirloomId().ToString()
+                && tbl.GetActorDate(tbl.mianActorId, 309, false) != GetHeirloomId().ToString() && tbl.GetActorDate(tbl.mianActorId, 310, false) != GetHeirloomId().ToString();
+            GUILayout.Label(GetHeirloomId() == -1 ? "没有家传宝物" : noHeirloom ? "家传宝物已遗失" : tbl.presetitemDate[int.Parse(tbl.itemsDate[GetHeirloomId()][999])][0]);
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             if (cond || GetHeirloomId() == -1) return;
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[0] >= 15 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] > 0)
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] > 0)
             {
                 if (changedHeirloom[0] == 0)
                 {
-                    freePoint[0] -= 15;
+                    changedPrestige -= 5000;
                 }
                 changedHeirloom[0]--;
                 if (changedHeirloom[0] == 0)
                 {
-                    freePoint[0] += 15;
+                    changedPrestige += 5000;
                 }
             }
             GUILayout.FlexibleSpace();
             GUILayout.Label(heirloomData[heirloomId[heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]]]);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[0] >= 15 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] < 24)
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] < 24)
             {
                 if (changedHeirloom[0] == 0)
                 {
-                    freePoint[0] -= 15;
+                    changedPrestige -= 5000;
                 }
                 changedHeirloom[0]++;
                 if (changedHeirloom[0] == 0)
                 {
-                    freePoint[0] += 15;
+                    changedPrestige += 5000;
                 }
             }
             GUILayout.EndHorizontal();
             if (cond || GetHeirloomBuffId() == -1) return;
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] >= 20 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 > 1)
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 > 1)
             {
                 if (changedHeirloom[1] == 0)
                 {
-                    freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] -= 20;
+                    changedPrestige -= 5000;
                 }
                 changedHeirloom[1]--;
                 if (changedHeirloom[1] == 0)
                 {
-                    freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] += 20;
+                    changedPrestige += 5000;
                 }
             }
-            if (GUILayout.Button("技艺") && GetHeirloomBuffId() + changedHeirloom[1] > 50600 && (freePoint[1] >= 20 || GetHeirloomBuffId() < 50600))
+            if (GUILayout.Button("技艺") && GetHeirloomBuffId() + changedHeirloom[1] > 50600 && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
             {
                 if (GetHeirloomBuffId() < 50600)
                 {
                     changedHeirloom[1] = 0;
-                    freePoint[2] += 20;
+                    changedPrestige += 5000;
                 }
                 else
                 {
-                    if (changedHeirloom[1] != 0)
+                    if (changedHeirloom[1] == 0)
                     {
-                        freePoint[2] += 20;
+                        changedPrestige -= 5000;
                     }
                     changedHeirloom[1] = 50501 - GetHeirloomBuffId();
-                    freePoint[1] -= 20;
                 }
             }
             GUILayout.FlexibleSpace();
-            GUILayout.Label(pointDate[GetHeirloomBuffId() - 50000 + changedHeirloom[1]] + "：+20", GUILayout.ExpandWidth(true));
+            GUILayout.Label(pointDate[GetHeirloomBuffId() - 50000 + changedHeirloom[1]] + "：+20");
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("武学") && GetHeirloomBuffId() + changedHeirloom[1] < 50600 && (freePoint[2] >= 20 || GetHeirloomBuffId() > 50600))
+            if (GUILayout.Button("武学") && GetHeirloomBuffId() + changedHeirloom[1] < 50600 && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
             {
                 if (GetHeirloomBuffId() > 50600)
                 {
                     changedHeirloom[1] = 0;
-                    freePoint[1] += 20;
+                    changedPrestige += 5000;
                 }
                 else
                 {
-                    if (changedHeirloom[1] != 0)
+                    if (changedHeirloom[1] == 0)
                     {
-                        freePoint[1] += 20;
+                        changedPrestige -= 5000;
                     }
                     changedHeirloom[1] = 50601 - GetHeirloomBuffId();
-                    freePoint[2] -= 20;
                 }
             }
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] >= 20 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 < 16 - ((GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 505) * 2)
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 < 16 - ((GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 505) * 2)
             {
                 if (changedHeirloom[1] == 0)
                 {
-                    freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] -= 20;
+                    changedPrestige -= 5000;
                 }
                 changedHeirloom[1]++;
                 if (changedHeirloom[1] == 0)
                 {
-                    freePoint[(GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 504] += 20;
+                    changedPrestige += 5000;
                 }
             }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("单项属性变更消耗5000威望");
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
         private static void SetChangedHeirloom()
@@ -348,6 +474,11 @@ namespace ExchangeStatPoints
             var tbl = DateFile.instance;
             bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
             if (cond) return;
+            if (changedPrestige != 0)
+            {
+                tbl.actorsDate[tbl.mianActorId][407] = (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige).ToString();
+                changedPrestige = 0;
+            }
             if (changedHeirloom[0] != 0)
             {
                 tbl.itemsDate[GetHeirloomId()][999] = heirloomId[heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]].ToString();
@@ -360,6 +491,70 @@ namespace ExchangeStatPoints
                 tbl.itemsDate[GetHeirloomId()].Add(newHeirloomBuffId, "20");
                 changedHeirloom[1] = 0;
             }
+        }
+
+        private static void Rejuvenation()
+        {
+            //{11,"年龄"},{12,"健康"},{13,"寿命"},
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("历练：" + tbl.gongFaExperienceP + " " + (isRejuvenation ? "-10000" : ""));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            if (GUILayout.Button("逆运回魂仙梦(10000历练)") && !isRejuvenation && int.Parse(tbl.actorsDate[tbl.mianActorId][11]) >= 10 && tbl.gongFaExperienceP >= 10000)
+            {
+                isRejuvenation = true;
+            }
+            if (GUILayout.Button("散功") && isRejuvenation)
+            {
+                isRejuvenation = false;
+            }
+            GUILayout.EndHorizontal();
+        }
+        private static void SetRejuvenation()
+        {
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (cond) return;
+            if (isRejuvenation)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    int num = Random.Range(0, 6);
+                    tbl.actorsDate[tbl.mianActorId][61 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][61 + num]) + 1).ToString();
+                }
+                for (int i = 0; i < 16; i++)
+                {
+                    int num = Random.Range(0, 16);
+                    tbl.actorsDate[tbl.mianActorId][501 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][501 + num]) + 1).ToString();
+                }
+                for (int i = 0; i < 14; i++)
+                {
+                    int num = Random.Range(0, 14);
+                    tbl.actorsDate[tbl.mianActorId][601 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][601 + num]) + 1).ToString();
+                }
+                tbl.actorsDate[tbl.mianActorId][11] = (int.Parse(tbl.actorsDate[tbl.mianActorId][11]) - 10).ToString();
+                tbl.actorsDate[tbl.mianActorId][13] = (int.Parse(tbl.actorsDate[tbl.mianActorId][13]) - 6).ToString();
+                tbl.gongFaExperienceP -= 10000;
+                tbl.actorsDate[tbl.mianActorId][39] = "8000";
+                DateFile.instance.samsara++;
+                isRejuvenation = false;
+            }
+        }
+
+        private static int GetChangedFeature(int num)
+        {
+            int class0 = int.Parse(DateFile.instance.actorFeaturesDate[featureList[num]][5]) + changedFeature[num, 0];
+            int Level = int.Parse(DateFile.instance.actorFeaturesDate[featureList[num]][4]) + changedFeature[num, 1];
+            if (Level == 0 || class0 == 0)
+            {
+                return 0;
+            }
+            return class0 - 1 + (Level > 0 ? Level : (Level * -1 + 3));
         }
         private static void ShowFeatureMessage(int featureId)
         {
@@ -422,16 +617,6 @@ namespace ExchangeStatPoints
                 GUILayout.Label(dic[key]);
             }
         }
-        private static int GetChangedFeature(int num)
-        {
-            int class0 = int.Parse(DateFile.instance.actorFeaturesDate[featureList[num]][5]) + changedFeature[num, 0];
-            int Level = int.Parse(DateFile.instance.actorFeaturesDate[featureList[num]][4]) + changedFeature[num, 1];
-            if (Level == 0 || class0 == 0)
-            {
-                return 0;
-            }
-            return class0 - 1 + (Level > 0 ? Level : (Level * -1 + 3));
-        }
         private static void ChangeFeature()
         {
             var tbl = DateFile.instance;
@@ -454,18 +639,22 @@ namespace ExchangeStatPoints
             }
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
-            GUILayout.Label("威望余额：" + tbl.actorsDate[tbl.mianActorId][407] + changedPrestige.ToString("+#;-#;"));
+            GUILayout.Label("太吾村地区恩义：" + (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] / 1000.0).ToString("#%")
+                + " " + (changedGrace / 1000.0).ToString("+#%;-#%;"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal("Box");
+
             GUILayout.BeginVertical("Box", GUILayout.Width(200));
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 500 || changedFeature[0, 0] != 0) &&
-                (changedFeature[0, 0] + featureList[0] > 2001 || (changedFeature[0, 0] == 2001 && featureList[0] == 0)))
+            if (GUILayout.Button("<", GUILayout.Width(30))
+                && (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
+                && (changedFeature[0, 0] + featureList[0] > 2001 || (changedFeature[0, 0] == 2001 && featureList[0] == 0)))
             {
                 if (changedFeature[0, 0] == 0)
                 {
-                    changedPrestige -= 500;
+                    changedGrace -= 300;
                 }
                 if (changedFeature[0, 0] + featureList[0] == 2001)
                 {
@@ -477,7 +666,7 @@ namespace ExchangeStatPoints
                 }
                 if (changedFeature[0, 0] == 0)
                 {
-                    changedPrestige += 500;
+                    changedGrace += 300;
                 }
             }
             GUILayout.FlexibleSpace();
@@ -490,11 +679,13 @@ namespace ExchangeStatPoints
                 GUILayout.Label(DateFile.instance.actorFeaturesDate[changedFeature[0, 0] + featureList[0]][0]);
             }
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 500 || changedFeature[0, 0] != 0) && changedFeature[0, 0] + featureList[0] < 2012)
+            if (GUILayout.Button(">", GUILayout.Width(30))
+                && (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
+                && changedFeature[0, 0] + featureList[0] < 2012)
             {
                 if (changedFeature[0, 0] == 0)
                 {
-                    changedPrestige -= 500;
+                    changedGrace -= 300;
                 }
                 if (changedFeature[0, 0] + featureList[0] == 0)
                 {
@@ -506,7 +697,7 @@ namespace ExchangeStatPoints
                 }
                 if (changedFeature[0, 0] == 0)
                 {
-                    changedPrestige += 500;
+                    changedGrace += 300;
                 }
             }
             GUILayout.EndHorizontal();
@@ -514,6 +705,7 @@ namespace ExchangeStatPoints
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("Box");
+
             GUILayout.BeginHorizontal("Box");
             if (GUILayout.Button(DateFile.instance.actorFeaturesDate[GetChangedFeature(1)][0])) featureId = 1;
             if (GUILayout.Button(DateFile.instance.actorFeaturesDate[GetChangedFeature(2)][0])) featureId = 2;
@@ -523,11 +715,14 @@ namespace ExchangeStatPoints
             if (GUILayout.Button(DateFile.instance.actorFeaturesDate[GetChangedFeature(6)][0])) featureId = 6;
             if (GUILayout.Button(DateFile.instance.actorFeaturesDate[GetChangedFeature(7)][0])) featureId = 7;
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal("Box");
+
             GUILayout.BeginVertical("Box", GUILayout.Width(200));
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("特性类别：");
-            if (GUILayout.Button("<", GUILayout.Width(30)))
+            if (GUILayout.Button("<", GUILayout.Width(30)) && featureId != 0 && featureList[featureId] == 0
+                && int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1] != 0)
             {
                 int i = 0;
                 bool isCover = true;
@@ -546,39 +741,23 @@ namespace ExchangeStatPoints
                 }
                 if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][5]) + changedFeature[featureId, 0] + i < 0)
                 {
-                    if (featureList[featureId] == 0)
-                    {
-                        i += 5;
-                    }
-                    else
-                    {
-                        i = 0;
-                    }
-                }
-                if (featureId == 0)
-                {
                     i = 0;
+                    //if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][5]) + changedFeature[featureId, 0] != 0)
+                    //{
+                    //    i += 5;
+                    //}
+                    //else
+                    //{
+                    //    i = 0;
+                    //}
                 }
-                if (i != 0)
-                {
-                    if (changedFeature[featureId, 0] != 0 || int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 500)
-                    {
-                        if (changedFeature[featureId, 0] == 0)
-                        {
-                            changedPrestige -= 500;
-                        }
-                        changedFeature[featureId, 0] += i;
-                        if (changedFeature[featureId, 0] == 0)
-                        {
-                            changedPrestige += 500;
-                        }
-                    }
-                }
+                changedFeature[featureId, 0] += i;
             }
             GUILayout.FlexibleSpace();
             GUILayout.Label((int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][5]) + changedFeature[featureId, 0]).ToString());
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(">", GUILayout.Width(30)))
+            if (GUILayout.Button(">", GUILayout.Width(30)) && featureId != 0 && featureList[featureId] == 0
+                && int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1] != 0)
             {
                 int i = 0;
                 if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][5]) + changedFeature[featureId, 0] == 0)
@@ -603,85 +782,139 @@ namespace ExchangeStatPoints
                 {
                     i = 0;
                 }
-                if (i != 0)
-                {
-                    if (changedFeature[featureId, 0] != 0 || int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 500)
-                    {
-                        if (changedFeature[featureId, 0] == 0)
-                        {
-                            changedPrestige -= 500;
-                        }
-                        changedFeature[featureId, 0] += i;
-                        if (changedFeature[featureId, 0] == 0)
-                        {
-                            changedPrestige += 500;
-                        }
-                    }
-                }
+                changedFeature[featureId, 0] += i;
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("特性等级：");
-            if (GUILayout.Button("-", GUILayout.Width(30))
-                && ((int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1]) > -1
-                    || (changedFeature[featureId, 0] == 0 && changedFeature[featureId, 1] > 0)))
+            if (GUILayout.Button("-", GUILayout.Width(30)) && featureId != 0)
             {
-                changedFeature[featureId, 1]--;
-                if (changedFeature[featureId, 1] >= 0)
+                if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) < 0)
                 {
-                    changedPrestige += 500;
+                    if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1] == 0)
+                    {
+                        changedGrace += 300;
+                    }
+                    if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1] > -3)
+                    {
+                        changedFeature[featureId, 1]--;
+                    }
+                }
+                else if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) > 0)
+                {
+                    if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1] > 0)
+                    {
+                        changedFeature[featureId, 1]--;
+                    }
+                }
+                else
+                {
+                    if (changedFeature[featureId, 1] == 1)
+                    {
+                        changedGrace += 300;
+                    }
+                    if (changedFeature[featureId, 1] > -3)
+                    {
+                        changedFeature[featureId, 1]--;
+                    }
                 }
             }
             GUILayout.FlexibleSpace();
             GUILayout.Label((int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1]).ToString("+#;-#;0"));
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("+", GUILayout.Width(30))
-                && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 500 || changedFeature[featureId, 1] < 0)
-                && ((int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) + changedFeature[featureId, 1]) < 2
-                    || (changedFeature[featureId, 0] == 0 && changedFeature[featureId, 1] < 0)))
+            if (GUILayout.Button("+", GUILayout.Width(30)) && featureId != 0)
             {
-                if (changedFeature[featureId, 1] >= 0)
+                if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) < 0)
                 {
-                    changedPrestige -= 500;
+                    if (changedFeature[featureId, 1] == 0 && int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) == -1
+                        && tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300)
+                    {
+                        changedGrace -= 300;
+                        changedFeature[featureId, 1]++;
+                    }
+                    if (changedFeature[featureId, 1] < 0)
+                    {
+                        changedFeature[featureId, 1]++;
+                    }
                 }
-                changedFeature[featureId, 1]++;
+                else if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) > 0)
+                {
+                    if (changedFeature[featureId, 1] < 0)
+                    {
+                        changedFeature[featureId, 1]++;
+                    }
+                }
+                else
+                {
+                    if (changedFeature[featureId, 1] == 0
+                        && tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300)
+                    {
+                        changedGrace -= 300;
+                        changedFeature[featureId, 1]++;
+                        if (changedFeature[featureId, 0] == 0)
+                        {
+                            changedFeature[featureId, 0] = -5;
+                            bool isCover = true;
+                            while (isCover)
+                            {
+                                isCover=false;
+                                changedFeature[featureId, 0] += 6;
+                                for (int j = 1; j < 8; j++)
+                                {
+                                    if (j != featureId && int.Parse(DateFile.instance.actorFeaturesDate[featureList[j]][5]) + changedFeature[j, 0]
+                                                            == int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][5]) + changedFeature[featureId, 0])
+                                    {
+                                        isCover = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (changedFeature[featureId, 1] < 0)
+                    {
+                        changedFeature[featureId, 1]++;
+                    }
+                }
+                GUILayout.EndHorizontal();
+                if (GUILayout.Button("Reset"))
+                {
+                    if (changedFeature[featureId, 0] != 0)
+                    {
+                        changedPrestige += 500;
+                    }
+                    if (changedFeature[featureId, 1] > 0)
+                    {
+                        changedPrestige += 500 * changedFeature[featureId, 1];
+                    }
+                    changedFeature[featureId, 0] = 0;
+                    changedFeature[featureId, 1] = 0;
+                }
             }
             GUILayout.EndHorizontal();
-            if (GUILayout.Button("Reset"))
-            {
-                if (changedFeature[featureId, 0] != 0)
-                {
-                    changedPrestige += 500;
-                }
-                if (changedFeature[featureId, 1] > 0)
-                {
-                    changedPrestige += 500 * changedFeature[featureId, 1];
-                }
-                changedFeature[featureId, 0] = 0;
-                changedFeature[featureId, 1] = 0;
-            }
             GUILayout.EndVertical();
+
             GUILayout.BeginVertical("Box");
             ShowFeatureMessage(GetChangedFeature(featureId));
             GUILayout.EndVertical();
+
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }
         private static void SetChangedFeature()
         {
-            if (changedPrestige != 0)
+            if (changedGrace != 0)
             {
-                DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]=(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige).ToString();
-                changedPrestige=0;
+                DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] += changedGrace;
+                changedGrace = 0;
             }
             if (changedFeature[0, 0] != 0)
             {
-                if (featureList[0] == 0)
-                {
-                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + changedFeature[0, 0].ToString();
-                }
-                else
+                //if (featureList[0] == 0)
+                //{
+                //    DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + changedFeature[0, 0].ToString();
+                //}
+                //else
                 {
                     DateFile.instance.ChangeActorFeature(DateFile.instance.mianActorId, featureList[0], featureList[0] + changedFeature[0, 0]);
                 }
@@ -691,11 +924,11 @@ namespace ExchangeStatPoints
             {
                 if (GetChangedFeature(i) != featureList[i])
                 {
-                    if (featureList[i] == 0)
-                    {
-                        DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + GetChangedFeature(i).ToString();
-                    }
-                    else
+                    //if (featureList[i] == 0)
+                    //{
+                    //    DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + GetChangedFeature(i).ToString();
+                    //}
+                    //else
                     {
                         DateFile.instance.ChangeActorFeature(DateFile.instance.mianActorId, featureList[i], GetChangedFeature(i));
                     }
@@ -704,147 +937,77 @@ namespace ExchangeStatPoints
                 }
             }
         }
-        private static void ChangeCharm()
-        {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
-            if(cond) return;
-            GUILayout.BeginHorizontal("Box");
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("金钱余额：" + tbl.actorsDate[tbl.mianActorId][406] + changedMoney.ToString("+#;-#;"));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("-10", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 10)
-            {
-                if (changedCharm >= 10)
-                {
-                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * 10 - 45;
-                }
-                else if (changedCharm > 0)
-                {
-                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * changedCharm - (changedCharm * (changedCharm - 1) / 2);
-                }
-                changedCharm -= 10;
-            }
-            if (GUILayout.Button("-1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 1)
-            {
-                if (changedCharm > 0)
-                {
-                    changedMoney += int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm;
-                }
-                changedCharm--;
-            }
-            GUILayout.FlexibleSpace();
-            GUILayout.Label("魅力：" + tbl.actorsDate[tbl.mianActorId][15] + changedCharm.ToString("+#;-#;"));
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("+1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 899
-                && (changedCharm < 0 || int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney >= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1)))
-            {
-                if (changedCharm >= 0)
-                {
-                    changedMoney -= int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1;
-                }
-                changedCharm++;
-            }
-            if (GUILayout.Button("+10", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 890
-                && (changedCharm <= -10 || changedCharm >= 0
-                ? ((int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45))
-                : (int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2))))
-            {
-                if (changedCharm >= 0)
-                {
-                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45;
-                }
-                else if (changedCharm > -10)
-                {
-                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2);
-                }
-                changedCharm += 10;
-            }
-            GUILayout.EndHorizontal();
-        }
-        private static void SetChangedCharm()
-        {
-            if (changedCharm != 0)
-            {
-                DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]=(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15])+changedCharm).ToString();
-            }
-            changedCharm = 0;
-            if (changedMoney != 0)
-            {
-                DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) + changedMoney).ToString();
-            }
-            changedMoney = 0;
-        }
+
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             var tbl = DateFile.instance;
             bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
             CheckDateId();
+            if (cond)
+            {
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Button("未读取存档", GUILayout.ExpandWidth(true));
+                GUILayout.EndHorizontal();
+                return;
+            }
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.BeginVertical("Box");
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.BeginVertical("Box");
+            GUILayout.Label("年龄：" + tbl.actorsDate[tbl.mianActorId][11] + (isRejuvenation ? " -10" : ""));
+            GUILayout.Label("寿命：" + tbl.actorsDate[tbl.mianActorId][13] + (isRejuvenation ? " -6" : ""));
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical("Box", GUILayout.Width(250));
+            GUILayout.Label("可用六维点数：" + freePoint[0].ToString());
+            for (int i = 0; i < 6; i++)
+            {
+                ChangePoint(0, 61 + i);
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            Rejuvenation();
+            ChangeSexy();
+            ChangeCharm();
+            ChangeHeirloom();
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical("Box", GUILayout.Width(250));
+            GUILayout.Label("可用技艺点数：" + freePoint[1].ToString());
+            for (int i = 0; i < 16; i++)
+            {
+                ChangePoint(1, 501 + i);
+            }
+            ChangeGrowth(1, 551);
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical("Box", GUILayout.Width(250));
+            GUILayout.Label("可用武学点数：" + freePoint[2].ToString());
+            for (int i = 0; i < 14; i++)
+            {
+                ChangePoint(2, 601 + i);
+            }
+            ChangeGrowth(2, 651);
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("变更资质成长需花费20可用点数");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("从左至右顺序为[均衡|早熟|晚成]");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal("Box");
             if (GUILayout.Button((freePoint[0] + freePoint[1] + freePoint[2] == 0) ? "Apply" : "有未使用的可用点数时不能应用更改") && (freePoint[0] + freePoint[1] + freePoint[2] == 0))
             {
                 SetChangedPoint();
+                SetRejuvenation();
+                SetChangedSexy();
+                SetChangedCharm();
                 SetChangedHeirloom();
                 SetChangedFeature();
-                SetChangedCharm();
             }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal("Box");
-            GUILayout.BeginVertical("Box");
-            ChangePoint(0, 61);
-            ChangePoint(0, 62);
-            ChangePoint(0, 63);
-            ChangePoint(0, 64);
-            ChangePoint(0, 65);
-            ChangePoint(0, 66);
-            GUILayout.Label("可用六维点数：" + freePoint[0].ToString());
-            ChangeHeirloom();
-            GUILayout.Label("变更固有属性消耗15六维可用点数。");
-            GUILayout.Label("变更资质加成消耗20目标类可用点数。");
-            ChangeCharm();
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical("Box");
-            ChangePoint(1, 501);
-            ChangePoint(1, 502);
-            ChangePoint(1, 503);
-            ChangePoint(1, 504);
-            ChangePoint(1, 505);
-            ChangePoint(1, 506);
-            ChangePoint(1, 507);
-            ChangePoint(1, 508);
-            ChangePoint(1, 509);
-            ChangePoint(1, 510);
-            ChangePoint(1, 511);
-            ChangePoint(1, 512);
-            ChangePoint(1, 513);
-            ChangePoint(1, 514);
-            ChangePoint(1, 515);
-            ChangePoint(1, 516);
-            ChangeGrowth(1, 551);
-            GUILayout.Label("可用技艺点数：" + freePoint[1].ToString());
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical("Box");
-            ChangePoint(2, 601);
-            ChangePoint(2, 602);
-            ChangePoint(2, 603);
-            ChangePoint(2, 604);
-            ChangePoint(2, 605);
-            ChangePoint(2, 606);
-            ChangePoint(2, 607);
-            ChangePoint(2, 608);
-            ChangePoint(2, 609);
-            ChangePoint(2, 610);
-            ChangePoint(2, 611);
-            ChangePoint(2, 612);
-            ChangePoint(2, 613);
-            ChangePoint(2, 614);
-            ChangeGrowth(2, 651);
-            GUILayout.Label("可用武学点数：" + freePoint[2].ToString());
-            GUILayout.Label("变更资质成长需花费20可用点数。");
-            GUILayout.Label("从左至右顺序为[均衡|早熟|晚成]。");
-            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
             ChangeFeature();

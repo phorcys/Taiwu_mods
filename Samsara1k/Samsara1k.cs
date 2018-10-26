@@ -13,9 +13,9 @@ namespace Samsara1k
     {
         public static void Prefix()
         {
-            if (Main.enabled)
+            if (Main.Enabled)
             {
-                DateFile.instance.samsara += Main.settings.samsara - 1;
+                DateFile.instance.samsara += Main.Setting.samsara - 1;
             }
         }
     }
@@ -25,11 +25,11 @@ namespace Samsara1k
     {
         public static void Prefix()
         {
-            if (Main.enabled)
+            if (Main.Enabled)
             {
                 if (MassageWindow.instance.eventValue[1] == 1)
                 {
-                    DateFile.instance.samsara += Main.settings.samsara - 1;
+                    DateFile.instance.samsara += Main.Setting.samsara - 1;
                 }
             }
         }
@@ -39,20 +39,20 @@ namespace Samsara1k
     {
         public static UnityModManager.ModEntry.ModLogger logger;
 
-        public static bool enabled;
+        public static bool Enabled { get; private set; }
 
-        public static Settings settings;
+        public static Settings Setting { get; private set; }
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            enabled = value;
+            Enabled = value;
             return true;
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             logger = modEntry.Logger;
-            settings = Settings.Load<Settings>(modEntry);
+            Setting = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
@@ -65,11 +65,11 @@ namespace Samsara1k
             GUILayout.BeginHorizontal();
             GUILayout.Label("每次传剑增加轮回次数:", GUILayout.Width(180));
             int samsara;
-            if (int.TryParse(GUILayout.TextArea(settings.samsara.ToString(), GUILayout.Width(60)), out samsara))
+            if (int.TryParse(GUILayout.TextArea(Setting.samsara.ToString(), GUILayout.Width(60)), out samsara))
             {
                 if (samsara >= 1)
                 {
-                    settings.samsara = samsara;
+                    Setting.samsara = samsara;
                 }
             }
             GUILayout.EndHorizontal();
@@ -77,7 +77,7 @@ namespace Samsara1k
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
-            settings.Save(modEntry);
+            Setting.Save(modEntry);
         }
     }
 
