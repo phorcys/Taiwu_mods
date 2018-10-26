@@ -14,10 +14,10 @@ namespace AutoWalk
         public static List<int> PlaceRc = new List<int>();
         public class Settings : UnityModManager.ModSettings
         {
-            public string Time;
-            public string Enemy;
-            public string Anyuan;
-            public bool Mengluu;
+            public string Time = "1";
+            public string Enemy = "5";
+            public string Anyuan = "100";
+            public bool Mengluu = true;
 
             public override void Save(UnityModManager.ModEntry modEntry)
             {

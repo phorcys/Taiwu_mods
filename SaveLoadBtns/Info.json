@@ -1,0 +1,8 @@
+{
+    "Id": "SaveLoadBtns",
+    "DisplayName": "方便游戏的S/L进度",
+    "Author": "Eiffel",
+    "Version": "1.0.0",
+    "AssemblyName": "SaveLoadBtns.dll",
+    "EntryMethod": "SaveLoadBtns.Main.Load"
+}

@@ -21,6 +21,7 @@ namespace ShowRichResources
 
         public bool ShowMax = true; //false为显示资源，true为显示资源上限
         public int yuZhi = 150;
+        public bool[] yuZhiToggle = { true, true, true, true, true, true};
     }
     public static class Main
     {
@@ -37,14 +38,26 @@ namespace ShowRichResources
             settings = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
+
             return true;
         }
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value) return false;
-            enabled = value;
-            logger.Log("ShowRichResources已加载");
+            Main.enabled = value;
+            if (isInGame())
+            {
+                RefreshResourcesIcon();
+            }
+            if (value)
+            {
+                logger.Log("ShowRichResources已加载");
+            }
+            else
+            {
+                logger.Log("ShowRichResources已关闭");
+            }
             return true;
         }
 
@@ -53,21 +66,42 @@ namespace ShowRichResources
             settings.ShowMax = GUILayout.Toggle(settings.ShowMax, "显示资源上限");
             GUILayout.Label("勾选时根据资源上限和阈值显示图标，未勾选时，根据资源和阈值显示图标");
             GUILayout.BeginHorizontal();
+            settings.yuZhiToggle[0] = GUILayout.Toggle(settings.yuZhiToggle[0], "食材", GUILayout.Width(60));
+            settings.yuZhiToggle[1] = GUILayout.Toggle(settings.yuZhiToggle[1], "木材", GUILayout.Width(60));
+            settings.yuZhiToggle[2] = GUILayout.Toggle(settings.yuZhiToggle[2], "金石", GUILayout.Width(60));
+            settings.yuZhiToggle[3] = GUILayout.Toggle(settings.yuZhiToggle[3], "织物", GUILayout.Width(60));
+            settings.yuZhiToggle[4] = GUILayout.Toggle(settings.yuZhiToggle[4], "药材", GUILayout.Width(60));
+            settings.yuZhiToggle[5] = GUILayout.Toggle(settings.yuZhiToggle[5], "银钱", GUILayout.Width(60));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label("显示阈值:", GUILayout.Width(60));
-            settings.yuZhi = Int32.Parse(GUILayout.TextArea(settings.yuZhi.ToString(), GUILayout.Width(50)));
-            DateFile tbl = DateFile.instance;
-            if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
+            int thresh = 0;
+            if (int.TryParse(GUILayout.TextArea(settings.yuZhi.ToString(), GUILayout.Width(50)), out thresh) && thresh > 0 && thresh <= 200)
             {
-                GUILayout.Label("存档未载入!");
+                settings.yuZhi = thresh;
             }
-            else
+            if (isInGame())
             {
                 if (GUILayout.Button("应用", GUILayout.Width(80)))
                 {
                     RefreshResourcesIcon();
                 }
             }
+            else
+            {
+                GUILayout.Label("存档未载入!");
+            }
             GUILayout.EndHorizontal();
+        }
+
+        public static bool isInGame()
+        {
+            DateFile tbl = DateFile.instance;
+            if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
+            {
+                return false;
+            }
+            else return true;
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -83,54 +117,7 @@ namespace ShowRichResources
             
             for (int j = 0; j < placeNum; j++)
             {
-                WorldMapPlace worldMapPlace = WorldMapSystem.instance.worldMapPlaces[j];
-                if (DateFile.instance.HaveShow(DateFile.instance.mianPartId, j) > 0)
-                {
-                    if (int.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 89)) != 6)
-                    {
-                        worldMapPlace.resourceIconHolder.gameObject.SetActive(true);
-                        int[] placeResource = DateFile.instance.GetPlaceResource(DateFile.instance.mianPartId, j);
-                        int[] placeResourceMax = new int[]
-                        {
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 1)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 2)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 3)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 4)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 5)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 6)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 7)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, j, 8))
-                        };
-                        int[] compare;
-                        if(settings.ShowMax)
-                        {
-                            compare = placeResourceMax;
-                        }
-                        else
-                        {
-                            compare = placeResource;
-                        }
-                        for (int i = 0; i < 6; i++)
-                        {
-                            if (compare[i] >= settings.yuZhi)
-                            {
-                                worldMapPlace.resourceIcon[i].SetActive(true);
-                            }
-                            else
-                            {
-                                worldMapPlace.resourceIcon[i].SetActive(false);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        worldMapPlace.resourceIconHolder.gameObject.SetActive(false);
-                    }
-                }
-                else
-                {
-                    worldMapPlace.resourceIconHolder.gameObject.SetActive(false);
-                }
+                SetResourcesIcon(j);
             }
         }
 
@@ -149,53 +136,63 @@ namespace ShowRichResources
             public static void Postfix(WorldMapPlace __instance)
             {
                 int placeId = Int32.Parse(GetInstanceField(typeof(WorldMapPlace), __instance, "placeId").ToString());
-                if (DateFile.instance.HaveShow(DateFile.instance.mianPartId, placeId) > 0)
+                SetResourcesIcon(placeId);
+            }
+        }
+
+        //设置格子图标
+        public static void SetResourcesIcon(int placeId)
+        {
+            WorldMapPlace worldMapPlace = WorldMapSystem.instance.worldMapPlaces[placeId];
+            if (DateFile.instance.HaveShow(DateFile.instance.mianPartId, placeId) > 0)
+            {
+                if (int.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 89)) != 6)
                 {
-                    if (int.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 89)) != 6)
+                    worldMapPlace.resourceIconHolder.gameObject.SetActive(true);
+                    int[] placeResource = DateFile.instance.GetPlaceResource(DateFile.instance.mianPartId, placeId);
+                    int[] placeResourceMax = new int[]
                     {
-                        __instance.resourceIconHolder.gameObject.SetActive(true);
-                        int[] placeResource = DateFile.instance.GetPlaceResource(DateFile.instance.mianPartId, placeId);
-                        int[] placeResourceMax = new int[]
-                        {
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 1)),
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 2)),
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 3)),
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 4)),
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 5)),
                             Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 6)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 7)),
-                            Int32.Parse(DateFile.instance.GetNewMapDate(DateFile.instance.mianPartId, placeId, 8))
-                        };
-                        int[] compare;
-                        if (settings.ShowMax)
-                        {
-                            compare = placeResourceMax;
-                        }
-                        else
-                        {
-                            compare = placeResource;
-                        }
-                        for (int i = 0; i < 6; i++)
-                        {
-                            if (compare[i] >= settings.yuZhi)
-                            {
-                                __instance.resourceIcon[i].SetActive(true);
-                            }
-                            else
-                            {
-                                __instance.resourceIcon[i].SetActive(false);
-                            }
-                        }
+                    };
+                    int[] compare;
+                    if (settings.ShowMax)
+                    {
+                        compare = placeResourceMax;
                     }
                     else
                     {
-                        __instance.resourceIconHolder.gameObject.SetActive(false);
+                        compare = placeResource;
+                    }
+                    if (!Main.enabled)
+                    {
+                        compare = placeResource;
+                    }
+                    for (int i = 0; i < 6; i++)
+                    {
+                        int yuZhi = Main.enabled ? settings.yuZhi : 100;
+                        if (compare[i] >= yuZhi && settings.yuZhiToggle[i])
+                        {
+                            worldMapPlace.resourceIcon[i].SetActive(true);
+                        }
+                        else
+                        {
+                            worldMapPlace.resourceIcon[i].SetActive(false);
+                        }
                     }
                 }
                 else
                 {
-                    __instance.resourceIconHolder.gameObject.SetActive(false);
+                    worldMapPlace.resourceIconHolder.gameObject.SetActive(false);
                 }
+            }
+            else
+            {
+                worldMapPlace.resourceIconHolder.gameObject.SetActive(false);
             }
         }
     }

@@ -1,0 +1,8 @@
+﻿{
+  "Id": "DoNotDisTurb",
+  "DisplayName": "勿扰模式",
+  "Author": "Duncan",
+  "Version": "1.0.0",
+  "AssemblyName": "DoNotDisTurb.dll",
+  "EntryMethod": "DoNotDisTurb.Main.Load"
+}

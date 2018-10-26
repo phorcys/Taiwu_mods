@@ -45,11 +45,7 @@ namespace NoMoreTrash
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
-
             enabled = value;
-
             return true;
         }
 
@@ -83,6 +79,8 @@ namespace NoMoreTrash
         public const int MajorTypeDrag = 2;
         static void Prefix(BattleSystem __instance)
         {
+            if (!Main.enabled)
+                return;
             BindingFlags bind_flag = BindingFlags.Instance | BindingFlags.NonPublic;
             Type type = __instance.GetType();
             FieldInfo field = type.GetField("battleBooty", bind_flag);
