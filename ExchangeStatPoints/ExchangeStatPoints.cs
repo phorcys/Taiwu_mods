@@ -8,7 +8,28 @@ namespace ExchangeStatPoints
     public static class Main
     {
         private static int dateId = 0;
+
+        //{16,"人物立场"},
+        ////0刚正，每200一段？
+        //{202,"喜爱"},{203,"厌恶"},
+        ////无|针匣|对刺|暗器|箫笛|掌套|短杵|拂尘|长鞭|剑|刀|长兵|瑶琴|宝物|冠饰|鞋子|护甲|衣着|代步|促织|图纸|书籍|工具|食材|木材|金铁|宝石|织物|毒物|药材|毒药|丹药|杂物|蛰罐|素食|荤食|神兵|酒|机关|毒器|令符|茶
+        //{18,"名誉"},
+        //{995,"捏脸部件"},{996,"捏脸颜色"},
+
+        public static bool Load(UnityModManager.ModEntry modEntry)
+        {
+            modEntry.OnGUI = OnGUI;
+            return true;
+        }
+
+
         private static int[] freePoint = { 0, 0, 0 };
+        private static int ChangedPoint(int pointId)
+        {
+            if (pointId == 551 || pointId == 651) return changedPoint[pointId];
+            if (changedPoint[pointId] > 0) return changedPoint[pointId] / 2;
+            return changedPoint[pointId];
+        }
         private static Dictionary<int, int> changedPoint = new Dictionary<int, int> {
             {61,0},/* "膂力"*/{62,0},/* "体质"*/{63,0},/* "灵敏"*/{64,0},/* "根骨"*/{65,0},/* "悟性"*/{66,0},/* "定力"*/
 
@@ -32,106 +53,6 @@ namespace ExchangeStatPoints
 
             {551,"技艺成长"},{651,"功法成长"},//2均衡3早熟4晚成
         };
-        private static int[] changedHeirloom = { 0, 0 };//changedItemId|changedBuffId
-        private static int[] heirloomId =
-        {
-            50809, 50909, 80809, 80818, 80827, 80909, 80918, 80927, 70209, 70309, 74009, 60809, 60909, 61009, 61109, 61209, 61309, 61409, 61509, 61609, 61709, 61809, 61909, 62009, 62109
-        };
-        private static Dictionary<int, int> heirloomIdIndex = new Dictionary<int, int>
-        {
-            {50809, 0 }, { 50909, 1 }, { 80809, 2 }, { 80818, 3 }, { 80827, 4 }, { 80909, 5 }, { 80918, 6 }, { 80927, 7 }, { 70209, 8 }, { 70309, 9 }, { 74009, 10 }, { 60809, 11 }, { 60909, 12 }, { 61009, 13 }, { 61109, 14 }, { 61209, 15 }, { 61309, 16 }, { 61409, 17 }, { 61509, 18 }, { 61609, 19 }, { 61709, 20 }, { 61809, 21 }, { 61909, 22 }, { 62009, 23 }, { 62109, 24 },
-        };
-        private static Dictionary<int, string> heirloomData = new Dictionary<int, string> {
-            {50809,"造成外伤：+20%"},//降龙玄铁戒
-            {50909,"内功发挥：-20%"},//玄离金册
-            {80809,"烈毒抵抗：+900"},//昊天塔
-            {80818,"寒毒抵抗：+900"},//羲和印
-            {80827,"腐毒抵抗：+900"},//娲皇图
-            {80909,"郁毒抵抗：+900"},//紫皇香炉
-            {80918,"赤毒抵抗：+900"},//涅槃珠
-            {80927,"幻毒抵抗：+900"},//万法荼糜
-            {70209,"架势速度：+20%"},//雷鼓灵旗
-            {70309,"提气速度：+20%"},//万象云光帕
-            {74009,"行囊大小：+30"},//乾坤叉袋
-            {60809,"膂力：+45"},//开天珠
-            {60909,"体质：+45"},//上尊金身
-            {61009,"灵敏：+45"},//神照镜
-            {61109,"内伤上限：+150"},//太真华扃
-            {61209,"迅疾：+80"},//三辰旗
-            {61309,"精妙：+80"},//九乌眼
-            {61409,"力道：+80"},//千均印
-            {61509,"悟性：+45"},//物华天宝
-            {61609,"根骨：+45"},//太始天元册
-            {61709,"定力：+45"},//冰心玉壶
-            {61809,"外伤上限：+150"},//聚宝盆
-            {61909,"架势&提气消耗：-15%"},//九色胭脂壶
-            {62009,"造成内伤：+20%"},//昆仑玉册
-            {62109,"内功发挥：+20%"},//四海匣
-        };
-        private static int featureId = 0;//0抓周，1-7一般
-        private static List<int> featureList = new List<int>();
-        private static int[,] changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
-        private static bool[] changedSexy = { false, false };
-        private static int changedMoney = 0;
-        private static int changedCharm = 0;
-        private static int changedPrestige = 0;
-        private static bool isRejuvenation = false;
-        private static int changedGrace = 0;
-
-        //{16,"人物立场"},
-        ////0刚正，每200一段？
-        //{202,"喜爱"},{203,"厌恶"},
-        ////无|针匣|对刺|暗器|箫笛|掌套|短杵|拂尘|长鞭|剑|刀|长兵|瑶琴|宝物|冠饰|鞋子|护甲|衣着|代步|促织|图纸|书籍|工具|食材|木材|金铁|宝石|织物|毒物|药材|毒药|丹药|杂物|蛰罐|素食|荤食|神兵|酒|机关|毒器|令符|茶
-        //{18,"名誉"},
-        //{995,"捏脸部件"},{996,"捏脸颜色"},
-
-        public static bool Load(UnityModManager.ModEntry modEntry)
-        {
-            modEntry.OnGUI = OnGUI;
-            return true;
-        }
-        private static void CheckDateId()
-        {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
-            if (dateId != SaveDateFile.instance.dateId || cond) //避免跨存档切换
-            {
-                freePoint = new int[] { 0, 0, 0 };
-                changedPoint = new Dictionary<int, int> {
-                    {61,0},/* "膂力"*/{62,0},/* "体质"*/{63,0},/* "灵敏"*/{64,0},/* "根骨"*/{65,0},/* "悟性"*/{66,0},/* "定力"*/
-
-                    {501,0},/*"音律"*/{502,0},/*"弈棋"*/{503,0},/*"诗书"*/{504,0},/*"绘画"*/{505,0},/*"术数"*/{506,0},/*"品鉴"*/{507,0},/*"锻造"*/{508,0},/*"制木"*/
-                    {509,0},/*"医术"*/{510,0},/*"毒术"*/{511,0},/*"织锦"*/{512,0},/*"巧匠"*/{513,0},/*"道法"*/{514,0},/*"佛学"*/{515,0},/*"厨艺"*/{516,0},/*"杂学"*/
-
-                    {601,0},/*"内功"*/{602,0},/*"身法"*/{603,0},/*"绝技"*/{604,0},/*"拳掌"*/{605,0},/*"指法"*/{606,0},/*"腿法"*/
-                    {607,0},/*"暗器"*/{608,0},/*"剑法"*/{609,0},/*"刀法"*/{610,0},/*"长兵"*/{611,0},/*"奇门"*/{612,0},/*"软兵"*/{613,0},/*"御射"*/{614,0},/*"乐器"*/
-
-                    {551,0},/*"技艺成长"*/{651,0},/*"功法成长"*/    //2均衡3早熟4晚成
-                };
-                changedHeirloom = new int[] { 0, 0 };
-                featureId = 0;//0抓周，1-7一般
-                changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
-                changedSexy = new bool[] { false, false };
-                changedCharm = 0;
-                changedMoney = 0;
-                changedPrestige = 0;
-                isRejuvenation = false;
-                if (cond)
-                {
-                    dateId = 0;
-                }
-                else
-                {
-                    dateId = SaveDateFile.instance.dateId;
-                }
-            }
-        }
-        private static int ChangedPoint(int pointId)
-        {
-            if (pointId == 551 || pointId == 651) return changedPoint[pointId];
-            if (changedPoint[pointId] > 0) return changedPoint[pointId] / 2;
-            return changedPoint[pointId];
-        }
         private static void ChangePoint(int index, int pointId)
         {
             var tbl = DateFile.instance;
@@ -199,6 +120,7 @@ namespace ExchangeStatPoints
         //    //{5,"姓"},{0,"名"},
         //}
 
+        private static bool[] changedSexy = { false, false };
         private static void ChangeSexy()
         {
             //{14,"性别"},{17,"性转外貌"},//可能没有该项
@@ -223,7 +145,7 @@ namespace ExchangeStatPoints
             if (cond) return;
             if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(14))
             {
-                tbl.actorsDate[tbl.mianActorId].Add(14, "1");
+                tbl.actorsDate[tbl.mianActorId].Add(14, tbl.GetActorDate(tbl.mianActorId, 14, false));
             }
             if (tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0])
             {
@@ -236,7 +158,7 @@ namespace ExchangeStatPoints
 
             if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(17))
             {
-                tbl.actorsDate[tbl.mianActorId].Add(14, "1");
+                tbl.actorsDate[tbl.mianActorId].Add(17, tbl.GetActorDate(tbl.mianActorId, 17, false));
             }
             if (tbl.GetActorDate(tbl.mianActorId, 17, false) != "0" ^ changedSexy[1])
             {
@@ -250,6 +172,8 @@ namespace ExchangeStatPoints
             changedSexy = new bool[] { false, false };
         }
 
+        private static int changedMoney = 0;
+        private static int changedCharm = 0;
         private static void ChangeCharm()
         {
             //{15,"魅力"},
@@ -325,6 +249,43 @@ namespace ExchangeStatPoints
             }
         }
 
+        private static int changedPrestige = 0;
+        private static int[] changedHeirloom = { 0, 0 };//changedItemId|changedBuffId
+        private static int[] heirloomId =
+        {
+            50809, 50909, 80809, 80818, 80827, 80909, 80918, 80927, 70209, 70309, 74009, 60809, 60909, 61009, 61109, 61209, 61309, 61409, 61509, 61609, 61709, 61809, 61909, 62009, 62109
+        };
+        private static Dictionary<int, int> heirloomIdIndex = new Dictionary<int, int>
+        {
+            {50809, 0 }, { 50909, 1 }, { 80809, 2 }, { 80818, 3 }, { 80827, 4 }, { 80909, 5 }, { 80918, 6 }, { 80927, 7 }, { 70209, 8 }, { 70309, 9 }, { 74009, 10 }, { 60809, 11 }, { 60909, 12 }, { 61009, 13 }, { 61109, 14 }, { 61209, 15 }, { 61309, 16 }, { 61409, 17 }, { 61509, 18 }, { 61609, 19 }, { 61709, 20 }, { 61809, 21 }, { 61909, 22 }, { 62009, 23 }, { 62109, 24 },
+        };
+        private static Dictionary<int, string> heirloomData = new Dictionary<int, string> {
+            {50809,"造成外伤：+20%"},//降龙玄铁戒
+            {50909,"内功发挥：-20%"},//玄离金册
+            {80809,"烈毒抵抗：+900"},//昊天塔
+            {80818,"寒毒抵抗：+900"},//羲和印
+            {80827,"腐毒抵抗：+900"},//娲皇图
+            {80909,"郁毒抵抗：+900"},//紫皇香炉
+            {80918,"赤毒抵抗：+900"},//涅槃珠
+            {80927,"幻毒抵抗：+900"},//万法荼糜
+            {70209,"架势速度：+20%"},//雷鼓灵旗
+            {70309,"提气速度：+20%"},//万象云光帕
+            {74009,"行囊大小：+30"},//乾坤叉袋
+            {60809,"膂力：+45"},//开天珠
+            {60909,"体质：+45"},//上尊金身
+            {61009,"灵敏：+45"},//神照镜
+            {61109,"内伤上限：+150"},//太真华扃
+            {61209,"迅疾：+80"},//三辰旗
+            {61309,"精妙：+80"},//九乌眼
+            {61409,"力道：+80"},//千均印
+            {61509,"悟性：+45"},//物华天宝
+            {61609,"根骨：+45"},//太始天元册
+            {61709,"定力：+45"},//冰心玉壶
+            {61809,"外伤上限：+150"},//聚宝盆
+            {61909,"架势&提气消耗：-15%"},//九色胭脂壶
+            {62009,"造成内伤：+20%"},//昆仑玉册
+            {62109,"内功发挥：+20%"},//四海匣
+        };
         private static int GetHeirloomId()
         {
             var tbl = DateFile.instance;
@@ -493,6 +454,7 @@ namespace ExchangeStatPoints
             }
         }
 
+        private static bool isRejuvenation = false;
         private static void Rejuvenation()
         {
             //{11,"年龄"},{12,"健康"},{13,"寿命"},
@@ -546,6 +508,12 @@ namespace ExchangeStatPoints
             }
         }
 
+        private static int changedGrace = 0;
+        private static int featureId = 0;//0抓周，1-7一般
+        private static int[,] changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
+        private static int birthday = 0;
+        private static List<int> featureList = new List<int>();
+        private static List<int> OtherFeatures = new List<int>();
         private static int GetChangedFeature(int num)
         {
             int class0 = int.Parse(DateFile.instance.actorFeaturesDate[featureList[num]][5]) + changedFeature[num, 0];
@@ -857,7 +825,7 @@ namespace ExchangeStatPoints
                             bool isCover = true;
                             while (isCover)
                             {
-                                isCover=false;
+                                isCover = false;
                                 changedFeature[featureId, 0] += 6;
                                 for (int j = 1; j < 8; j++)
                                 {
@@ -908,36 +876,89 @@ namespace ExchangeStatPoints
                 DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] += changedGrace;
                 changedGrace = 0;
             }
-            if (changedFeature[0, 0] != 0)
+            OtherFeatures = new List<int>(DateFile.instance.GetActorFeature(DateFile.instance.mianActorId));
+            OtherFeatures.RemoveAll(n => n == 0);
+            foreach (int key in featureList)
             {
-                //if (featureList[0] == 0)
-                //{
-                //    DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + changedFeature[0, 0].ToString();
-                //}
-                //else
-                {
-                    DateFile.instance.ChangeActorFeature(DateFile.instance.mianActorId, featureList[0], featureList[0] + changedFeature[0, 0]);
-                }
-                changedFeature[0, 0] = 0;
+                OtherFeatures.Remove(key);
             }
+            foreach (int key in OtherFeatures)
+            {
+                if (key >= 3001 && key <= 3024)
+                {
+                    birthday = key;
+                }
+            }
+            OtherFeatures.Remove(birthday);
+            featureList[0] += changedFeature[0, 0];
+            changedFeature[0, 0] = 0;
             for (int i = 1; i < 8; i++)
             {
-                if (GetChangedFeature(i) != featureList[i])
+                featureList[i] = GetChangedFeature(i);
+                changedFeature[i, 0] = 0;
+                changedFeature[i, 1] = 0;
+            }
+            string feature = "0|" + birthday.ToString();
+            foreach (int key in featureList)
+            {
+                if (key != 0)
                 {
-                    //if (featureList[i] == 0)
-                    //{
-                    //    DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] += "|" + GetChangedFeature(i).ToString();
-                    //}
-                    //else
-                    {
-                        DateFile.instance.ChangeActorFeature(DateFile.instance.mianActorId, featureList[i], GetChangedFeature(i));
-                    }
-                    changedFeature[i, 0] = 0;
-                    changedFeature[i, 1] = 0;
+                    feature += "|" + key.ToString();
+                }
+            }
+            foreach (int key in OtherFeatures)
+            {
+                if (key != 0)
+                {
+                    feature += "|" + key.ToString();
+                }
+            }
+            DateFile.instance.actorsDate[DateFile.instance.mianActorId][101] = feature;
+            DateFile.instance.actorsFeatureCache.Remove(DateFile.instance.mianActorId);
+        }
+
+        private static void CheckDateId()
+        {
+            var tbl = DateFile.instance;
+            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            if (dateId != SaveDateFile.instance.dateId || cond) //避免跨存档切换
+            {
+                freePoint = new int[] { 0, 0, 0 };
+                changedPoint = new Dictionary<int, int> {
+                    {61,0},/* "膂力"*/{62,0},/* "体质"*/{63,0},/* "灵敏"*/{64,0},/* "根骨"*/{65,0},/* "悟性"*/{66,0},/* "定力"*/
+
+                    {501,0},/*"音律"*/{502,0},/*"弈棋"*/{503,0},/*"诗书"*/{504,0},/*"绘画"*/{505,0},/*"术数"*/{506,0},/*"品鉴"*/{507,0},/*"锻造"*/{508,0},/*"制木"*/
+                    {509,0},/*"医术"*/{510,0},/*"毒术"*/{511,0},/*"织锦"*/{512,0},/*"巧匠"*/{513,0},/*"道法"*/{514,0},/*"佛学"*/{515,0},/*"厨艺"*/{516,0},/*"杂学"*/
+
+                    {601,0},/*"内功"*/{602,0},/*"身法"*/{603,0},/*"绝技"*/{604,0},/*"拳掌"*/{605,0},/*"指法"*/{606,0},/*"腿法"*/
+                    {607,0},/*"暗器"*/{608,0},/*"剑法"*/{609,0},/*"刀法"*/{610,0},/*"长兵"*/{611,0},/*"奇门"*/{612,0},/*"软兵"*/{613,0},/*"御射"*/{614,0},/*"乐器"*/
+
+                    {551,0},/*"技艺成长"*/{651,0},/*"功法成长"*/    //2均衡3早熟4晚成
+                };
+
+                changedSexy = new bool[] { false, false };
+
+                changedMoney = 0;
+                changedCharm = 0;
+
+                changedPrestige = 0;
+                changedHeirloom = new int[] { 0, 0 };
+
+                isRejuvenation = false;
+
+                changedGrace = 0;
+                featureId = 0;//0抓周，1-7一般
+                changedFeature = new int[8, 2] { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, };//类别|等级
+                if (cond)
+                {
+                    dateId = 0;
+                }
+                else
+                {
+                    dateId = SaveDateFile.instance.dateId;
                 }
             }
         }
-
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             var tbl = DateFile.instance;
@@ -1009,7 +1030,7 @@ namespace ExchangeStatPoints
                 SetChangedFeature();
             }
             GUILayout.EndHorizontal();
-
+            GUILayout.Label(tbl.GetActorDate(tbl.mianActorId, 101, false));
             ChangeFeature();
         }
     }
