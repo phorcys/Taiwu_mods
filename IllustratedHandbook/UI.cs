@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 namespace IllustratedHandbook
 {
@@ -60,10 +61,13 @@ namespace IllustratedHandbook
         // 是否到达过最后一页 用来控制itemSlots的开关
         bool finalPageReached = false;
         // 判断游戏是否加载
-        private bool gameLoaded = false; 
+        private bool gameLoaded = false;
+        private bool gameExited = false;
 
         void Awake()
         {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+
             DontDestroyOnLoad(this);
             InitUI();
         }
@@ -85,7 +89,7 @@ namespace IllustratedHandbook
             {
                 // 如果游戏未加载 那么UI渲染模式为ScreenSpaceOverlay, 此时直接使用屏幕位置即可
                 // 如果游戏已加载 那么UI将通过MainCamera渲染, 此时需要将屏幕位置换算成世界位置
-                if (gameLoaded)
+                if (gameLoaded && !gameExited)
                     offsetPostion = mainPanel.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z));
                 else
                     offsetPostionLoding = mainPanel.transform.position - Input.mousePosition;
@@ -109,6 +113,33 @@ namespace IllustratedHandbook
             }
         }
 
+        // 用来判断是否返回了主菜单
+        public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "1_StartMenu")
+            {
+                if (gameLoaded)
+                {
+                    gameExited = true;
+                    mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                    loadedPanel.SetActive(false);
+                    filterPanel.SetActive(false);
+                    loadingPanel.SetActive(true);
+                }
+            }
+            else if (scene.name == "3_WorldMap")
+            {
+                if (gameExited)
+                {
+                    gameExited = false;
+                    mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+                    mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
+                    loadedPanel.SetActive(true);
+                    filterPanel.SetActive(false);
+                    loadingPanel.SetActive(false);
+                }
+            }
+        }
         void OnGameLoaded()
         {
             dataInstance = DateFile.instance;
@@ -488,7 +519,7 @@ namespace IllustratedHandbook
                 itemSlot.GetComponent<Button>().onClick.AddListener(
                     () =>
                     {
-                        if(itemSlot.name.Split('|')[1] != "10000")
+                        if (itemSlot.name.Split('|')[1] != "10000")
                         {
                             if (DateFile.instance.GetItem(ActorMenu.instance.acotrId, int.Parse(itemSlot.name.Split('|')[1]), 1, true) > 0)
                             {
@@ -681,11 +712,11 @@ namespace IllustratedHandbook
                 OnHover = OnHover.transform.parent.gameObject;
             }
 
-            GameObject tips = new GameObject();
-            // 临时新建一个Item获取ID以显示信息
-            tips.name = "ActorItem," + DateFile.instance.MakeNewItem(int.Parse(OnHover.name.Split('|')[1]), -5713);
-            tips.tag = "ActorItem";
-            WindowManage.instance.WindowSwitch(true, tips);
+                GameObject tips = new GameObject();
+                // 临时新建一个Item获取ID以显示信息
+                tips.name = "ActorItem," + DateFile.instance.MakeNewItem(int.Parse(OnHover.name.Split('|')[1]), -5713);
+                tips.tag = "ActorItem";
+                WindowManage.instance.WindowSwitch(true, tips);
 
         }
         public void OnMouseExitDelegate(PointerEventData data)
@@ -701,7 +732,7 @@ namespace IllustratedHandbook
 
         public void OnDragDelegate(PointerEventData data)
         {
-            if (gameLoaded)
+            if (gameLoaded && !gameExited)
             {
                 // 获取当前鼠标位置
                 Vector3 newPosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z);
