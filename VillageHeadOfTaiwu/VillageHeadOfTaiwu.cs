@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
@@ -38,7 +39,7 @@ namespace VillageHeadOfTaiwu
             "银钱"
         };
 
-        static VillagersList instance;
+        public static VillagersList Instance { get; private set; }
         static GameObject obj;
 
         GameObject canvas;
@@ -46,12 +47,12 @@ namespace VillageHeadOfTaiwu
         Rect windowRect;
         Vector2 scrollPosition;
 
-        bool open;
+        public bool Open { get; private set; }
         bool cursorLock;
         //bool collapse;
 
         GUIStyle windowStyle;
-        GUIStyle collapseStyle;
+        // GUIStyle collapseStyle;
         GUIStyle labelStyle;
         GUIStyle seperatorStyle;
         GUIStyle buttonStyle;
@@ -76,7 +77,7 @@ namespace VillageHeadOfTaiwu
         private void Awake()
         {
             Main.logger.Log("awake");
-            instance = this;
+            Instance = this;
             DontDestroyOnLoad(this);
         }
 
@@ -84,10 +85,9 @@ namespace VillageHeadOfTaiwu
         {
             Main.logger.Log("start");
 
-            open = false;
+            Open = false;
             //collapse = false;
 
-            windowRect = new Rect(Screen.width * 0.833f, 50f, Screen.width * 0.164f, 0);
             scrollPosition = Vector2.zero;
 
             windowStyle = new GUIStyle
@@ -96,30 +96,27 @@ namespace VillageHeadOfTaiwu
                 padding = new RectOffset(5, 5, 5, 5),
             };
 
-            collapseStyle = new GUIStyle
-            {
-                name = "collapse",
-                fontSize = 24,
-                alignment = TextAnchor.MiddleCenter,
-                margin = new RectOffset(5, 5, 5, 5),
-            };
-            collapseStyle.normal.textColor = Color.blue;
+            // collapseStyle = new GUIStyle
+            // {
+            //     name = "collapse",
+            //     fontSize = 24,
+            //     alignment = TextAnchor.MiddleCenter,
+            //     margin = new RectOffset(5, 5, 5, 5),
+            // };
+            // collapseStyle.normal.textColor = Color.blue;
 
             labelStyle = new GUIStyle
             {
                 name = "label",
-                fontSize = 12,
-                alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(0, 0, 5, 0),
+                alignment = TextAnchor.MiddleCenter,
+                margin = new RectOffset(0, 0, 5, 5),
             };
             labelStyle.normal.textColor = Color.yellow;
 
             buttonStyle = new GUIStyle
             {
                 name = "button",
-                fontSize = 12,
                 alignment = TextAnchor.MiddleLeft,
-                fixedWidth = windowRect.width - 40,
                 margin = new RectOffset(0, 0, 5, 0),
             };
             buttonStyle.normal.textColor = Color.white;
@@ -128,53 +125,77 @@ namespace VillageHeadOfTaiwu
             seperatorStyle = new GUIStyle
             {
                 name = "seperator",
-                fontSize = 12,
                 alignment = TextAnchor.MiddleCenter,
-                fixedWidth = windowRect.width - 40,
             };
             seperatorStyle.normal.textColor = Color.cyan;
 
             df = DateFile.instance;
             wms = WorldMapSystem.instance;
+
+            CalcWindow();
+        }
+
+        public void CalcWindow()
+        {
+            windowRect = new Rect(Screen.width * 0.833f, Screen.height * 0.05f, Screen.width * 0.164f, 0);
+            Main.logger.Log(windowRect.ToString());
+        }
+        private void PrepareGUI()
+        {
+            labelStyle.fontSize = Main.Setting.labelSize;
+            buttonStyle.fontSize = Main.Setting.buttonSize;
+            seperatorStyle.fontSize = Main.Setting.buttonSize;
+
+            buttonStyle.fixedWidth = windowRect.width - 40;
+            seperatorStyle.fixedWidth = windowRect.width - 40;
         }
 
         public void OnGUI()
         {
-            if (open)
+            if (Open)
             {
+                PrepareGUI();
+
                 var bgColor = GUI.backgroundColor;
                 var color = GUI.color;
 
                 GUI.backgroundColor = Color.black;
                 GUI.color = Color.white;
                 windowRect = GUILayout.Window(666, windowRect, WindowFunc, "",
-                    windowStyle, GUILayout.Height(Screen.height * 0.8f));
+                    windowStyle, GUILayout.Height(Screen.height * 0.73f));
 
                 GUI.backgroundColor = bgColor;
                 GUI.color = color;
             }
-
         }
 
         private void WindowFunc(int windowId)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical();
             for (int i = 0; i < 6; i++)
             {
+                if (i % 3 == 0)
+                {
+                    GUILayout.BeginHorizontal();
+                }
                 if (GUILayout.Button(workStr[i], labelStyle))
                 {
                     ArrangeWork(workType: i);
                 }
-                if (i < 5)
+                if (i % 3 < 2)
                 {
                     GUILayout.Label("|");
                 }
+                else if (i % 3 == 2)
+                {
+                    GUILayout.EndHorizontal();
+                }
             }
-            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
                 GUILayout.Width(windowRect.width - 20),
-                GUILayout.MaxHeight(Screen.height - 200));
+                GUILayout.MaxHeight(Screen.height * 0.73f));
             GUILayout.BeginVertical();
             //if (GUILayout.Button("收起", collapseStyle))
             //{
@@ -213,23 +234,28 @@ namespace VillageHeadOfTaiwu
 
             var maxPlace = -1;
             var maxRes = 0;
+            var manNeed = 0x7fffffff;
+            var manPool = UIDate.instance.GetUseManPower();
 
             for (int place = 0; place < size * size; place++)
             {
                 if (Explored(part, place) && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
                 {
                     var res = UIDate.instance.GetWorkPower((int)workType, part, place);
-                    if (res > maxRes)
+                    var man = int.Parse(df.GetNewMapDate(part, place, 12));
+                    if (res > maxRes && manPool >= man)
                     {
-                        maxRes = res;
-                        maxPlace = place;
+                        if (man <= 1 || !Main.Setting.skipTown)
+                        {
+                            maxRes = res;
+                            maxPlace = place;
+                            manNeed = man;
+                        }
                     }
                 }
             }
             if (maxRes > 0 && maxPlace >= 0)
             {
-                var manPool = UIDate.instance.GetUseManPower();
-                var manNeed = int.Parse(df.GetNewMapDate(part, maxPlace, 12));
                 if (manPool >= manNeed)
                 {
                     var choosePartId = wms.choosePartId;
@@ -311,7 +337,7 @@ namespace VillageHeadOfTaiwu
                     {
                         content = $"{df.SetColoer(10003, position)}：+" +
                             $"{df.SetColoer(10002, resource.ToString())}/" +
-                            $"{df.SetColoer(10005, manpower.ToString())}人 /时节",
+                            $"{df.SetColoer(10005, manpower.ToString())}人/时节",
                         part = part,
                         place = place,
                         manpower = manpower,
@@ -328,7 +354,7 @@ namespace VillageHeadOfTaiwu
             {
                 Destroy(canvas);
             }
-            if (open)
+            if (Open)
             {
                 if (Input.GetKey(KeyCode.PageUp))
                 {
@@ -342,18 +368,18 @@ namespace VillageHeadOfTaiwu
                 }
             }
             if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
-                && Input.GetKeyUp(Main.settings.key))
+                && Input.GetKeyUp(Main.Setting.key))
             {
                 ToggleWindow();
             }
         }
 
-        private void ToggleWindow()
+        public void ToggleWindow()
         {
-            Main.logger.Log($"Toggle {(!open ? "on" : "off")}");
-            open = !open;
-            BlockGameUI(open);
-            if (open)
+            Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
+            Open = !Open;
+            BlockGameUI(Open);
+            if (Open)
             {
                 scrollPosition = Vector2.zero;
                 cursorLock = Cursor.lockState == CursorLockMode.Locked || !Cursor.visible;
@@ -377,21 +403,38 @@ namespace VillageHeadOfTaiwu
         {
             if (open)
             {
-                canvas = new GameObject("", typeof(Canvas), typeof(GraphicRaycaster));
-                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+                canvas = new GameObject("canvas", typeof(Canvas), typeof(GraphicRaycaster));
+                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
                 canvas.GetComponent<Canvas>().sortingOrder = short.MaxValue;
                 DontDestroyOnLoad(canvas);
-                var panel = new GameObject("", typeof(Image));
+                var panel = new GameObject("panel", typeof(Image));
                 panel.transform.SetParent(canvas.transform);
-                panel.GetComponent<RectTransform>().anchorMin = new Vector2(1, 0);
-                panel.GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-                panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
-                panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+                panel.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 0.2f);
+                panel.GetComponent<RectTransform>().anchorMin = Vector2.zero;
+                panel.GetComponent<RectTransform>().anchorMax = Vector2.one;
+                panel.GetComponent<RectTransform>().offsetMin = new Vector2(windowRect.x, Screen.height * 0.22f);
+                panel.GetComponent<RectTransform>().offsetMax = new Vector2(0, -Screen.height * 0.05f);
             }
             else
             {
                 Destroy(canvas);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(DateFile), "SetScreenResolution")]
+    public class DateFile_SetScreenResolution_Patch
+    {
+        public static void Prefix(int index, DateFile __instance)
+        {
+            if (VillagersList.Instance.Open)
+            {
+                VillagersList.Instance.ToggleWindow();
+            }
+            var width = __instance.gameResolutions[index].width;
+            var height = __instance.gameResolutions[index].height;
+            Main.Setting.FitFont(width, height);
+            VillagersList.Instance.CalcWindow();
         }
     }
 
@@ -406,7 +449,46 @@ namespace VillageHeadOfTaiwu
 
     public class Settings : UnityModManager.ModSettings
     {
-        public KeyCode key = KeyCode.F8;
+        [XmlIgnore]
+        public int labelSize = 16;
+        [XmlIgnore]
+        public int buttonSize = 12;
+
+        public bool skipTown = true;
+        public KeyCode key = KeyCode.F9;
+
+        public void FitFont(int width = 0, int height = 0)
+        {
+            if (width == 0)
+            {
+                width = Screen.width;
+            }
+            if (height == 0)
+            {
+                height = Screen.height;
+            }
+            if (height <= 800)
+            {
+                labelSize = 16;
+                buttonSize = 12;
+            }
+            else if (height <= 900)
+            {
+                labelSize = 18;
+                buttonSize = 15;
+            }
+            else if (height <= 1100)
+            {
+                labelSize = 20;
+                buttonSize = 16;
+            }
+            else
+            {
+                labelSize = 22;
+                buttonSize = 18;
+            }
+            Main.logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
+        }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -416,7 +498,7 @@ namespace VillageHeadOfTaiwu
     public class Main
     {
         public static UnityModManager.ModEntry.ModLogger logger;
-        public static Settings settings;
+        public static Settings Setting;
         public static bool enabled;
 
         public static bool bindingKey = false;
@@ -429,12 +511,13 @@ namespace VillageHeadOfTaiwu
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            settings = Settings.Load<Settings>(modEntry);
             logger = modEntry.Logger;
+            Setting = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+            Setting.FitFont();
             return true;
         }
 
@@ -450,25 +533,26 @@ namespace VillageHeadOfTaiwu
                         || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
                         )
                     {
-                        settings.key = e.keyCode;
+                        Setting.key = e.keyCode;
                     }
                     bindingKey = false;
                 }
             }
             GUILayout.BeginHorizontal();
             GUILayout.Label("设置快捷键： Ctrl +", GUILayout.Width(130));
-            if (GUILayout.Button((bindingKey ? "请按键":settings.key.ToString()),
+            if (GUILayout.Button((bindingKey ? "请按键" : Setting.key.ToString()),
                 GUILayout.Width(80)))
             {
                 bindingKey = !bindingKey;
             }
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
+            Setting.skipTown = GUILayout.Toggle(Setting.skipTown, "忽略城镇");
             GUILayout.EndHorizontal();
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
-            settings.Save(modEntry);
+            Setting.Save(modEntry);
         }
     }
 }

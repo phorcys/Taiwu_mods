@@ -31,12 +31,14 @@ namespace CharacterFloatInfo
         public bool showIV = false; //显示被隐藏了的人物特性
         public bool showBest = true; //显示身上品质最高的物品与功法及可学功法
         public bool deadActor = false;//死亡人物显示信息
-        public bool enableMAL = false;
+        public bool enableMAL = true;
+        public bool enableMAN = false;
         public bool enableDI = false;
         public bool enableBW = false;
         public bool enableTA = false;
         public bool enableAM = false;
         public bool enableRI = false;
+        public bool enableMAC = false;
         public bool shortMAL = false;
         public bool shortDI = false;
         public bool shortBW = false;
@@ -65,9 +67,7 @@ namespace CharacterFloatInfo
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-
             enabled = value;
-
             return true;
         }
 
@@ -78,11 +78,13 @@ namespace CharacterFloatInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物列表", new GUILayoutOption[0]);
+            Main.settings.enableMAN = GUILayout.Toggle(Main.settings.enableMAN, "地块邻格人物列表", new GUILayoutOption[0]);
             Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主角及同道头像", new GUILayoutOption[0]);
             Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话界面", new GUILayoutOption[0]);
             Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配界面", new GUILayoutOption[0]);
             Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "人物信息界面", new GUILayoutOption[0]);
             Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系界面", new GUILayoutOption[0]);
+            Main.settings.enableMAC = GUILayout.Toggle(Main.settings.enableMAC, "对话中的人物选择界面", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("简约显示");
@@ -130,8 +132,6 @@ namespace CharacterFloatInfo
             GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
             if (actor.GetComponents<PointerEnter>().Count() == 0)
             {
-                //string npcname = actor.GetComponent<SetSamsaraActor>().listActorNameText.text;
-                //Debug.Log("SetSamsaraActor_SetActor_Patch add " + actor.name + " " + npcname);
                 actor.AddComponent<PointerEnter>();
             }
         }
@@ -147,8 +147,6 @@ namespace CharacterFloatInfo
             GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
             if (actor.GetComponents<PointerEnter>().Count() == 0)
             {
-                //string npcname = actor.GetComponent<SetListActor>().listActorNameText.text;
-                //Debug.Log("SetListActor_SetActor_Patch add " + actor.name + " " + npcname);
                 actor.AddComponent<PointerEnter>();
             }
         }
@@ -162,12 +160,10 @@ namespace CharacterFloatInfo
         {
             if (!Main.enabled) return;
             if (show)
-            { // 只顯示本格及旁邊格的NPC
+            { // 只顯示本格及邻格的NPC
                 GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
                 if (actor.GetComponents<PointerEnter>().Count() == 0)
                 {
-                    //string npcname = actor.GetComponent<SetPlaceActor>().listActorNameText.text;
-                    //Debug.Log("HomeSystem_GetActor_Patch add " + actor.name + " " + npcname);
                     actor.AddComponent<PointerEnter>();
                 }
             }
@@ -175,19 +171,34 @@ namespace CharacterFloatInfo
     }
 
     // 村內建築中選擇NPC時
-    [HarmonyPatch(typeof(HomeSystem), "GetActor")]
-    public static class HomeSystem_GetActor_Patch
+    [HarmonyPatch(typeof(SetWorkActorIcon), "SetActor")]
+    public static class SetWorkActorIcon_SetActor_Patch
     {
-        static void Postfix(Transform ___listActorsHolder)
+        static void Postfix(int key, int skillTyp, bool favorChange, ActorFace ___mianActorFace)
         {
-            if (!Main.enabled || !Main.settings.enableBW)
+            if (!Main.enabled) return;
+            GameObject actor = ___mianActorFace.transform.parent.parent.parent.gameObject;
+            if (actor.GetComponents<PointerEnter>().Count() == 0)
             {
-                return;
+                actor.AddComponent<PointerEnter>();
             }
-            int count = ___listActorsHolder.childCount;
-            for (int i = 0; i < count; i++)
+        }
+    }
+
+    // 對話時,彈出的NPC選擇窗
+    [HarmonyPatch(typeof(MassageWindow), "GetActor")]
+    public static class MassageWindow_GetActor_Patch
+    {
+        static void Postfix(Transform ___actorHolder)
+        {
+            if (!Main.enabled) return;
+            for (int i = 0; i < ___actorHolder.childCount; i++)
             {
-                ___listActorsHolder.GetChild(i).gameObject.AddComponent<PointerEnter>();
+                GameObject actor = ___actorHolder.GetChild(i).gameObject;
+                if (actor.GetComponents<PointerEnter>().Count() == 0)
+                {
+                    actor.AddComponent<PointerEnter>();
+                }
             }
         }
     }
@@ -197,6 +208,7 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
+        public static bool isPeopleActor;
         public enum WindowType
         {
             MapActorList,
@@ -204,8 +216,14 @@ namespace CharacterFloatInfo
             BuildingWindow,
             TeamActor,
             ActorMenu,
-            Relationship
+            Relationship,
+            MessageActors,
         };
+        public static List<WindowType> smallerWindow = new List<WindowType>(){
+            WindowType.MessageActors,
+            WindowType.BuildingWindow
+        };
+
         public static WindowType windowType = WindowType.MapActorList;
         public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW)
         {
@@ -213,7 +231,7 @@ namespace CharacterFloatInfo
 
             bool needShow = false;
             int id = -1;
-
+            isPeopleActor = tips.tag == "PeopleActor";
             string[] array = tips.name.Split(',');
 
             //大地圖下面的太吾自己的頭像
@@ -235,11 +253,15 @@ namespace CharacterFloatInfo
             //建筑/地图左边的列表
             if (array[0] == "Actor")
             {
-
                 id = int.Parse(array[1]);
                 if (DateFile.instance.actorsDate.ContainsKey(id)) //检查人物列表 以排除大地图第三列无名敌人引起的错误
                 {
                     if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId && Main.settings.enableMAL) //当前格显示
+                    {
+                        needShow = true;
+                        windowType = WindowType.MapActorList;
+                    }
+                    if (WorldMapSystem.instance.choosePlaceId != DateFile.instance.mianPlaceId && WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId) && Main.settings.enableMAN) //邻格显示
                     {
                         needShow = true;
                         windowType = WindowType.MapActorList;
@@ -253,7 +275,7 @@ namespace CharacterFloatInfo
                     {
                         needShow = true;
                         windowType = WindowType.ActorMenu;
-                        if (!Main.settings.enableRI && tips.tag == "PeopleActor")
+                        if (!Main.settings.enableRI && isPeopleActor)
                         {
                             needShow = false;
                         }
@@ -262,12 +284,15 @@ namespace CharacterFloatInfo
                     {
                         needShow = true;
                         windowType = WindowType.Relationship;
-                        Main.Logger.Log(tips.tag);
-                        if (!Main.settings.enableAM && tips.tag != "PeopleActor")
+                        if (!Main.settings.enableAM && !isPeopleActor)
                         {
                             needShow = false;
                         }
-
+                    }
+                    if (MassageWindow.instance.actorWindow.activeInHierarchy)
+                    {
+                        windowType = WindowType.MessageActors;
+                        needShow = Main.settings.enableMAC;
                     }
                 }
             }
@@ -286,7 +311,7 @@ namespace CharacterFloatInfo
 
             if (needShow)
             {
-                ___tipsW = 680;
+                ___tipsW = smallerWindow.Contains(windowType) ? 470 : 680;
                 ___itemLevelText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
                 ___itemMoneyText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
 
@@ -303,8 +328,8 @@ namespace CharacterFloatInfo
                     ___tipsW = 200;
                 }
 
-                clearResourceHolder();
-                clearActorFeatureHolder();
+                ClearResourceHolder();
+                ClearActorFeatureHolder();
             }
         }
 
@@ -317,6 +342,7 @@ namespace CharacterFloatInfo
         //标题栏右侧侧小字号文本
         public static string SetMoneyText(int id)
         {
+            if (smallerWindow.Contains(windowType)) return GetChame(id);
             return GetActorGang(id) + GetGangLevelColorText(id) + "\n" + GetChame(id);
         }
 
@@ -326,9 +352,14 @@ namespace CharacterFloatInfo
             string text = "";
             int age = GetAge(id);
             text = DateFile.instance.GetActorName(id, true, false);
-            string samsaraNmae = GetSamsaraName(id);
-            text += samsaraNmae.Length > 0 ? " ◆ " + samsaraNmae : "";
+            if (!smallerWindow.Contains(windowType))
+            {
+                string samsaraNmae = GetSamsaraName(id);
+                text += samsaraNmae.Length > 0 ? " ◆ " + samsaraNmae : "";
+            }
             text += "\n" + GetMood(id) + " • " + GetFame(id);
+            if (smallerWindow.Contains(windowType)) return text;
+
             if (age > ConstValue.actorMinAge) //低于14岁不显示婚姻状况
             {
                 text += " • " + GetSpouse(id);
@@ -375,7 +406,7 @@ namespace CharacterFloatInfo
                     text += DateFile.instance.SetColoer(20007, "\n中毒");
                     break;
                 case 3:
-                    text += DateFile.instance.SetColoer(20010, "\n受伤") + ", " + DateFile.instance.SetColoer(20007, "中毒");
+                    text += DateFile.instance.SetColoer(20010, "\n受伤") + "/" + DateFile.instance.SetColoer(20007, "中毒");
                     break;
                 default:
                     text += DateFile.instance.SetColoer(20004, "\n健康");
@@ -394,19 +425,32 @@ namespace CharacterFloatInfo
 
         public static bool CheckShort()
         {
-            if (windowType == WindowType.MapActorList && Main.settings.shortMAL) return true;
-            if (windowType == WindowType.Dialog && Main.settings.shortDI) return true;
-            if (windowType == WindowType.BuildingWindow && Main.settings.shortBW) return true;
-            if (windowType == WindowType.TeamActor && Main.settings.shortTA) return true;
-            if (windowType == WindowType.ActorMenu && Main.settings.shortAM) return true;
-            if (windowType == WindowType.Relationship && Main.settings.shortRI) return true;
+            switch (windowType)
+            {
+                case WindowType.MapActorList when Main.settings.shortMAL:
+                    return true;
+                case WindowType.Dialog when Main.settings.shortDI:
+                    return true;
+                case WindowType.BuildingWindow when Main.settings.shortBW:
+                    return true;
+                case WindowType.TeamActor when Main.settings.shortTA:
+                    return true;
+                case WindowType.ActorMenu when Main.settings.shortAM:
+                    return true;
+                case WindowType.Relationship when Main.settings.shortRI:
+                    return true;
+            }
             return false;
         }
 
         public static string SetInfoMessage1(int id)
         {
             string text = "";
-            text += "立场：" + GetGoodness(id) + "\t\t\t轮回：" + GetSamsara(id);
+
+            text += "立场：" + GetGoodness(id);
+            if (smallerWindow.Contains(windowType)) return text + GetActorStatus(id) + GetSpStage(id);
+
+            text += "\t\t\t轮回：" + GetSamsara(id);
             if (GetAge(id) > ConstValue.actorMinAge)
             {
                 text += "\t\t\t子嗣：" + DateFile.instance.GetActorSocial(id, 310, false).Count;
@@ -417,15 +461,34 @@ namespace CharacterFloatInfo
             return text;
         }
 
+        // 入邪狀態
+        public static string GetActorStatus(int id)
+        {
+            int[] specialFeatures = { 9997, 9998, 9999 };
+            foreach (int featureID in specialFeatures)
+            {
+                if (DateFile.instance.GetActorFeature(id).Contains(featureID))
+                    return "\t\t状态：" + DateFile.instance.actorFeaturesDate[featureID][0];
+            }
+            return "";
+        }
+
+        // 內息
+        public static string GetSpStage(int id)
+        {
+            double result = DateFile.instance.actorsDate[id].ContainsKey(39) ? int.Parse(DateFile.instance.actorsDate[id][39]) / 10 : 0;
+            return string.Format("\t\t內息：{0:0.#}", result);
+        }
+
         // 個人特性
         public static string SetInfoMessage2(int id, ref int ___tipsW)
         {
             string text = "";
-            if (Main.settings.showCharacteristic)
+            ClearActorFeatureHolder();
+            if (Main.settings.showCharacteristic && !smallerWindow.Contains(windowType))
             {
                 text += "\n\n\n";
                 int shown = 0;
-                clearActorFeatureHolder();
                 if (DateFile.instance.GetActorFeature(id).Count() == 0) return ""; // 死人
 
                 foreach (int featureID in DateFile.instance.GetActorFeature(id))
@@ -457,7 +520,7 @@ namespace CharacterFloatInfo
                             UnityEngine.Object.Instantiate(ActorMenu.instance.actorPlanFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
                         }
 
-                        actorFeature.SetParent(getActorFeatureHolder(), false);
+                        actorFeature.SetParent(GetActorFeatureHolder(), false);
                         shown++;
                     }
                 Graphic[] componentsInChildren = WindowManage.instance.informationWindow.GetComponentsInChildren<Graphic>();
@@ -477,9 +540,9 @@ namespace CharacterFloatInfo
             string text = "\n";
             foreach (int i in DateFile.instance.baseSkillDate.Keys)
             {
-                text += CanTeach(id, i) ? "※" : "　";
-                text += GetLevel(id, i, Main.settings.addonInfo);
-                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : "\t\t";
+                if (!smallerWindow.Contains(windowType)) text += CanTeach(id, i) ? "※" : "　";
+                text += GetLevel(id, i);
+                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : (smallerWindow.Contains(windowType) ? "" : "\t\t");
                 if (i == 15) text += "\n";
             }
             return text + "\n";
@@ -531,11 +594,8 @@ namespace CharacterFloatInfo
         public static string SetInfoMessage4(int id)
         {
             string text = "";
-
             text += GetResource(id);
-
-
-            if (Main.settings.showBest)
+            if (Main.settings.showBest && !smallerWindow.Contains(windowType))
             {
                 text += "\n" + GetEquipments(id);
                 text += "\n" + GetBestItems(id);
@@ -544,7 +604,7 @@ namespace CharacterFloatInfo
                     text += "\n" + GetBestGongfa(id);
                     if (id != DateFile.instance.MianActorID())
                     {
-                        text += "\n" + getLearnableGongfa(id);
+                        text += "\n" + GetLearnableGongfa(id);
                     }
                 }
 
@@ -556,9 +616,10 @@ namespace CharacterFloatInfo
         public static string SetInfoMessage5(int id)
         {
             string text = "";
-            if (Main.settings.lifeMessage) // 只要用者設定了就顯示. 
+
+            if (Main.settings.lifeMessage && !smallerWindow.Contains(windowType))
             {
-                text += "\n" + GetLifeMessage(id, 3) + "\n";
+                text += "\n" + GetLifeMessage(id, 3) + (isPeopleActor ? "\n" : "");
             }
             return text;
         }
@@ -581,7 +642,7 @@ namespace CharacterFloatInfo
                     DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(id, 14, false)) - 1].Split('|')[actorChame] :
                     DateFile.instance.massageDate[25][5].Split('|')[1]
                 );
-            if (Main.settings.addonInfo && !isChild && actorChameDiff != 0)
+            if (Main.settings.addonInfo && !isChild && actorChameDiff != 0 && !smallerWindow.Contains(windowType))
             { // 显示未加成数据 true
                 text += " <color=#606060FF>" + (actorChameDiff > 0 ? "+" : "") + actorChameDiff + "</color>";
             }
@@ -619,17 +680,20 @@ namespace CharacterFloatInfo
         }
 
         //资质
-        public static string GetLevel(int id, int index, bool shownoadd)
+        public static string GetLevel(int id, int index)
         {
             int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
-            int num = int.Parse(DateFile.instance.GetActorDate(id, (index<100?501:500) + index , true));
+            int num = int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, true));
             int num2 = num - int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, false));
-            shownoadd = shownoadd && num2 != 0;
+            bool shownoadd = !smallerWindow.Contains(windowType) && Main.settings.addonInfo && num2 != 0;
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8),
-                string.Format("{0}{1,3}{2}<color=#606060ff>{3,3}</color>{4}",
+                string.Format("{0}{1,3}{2}<color=#606060ff>{3,4}</color>{4}",
                     DateFile.instance.baseSkillDate[index][0],
-                    num.ToString(), (num < 10 ? " " : "") + (num < 100 ? "  " : ""),
-                    shownoadd ? (num2 < 0 ? "" : "+") + num2.ToString() : "    ", shownoadd ? (Math.Abs(num2) < 10 ? " " : "") : (num < 100 ? "" : "    ")));
+                    num.ToString(),
+                    (num < 10 ? "\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : ""),
+                    shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : (smallerWindow.Contains(windowType) ? "" : "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"),
+                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : "\u00A0\u00A0"));
+
             return text;
         }
 
@@ -790,7 +854,7 @@ namespace CharacterFloatInfo
 
 
         //获取列表中品级最高功法的名字与数量
-        public static string getBestGongfaText(List<int> gongFas)
+        public static string GetBestGongfaText(List<int> gongFas)
         {
             string bestName = "";
             int bestLevel = -1;
@@ -821,7 +885,7 @@ namespace CharacterFloatInfo
 
         public static string GetGongfaColorText(int id)
         {
-            return id > 0 ? DateFile.instance.SetColoer(20001 + GetGongfaLevel(id), GetGongfaText(id)) : "";
+            return DateFile.instance.SetColoer(20001 + GetGongfaLevel(id), GetGongfaText(id));
         }
 
         public static List<int> GetGongfaList(int id)
@@ -834,14 +898,13 @@ namespace CharacterFloatInfo
         //人物身上最高级功法获取
         public static string GetBestGongfa(int id)
         {
-            List<int> gongFas = DateFile.instance.actorGongFas.ContainsKey(id) ? new List<int>(DateFile.instance.actorGongFas[id].Keys) : new List<int>(); //避免引發紅字
-            string bestName = getBestGongfaText(gongFas);
+            string bestName = GetBestGongfaText(GetGongfaList(id));
             bestName = (bestName == "") ? DateFile.instance.SetColoer(20002, GetGenderTA(id) + "还没来得及学") : bestName;
             return "最佳功法: " + bestName + "\n";
         }
 
         //人物身上可被太吾修习的功法获取
-        public static string getLearnableGongfa(int id)
+        public static string GetLearnableGongfa(int id)
         {
             List<int> myGongFas = GetGongfaList(DateFile.instance.MianActorID());
             List<int> taGongFas = GetGongfaList(id);
@@ -851,7 +914,7 @@ namespace CharacterFloatInfo
             foreach (int gongFaId in taGongFas)
                 if (!myGongFas.Contains(gongFaId)) nGongFas.Add(gongFaId);
 
-            string bestName = getBestGongfaText(nGongFas);
+            string bestName = GetBestGongfaText(nGongFas);
             int bestGongfaCount = (bestName == "") ? 0 : bestName.Split(',').Count();
 
             bestName = bestName == "" ? DateFile.instance.SetColoer(20002, DateFile.instance.eventDate[9159][3].Replace("我", GetGenderTA(id))) : bestName;
@@ -1076,25 +1139,12 @@ namespace CharacterFloatInfo
             if (HomeSystem.instance == null) return null;
             if (!HomeSystem.instance.buildingWindowOpend) return null;
             int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
-            int partId = -1;
-            int placeId = -1;
-            List<int> list = new List<int>(DateFile.instance.baseHomeDate.Keys);
-            foreach (var x_pair in DateFile.instance.baseHomeDate)
-            {
-                int x = x_pair.Key;
-                foreach (var y_pair in x_pair.Value)
-                {
-                    int y = y_pair.Key;
-                    if (DateFile.instance.baseHomeDate[x][y] != 0)
-                    {
-                        partId = x;
-                        placeId = y;
-                        break;
-                    }
-                }
-                if (partId >= 0)
-                    break;
-            }
+            int partId = HomeSystem.instance.homeMapPartId;
+            int placeId = HomeSystem.instance.homeMapPlaceId;
+            if ((!DateFile.instance.baseHomeDate.ContainsKey(partId))
+                || (!DateFile.instance.baseHomeDate[partId].ContainsKey(placeId))
+                || DateFile.instance.baseHomeDate[partId][placeId] == 0)
+                return null;
             if (partId < 0 || placeId < 0) return null;
             int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int unknown = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
@@ -1147,13 +1197,13 @@ namespace CharacterFloatInfo
             if (!Main.settings.showCharacteristic) return "";
 
             int[] actorResources = ActorMenu.instance.GetActorResources(id);  //401~407
-            if (DateFile.instance.deadActors.Contains(id) || actorResources.Sum() == 0)
+            if (DateFile.instance.deadActors.Contains(id) || actorResources.Sum() == 0 || smallerWindow.Contains(windowType))
             {
-                clearResourceHolder();
+                ClearResourceHolder();
                 return "";
             }
 
-            Text[] resourcesText = getResourceHolder().gameObject.GetComponentsInChildren<Text>();
+            Text[] resourcesText = GetResourceHolder().gameObject.GetComponentsInChildren<Text>();
 
             for (int j = 0; j < resourcesText.Length; j++)
             {
@@ -1199,7 +1249,7 @@ namespace CharacterFloatInfo
             return DateFile.instance.SetColoer(20001 + itemGrade, itemName);
         }
 
-        public static Transform getActorFeatureHolder()
+        public static Transform GetActorFeatureHolder()
         {
             Transform actorFeatureHolder = WindowManage.instance.informationWindow.transform.Find("ActorFeatureHolder");
             if (actorFeatureHolder == null)
@@ -1212,9 +1262,9 @@ namespace CharacterFloatInfo
             }
             return actorFeatureHolder;
         }
-        public static void clearActorFeatureHolder()
+        public static void ClearActorFeatureHolder()
         {
-            Transform actorFeatureHolder = getActorFeatureHolder();
+            Transform actorFeatureHolder = GetActorFeatureHolder();
             if (actorFeatureHolder.childCount > 0)
             {
                 for (int i = 0; i < actorFeatureHolder.childCount; i++)
@@ -1224,7 +1274,7 @@ namespace CharacterFloatInfo
             }
         }
 
-        public static Transform getResourceHolder()
+        public static Transform GetResourceHolder()
         {
             Transform resourceHolder = WindowManage.instance.informationWindow.transform.Find("ResourceHolder");
             if (resourceHolder == null)
@@ -1236,9 +1286,9 @@ namespace CharacterFloatInfo
             return resourceHolder;
         }
 
-        public static void clearResourceHolder()
+        public static void ClearResourceHolder()
         {
-            UnityEngine.Object.Destroy(getResourceHolder().gameObject);
+            UnityEngine.Object.Destroy(GetResourceHolder().gameObject);
         }
 
 

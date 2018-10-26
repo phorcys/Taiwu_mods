@@ -80,23 +80,24 @@ namespace HomeShopSort
         {
             if (!Main.enabled)
                 return;
-            string[] array = __instance.name.Split(new char[]{','});
+            string[] array = __instance.name.Split(new char[] { ',' });
             int partId = int.Parse(array[1]);
             int placeId = int.Parse(array[2]);
             int buildingId = int.Parse(array[3]);
             int[] buildingDate = DateFile.instance.homeBuildingsDate[partId][placeId][buildingId];
             if (buildingDate[0] > 0 && int.Parse(DateFile.instance.basehomePlaceDate[buildingDate[0]][3]) == 1 && buildingDate[3] <= 0)
+            {
                 if (DateFile.instance.actorsWorkingDate.ContainsKey(partId) && DateFile.instance.actorsWorkingDate[partId].ContainsKey(placeId) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(buildingId))
                 {
-                    int eff = HomeSystem.instance.GetBuildingLevelPct(partId,placeId,buildingId);
-                    int total= int.Parse(DateFile.instance.basehomePlaceDate[buildingDate[0]][91]);
+                    int eff = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingId);
+                    int total = int.Parse(DateFile.instance.basehomePlaceDate[buildingDate[0]][91]);
                     if (total > 0)
                     {
                         string text = "";
-                        int color = 20002+6;
-                        if(Main.settings.showEfficienctUsingDifferentColor)
+                        int color = 20002 + 6;
+                        if (Main.settings.showEfficienctUsingDifferentColor)
                         {
-                            int percent = 100*(eff*100 / total)/(200*100/total);
+                            int percent = 100 * eff / total;
                             if (percent >= 90)
                                 color = 20002 + 2;
                             else if (percent >= 70)
@@ -107,10 +108,10 @@ namespace HomeShopSort
                                 color = 20002 + 8;
                         }
                         if (Main.settings.showEfficiencyAsMyWay)
-                            text ="("+ (eff / 2).ToString()+"%)";
+                            text = "(" + (eff / 2).ToString() + "%)";
                         else
-                            text ="(" +(100*eff / total).ToString() + "%)";
-                        if(!Main.settings.showEfficienctInBottom)
+                            text = "(" + (100 * eff / total).ToString() + "%)";
+                        if (!Main.settings.showEfficienctInBottom)
                             __instance.pctText.text += DateFile.instance.SetColoer(color,
                                                      text, false);
                         else
@@ -118,7 +119,18 @@ namespace HomeShopSort
                                                      text, false);
                     }
                 }
-
+                else
+                {
+                    string text = "(空闲)";
+                    int color = 20002 + 8;
+                    if (!Main.settings.showEfficienctInBottom)
+                        __instance.pctText.text += DateFile.instance.SetColoer(color,
+                                                 text, false);
+                    else
+                        __instance.placeName.text += DateFile.instance.SetColoer(color,
+                                                 text, false);
+                }
+            }
         }
     }
     //将显示人物的物体重排序(实际上是对每个物体重新设置了内容)
@@ -179,25 +191,12 @@ namespace HomeShopSort
             if (!HomeSystem.instance.buildingWindowOpend)
                 return -1;
             int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
-            int partId = -1;
-            int placeId = -1;
-            List<int> list = new List<int>(DateFile.instance.baseHomeDate.Keys);
-            foreach (var x_pair in DateFile.instance.baseHomeDate)
-            {
-                int x = x_pair.Key;
-                foreach (var y_pair in x_pair.Value)
-                {
-                    int y = y_pair.Key;
-                    if (DateFile.instance.baseHomeDate[x][y] != 0)
-                    {
-                        partId = x;
-                        placeId = y;
-                        break;
-                    }
-                }
-                if (partId >= 0)
-                    break;
-            }
+            int partId = HomeSystem.instance.homeMapPartId;
+            int placeId = HomeSystem.instance.homeMapPlaceId;
+            if ((!DateFile.instance.baseHomeDate.ContainsKey(partId))
+                || (!DateFile.instance.baseHomeDate[partId].ContainsKey(placeId))
+                || DateFile.instance.baseHomeDate[partId][placeId] == 0)
+                return -1;
             if (partId < 0 || placeId < 0)
                 return -1;
             int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
