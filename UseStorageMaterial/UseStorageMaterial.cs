@@ -41,6 +41,23 @@ namespace UseStorageMaterial
     }
 
 
+    public static class UseStorangeMaterialHelper
+    {
+        public static bool isActorEquip(int actor_id, int itemid)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                int num3 = int.Parse(DateFile.instance.GetActorDate(actor_id, 301 + i, false));
+                if (itemid != 0 && num3 == itemid)
+                {
+                    return true;
+                    break;
+                }
+            }
+            return false;
+        }
+    }
+
     /// <summary>
     ///  制造界面列表显示仓库物品，包括工具和引子材料，包括制造/修理/强化/淬毒界面
     ///  因为是直接修改函数，所以不能禁用
@@ -142,13 +159,13 @@ namespace UseStorageMaterial
             {
                 if(0== int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)))
                 {
-                    DateFile.instance.LoseItem(-999, ___mianItemId, -1,true);
+                    DateFile.instance.LoseItem(-999, ___mianItemId, -1,true, true);
                 }
                 
             }
             if ((__state & 2) == 2)
             {
-                DateFile.instance.LoseItem(-999, ___secondItemId, 1, true);
+                DateFile.instance.LoseItem(-999, ___secondItemId, 1, true, true);
             }
             return;
         }
@@ -189,7 +206,7 @@ namespace UseStorageMaterial
                 {
                     if (int.Parse(DateFile.instance.GetItemDate(___thirdItemId[j], 6, true)) > 0)
                     {
-                        DateFile.instance.LoseItem(-999, ___thirdItemId[j], 1, true);
+                        DateFile.instance.LoseItem(-999, ___thirdItemId[j], 1, true, true);
                         //Main.Logger.Log(" poison use warehouse third item ,remove it");
                     }
                     else
@@ -202,7 +219,12 @@ namespace UseStorageMaterial
             }
 
             //被强化物品
-            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
+            //被强化物品装备了
+            if (UseStorangeMaterialHelper.isActorEquip(actorId, ___secondItemId) == true)
+            {
+                //啥也不干
+            }
+            else if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
             {
                 //被强化物品在仓库，先挪 到背包里
                 __state = ___secondItemId;
@@ -258,13 +280,18 @@ namespace UseStorageMaterial
             {
                 if (___thirdItemId[j] > 0 && !DateFile.instance.actorItemsDate[actorId].ContainsKey(___thirdItemId[j]))
                 {
-                    DateFile.instance.LoseItem(-999, ___thirdItemId[j], 1, true);
+                    DateFile.instance.LoseItem(-999, ___thirdItemId[j], 1, true, true);
                     //Main.Logger.Log(" poison use warehouse third item ,remove it");
                 }
             }
 
             //被强化物品
-            if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
+            //被强化物品装备了
+            if (UseStorangeMaterialHelper.isActorEquip(actorId, ___secondItemId) == true)
+            {
+                //啥也不干
+            }
+            else if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___secondItemId))
             {
                 //被强化物品在仓库，先挪 到背包里
                 __state = ___secondItemId;
