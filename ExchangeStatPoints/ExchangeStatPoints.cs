@@ -1030,7 +1030,7 @@ namespace ExchangeStatPoints
                 SetChangedFeature();
             }
             GUILayout.EndHorizontal();
-            GUILayout.Label(tbl.GetActorDate(tbl.mianActorId, 101, false));
+
             ChangeFeature();
         }
     }
