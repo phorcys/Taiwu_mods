@@ -180,7 +180,7 @@ namespace VillageHeadOfTaiwu
                 }
                 if (GUILayout.Button(workStr[i], labelStyle))
                 {
-                    ArrangeWork(workType: i);
+                    ArrangeWork((WorkType)i);
                 }
                 if (i % 3 < 2)
                 {
@@ -220,6 +220,12 @@ namespace VillageHeadOfTaiwu
             GUILayout.EndScrollView();
         }
 
+        /// <summary>
+        /// 判断地点是否已经探索出来
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="place"></param>
+        /// <returns></returns>
         private bool Explored(int part, int place)
         {
             return (df.mapPlaceShowDate.ContainsKey(part)
@@ -227,7 +233,11 @@ namespace VillageHeadOfTaiwu
                 && df.mapPlaceShowDate[part][place] > 0);
         }
 
-        private void ArrangeWork(int workType)
+        /// <summary>
+        /// 分配特定种类资源的采集任务
+        /// </summary>
+        /// <param name="workType">资源种类</param>
+        private void ArrangeWork(WorkType workType)
         {
             var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]); // size of map
             var part = df.mianPartId;
@@ -264,7 +274,7 @@ namespace VillageHeadOfTaiwu
 
                     wms.choosePartId = part;
                     wms.choosePlaceId = maxPlace;
-                    wms.chooseWorkTyp = workType;
+                    wms.chooseWorkTyp = (int)workType;
                     wms.DoManpowerWork();
 
                     wms.choosePartId = choosePartId;
@@ -276,6 +286,10 @@ namespace VillageHeadOfTaiwu
 
         }
 
+        /// <summary>
+        /// 取消任务
+        /// </summary>
+        /// <param name="worker"></param>
         private void CancelWork(Worker worker)
         {
             var manpowerList = DateFile.instance.manpowerUseList;
@@ -294,10 +308,15 @@ namespace VillageHeadOfTaiwu
             }
         }
 
-        private IEnumerable<Worker> GetWorkers(WorkType work)
+        /// <summary>
+        /// 获取特定种类资源的所有采集任务
+        /// </summary>
+        /// <param name="workType">资源种类</param>
+        /// <returns></returns>
+        private IEnumerable<Worker> GetWorkers(WorkType workType)
         {
             Dictionary<int, Dictionary<int, int[]>> list = null;
-            switch (work)
+            switch (workType)
             {
                 case WorkType.FOOD:
                     list = df.foodUPList;
@@ -331,7 +350,7 @@ namespace VillageHeadOfTaiwu
                     var position = df.GetNewMapDate(part, place, 98) +
                         df.GetNewMapDate(part, place, 0);
                     var manpower = list[part][place][1];
-                    var type = (int)work;
+                    var type = (int)workType;
                     var resource = UIDate.instance.GetWorkPower(type, part, place);
                     var worker = new Worker
                     {
@@ -374,6 +393,9 @@ namespace VillageHeadOfTaiwu
             }
         }
 
+        /// <summary>
+        /// 切换窗体显示状态
+        /// </summary>
         public void ToggleWindow()
         {
             Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
@@ -399,6 +421,10 @@ namespace VillageHeadOfTaiwu
             }
         }
 
+        /// <summary>
+        /// 挡住游戏的UI
+        /// </summary>
+        /// <param name="open"></param>
         private void BlockGameUI(bool open)
         {
             if (open)
@@ -422,6 +448,9 @@ namespace VillageHeadOfTaiwu
         }
     }
 
+    /// <summary>
+    /// 分辨率调整时调整窗体样式
+    /// </summary>
     [HarmonyPatch(typeof(DateFile), "SetScreenResolution")]
     public class DateFile_SetScreenResolution_Patch
     {
@@ -438,6 +467,9 @@ namespace VillageHeadOfTaiwu
         }
     }
 
+    /// <summary>
+    /// 载入游戏时加载VillageList类
+    /// </summary>
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
     public class WorldMapSystem_Start_Patch
     {

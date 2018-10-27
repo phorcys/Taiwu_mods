@@ -427,18 +427,18 @@ namespace CharacterFloatInfo
         {
             switch (windowType)
             {
-                case WindowType.MapActorList when Main.settings.shortMAL:
-                    return true;
-                case WindowType.Dialog when Main.settings.shortDI:
-                    return true;
-                case WindowType.BuildingWindow when Main.settings.shortBW:
-                    return true;
-                case WindowType.TeamActor when Main.settings.shortTA:
-                    return true;
-                case WindowType.ActorMenu when Main.settings.shortAM:
-                    return true;
-                case WindowType.Relationship when Main.settings.shortRI:
-                    return true;
+                case WindowType.MapActorList:
+                    return Main.settings.shortMAL;
+                case WindowType.Dialog:
+                    return Main.settings.shortDI;
+                case WindowType.BuildingWindow:
+                    return Main.settings.shortBW;
+                case WindowType.TeamActor:
+                    return Main.settings.shortTA;
+                case WindowType.ActorMenu:
+                    return Main.settings.shortAM;
+                case WindowType.Relationship:
+                    return Main.settings.shortRI;
             }
             return false;
         }
