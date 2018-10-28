@@ -2,7 +2,7 @@
   "Id": "CharacterFloatInfo",
   "DisplayName": "人物浮动信息",
   "Author": "Vallind",
-  "Version": "1.1.2",
+  "Version": "1.2.1",
   "AssemblyName": "CharacterFloatInfo.dll",
   "EntryMethod": "CharacterFloatInfo.Main.Load"
 }
