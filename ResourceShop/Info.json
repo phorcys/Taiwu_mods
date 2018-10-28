@@ -1,0 +1,8 @@
+﻿{
+  "Id": "ResourceShop",
+  "DisplayName": "贪婪",
+  "Author": "xyzkljl1",
+  "Version": "1.0.0",
+  "AssemblyName": "ResourceShop.dll",
+  "EntryMethod": "ResourceShop.Main.Load"
+}
