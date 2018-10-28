@@ -76,6 +76,8 @@ namespace ResourceShop
                 return;
             int id = DateFile.instance.MianActorID();
             int count = Main.settings.resourceCount;
+            if (count < 0)
+                count = 0;
             int cost =(int) Math.Ceiling(price * count);
             int current_money=ActorMenu.instance.ActorResource(id)[MoneyIndex];
             if(cost>current_money)
