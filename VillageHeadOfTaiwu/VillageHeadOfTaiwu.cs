@@ -171,9 +171,9 @@ namespace VillageHeadOfTaiwu
 
         private void WindowFunc(int windowId)
         {
-            if (GUILayout.Button((collapse? "展开": "收起"), collapseStyle))
+            if (GUILayout.Button((collapse ? "展开" : "收起"), collapseStyle))
             {
-               collapse = !collapse;
+                collapse = !collapse;
             }
             GUILayout.BeginVertical();
             for (int i = 0; i < 6; i++)
@@ -364,10 +364,12 @@ namespace VillageHeadOfTaiwu
                     wms.choosePartId = choosePartId;
                     wms.choosePlaceId = choosePlaceId;
                     wms.chooseWorkTyp = chooseWorkTyp;
-                    return;
                 }
             }
-
+            else
+            {
+                TipsWindow.instance.SetTips(0, new string[] { "<color=#AF3737FF>无资源可采集或人力不足</color>" }, 180);
+            }
         }
 
         /// <summary>
@@ -449,6 +451,37 @@ namespace VillageHeadOfTaiwu
                     yield return worker;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// 修复🍆人力回复列表的bug
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "AddBackManpower")]
+    public class UIDate_AddBackManpower_Patch
+    {
+        public static bool Prefix(int partId, int placeId, int menpower, int time)
+        {
+            var df = DateFile.instance;
+            if (!df.backManpowerList.ContainsKey(partId))
+            {
+                df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
+            }
+
+            var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]);
+            while (df.backManpowerList[partId].ContainsKey(placeId))
+            {
+                // 防止key重复。如果在同一地点人力未恢复完成，再次分配人力然后取消，则会出现。
+                placeId += size * size;
+            }
+
+            df.backManpowerList[partId].Add(placeId, new int[2]
+            {
+                menpower,
+                time
+            });
+
+            return false;
         }
     }
 
