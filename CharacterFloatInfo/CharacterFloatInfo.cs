@@ -223,7 +223,7 @@ namespace CharacterFloatInfo
         public static bool smallerWindow;
 
         public static WindowType windowType = WindowType.MapActorList;
-        public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW)
+        public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW, ref int ___tipsH)
         {
             if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
 
@@ -312,6 +312,7 @@ namespace CharacterFloatInfo
             {
                 smallerWindow = CheckShort();
                 ___tipsW = 470;
+                ___tipsH = 50;
                 if (!smallerWindow)
                 {
                     ___tipsW =  680;
@@ -548,10 +549,10 @@ namespace CharacterFloatInfo
             {
                 if (!smallerWindow) text += CanTeach(id, i) ? "※" : "　";
                 text += GetLevel(id, i);
-                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : (smallerWindow ? "" : "\t\t");
+                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : (smallerWindow ? "\t" : "\t\t");
                 if (i == 15) text += "\n";
             }
-            return text + "\n"+ (isPeopleActor && smallerWindow ? "\n" : "");
+            return text + "\n";
         }
 
         // 根據NPC的門派或職業,配斷能否傳授你這生活藝能
@@ -617,7 +618,7 @@ namespace CharacterFloatInfo
 
             if (Main.settings.lifeMessage && !smallerWindow)
             {
-                text += "\n" + GetLifeMessage(id, 3) + (isPeopleActor ? "\n" : "");
+                text += "\n" + GetLifeMessage(id, 3);
             }
             return text;
         }
@@ -688,9 +689,9 @@ namespace CharacterFloatInfo
                 string.Format("{0}{1,3}{2}<color=#606060ff>{3,4}</color>{4}",
                     DateFile.instance.baseSkillDate[index][0],
                     num.ToString(),
-                    (num < 10 ? "\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : ""),
+                    (num < 10 ? "\u00A0\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : "\u00A0"),
                     shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : (smallerWindow ? "" : "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"),
-                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : "\u00A0\u00A0"));
+                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "" :"\u00A0\u00A0")));
 
             return text;
         }
