@@ -5,6 +5,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
+using System.Text.RegularExpressions;
+
 
 namespace NpcScan
 {
@@ -68,10 +70,11 @@ namespace NpcScan
         //杂学
         int[] life = new int[16];
         string actorFeatureText = "";
+        bool tarFeature = false;
 
         float windowWidth = Screen.width * 0.8f;
 
-        string name = "";
+        string aName = "";
 
         List<string[]> actorList = new List<string[]>();
 
@@ -94,7 +97,7 @@ namespace NpcScan
                 Debug.LogException(e);
             }
             return false;
-            GUILayout.Button("");
+            //GUILayout.Button("");
         }
 
         private static UI mInstance = null;
@@ -112,6 +115,8 @@ namespace NpcScan
         private static GUIStyle status = null;
         private static GUIStyle www = null;
         private static GUIStyle updates = null;
+        private GUIStyle featureStyle = null;
+
 
         private bool mInit = false;
 
@@ -135,16 +140,8 @@ namespace NpcScan
         {
             if (mOpened)
                 mLogTimer += Time.unscaledDeltaTime;
-            bool toggle = false;
-            if (Input.GetKeyUp(KeyCode.F12) && (Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl)))
-            {
-                toggle = true;
-            }
-            if (Input.GetKeyUp(key))
-            {
-                toggle = true;
-            }
-            if (toggle)
+            if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
+                && Input.GetKeyUp(Main.settings.key))
             {
                 ToggleWindow();
             }
@@ -211,6 +208,13 @@ namespace NpcScan
             updates.stretchHeight = true;
             updates.fixedWidth = 26;
             updates.fixedHeight = iconHeight;
+
+            featureStyle = new GUIStyle
+            {
+                richText = true,
+            };
+
+
         }
 
         private void OnGUI()
@@ -488,7 +492,7 @@ namespace NpcScan
 
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("姓名（包括前世）:", GUILayout.Width(120));
-            name = GUILayout.TextField(name, 10, GUILayout.Width(80));
+            aName = GUILayout.TextField(aName, 10, GUILayout.Width(80));
             //从属gangText
             GUILayout.Label("从属:", GUILayout.Width(50));
             gangValue = GUILayout.TextField(gangValue, 10, GUILayout.Width(60));
@@ -514,14 +518,37 @@ namespace NpcScan
             }
             GUILayout.Label("人物特性:", GUILayout.Width(60));
             actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
-
+            tarFeature = GUILayout.Toggle(tarFeature, "精确特性", new GUILayoutOption[0]);//是否精确查找,精确查找的情况下,特性用'|'分隔
+            //Main.Logger.Log(tarFeature.ToString());
             GUILayout.Space(30);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
             {
                 page = 1;
+                string s = Main.featuresList.Count.ToString();
+                //Main.Logger.Log("测试对象字典长度:" + s);
+                if (Main.featuresList.Count == 0)
+                {
+                    Features aFeature = new Features();
+                    foreach (int i in DateFile.instance.actorFeaturesDate.Keys)
+                    {
+                        aFeature = new Features(i);
+                        Main.featuresList.Add(aFeature.Key, aFeature);
+                        Main.fNameList.Add(aFeature.Name, aFeature.Key);
+                    }
+                }
+                s = Main.findList.Count.ToString();
+                //Main.Logger.Log("测试查找列表:" + s);
+                if (actorFeatureText != "")
+                {
+                    Main.findList = GetFeatureKey(actorFeatureText, tarFeature);
+                }
+                //s = Main.findList.Count.ToString();
+                //Main.Logger.Log("测试查找列表:" + s);
                 ScanNpc();
+
             }
             GUILayout.EndHorizontal();
+
 
             if (actorList.Count > 0)
             {
@@ -570,7 +597,14 @@ namespace NpcScan
                     for (int j = 0; j < mods[i].Count(); j++)
                     {
                         GUILayout.BeginHorizontal(colWidth[j]);
-                        GUILayout.Label(mods[i][j].ToString());
+                        if (j == 56)
+                        {
+                            GUILayout.Label(mods[i][j].ToString(), featureStyle);
+                        }
+                        else
+                        {
+                            GUILayout.Label(mods[i][j].ToString());
+                        }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndHorizontal();
@@ -688,44 +722,88 @@ namespace NpcScan
             int n = 0;
             string s1 = a[sortIndex];
             string s2 = b[sortIndex];
-            if (s1.Contains("color"))
+            if (sortIndex != 6)
             {
-                if (s1.Contains("("))
+                if (s1.Contains("color"))
                 {
-                    s1 = System.Text.RegularExpressions.Regex.Replace(s1, "\\(.*?\\)", "");
-                    s2 = System.Text.RegularExpressions.Regex.Replace(s2, "\\(.*?\\)", "");
+                    if (s1.Contains("("))
+                    {
+                        s1 = System.Text.RegularExpressions.Regex.Replace(s1, "\\(.*?\\)", "");
+                        s2 = System.Text.RegularExpressions.Regex.Replace(s2, "\\(.*?\\)", "");
+                    }
+                    else
+                    {
+                        s1 = System.Text.RegularExpressions.Regex.Replace(s1, "<.*?>", "");
+                        s2 = System.Text.RegularExpressions.Regex.Replace(s2, "<.*?>", "");
+                    }
+                }
+                int.TryParse(s1, out m);
+                int.TryParse(s2, out n);
+                if (desc)
+                {
+                    if (m > n)
+                    {
+                        return -1;
+                    }
+                    else if (m < n)
+                    {
+                        return 1;
+                    }
                 }
                 else
                 {
-                    s1 = System.Text.RegularExpressions.Regex.Replace(s1, "<.*?>", "");
-                    s2 = System.Text.RegularExpressions.Regex.Replace(s2, "<.*?>", "");
+                    if (m > n)
+                    {
+                        return 1;
+                    }
+                    else if (m < n)
+                    {
+                        return -1;
+                    }
                 }
-            }
-            int.TryParse(s1, out m);
-            int.TryParse(s2, out n);
-            if (desc)
-            {
-                if (m > n)
+                if (desc)
                 {
-                    return -1;
+                    return -s1.CompareTo(s2);
                 }
-                else if (m < n)
+                else
                 {
-                    return 1;
+                    return s1.CompareTo(s2);
                 }
             }
             else
             {
-                if (m > n)
+                Regex reg = new Regex("<(.+?)>");
+                Match m1 = reg.Match(s1);
+                Match m2 = reg.Match(s2);
+                s1 = m1.Groups[0].Value;
+                s2 = m2.Groups[0].Value;
+                Main.Logger.Log(s1 + "," + s2);
+                m = Main.colorText[s1];
+                n = Main.colorText[s2];
+                if (desc)
                 {
-                    return 1;
+                    if (m > n)
+                    {
+                        return -1;
+                    }
+                    else if (m < n)
+                    {
+                        return 1;
+                    }
                 }
-                else if (m < n)
+                else
                 {
-                    return -1;
+                    if (m > n)
+                    {
+                        return 1;
+                    }
+                    else if (m < n)
+                    {
+                        return -1;
+                    }
                 }
+                return 0;
             }
-            return 0;
         }
 
         void ScanNpc()
@@ -854,11 +932,11 @@ namespace NpcScan
                         int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
                         string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
 
-                        if (ScanFeature(index, GetFeatureKey(actorFeatureText)) || actorFeatureText == "")
+                        if (ScanFeature(index, Main.findList, tarFeature) || actorFeatureText == "")
                         {
                             if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
                             {
-                                if ((actorName.Contains(name) || samsaraNames.Contains(name)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                                if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
                                 {
                                     actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
                                 charm + "(" + charmText + ")" ,//魅力
@@ -969,55 +1047,108 @@ namespace NpcScan
         private static string GetActorFeatureNameText(int key)
         {
             List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
-            string[] text = new string[list.Count];
+            string text = "";
             for (int i = 0; i < list.Count; i++)
             {
-                int num4 = list[i];
-                if (int.Parse(DateFile.instance.actorFeaturesDate[num4][95]) != 1)
-                {
-                    text[i] = DateFile.instance.actorFeaturesDate[num4][0];
-                }
+                int j = list[i];
+                Features f = Main.featuresList[j];
+                if (f.Group == 2001 || f.Group == 3024) continue;
+                string s = f.Level.ToString();
+                text += (Main.findList.Contains(f) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
             }
-            return string.Join(",", text);
+            //Main.Logger.Log(text);
+            return text;
         }
 
-        private static List<int> GetFeatureKey(string str)
+        private static List<Features> GetFeatureKey(string str, bool flag)
         {
-
-            List<int> fKey = new List<int>(DateFile.instance.actorFeaturesDate.Keys);
-            List<int> list = new List<int>();
-            for (int i = 0; i < fKey.Count; i++)
+            //List<int> fKey = new List<int>(Main.featuresList.Keys);
+            List<Features> list = new List<Features>();
+            string[] aFeatures = str.Split('|');
+            foreach (string s in aFeatures)
             {
-                int j = fKey[i];
-                if (int.Parse(DateFile.instance.actorFeaturesDate[j][8]) >= 3)
+                if (Main.fNameList.ContainsKey(s))
                 {
-                    //Main.Logger.Log(DateFile.instance.actorFeaturesDate[j][0]);
-                    if (DateFile.instance.actorFeaturesDate[j][0].Equals(str))
+                    int i = Main.fNameList[s];
+                    Features f = Main.featuresList[i];
+                    if (flag)
                     {
-                        int k = int.Parse(DateFile.instance.actorFeaturesDate[j][5]);
-                        list.Add(k);
-                        list.Add(k + 1);
-                        list.Add(k + 2);//查询同组正特质的编号
-                        Main.Logger.Log("k:" + k.ToString());
+                        list.Add(f);
+                    }
+                    else
+                    {
+                        int j = f.Group;
+                        list.Add(Main.featuresList[j]);
+                        list.Add(Main.featuresList[j + 1]);
+                        list.Add(Main.featuresList[j + 2]);
                     }
                 }
             }
+            //foreach (int i in Main.featuresList.Keys)
+            //{
+            //    //if (i == 0) continue;
+            //    Features f = Main.featuresList[i];
+            //    //Main.Logger.Log(f.Plus.ToString());
+            //    if (f.Plus == 3 || f.Plus == 4)
+            //    {
+            //        foreach (string s in aFeatures)
+            //        {
+            //            if (f.Name.Equals(s))
+            //            {
+            //                if (flag)
+            //                {
+            //                    //Main.Logger.Log("SCAN标记1:" + f.Name);
+            //                    list.Add(f);
+            //                }
+            //                else
+            //                {
+            //                    int j = f.Group;
+            //                    //Main.Logger.Log("SCAN标记2:" + Main.featuresList[j].Name + "|" + Main.featuresList[j + 1].Name + "|" + Main.featuresList[j + 2].Name);
+            //                    list.Add(Main.featuresList[j]);
+            //                    list.Add(Main.featuresList[j + 1]);
+            //                    list.Add(Main.featuresList[j + 2]);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
             return list;
         }
-        private static bool ScanFeature(int key, List<int> slist)
+        private static bool ScanFeature(int key, List<Features> slist, bool flag)
         {
-
             List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
-            for (int i = 0; i < list.Count; i++)
+            bool result = false;
+            if (slist.Count == 0)
             {
-                //Main.Logger.Log("人物特性"+list[i].ToString());
-                if (slist.Contains(list[i]))
+                return result;
+            }
+            List<Features> actorFeature = new List<Features>();
+            foreach (int i in list)
+            {
+                actorFeature.Add(Main.featuresList[i]);
+            }
+
+            if (flag)
+            {
+                if (slist.All(t => actorFeature.Any(b => b.Key == t.Key)))
                 {
-                    return true;
+                    result = true;
                 }
             }
-            return false;
+            else
+            {
+                foreach (Features f in actorFeature)
+                {
+                    if (slist.Contains(f))
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+            return result;
         }
+
 
         //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
         static class Screen_lockCursor_Patch
