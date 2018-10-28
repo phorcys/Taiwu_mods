@@ -37,9 +37,12 @@ namespace UseStorageBook
         {
             var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
             RemoveBook.Invoke(HomeSystem.instance, null);
-            int key = DateFile.instance.MianActorID();
-            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(key, 0).Keys);
-            if (Main.enabled)
+            List<int> list = new List<int>();
+            if (!Main.Enabled || Main.Setting.pack)
+            {
+                list.AddRange(ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys);
+            }
+            if (Main.Enabled && Main.Setting.warehouse)
             {
                 list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
             }
@@ -139,24 +142,52 @@ namespace UseStorageBook
         }
     }
 
+    public class Settings : UnityModManager.ModSettings
+    {
+        public bool warehouse = true;
+        public bool pack = true;
+
+        public override void Save(UnityModManager.ModEntry modEntry)
+        {
+            Save(this, modEntry);
+        }
+    }
+
     public class Main
     {
         public static UnityModManager.ModEntry.ModLogger logger;
 
-        public static bool enabled;
+        public static bool Enabled {get; private set;}
+        public static Settings Setting {get; private set;}
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            enabled = value;
+            Enabled = value;
             return true;
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             logger = modEntry.Logger;
-            modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
+            Setting = Settings.Load<Settings>(modEntry);
+            modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
+        }
+
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        {
+            GUILayout.BeginHorizontal();
+            Setting.warehouse = GUILayout.Toggle(Setting.warehouse, "仓库");
+            Setting.pack = GUILayout.Toggle(Setting.pack, "包裹");
+            GUILayout.EndHorizontal();
+        }
+
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            Setting.Save(modEntry);
         }
     }
 }
