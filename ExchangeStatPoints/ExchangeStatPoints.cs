@@ -55,20 +55,19 @@ namespace ExchangeStatPoints
         };
         private static void ChangePoint(int index, int pointId)
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label(pointDate[pointId]);
-            GUILayout.Label(tbl.actorsDate[tbl.mianActorId][pointId] + "\t" + (changedPoint[pointId] == 0 ? "" : ChangedPoint(pointId).ToString("+#;-#;0")) + "\t");
+            GUILayout.Label(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId] + "\t" + (changedPoint[pointId] == 0 ? "" : ChangedPoint(pointId).ToString("+#;-#;0")) + "\t");
             //GUILayout.FlexibleSpace();
-            if (GUILayout.Button("-", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 1)
+            if (GUILayout.Button("-", GUILayout.Width(30)) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + changedPoint[pointId] > 1)
             {
                 changedPoint[pointId] -= 2;
                 freePoint[index]++;
             }
             if (GUILayout.Button("+", GUILayout.Width(30)) && freePoint[index] > 0
-                && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + ChangedPoint(pointId) < (pointId < 67 ? 80 : 100) + 10 * (tbl.actorsDate[tbl.mianActorId].ContainsKey(901) ? int.Parse(tbl.actorsDate[tbl.mianActorId][901]) : 0))
+                && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + ChangedPoint(pointId) < (pointId < 67 ? 80 : 100) + 10 * (DateFile.instance.actorsDate[DateFile.instance.mianActorId].ContainsKey(901) ? int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][901]) : 0))
             {
                 changedPoint[pointId] += 2;
                 freePoint[index]--;
@@ -77,13 +76,12 @@ namespace ExchangeStatPoints
         }
         private static void ChangeGrowth(int index, int pointId)
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label(pointDate[pointId]);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] > 2)
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + changedPoint[pointId] > 2)
             {
                 if (changedPoint[pointId] == 0)
                     freePoint[index] -= 20;
@@ -91,8 +89,8 @@ namespace ExchangeStatPoints
                 if (changedPoint[pointId] == 0)
                     freePoint[index] += 20;
             }
-            GUILayout.Label(int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 2 ? "均衡" : int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] == 3 ? "早熟" : "晚成");
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(tbl.actorsDate[tbl.mianActorId][pointId]) + changedPoint[pointId] < 4)
+            GUILayout.Label(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + changedPoint[pointId] == 2 ? "均衡" : int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + changedPoint[pointId] == 3 ? "早熟" : "晚成");
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (freePoint[index] >= 20 || changedPoint[pointId] != 0) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][pointId]) + changedPoint[pointId] < 4)
             {
                 if (changedPoint[pointId] == 0)
                     freePoint[index] -= 20;
@@ -104,13 +102,12 @@ namespace ExchangeStatPoints
         }
         private static void SetChangedPoint()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             foreach (var key in pointDate.Keys)
             {
-                int temp = int.Parse(tbl.actorsDate[tbl.mianActorId][key]);
-                tbl.actorsDate[tbl.mianActorId][key] = (temp + ChangedPoint(key)).ToString();
+                int temp = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][key]);
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][key] = (temp + ChangedPoint(key)).ToString();
                 changedPoint[key] = 0;
             }
         }
@@ -124,15 +121,14 @@ namespace ExchangeStatPoints
         private static void ChangeSexy()
         {
             //{14,"性别"},{17,"性转外貌"},//可能没有该项
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("性别:" + ((tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0]) ? "男" : "女")))
+            if (GUILayout.Button("性别:" + ((DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 14, false) == "1" ^ changedSexy[0]) ? "男" : "女")))
             {
                 changedSexy[0] = !changedSexy[0];
             }
-            if (GUILayout.Button("外貌：" + ((tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0]) ^ (tbl.GetActorDate(tbl.mianActorId, 17, false) != "0" ^ changedSexy[1]) ? "男" : "女")))
+            if (GUILayout.Button("外貌：" + ((DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 14, false) == "1" ^ changedSexy[0]) ^ (DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 17, false) != "0" ^ changedSexy[1]) ? "男" : "女")))
             {
                 changedSexy[1] = !changedSexy[1];
             }
@@ -140,33 +136,32 @@ namespace ExchangeStatPoints
         }
         private static void SetChangedSexy()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
-            if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(14))
+            if (!DateFile.instance.actorsDate[DateFile.instance.mianActorId].ContainsKey(14))
             {
-                tbl.actorsDate[tbl.mianActorId].Add(14, tbl.GetActorDate(tbl.mianActorId, 14, false));
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId].Add(14, DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 14, false));
             }
-            if (tbl.GetActorDate(tbl.mianActorId, 14, false) == "1" ^ changedSexy[0])
+            if (DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 14, false) == "1" ^ changedSexy[0])
             {
-                tbl.actorsDate[tbl.mianActorId][14] = "1";
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][14] = "1";
             }
             else
             {
-                tbl.actorsDate[tbl.mianActorId][14] = "2";
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][14] = "2";
             }
 
-            if (!tbl.actorsDate[tbl.mianActorId].ContainsKey(17))
+            if (!DateFile.instance.actorsDate[DateFile.instance.mianActorId].ContainsKey(17))
             {
-                tbl.actorsDate[tbl.mianActorId].Add(17, tbl.GetActorDate(tbl.mianActorId, 17, false));
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId].Add(17, DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 17, false));
             }
-            if (tbl.GetActorDate(tbl.mianActorId, 17, false) != "0" ^ changedSexy[1])
+            if (DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 17, false) != "0" ^ changedSexy[1])
             {
-                tbl.actorsDate[tbl.mianActorId][17] = "1";
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][17] = "1";
             }
             else
             {
-                tbl.actorsDate[tbl.mianActorId][17] = "0";
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][17] = "0";
             }
 
             changedSexy = new bool[] { false, false };
@@ -177,59 +172,58 @@ namespace ExchangeStatPoints
         private static void ChangeCharm()
         {
             //{15,"魅力"},
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
-            GUILayout.Label("金钱：" + tbl.actorsDate[tbl.mianActorId][406] + " " + changedMoney.ToString("+#;-#;"));
+            GUILayout.Label("金钱：" + DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] + " " + changedMoney.ToString("+#;-#;"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("-10", GUILayout.Width(40)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 10)
+            if (GUILayout.Button("-10", GUILayout.Width(40)) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm >= 10)
             {
                 if (changedCharm >= 10)
                 {
-                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * 10 - 45;
+                    changedMoney += (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm) * 10 - 45;
                 }
                 else if (changedCharm > 0)
                 {
-                    changedMoney += (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm) * changedCharm - (changedCharm * (changedCharm - 1) / 2);
+                    changedMoney += (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm) * changedCharm - (changedCharm * (changedCharm - 1) / 2);
                 }
                 changedCharm -= 10;
             }
-            if (GUILayout.Button("-1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm >= 1)
+            if (GUILayout.Button("-1", GUILayout.Width(30)) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm >= 1)
             {
                 if (changedCharm > 0)
                 {
-                    changedMoney += int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm;
+                    changedMoney += int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm;
                 }
                 changedCharm--;
             }
             GUILayout.FlexibleSpace();
-            GUILayout.Label("魅力：" + tbl.actorsDate[tbl.mianActorId][15] + changedCharm.ToString("+#;-#;"));
+            GUILayout.Label("魅力：" + DateFile.instance.actorsDate[DateFile.instance.mianActorId][15] + changedCharm.ToString("+#;-#;"));
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("+1", GUILayout.Width(30)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 899
-                && (changedCharm < 0 || int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney >= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1)))
+            if (GUILayout.Button("+1", GUILayout.Width(30)) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm <= 899
+                && (changedCharm < 0 || int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) + changedMoney >= (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm + 1)))
             {
                 if (changedCharm >= 0)
                 {
-                    changedMoney -= int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1;
+                    changedMoney -= int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm + 1;
                 }
                 changedCharm++;
             }
-            if (GUILayout.Button("+10", GUILayout.Width(40)) && int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm <= 890
+            if (GUILayout.Button("+10", GUILayout.Width(40)) && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm <= 890
                 && (changedCharm <= -10 || changedCharm >= 0
-                ? ((int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45))
-                : (int.Parse(tbl.actorsDate[tbl.mianActorId][406]) + changedMoney) > ((int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2))))
+                ? ((int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) + changedMoney) > ((int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm + 1) * 10 + 45))
+                : (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) + changedMoney) > ((int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2))))
             {
                 if (changedCharm >= 0)
                 {
-                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + changedCharm + 1) * 10 + 45;
+                    changedMoney -= (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + changedCharm + 1) * 10 + 45;
                 }
                 else if (changedCharm > -10)
                 {
-                    changedMoney -= (int.Parse(tbl.actorsDate[tbl.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2);
+                    changedMoney -= (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][15]) + 1) * (10 + changedCharm) + ((10 + changedCharm) * (9 + changedCharm) / 2);
                 }
                 changedCharm += 10;
             }
@@ -288,10 +282,9 @@ namespace ExchangeStatPoints
         };
         private static int GetHeirloomId()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return -1;
-            foreach (var kvp in tbl.itemsChangeDate)
+            foreach (var kvp in DateFile.instance.itemsChangeDate)
             {
                 if (kvp.Value.ContainsKey(92) && kvp.Value.ContainsKey(93))
                 {
@@ -302,10 +295,9 @@ namespace ExchangeStatPoints
         }
         private static int GetHeirloomBuffId()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond || GetHeirloomId() == -1) return -1;
-            foreach (var key in tbl.itemsDate[GetHeirloomId()].Keys)
+            foreach (var key in DateFile.instance.itemsDate[GetHeirloomId()].Keys)
             {
                 if ((key > 50500 && key < 50517) || (key > 50600 && key < 50615))
                 {
@@ -316,25 +308,24 @@ namespace ExchangeStatPoints
         }
         private static void ChangeHeirloom()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
-            GUILayout.Label("威望：" + tbl.actorsDate[tbl.mianActorId][407] + " " + changedPrestige.ToString("+#;-#;"));
+            GUILayout.Label("威望：" + DateFile.instance.actorsDate[DateFile.instance.mianActorId][407] + " " + changedPrestige.ToString("+#;-#;"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
             GUILayout.Label("家传宝物：");
-            bool noHeirloom = !tbl.actorItemsDate[tbl.mianActorId].ContainsKey(GetHeirloomId()) && tbl.GetActorDate(tbl.mianActorId, 308, false) != GetHeirloomId().ToString()
-                && tbl.GetActorDate(tbl.mianActorId, 309, false) != GetHeirloomId().ToString() && tbl.GetActorDate(tbl.mianActorId, 310, false) != GetHeirloomId().ToString();
-            GUILayout.Label(GetHeirloomId() == -1 ? "没有家传宝物" : noHeirloom ? "家传宝物已遗失" : tbl.presetitemDate[int.Parse(tbl.itemsDate[GetHeirloomId()][999])][0]);
+            bool noHeirloom = !DateFile.instance.actorItemsDate[DateFile.instance.mianActorId].ContainsKey(GetHeirloomId()) && DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 308, false) != GetHeirloomId().ToString()
+                && DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 309, false) != GetHeirloomId().ToString() && DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 310, false) != GetHeirloomId().ToString();
+            GUILayout.Label(GetHeirloomId() == -1 ? "没有家传宝物" : noHeirloom ? "家传宝物已遗失" : DateFile.instance.presetitemDate[int.Parse(DateFile.instance.itemsDate[GetHeirloomId()][999])][0]);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             if (cond || GetHeirloomId() == -1) return;
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] > 0)
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(DateFile.instance.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] > 0)
             {
                 if (changedHeirloom[0] == 0)
                 {
@@ -347,9 +338,9 @@ namespace ExchangeStatPoints
                 }
             }
             GUILayout.FlexibleSpace();
-            GUILayout.Label(heirloomData[heirloomId[heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]]]);
+            GUILayout.Label(heirloomData[heirloomId[heirloomIdIndex[int.Parse(DateFile.instance.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]]]);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] < 24)
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[0] != 0) && heirloomIdIndex[int.Parse(DateFile.instance.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0] < 24)
             {
                 if (changedHeirloom[0] == 0)
                 {
@@ -364,7 +355,7 @@ namespace ExchangeStatPoints
             GUILayout.EndHorizontal();
             if (cond || GetHeirloomBuffId() == -1) return;
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 > 1)
+            if (GUILayout.Button("<", GUILayout.Width(30)) && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 > 1)
             {
                 if (changedHeirloom[1] == 0)
                 {
@@ -376,7 +367,7 @@ namespace ExchangeStatPoints
                     changedPrestige += 5000;
                 }
             }
-            if (GUILayout.Button("技艺") && GetHeirloomBuffId() + changedHeirloom[1] > 50600 && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
+            if (GUILayout.Button("技艺") && GetHeirloomBuffId() + changedHeirloom[1] > 50600 && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
             {
                 if (GetHeirloomBuffId() < 50600)
                 {
@@ -395,7 +386,7 @@ namespace ExchangeStatPoints
             GUILayout.FlexibleSpace();
             GUILayout.Label(pointDate[GetHeirloomBuffId() - 50000 + changedHeirloom[1]] + "：+20");
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("武学") && GetHeirloomBuffId() + changedHeirloom[1] < 50600 && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
+            if (GUILayout.Button("武学") && GetHeirloomBuffId() + changedHeirloom[1] < 50600 && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0))
             {
                 if (GetHeirloomBuffId() > 50600)
                 {
@@ -411,7 +402,7 @@ namespace ExchangeStatPoints
                     changedHeirloom[1] = 50601 - GetHeirloomBuffId();
                 }
             }
-            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 < 16 - ((GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 505) * 2)
+            if (GUILayout.Button(">", GUILayout.Width(30)) && (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige >= 5000 || changedHeirloom[1] != 0) && (GetHeirloomBuffId() + changedHeirloom[1]) % 100 < 16 - ((GetHeirloomBuffId() + changedHeirloom[1]) / 100 - 505) * 2)
             {
                 if (changedHeirloom[1] == 0)
                 {
@@ -432,24 +423,23 @@ namespace ExchangeStatPoints
         }
         private static void SetChangedHeirloom()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             if (changedPrestige != 0)
             {
-                tbl.actorsDate[tbl.mianActorId][407] = (int.Parse(tbl.actorsDate[tbl.mianActorId][407]) + changedPrestige).ToString();
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][407] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][407]) + changedPrestige).ToString();
                 changedPrestige = 0;
             }
             if (changedHeirloom[0] != 0)
             {
-                tbl.itemsDate[GetHeirloomId()][999] = heirloomId[heirloomIdIndex[int.Parse(tbl.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]].ToString();
+                DateFile.instance.itemsDate[GetHeirloomId()][999] = heirloomId[heirloomIdIndex[int.Parse(DateFile.instance.itemsDate[GetHeirloomId()][999])] + changedHeirloom[0]].ToString();
                 changedHeirloom[0] = 0;
             }
             if (changedHeirloom[1] != 0)
             {
                 var newHeirloomBuffId = GetHeirloomBuffId() + changedHeirloom[1];
-                tbl.itemsDate[GetHeirloomId()].Remove(GetHeirloomBuffId());
-                tbl.itemsDate[GetHeirloomId()].Add(newHeirloomBuffId, "20");
+                DateFile.instance.itemsDate[GetHeirloomId()].Remove(GetHeirloomBuffId());
+                DateFile.instance.itemsDate[GetHeirloomId()].Add(newHeirloomBuffId, "20");
                 changedHeirloom[1] = 0;
             }
         }
@@ -458,16 +448,15 @@ namespace ExchangeStatPoints
         private static void Rejuvenation()
         {
             //{11,"年龄"},{12,"健康"},{13,"寿命"},
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
-            GUILayout.Label("历练：" + tbl.gongFaExperienceP + " " + (isRejuvenation ? "-10000" : ""));
+            GUILayout.Label("历练：" + DateFile.instance.gongFaExperienceP + " " + (isRejuvenation ? "-10000" : ""));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("Box");
-            if (GUILayout.Button("逆运回魂仙梦(10000历练)") && !isRejuvenation && int.Parse(tbl.actorsDate[tbl.mianActorId][11]) >= 10 && tbl.gongFaExperienceP >= 10000)
+            if (GUILayout.Button("逆运回魂仙梦(10000历练)") && !isRejuvenation && int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]) >= 10 && DateFile.instance.gongFaExperienceP >= 10000)
             {
                 isRejuvenation = true;
             }
@@ -479,30 +468,29 @@ namespace ExchangeStatPoints
         }
         private static void SetRejuvenation()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond) return;
             if (isRejuvenation)
             {
                 for (int i = 0; i < 6; i++)
                 {
                     int num = Random.Range(0, 6);
-                    tbl.actorsDate[tbl.mianActorId][61 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][61 + num]) + 1).ToString();
+                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][61 + num] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][61 + num]) + 1).ToString();
                 }
                 for (int i = 0; i < 16; i++)
                 {
                     int num = Random.Range(0, 16);
-                    tbl.actorsDate[tbl.mianActorId][501 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][501 + num]) + 1).ToString();
+                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][501 + num] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][501 + num]) + 1).ToString();
                 }
                 for (int i = 0; i < 14; i++)
                 {
                     int num = Random.Range(0, 14);
-                    tbl.actorsDate[tbl.mianActorId][601 + num] = (int.Parse(tbl.actorsDate[tbl.mianActorId][601 + num]) + 1).ToString();
+                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][601 + num] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][601 + num]) + 1).ToString();
                 }
-                tbl.actorsDate[tbl.mianActorId][11] = (int.Parse(tbl.actorsDate[tbl.mianActorId][11]) - 10).ToString();
-                tbl.actorsDate[tbl.mianActorId][13] = (int.Parse(tbl.actorsDate[tbl.mianActorId][13]) - 6).ToString();
-                tbl.gongFaExperienceP -= 10000;
-                tbl.actorsDate[tbl.mianActorId][39] = "8000";
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][11] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]) - 10).ToString();
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][13] = (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][13]) - 6).ToString();
+                DateFile.instance.gongFaExperienceP -= 10000;
+                DateFile.instance.actorsDate[DateFile.instance.mianActorId][39] = "8000";
                 DateFile.instance.samsara++;
                 isRejuvenation = false;
             }
@@ -587,7 +575,6 @@ namespace ExchangeStatPoints
         }
         private static void ChangeFeature()
         {
-            var tbl = DateFile.instance;
             if (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId)) return;
             featureList = new List<int>(DateFile.instance.GetActorFeature(DateFile.instance.mianActorId));
             int zhuazhou = 0;
@@ -607,7 +594,7 @@ namespace ExchangeStatPoints
             }
             GUILayout.BeginHorizontal("Box");
             GUILayout.FlexibleSpace();
-            GUILayout.Label("太吾村地区恩义：" + (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] / 1000.0).ToString("#%")
+            GUILayout.Label("太吾村地区恩义：" + (DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] / 1000.0).ToString("#%")
                 + " " + (changedGrace / 1000.0).ToString("+#%;-#%;"));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -617,7 +604,7 @@ namespace ExchangeStatPoints
             GUILayout.BeginVertical("Box", GUILayout.Width(200));
             GUILayout.BeginHorizontal("Box");
             if (GUILayout.Button("<", GUILayout.Width(30))
-                && (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
+                && (DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
                 && (changedFeature[0, 0] + featureList[0] > 2001 || (changedFeature[0, 0] == 2001 && featureList[0] == 0)))
             {
                 if (changedFeature[0, 0] == 0)
@@ -648,7 +635,7 @@ namespace ExchangeStatPoints
             }
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(">", GUILayout.Width(30))
-                && (tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
+                && (DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] + changedGrace >= 300 || changedFeature[0, 0] != 0)
                 && changedFeature[0, 0] + featureList[0] < 2012)
             {
                 if (changedFeature[0, 0] == 0)
@@ -795,7 +782,7 @@ namespace ExchangeStatPoints
                 if (int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) < 0)
                 {
                     if (changedFeature[featureId, 1] == 0 && int.Parse(DateFile.instance.actorFeaturesDate[featureList[featureId]][4]) == -1
-                        && tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300)
+                        && DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] + changedGrace >= 300)
                     {
                         changedGrace -= 300;
                         changedFeature[featureId, 1]++;
@@ -815,7 +802,7 @@ namespace ExchangeStatPoints
                 else
                 {
                     if (changedFeature[featureId, 1] == 0
-                        && tbl.baseWorldDate[int.Parse(tbl.gangDate[16][11])][int.Parse(tbl.gangDate[16][3])][3] + changedGrace >= 300)
+                        && DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[16][11])][int.Parse(DateFile.instance.gangDate[16][3])][3] + changedGrace >= 300)
                     {
                         changedGrace -= 300;
                         changedFeature[featureId, 1]++;
@@ -919,8 +906,7 @@ namespace ExchangeStatPoints
 
         private static void CheckDateId()
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (dateId != SaveDateFile.instance.dateId || cond) //避免跨存档切换
             {
                 freePoint = new int[] { 0, 0, 0 };
@@ -961,8 +947,7 @@ namespace ExchangeStatPoints
         }
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            var tbl = DateFile.instance;
-            bool cond = (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId));
+            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             CheckDateId();
             if (cond)
             {
@@ -975,8 +960,8 @@ namespace ExchangeStatPoints
             GUILayout.BeginVertical("Box");
             GUILayout.BeginHorizontal("Box");
             GUILayout.BeginVertical("Box");
-            GUILayout.Label("年龄：" + tbl.actorsDate[tbl.mianActorId][11] + (isRejuvenation ? " -10" : ""));
-            GUILayout.Label("寿命：" + tbl.actorsDate[tbl.mianActorId][13] + (isRejuvenation ? " -6" : ""));
+            GUILayout.Label("年龄：" + DateFile.instance.actorsDate[DateFile.instance.mianActorId][11] + (isRejuvenation ? " -10" : ""));
+            GUILayout.Label("寿命：" + DateFile.instance.actorsDate[DateFile.instance.mianActorId][13] + (isRejuvenation ? " -6" : ""));
             GUILayout.EndVertical();
             GUILayout.BeginVertical("Box", GUILayout.Width(250));
             GUILayout.Label("可用六维点数：" + freePoint[0].ToString());
