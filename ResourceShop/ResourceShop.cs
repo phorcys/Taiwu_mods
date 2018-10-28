@@ -76,15 +76,15 @@ namespace ResourceShop
                 return;
             int id = DateFile.instance.MianActorID();
             int count = Main.settings.resourceCount;
-            int cost =(int) Math.Ceiling(price * (float)count);
+            int cost =(int) Math.Ceiling(price * count);
             int current_money=ActorMenu.instance.ActorResource(id)[MoneyIndex];
             if(cost>current_money)
             {
                 cost = current_money;
-                count =(int) Math.Floor((float)cost / price);
+                count =(int) Math.Floor(cost / price);
             }
             UIDate.instance.ChangeResource(id, Main.settings.resourceType, count, true);
-            UIDate.instance.ChangeResource(id, MoneyIndex, -count, true);
+            UIDate.instance.ChangeResource(id, MoneyIndex, -cost, true);
             Main.settings.resourceCount = 0;
         }
     }
