@@ -88,6 +88,8 @@ namespace KeyBoardShortCut
         public SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode, string>> hotkeys;
         public MODIFIER_KEY_TYPE qinggong_modifier_key = MODIFIER_KEY_TYPE.MKT_SHIFT;
         public MODIFIER_KEY_TYPE special_modifierkey = MODIFIER_KEY_TYPE.MKT_ALT;
+
+        public bool enable_close = true;
         [XmlIgnore]
         public UnityModManager.ModEntry modee;
         public Settings()
@@ -210,6 +212,7 @@ namespace KeyBoardShortCut
             modEntry.OnToggle = OnToggle;
             settings = Settings.Load<Settings>(modEntry);
             Main.Logger.Log("hotkey count:" + Main.settings.hotkeys.Count);
+            Main.Logger.Log("hotkey enable close with esc or right button:" + Main.settings.enable_close);
             settings.modee = modEntry;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
@@ -245,6 +248,7 @@ namespace KeyBoardShortCut
             Main.Logger.Log("hotkey count:" + Main.settings.hotkeys.Count);
             processKeyPress();
             GUILayout.BeginVertical("box");
+            settings.enable_close = GUILayout.Toggle(settings.enable_close, "是否使用本Mod的Esc/鼠标右键关闭功能（需要重启游戏生效）");
             settings.close_with_right_mouse_button = GUILayout.Toggle(settings.close_with_right_mouse_button, "是否使用鼠标右键关闭窗口");
             
             GUILayout.Label("战斗中释放轻功技能的装饰键");
@@ -469,7 +473,7 @@ namespace KeyBoardShortCut
         public void Update()
         {
 
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -504,7 +508,7 @@ namespace KeyBoardShortCut
         public new void Update()
         {
 
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key )
             {
                 return;
             }
@@ -539,6 +543,10 @@ namespace KeyBoardShortCut
     {
         private static void Prefix()
         {
+            if(!Main.enabled || !Main.settings.enable_close)
+            {
+                return;
+            }
             if(Main.notify_reset_key == true)
             {
                 Main.notify_reset_key = false;
@@ -573,7 +581,7 @@ namespace KeyBoardShortCut
                 //处理关闭                                                         
                 if (YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled == true)
                 {
-                    if ( (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
+                    if (Main.settings.enable_close && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
                            || (Main.settings.close_with_right_mouse_button == true && Input.GetMouseButtonDown(1) == true))
                         && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
                     {
@@ -892,7 +900,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -912,7 +920,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(WorldMapSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -960,7 +968,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(HomeSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1044,7 +1052,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(SystemSetting __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1065,7 +1073,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(MakeSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1086,7 +1094,7 @@ namespace KeyBoardShortCut
 
         private static void Postfix(BookShopSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1106,7 +1114,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(ShopSystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1127,7 +1135,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(StorySystem __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1160,7 +1168,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(UIDate __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
@@ -1301,7 +1309,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(GongFaTreeWindow __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
             {
                 return;
             }
