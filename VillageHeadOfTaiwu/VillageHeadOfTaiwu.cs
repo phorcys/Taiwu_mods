@@ -49,10 +49,10 @@ namespace VillageHeadOfTaiwu
 
         public bool Open { get; private set; }
         bool cursorLock;
-        //bool collapse;
+        bool collapse;
 
         GUIStyle windowStyle;
-        // GUIStyle collapseStyle;
+        GUIStyle collapseStyle;
         GUIStyle labelStyle;
         GUIStyle seperatorStyle;
         GUIStyle buttonStyle;
@@ -96,14 +96,14 @@ namespace VillageHeadOfTaiwu
                 padding = new RectOffset(5, 5, 5, 5),
             };
 
-            // collapseStyle = new GUIStyle
-            // {
-            //     name = "collapse",
-            //     fontSize = 24,
-            //     alignment = TextAnchor.MiddleCenter,
-            //     margin = new RectOffset(5, 5, 5, 5),
-            // };
-            // collapseStyle.normal.textColor = Color.blue;
+            collapseStyle = new GUIStyle
+            {
+                name = "collapse",
+                fontSize = 14,
+                alignment = TextAnchor.MiddleCenter,
+                margin = new RectOffset(5, 5, 5, 5),
+            };
+            collapseStyle.normal.textColor = Color.red;
 
             labelStyle = new GUIStyle
             {
@@ -171,6 +171,10 @@ namespace VillageHeadOfTaiwu
 
         private void WindowFunc(int windowId)
         {
+            if (GUILayout.Button((collapse ? "展开" : "收起"), collapseStyle))
+            {
+                collapse = !collapse;
+            }
             GUILayout.BeginVertical();
             for (int i = 0; i < 6; i++)
             {
@@ -192,17 +196,14 @@ namespace VillageHeadOfTaiwu
                 }
             }
             GUILayout.EndVertical();
-
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
-                GUILayout.Width(windowRect.width - 20),
-                GUILayout.MaxHeight(Screen.height * 0.73f));
-            GUILayout.BeginVertical();
-            //if (GUILayout.Button("收起", collapseStyle))
-            //{
-            //    collapse = !collapse;
-            //}
-            //if (!collapse)
+            if (!collapse)
             {
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
+
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
+                    GUILayout.Width(windowRect.width - 20),
+                    GUILayout.MaxHeight(Screen.height * 0.73f));
+                GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
                     GUILayout.Label($"------------{workStr[i]}-------------", seperatorStyle);
@@ -215,11 +216,94 @@ namespace VillageHeadOfTaiwu
                         }
                     }
                 }
+                GUILayout.EndVertical();
+                GUILayout.EndScrollView();
             }
-            GUILayout.EndVertical();
-            GUILayout.EndScrollView();
+            else
+            {
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.84f);
+            }
         }
 
+        public void Update()
+        {
+            if (!Main.enabled)
+            {
+                Destroy(canvas);
+            }
+            if (Open)
+            {
+                if (Input.GetKey(KeyCode.PageUp))
+                {
+                    scrollPosition.y -= 40;
+                    Main.logger.Log($"pgup {scrollPosition}");
+                }
+                if (Input.GetKey(KeyCode.PageDown))
+                {
+                    scrollPosition.y += 40;
+                    Main.logger.Log($"pgdn {scrollPosition}");
+                }
+            }
+            if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
+                && Input.GetKeyUp(Main.Setting.key))
+            {
+                ToggleWindow();
+            }
+        }
+
+        /// <summary>
+        /// 切换窗体显示状态
+        /// </summary>
+        public void ToggleWindow()
+        {
+            Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
+            Open = !Open;
+            BlockGameUI(Open);
+            if (Open)
+            {
+                scrollPosition = Vector2.zero;
+                cursorLock = Cursor.lockState == CursorLockMode.Locked || !Cursor.visible;
+                if (cursorLock)
+                {
+                    Cursor.visible = true;
+                    Cursor.lockState = CursorLockMode.None;
+                }
+            }
+            else
+            {
+                if (cursorLock)
+                {
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 挡住游戏的UI
+        /// </summary>
+        /// <param name="open"></param>
+        private void BlockGameUI(bool open)
+        {
+            if (open)
+            {
+                canvas = new GameObject("canvas", typeof(Canvas), typeof(GraphicRaycaster));
+                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.GetComponent<Canvas>().sortingOrder = short.MaxValue;
+                DontDestroyOnLoad(canvas);
+                var panel = new GameObject("panel", typeof(Image));
+                panel.transform.SetParent(canvas.transform);
+                panel.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 0.2f);
+                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
+                panel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.95f);
+                panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
+                panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+            }
+            else
+            {
+                Destroy(canvas);
+            }
+        }
         /// <summary>
         /// 判断地点是否已经探索出来
         /// </summary>
@@ -280,10 +364,12 @@ namespace VillageHeadOfTaiwu
                     wms.choosePartId = choosePartId;
                     wms.choosePlaceId = choosePlaceId;
                     wms.chooseWorkTyp = chooseWorkTyp;
-                    return;
                 }
             }
-
+            else
+            {
+                TipsWindow.instance.SetTips(0, new string[] { "<color=#AF3737FF>无资源可采集或人力不足</color>" }, 180);
+            }
         }
 
         /// <summary>
@@ -366,85 +452,36 @@ namespace VillageHeadOfTaiwu
                 }
             }
         }
+    }
 
-        public void Update()
+    /// <summary>
+    /// 修复🍆人力回复列表的bug
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "AddBackManpower")]
+    public class UIDate_AddBackManpower_Patch
+    {
+        public static bool Prefix(int partId, int placeId, int menpower, int time)
         {
-            if (!Main.enabled)
+            var df = DateFile.instance;
+            if (!df.backManpowerList.ContainsKey(partId))
             {
-                Destroy(canvas);
+                df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
             }
-            if (Open)
-            {
-                if (Input.GetKey(KeyCode.PageUp))
-                {
-                    scrollPosition.y -= 40;
-                    Main.logger.Log($"pgup {scrollPosition}");
-                }
-                if (Input.GetKey(KeyCode.PageDown))
-                {
-                    scrollPosition.y += 40;
-                    Main.logger.Log($"pgdn {scrollPosition}");
-                }
-            }
-            if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
-                && Input.GetKeyUp(Main.Setting.key))
-            {
-                ToggleWindow();
-            }
-        }
 
-        /// <summary>
-        /// 切换窗体显示状态
-        /// </summary>
-        public void ToggleWindow()
-        {
-            Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
-            Open = !Open;
-            BlockGameUI(Open);
-            if (Open)
+            var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]);
+            while (df.backManpowerList[partId].ContainsKey(placeId))
             {
-                scrollPosition = Vector2.zero;
-                cursorLock = Cursor.lockState == CursorLockMode.Locked || !Cursor.visible;
-                if (cursorLock)
-                {
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
-                }
+                // 防止key重复。如果在同一地点人力未恢复完成，再次分配人力然后取消，则会出现。
+                placeId += size * size;
             }
-            else
-            {
-                if (cursorLock)
-                {
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-                }
-            }
-        }
 
-        /// <summary>
-        /// 挡住游戏的UI
-        /// </summary>
-        /// <param name="open"></param>
-        private void BlockGameUI(bool open)
-        {
-            if (open)
+            df.backManpowerList[partId].Add(placeId, new int[2]
             {
-                canvas = new GameObject("canvas", typeof(Canvas), typeof(GraphicRaycaster));
-                canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.GetComponent<Canvas>().sortingOrder = short.MaxValue;
-                DontDestroyOnLoad(canvas);
-                var panel = new GameObject("panel", typeof(Image));
-                panel.transform.SetParent(canvas.transform);
-                panel.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 0.2f);
-                panel.GetComponent<RectTransform>().anchorMin = Vector2.zero;
-                panel.GetComponent<RectTransform>().anchorMax = Vector2.one;
-                panel.GetComponent<RectTransform>().offsetMin = new Vector2(windowRect.x, Screen.height * 0.22f);
-                panel.GetComponent<RectTransform>().offsetMax = new Vector2(0, -Screen.height * 0.05f);
-            }
-            else
-            {
-                Destroy(canvas);
-            }
+                menpower,
+                time
+            });
+
+            return false;
         }
     }
 

@@ -44,7 +44,6 @@ namespace ReadAssistant
         public static int readNum = 0;
         public static Settings settings;
         public static QuickReadPlan plan;
-        //public static int[] power36Num = { 0, 0, 0, 0 };//3总数|3使用|6总数|6使用
 
 
         public static void GetReadNum()
