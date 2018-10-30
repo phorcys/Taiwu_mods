@@ -1,4 +1,4 @@
-using Harmony12;
+﻿using Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,14 +78,14 @@ namespace CharacterFloatInfo
             GUILayout.Label("浮窗显示区域");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物列表", new GUILayoutOption[0]);
-            Main.settings.enableMAN = GUILayout.Toggle(Main.settings.enableMAN, "地块邻格人物列表", new GUILayoutOption[0]);
-            Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主角及同道头像", new GUILayoutOption[0]);
-            Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话界面的主角", new GUILayoutOption[0]);
-            Main.settings.enableMAC = GUILayout.Toggle(Main.settings.enableMAC, "对话界面的人物选择", new GUILayoutOption[0]);
-            Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配界面", new GUILayoutOption[0]);
-            Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "人物信息界面", new GUILayoutOption[0]);
-            Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系界面", new GUILayoutOption[0]);
+            Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物", new GUILayoutOption[0]);
+            Main.settings.enableMAN = GUILayout.Toggle(Main.settings.enableMAN, "地块邻格", new GUILayoutOption[0]);
+            Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主画面同道", new GUILayoutOption[0]);
+            Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话对象", new GUILayoutOption[0]);
+            Main.settings.enableMAC = GUILayout.Toggle(Main.settings.enableMAC, "对话选择人物", new GUILayoutOption[0]);
+            Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配", new GUILayoutOption[0]);
+            Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "同道列表", new GUILayoutOption[0]);
+            Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("展示內容");
@@ -209,7 +209,6 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
-        public static bool isPeopleActor;
         public static bool isDead;
         public static bool smallerWindow;
         public static WindowType windowType;
@@ -251,78 +250,73 @@ namespace CharacterFloatInfo
             if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
 
             bool needShow = false;
-            int id = -1;
-            isPeopleActor = tips.tag == "PeopleActor";
             string[] array = tips.name.Split(',');
+            int id = array.Length>1 ? int.Parse(array[1]) : 0;
 
             //大地圖下面的太吾自己的頭像
-            if (array[0] == "PlayerFaceButton" && Main.settings.enableTA)
+            if (array[0] == "PlayerFaceButton")
             {
                 id = DateFile.instance.mianActorId;
-                needShow = true;
+                needShow = Main.settings.enableTA;
                 windowType = WindowType.TeamActor;
             }
             else
             //大地圖下面的隊友頭像
-            if (tips.tag == "TeamActor" && Main.settings.enableTA)
+            if (tips.tag == "TeamActor")
             {
-                id = DateFile.instance.acotrTeamDate[array[1].Length > 0 ? int.Parse(array[1]) : 0];
-                needShow = id > 0;
+                id = DateFile.instance.acotrTeamDate[ id ];
+                needShow = id > 0 && Main.settings.enableTA;
                 windowType = WindowType.TeamActor;
             }
             else
-            //建筑/地图左边的列表
-            if (array[0] == "Actor")
+            //同道列表
+            if (tips.transform.parent.name == "ActorListMianHolder")
             {
-                id = int.Parse(array[1]);
-                if (DateFile.instance.actorsDate.ContainsKey(id)) //检查人物列表 以排除大地图第三列无名敌人引起的错误
-                {
-                    if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId && Main.settings.enableMAL) //当前格显示
-                    {
-                        needShow = true;
-                        windowType = WindowType.MapActorList;
-                    }
-                    if (WorldMapSystem.instance.choosePlaceId != DateFile.instance.mianPlaceId && WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId) && Main.settings.enableMAN) //邻格显示
-                    {
-                        needShow = true;
-                        windowType = WindowType.MapActorList;
-                    }
-                    if (HomeSystem.instance.buildingWindowOpend && Main.settings.enableBW)
-                    {
-                        needShow = true;
-                        windowType = WindowType.BuildingWindow;
-                    }
-                    if (ActorMenu.instance.actorMenu.activeSelf && Main.settings.enableAM)
-                    {
-                        needShow = true;
-                        windowType = WindowType.ActorMenu;
-                        if (!Main.settings.enableRI && isPeopleActor)
-                        {
-                            needShow = false;
-                        }
-                    }
-                    if (ActorMenu.instance.actorMenu.activeSelf && ActorMenu.instance.actorMenuIndex == 7 && Main.settings.enableRI)
-                    {
-                        needShow = true;
-                        windowType = WindowType.Relationship;
-                        if (!Main.settings.enableAM && !isPeopleActor)
-                        {
-                            needShow = false;
-                        }
-                    }
-                    if (MassageWindow.instance.actorWindow.activeInHierarchy)
-                    {
-                        windowType = WindowType.DialogChooseActors;
-                        needShow = Main.settings.enableMAC;
-                    }
-                }
+                needShow = id > 0 && Main.settings.enableAM;
+                windowType = WindowType.ActorMenu;
+            }
+            else
+            //人物訊息內的關係頁及輪迴前世
+            if (tips.transform.parent.name == "ActorListHolder" || (ActorMenu.instance.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
+            {
+                needShow = Main.settings.enableRI;
+                windowType = WindowType.Relationship;
+            }
+            else
+            //太吾村內工作人員選單
+            if (HomeSystem.instance.buildingWindow.gameObject.activeSelf && tips.transform.parent.name == "ActorHolder")
+            {
+                needShow = Main.settings.enableBW;
+                windowType = WindowType.BuildingWindow;
+            }
+            else
+            //对话界面的人物选择
+            if (MassageWindow.instance.actorWindow.activeInHierarchy && tips.transform.parent.name == "ActorHolder")
+            {
+                needShow = Main.settings.enableMAC;
+                windowType = WindowType.DialogChooseActors;
             }
             //对话窗口的人物头像
-            else if (array[0] == "FaceHolder" && Main.settings.enableDI)
+            else if (array[0] == "FaceHolder" )
             {
                 id = MassageWindow.instance.eventMianActorId;
-                needShow = true;
+                needShow = Main.settings.enableDI;
                 windowType = WindowType.Dialog;
+            }
+            else
+            //建筑/地图左边的列表
+            if (array[0] == "Actor" && DateFile.instance.actorsDate.ContainsKey(id))
+            {
+                if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId) //当前格显示
+                {
+                    needShow = Main.settings.enableMAL;
+                    windowType = WindowType.MapActorList;
+                }
+                else if (WorldMapSystem.instance.choosePlaceId != DateFile.instance.mianPlaceId && WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId)) //邻格显示
+                {
+                    needShow = Main.settings.enableMAN;
+                    windowType = WindowType.MapActorList;
+                }
             }
 
             isDead = int.Parse(DateFile.instance.GetActorDate(id, 26, false)) > 0;
@@ -498,7 +492,7 @@ namespace CharacterFloatInfo
             {
                 text += string.Format("轮回:<color=white>{0}</color>", GetSamsara(id));
 
-                text += GetSamsara(id) != "0" ? string.Format(" ◆ 前世:<color=white>{0}</color>", GetSamsaraName(id) ): "";
+                text += GetSamsara(id) != "0" ? string.Format(" ◆ 前世:<color=white>{0}</color>", GetSamsaraName(id)) : "";
 
                 string item = Gethobby(id, 0);
                 text += string.Format("\t\t喜好:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
@@ -506,7 +500,7 @@ namespace CharacterFloatInfo
                 text += string.Format("\t\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
 
                 if (GetAge(id) > ConstValue.actorMinAge)
-                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count );    // todo: 改為顯示所有孩子名
+                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
 
             }
             else if (windowType == WindowType.BuildingWindow)
@@ -527,14 +521,14 @@ namespace CharacterFloatInfo
                 {
                     case 9301: // 念经忏悔
                         int num = Math.Min(0, int.Parse(DateFile.instance.GetActorDate(id, 18, false)));
-                        text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num<0?"red":"white");
+                        text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num < 0 ? "red" : "white");
                         break;
                     case 9303: // 起死回生
                         int Hp = ActorMenu.instance.Hp(id, false);
                         int maxHp = ActorMenu.instance.MaxHp(id);
                         int Sp = ActorMenu.instance.Sp(id, false);
                         int maxSp = ActorMenu.instance.MaxSp(id);
-                        text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp==0?"white":"red", Sp==0?"white":"red" );
+                        text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp == 0 ? "white" : "red", Sp == 0 ? "white" : "red");
                         break;
                     case 9307: // 王禅典籍
                         text += string.Format("\t\t处世立场:{0}", DateFile.instance.GetActorDate(id, 18, false));
@@ -553,7 +547,7 @@ namespace CharacterFloatInfo
                         break;
                     case 9304: // 七星调元
                         float hurt = int.Parse(DateFile.instance.GetActorDate(id, 39)) / 10;
-                        text += string.Format("\t\t內息:<color={1}>{0:0.#}</color>", hurt, hurt == 0?"white":"red");
+                        text += string.Format("\t\t內息:<color={1}>{0:0.#}</color>", hurt, hurt == 0 ? "white" : "red");
                         break;
                     case 9308: // 玉镜沉思
                         int canDeductCount = 0, canEnchanceCount = 0;
@@ -799,7 +793,7 @@ namespace CharacterFloatInfo
                     num.ToString(),
                     (num < 10 ? "\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : "\u00A0"),
                     shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : (smallerWindow ? "" : "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"),
-                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "\u00A0" :"\u00A0\u00A0")));
+                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "\u00A0" : "\u00A0\u00A0")));
 
             return text;
         }
