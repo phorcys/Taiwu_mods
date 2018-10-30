@@ -6,13 +6,22 @@ using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
-public class Actor
+namespace TaiwuBaseClass
 {
-    protected Actor()
+    public class Actor
     {
-    }
+        public int Id { get; private set; }
+        public Tuple<string, string> Name { get; private set; }
+        protected Actor()
+        {
+        }
 
-    public Actor fromId(int id)
-    {
+        public static Actor fromId(int id)
+        {
+            var actor = new Actor();
+            actor.Id = id;
+            // actor.Name = ...
+            return actor;
+        }
     }
 }
