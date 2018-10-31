@@ -13,13 +13,31 @@ namespace VillageHeadOfTaiwu
     {
         class Worker
         {
+            /// <summary>
+            /// 显示在列表中的任务字符串
+            /// </summary>
             public string content;
+            /// <summary>
+            /// 坐标part
+            /// </summary>
             public int part;
+            /// <summary>
+            /// 坐标place
+            /// </summary>
             public int place;
+            /// <summary>
+            /// 消耗的人力
+            /// </summary>
             public int manpower;
+            /// <summary>
+            /// 采集的资源类型
+            /// </summary>
             public int type;
         }
 
+        /// <summary>
+        /// 采集的资源类型
+        /// </summary>
         enum WorkType
         {
             FOOD,
@@ -64,8 +82,11 @@ namespace VillageHeadOfTaiwu
         {
             try
             {
-                obj = new GameObject("Villagers", typeof(VillagersList));
-                DontDestroyOnLoad(obj);
+                if (obj == null)
+                {
+                    obj = new GameObject("Villagers", typeof(VillagersList));
+                    DontDestroyOnLoad(obj);
+                }
             }
             catch (Exception)
             {
@@ -99,9 +120,9 @@ namespace VillageHeadOfTaiwu
             collapseStyle = new GUIStyle
             {
                 name = "collapse",
-                fontSize = 14,
-                alignment = TextAnchor.MiddleCenter,
-                margin = new RectOffset(5, 5, 5, 5),
+                fontSize = 12,
+                alignment = TextAnchor.MiddleRight,
+                fixedWidth = 25f,
             };
             collapseStyle.normal.textColor = Color.red;
 
@@ -133,6 +154,18 @@ namespace VillageHeadOfTaiwu
             wms = WorldMapSystem.instance;
 
             CalcWindow();
+
+            ToggleWindow();
+
+            // 设置点击事件
+            // var btn = UIDate.instance.manpowerText.gameObject.AddComponent<Button>();
+            // btn.interactable = true;
+            // btn.targetGraphic = UIDate.instance.manpowerText;
+            // btn.onClick.AddListener(() => 
+            // {
+            //     VillagersList.Instance.ToggleWindow();
+            //     Main.logger.Log("toggle");
+            // });
         }
 
         public void CalcWindow()
@@ -171,33 +204,37 @@ namespace VillageHeadOfTaiwu
 
         private void WindowFunc(int windowId)
         {
-            if (GUILayout.Button((collapse ? "展开" : "收起"), collapseStyle))
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(windowRect.width - 35f);
+            if (GUILayout.Button((collapse ? "展" : "收"), collapseStyle))
             {
                 collapse = !collapse;
             }
-            GUILayout.BeginVertical();
-            for (int i = 0; i < 6; i++)
-            {
-                if (i % 3 == 0)
-                {
-                    GUILayout.BeginHorizontal();
-                }
-                if (GUILayout.Button(workStr[i], labelStyle))
-                {
-                    ArrangeWork((WorkType)i);
-                }
-                if (i % 3 < 2)
-                {
-                    GUILayout.Label("|");
-                }
-                else if (i % 3 == 2)
-                {
-                    GUILayout.EndHorizontal();
-                }
-            }
-            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
             if (!collapse)
             {
+                GUILayout.BeginVertical();
+                for (int i = 0; i < 6; i++)
+                {
+                    if (i % 3 == 0)
+                    {
+                        GUILayout.BeginHorizontal();
+                    }
+                    if (GUILayout.Button(workStr[i], labelStyle))
+                    {
+                        ArrangeWork((WorkType)i);
+                    }
+                    if (i % 3 < 2)
+                    {
+                        GUILayout.Label("|");
+                    }
+                    else if (i % 3 == 2)
+                    {
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                GUILayout.EndVertical();
                 canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
 
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
@@ -206,7 +243,7 @@ namespace VillageHeadOfTaiwu
                 GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
-                    GUILayout.Label($"------------{workStr[i]}-------------", seperatorStyle);
+                    GUILayout.Label($"------------{workStr[i]}-------------     ", seperatorStyle);
                     var wokers = new List<Worker>(GetWorkers((WorkType)i));
                     foreach (var worker in wokers)
                     {
@@ -221,7 +258,7 @@ namespace VillageHeadOfTaiwu
             }
             else
             {
-                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.84f);
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / Screen.width, 0.95f - 25f / Screen.height);
             }
         }
 
@@ -230,6 +267,7 @@ namespace VillageHeadOfTaiwu
             if (!Main.enabled)
             {
                 Destroy(canvas);
+                Open = false;
             }
             if (Open)
             {
@@ -504,6 +542,18 @@ namespace VillageHeadOfTaiwu
         }
     }
 
+    [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
+    public class DateFile_BackToStartMenu_Patch
+    {
+        static void Prefix()
+        {
+            if (VillagersList.Instance != null && VillagersList.Instance.Open)
+            {
+                VillagersList.Instance.ToggleWindow();
+            }
+        }
+    }
+
     /// <summary>
     /// 载入游戏时加载VillageList类
     /// </summary>
@@ -512,7 +562,14 @@ namespace VillageHeadOfTaiwu
     {
         public static void Postfix()
         {
-            Main.logger.Log($"create ui: {VillagersList.Load()}");
+            if (VillagersList.Instance == null)
+            {
+                Main.logger.Log($"create ui: {VillagersList.Load()}");
+            }
+            else if (!VillagersList.Instance.Open)
+            {
+                VillagersList.Instance.ToggleWindow();
+            }
         }
     }
 

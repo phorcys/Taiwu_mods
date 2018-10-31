@@ -206,11 +206,11 @@ namespace LKX_GongFaSizeToOne
                 if (!Main.settings.quanfaActive) gongFaKey.Remove("104");
                 if (!Main.settings.zhifaActive) gongFaKey.Remove("105");
                 if (!Main.settings.tuifaActive) gongFaKey.Remove("106");
-                if (!Main.settings.qimenActive) gongFaKey.Remove("107");
+                if (!Main.settings.anqiActive) gongFaKey.Remove("107");
                 if (!Main.settings.jianfaActive) gongFaKey.Remove("108");
                 if (!Main.settings.daofaActive) gongFaKey.Remove("109");
                 if (!Main.settings.changbingActive) gongFaKey.Remove("110");
-                if (!Main.settings.anqiActive) gongFaKey.Remove("111");
+                if (!Main.settings.qimenActive) gongFaKey.Remove("111");
                 if (!Main.settings.ruanbingActive) gongFaKey.Remove("112");
                 if (!Main.settings.yusheActive) gongFaKey.Remove("113");
                 if (!Main.settings.yueqiActive) gongFaKey.Remove("114");
