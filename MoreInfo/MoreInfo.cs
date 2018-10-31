@@ -20,6 +20,7 @@ namespace MoreInfo
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
         public bool showItemExtraInBag = true;//显示包裹中物品特殊词条
+        public bool showItemExtraInEquuipBag = true;//显示装备界面包裹中物品特殊词条
         public bool showItemExtraInBank = true;//显示仓库中物品特殊词条
         public bool showItemExtraInShop = true;//显示商店中物品特殊词条
         public bool showGongFaLevel = true;//显示功法等级颜色
@@ -63,6 +64,7 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showItemExtraInBag = GUILayout.Toggle(Main.settings.showItemExtraInBag, "显示包裹中物品特殊词条", new GUILayoutOption[0]);
+            Main.settings.showItemExtraInEquuipBag = GUILayout.Toggle(Main.settings.showItemExtraInEquuipBag, "显示装备界面包裹中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInBank = GUILayout.Toggle(Main.settings.showItemExtraInBank, "显示仓库中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInShop = GUILayout.Toggle(Main.settings.showItemExtraInShop, "显示商店中物品特殊词条", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
@@ -151,7 +153,33 @@ namespace MoreInfo
         }
     }
 
-    //
+    //将人物装备界面中物品栏的宝物耐久度替换为特殊词条显示
+    [HarmonyPatch(typeof(SetItem), "SetActorEquipIcon")]
+    public static class SetItem_SetActorEquipIcon_Patch
+    {
+        static void Postfix(SetItem __instance, int itemId)
+        {
+            if (!Main.enabled || !Main.settings.showItemExtraInEquuipBag)
+                return;
+            int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
+            //只针对宝物的属性处理
+            if (typ == 3)
+            {
+                foreach (var item in Main.itemExtraAttr)
+                {
+                    int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
+                    if (val > 0)
+                    {
+                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
+                        __instance.itemNumber.text = item.Value;
+                    }
+                }
+            }
+        }
+    }
+
+
+
     //将仓库中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]    
     public static class SetItem_SetWarehouseItemIcon_Patch
@@ -179,7 +207,6 @@ namespace MoreInfo
                         //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
                         __instance.itemNumber.text = item.Value;
                     }
-                    Main.Logger.Log(string.Format("MoreInfo---UpdateItems-{0}-{1}-{2}-{3}-value-{4}", actorName, itemId, itemName, item.Value, val));
                 }
             }
         }
@@ -247,10 +274,7 @@ namespace MoreInfo
 
 
 
+
 }
 
 
-
-/*  
-
-    ;*/
