@@ -44,7 +44,6 @@ namespace ReadAssistant
         public static int readNum = 0;
         public static Settings settings;
         public static QuickReadPlan plan;
-        //public static int[] power36Num = { 0, 0, 0, 0 };//3总数|3使用|6总数|6使用
 
 
         public static void GetReadNum()
@@ -87,7 +86,7 @@ namespace ReadAssistant
         {
             GUILayout.BeginVertical("Box");
             settings.autoRead = GUILayout.Toggle(settings.autoRead, "读书刷历练助手");
-            settings.just50Hard=GUILayout.Toggle(settings.just50Hard,"仅对50%研读难度的书籍生效");
+            settings.just50Hard = GUILayout.Toggle(settings.just50Hard, "仅对50%研读难度的书籍生效");
             GUILayout.Label("说明： ");
             GUILayout.Label("仅对已读完的书籍有效，最低悟性要求是上限足够放一个【温故知新】。");
             GUILayout.Label("根据玩家初始耐心选取最优刷历练方案并自动实施，刷历练期间请不要手动释放技能。");
@@ -136,8 +135,12 @@ namespace ReadAssistant
                 Main.plan = new QuickReadPlan();
                 int maxIncome = 0;
                 int maxPatience = ReadBook.instance.GetMaxPatience();
-                //int canUseInt = DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) / 2;
-
+                Type type = ReadBook.instance.GetType();
+                int actorValue = (int)type.InvokeMember("actorValue", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
+                int readSkillId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
+                int needInt = HomeSystem.instance.GetNeedInt(actorValue, readSkillId);
+                int canUseInt = DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) / 2;
+                int cost3 = int.Parse(DateFile.instance.readBookDate[3][1]) * needInt / 100;
                 int incomeBuff = int.Parse(DateFile.instance.readBookDate[3][6]);
                 for (int i = 0; i <= 30; i++)
                 {//i - 温的次数
@@ -154,9 +157,16 @@ namespace ReadAssistant
                         {
                             if (i + addPower3 + addPower4 <= 30)
                             {//仅在格子合适时计算收益
-                                int income2 = ((30 - i - addPower3 - addPower4) * i + addPower3 * (addPower3 + 2) - addPower4 * (addPower4 + 2)) * incomeBuff;
+                                int income2 = ((30 - i - addPower3 - addPower4) * i + addPower3 * (addPower3 + 3 * addPower4 + 2)) * incomeBuff;
+
+                                int addInt = (32 - i) / 3 * 20 - ((32 - i) % 3 == 0 ? 20 : 10) + canUseInt;
+                                if ((30 - i - addPower3 - addPower4) * cost3 - addInt > 0)
+                                {
+                                    income2 -= ((30 - i - addPower3 - addPower4) * cost3 - addInt + cost3 - 1) / cost3 * incomeBuff;
+                                }
+
                                 int patienceNeed = (1 << (i - j - 1)) + 1 - (30 - i - addPower3 - addPower4) * 2;
-                                if (patienceNeed <= maxPatience && maxIncome < income1 + income2)
+                                if (patienceNeed <= maxPatience && (maxIncome < income1 + income2 || (maxIncome == income1 + income2 && Main.plan.power3Num[0] > 30 - i - addPower3 - addPower4)))
                                 {//耐心达标且收益更高时更换方案
                                     maxIncome = income1 + income2;
                                     Main.plan.power3Num[0] = 30 - i - addPower3 - addPower4;
@@ -215,7 +225,8 @@ namespace ReadAssistant
                     {
                         for (int i = 0; i < 3; i++)
                         {
-                            if (Main.plan.power3Num[0] > Main.plan.power3Num[1] && readPageIndex * 3 + i + 1 < 30 - Main.plan.power6Num[0] && pageState[readPageIndex][i] == 0 && canUseInt >= cost3)
+                            if (Main.plan.power3Num[0] > Main.plan.power3Num[1] && readPageIndex * 3 + i < 30 - Main.plan.power6Num[0] - Main.plan.addPower4Num[0]
+                                && pageState[readPageIndex][i] == 0 && canUseInt >= cost3)
                             {
                                 ReadBook.instance.UseIntPower(3);
                                 pageState[readPageIndex][i] = 3;

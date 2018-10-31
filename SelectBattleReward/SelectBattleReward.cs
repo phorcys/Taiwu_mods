@@ -94,7 +94,7 @@ namespace SelectBattleReward
         public void OnPointerClick(PointerEventData eventData)
         {
             //删掉不要的物品
-            DateFile.instance.LoseItem(DateFile.instance.MianActorID(), _itemid, _count, true);
+            DateFile.instance.LoseItem(DateFile.instance.MianActorID(), _itemid, _count, true, true);
             //销毁图标
             GameObject.Destroy(_icon);
         }
