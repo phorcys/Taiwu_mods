@@ -95,9 +95,11 @@ namespace HomeShopSort
                     {
                         string text = "";
                         int color = 20002 + 6;
+                        int effPct = 100 * eff / total;//当前工作效率
+                        int totalPct = 100 * 200 / total;//最大工作效率
                         if (Main.settings.showEfficienctUsingDifferentColor)
                         {
-                            int percent = 100 * eff / total;
+                            int percent = 100 * effPct / totalPct;//占最大效率的百分比
                             if (percent >= 90)
                                 color = 20002 + 2;
                             else if (percent >= 70)
@@ -108,7 +110,7 @@ namespace HomeShopSort
                                 color = 20002 + 8;
                         }
                         if (Main.settings.showEfficiencyAsMyWay)
-                            text = "(" + (eff / 2).ToString() + "%)";
+                            text = "(" + (100 * effPct / totalPct).ToString() + "%)";
                         else
                             text = "(" + (100 * eff / total).ToString() + "%)";
                         if (!Main.settings.showEfficienctInBottom)
