@@ -82,8 +82,11 @@ namespace VillageHeadOfTaiwu
         {
             try
             {
-                obj = new GameObject("Villagers", typeof(VillagersList));
-                DontDestroyOnLoad(obj);
+                if (obj == null)
+                {
+                    obj = new GameObject("Villagers", typeof(VillagersList));
+                    DontDestroyOnLoad(obj);
+                }
             }
             catch (Exception)
             {
@@ -539,6 +542,18 @@ namespace VillageHeadOfTaiwu
         }
     }
 
+    [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
+    public class DateFile_BackToStartMenu_Patch
+    {
+        static void Prefix()
+        {
+            if (VillagersList.Instance != null && VillagersList.Instance.Open)
+            {
+                VillagersList.Instance.ToggleWindow();
+            }
+        }
+    }
+
     /// <summary>
     /// 载入游戏时加载VillageList类
     /// </summary>
@@ -547,7 +562,14 @@ namespace VillageHeadOfTaiwu
     {
         public static void Postfix()
         {
-            Main.logger.Log($"create ui: {VillagersList.Load()}");
+            if (VillagersList.Instance == null)
+            {
+                Main.logger.Log($"create ui: {VillagersList.Load()}");
+            }
+            else if (!VillagersList.Instance.Open)
+            {
+                VillagersList.Instance.ToggleWindow();
+            }
         }
     }
 
