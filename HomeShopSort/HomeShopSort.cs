@@ -95,11 +95,11 @@ namespace HomeShopSort
                     {
                         string text = "";
                         int color = 20002 + 6;
-                        int effPct = 100 * eff / total;//当前工作效率
-                        int totalPct = 100 * 200 / total;//最大工作效率
+                        int effPct = 100 * eff / total;                 //当前工作效率
+                        int totalPct = 100 * 200 / total;               //最大工作效率
                         if (Main.settings.showEfficienctUsingDifferentColor)
                         {
-                            int percent = 100 * effPct / totalPct;//占最大效率的百分比
+                            int percent = 100 * effPct / totalPct;      //占最大效率的百分比
                             if (percent >= 90)
                                 color = 20002 + 2;
                             else if (percent >= 70)
