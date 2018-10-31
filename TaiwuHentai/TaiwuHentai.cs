@@ -2,8 +2,6 @@
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
-using DG.Tweening;
-using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
@@ -86,14 +84,15 @@ namespace TaiwuHentai
             settings.PeerTeaching = GUILayout.Toggle(settings.PeerTeaching, "修改可请教同伴天赋70以上的技艺");
             GUILayout.Label("说明： 选中修改使太吾可以可请教同伴天赋70以上的技艺。");
             GUILayout.EndHorizontal();
-            /**GUILayout.BeginHorizontal("Box");
+            /*
+            GUILayout.BeginHorizontal("Box");
             GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄");
             var maxBackupsToKeep = GUILayout.TextField(settings.SpouseAge.ToString(), 3);
             if (GUI.changed && !uint.TryParse(maxBackupsToKeep, out settings.SpouseAge))
             {
                 settings.SpouseAge = 14;
             }
-            GUILayout.EndHorizontal();**/
+            GUILayout.EndHorizontal();*/
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("有情人的npc，新欢概率", new GUILayoutOption[0]);
             Main.settings.GetLoveHaveLover = GUILayout.SelectionGrid(Main.settings.GetLoveHaveLover, new string[]
@@ -132,63 +131,63 @@ namespace TaiwuHentai
     }
 
     [HarmonyPatch(typeof(DateFile), "GetActorDate")]
-     public static class DateFile_GetActorDate_Patch
-     {
-         private static void Postfix(DateFile __instance, ref string __result, int id, int index, bool addValue = true)
-         {
+    public static class DateFile_GetActorDate_Patch
+    {
+        private static void Postfix(DateFile __instance, ref string __result, int id, int index, bool addValue = true)
+        {
 
-             if (!Main.enabled || !Main.settings.displayGlamour)
-             {
-                 return;
-             }
-             if (index == 15)
-             {
-                 string text = (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(index)) ? "0" : __instance.presetActorDate[id][index];
-                 if (__instance.actorsDate.ContainsKey(id))
-                 {
-                     if (__instance.actorsDate[id].ContainsKey(index))
-                     {
-                         text = __instance.actorsDate[id][index];
-                     }
-                     else
-                     {
-                         int key = (!__instance.actorsDate[id].ContainsKey(997)) ? id : int.Parse(__instance.actorsDate[id][997]);
-                         if (!__instance.presetActorDate.ContainsKey(key) || !__instance.presetActorDate[key].ContainsKey(index))
-                         {
-                             __result = "0";
-                         }
-                         text = __instance.presetActorDate[key][index];
-                     }
-                 }
+            if (!Main.enabled || !Main.settings.displayGlamour)
+            {
+                return;
+            }
+            if (index == 15)
+            {
+                string text = (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(index)) ? "0" : __instance.presetActorDate[id][index];
+                if (__instance.actorsDate.ContainsKey(id))
+                {
+                    if (__instance.actorsDate[id].ContainsKey(index))
+                    {
+                        text = __instance.actorsDate[id][index];
+                    }
+                    else
+                    {
+                        int key = (!__instance.actorsDate[id].ContainsKey(997)) ? id : int.Parse(__instance.actorsDate[id][997]);
+                        if (!__instance.presetActorDate.ContainsKey(key) || !__instance.presetActorDate[key].ContainsKey(index))
+                        {
+                            __result = "0";
+                        }
+                        text = __instance.presetActorDate[key][index];
+                    }
+                }
 
-                 int num = 0;
-                 if (addValue)
-                 {
-                     Type type = __instance.GetType();
-                     object[] temp = new object[] { id, index };
-                     BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-                     var m = type.GetMethod("ActorAddValue", flags);
-                     num = (int)m.Invoke(__instance, temp);
-                     if (int.Parse(__instance.GetActorDate(id, 8, false)) == 1 && int.Parse(__instance.GetActorDate(id, 305, false)) == 0)
-                     {
-                         __result = (int.Parse((num == 0) ? text : (int.Parse(text) + num).ToString()) * 50 / 100).ToString();
-                     }
-                     else
-                     {
+                int num = 0;
+                if (addValue)
+                {
+                    Type type = __instance.GetType();
+                    object[] temp = new object[] { id, index };
+                    BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                    var m = type.GetMethod("ActorAddValue", flags);
+                    num = (int)m.Invoke(__instance, temp);
+                    if (int.Parse(__instance.GetActorDate(id, 8, false)) == 1 && int.Parse(__instance.GetActorDate(id, 305, false)) == 0)
+                    {
+                        __result = (int.Parse((num == 0) ? text : (int.Parse(text) + num).ToString()) * 50 / 100).ToString();
+                    }
+                    else
+                    {
 
-                         string text2 = (num == 0) ? text : (int.Parse(text) + num).ToString();
+                        string text2 = (num == 0) ? text : (int.Parse(text) + num).ToString();
 
-                         __result = text2;
-                     }
+                        __result = text2;
+                    }
 
-                 }
-             }
-         }
-
-
+                }
+            }
+        }
 
 
-     }
+
+
+    }
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
@@ -244,14 +243,14 @@ namespace TaiwuHentai
                 {
                         '|'
                 })[0]);
-                        text2.text += "18岁时:\n魅力：" + charmText+ "\n";
-                        
+                        text2.text += "18岁时:\n魅力：" + charmText + "\n";
+
 
                         List<int> featureIDs = DateFile.instance.GetActorFeature(key);
-                        for(int i=0;i< featureIDs.Count;i++)
+                        for (int i = 0; i < featureIDs.Count; i++)
                         {
-                            
-                                text2.text += DateFile.instance.actorFeaturesDate[featureIDs[i]][0]+" ";
+
+                            text2.text += DateFile.instance.actorFeaturesDate[featureIDs[i]][0] + " ";
                             if ((i + 1) % 3 == 0)
                             {
                                 text2.text += "\n";
@@ -280,7 +279,7 @@ namespace TaiwuHentai
                         }
                         int num = int.Parse(DateFile.instance.GetActorDate(key, 305, false));
                         int clotheIndex = (num <= 0) ? -1 : int.Parse(DateFile.instance.GetItemDate(num, 15, true));
-                        
+
 
 
 
@@ -297,8 +296,8 @@ namespace TaiwuHentai
                             float scY = mainHoder.transform.parent.localScale.y;
                             scX = 1 / scX;
                             scY = 1 / scY;
-                           
-                            mainHoder.transform.localScale = new Vector3(scX*0.3f, scY * 0.45f, 1);
+
+                            mainHoder.transform.localScale = new Vector3(scX * 0.3f, scY * 0.45f, 1);
 
                             editFac(ref mainHoder, key, 18, int.Parse(DateFile.instance.GetActorDate(key, 14, false)), int.Parse(DateFile.instance.GetActorDate(key, 17, false)), array3, array4, clotheIndex);
                         }
@@ -687,11 +686,10 @@ namespace TaiwuHentai
 
         private static bool AddToList(ref MassageWindow __instance, ref Dictionary<int, int> ___massageGetGongFas, int num, int num3, int num4, List<string> list2, List<string> list3)
         {
+            
             int num24 = 0;
-
             for (int num25 = 0; num25 < list2.Count; num25++)
             {
-
                 bool flag6 = list3.Contains(list2[num25]);
                 int num26 = int.Parse(list2[num25]);
                 if (!__instance.removeChooseIds.Contains(num26))
@@ -701,7 +699,7 @@ namespace TaiwuHentai
                         bool flag7 = false;
                         string[] array3 = DateFile.instance.eventDate[num26][6].Split(new char[]
                         {
-                        '&'
+                    '&'
                         });
                         if (array3[0] == "GTYP")
                         {
@@ -718,7 +716,7 @@ namespace TaiwuHentai
                             }
                             if (!flag7)
                             {
-                                goto IL_1870;
+                                goto IL_1B43;
                             }
                         }
                     }
@@ -732,6 +730,7 @@ namespace TaiwuHentai
                     {
                         num30 = __instance.mianEventDate[Mathf.Abs(num29)];
                     }
+                    int num31 = -1;
                     GameObject gameObject = Object.Instantiate<GameObject>((num30 == -99) ? __instance.massageChoose2 : __instance.massageChoose1, Vector3.zero, Quaternion.identity);
                     gameObject.transform.SetParent(__instance.chooseHolder, false);
                     gameObject.name = "Choose," + num26;
@@ -739,19 +738,50 @@ namespace TaiwuHentai
                     {
                         gameObject.transform.Find("NameText").GetComponent<Text>().text = DateFile.instance.GetActorName(num30, false, false) + WindowManage.instance.Mut();
                         gameObject.transform.Find("FaceHolder").Find("FaceMask").Find("MianActorFace").GetComponent<ActorFace>().SetActorFace(num30, false);
-                        GameObject gameObject2 = gameObject.transform.Find("NeedIcon").gameObject;
-                        string a = DateFile.instance.eventDate[num26][6];
+                        GameObject gameObject2 = gameObject.transform.Find("IconHolder").Find("NeedIcon").gameObject;
+                        string a = DateFile.instance.eventDate[num26][6].Replace("|GN&0", "").Replace("|GN&1", "").Replace("|GN&2", "").Replace("|GN&3", "").Replace("|GN&4", "").Replace("GN&0|", "").Replace("GN&1|", "").Replace("GN&2|", "").Replace("GN&3|", "").Replace("GN&4|", "").Replace("GN&0", "").Replace("GN&1", "").Replace("GN&2", "").Replace("GN&3", "").Replace("GN&4", "");
                         gameObject2.SetActive(a != "" && a != "0");
                         gameObject2.name = "NeedIcon," + num26;
+                        a = DateFile.instance.eventDate[num26][6];
+                        if (a != "" && a != "0")
+                        {
+                            string[] array4 = DateFile.instance.eventDate[num26][6].Split(new char[]
+                            {
+                        '|'
+                            });
+                            for (int num32 = 0; num32 < array4.Length; num32++)
+                            {
+                                string[] array5 = array4[num32].Split(new char[]
+                                {
+                            '#'
+                                });
+                                for (int num33 = 0; num33 < array5.Length; num33++)
+                                {
+                                    string[] array6 = array5[num33].Split(new char[]
+                                    {
+                                '&'
+                                    });
+                                    string text = array6[0];
+                                    if (text != null)
+                                    {
+                                        if (text == "GN")
+                                        {
+                                            num31 = int.Parse(array6[1]);
+                                            gameObject.transform.Find("IconHolder").Find("LikeIcon,774").gameObject.SetActive(DateFile.instance.GetActorGoodness(num3) == num31);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     bool flag8 = false;
-                    string[] array4 = DateFile.instance.eventDate[num26][8].Split(new char[]
+                    string[] array7 = DateFile.instance.eventDate[num26][8].Split(new char[]
                     {
-                    '|'
+                '|'
                     });
-                    for (int num31 = 0; num31 < array4.Length; num31++)
+                    for (int num34 = 0; num34 < array7.Length; num34++)
                     {
-                        if (array4[num31] == "RM")
+                        if (array7[num34] == "RM")
                         {
                             flag8 = true;
                             break;
@@ -759,22 +789,46 @@ namespace TaiwuHentai
                     }
                     if (flag6)
                     {
-                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true)), false);
+
+                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance,num, DateFile.instance.eventDate[num26][3], true)), false);
                         gameObject.GetComponent<Button>().interactable = false;
                     }
                     else if (GetEventIF(ref __instance, num30, num4, num26))
                     {
-                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer((!flag8) ? 20003 : 20005, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true)), false);
+                       
+                        string text2 = ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true);
+                        if (num31 >= 0)
+                        {
+                            text2 = string.Format("{2}{0}{3}{1}", new object[]
+                            {
+                        DateFile.instance.massageDate[9][0].Split(new char[]
+                        {
+                            '|'
+                        })[num31],
+                        text2,
+                        DateFile.instance.massageDate[10][0].Split(new char[]
+                        {
+                            '|'
+                        })[0],
+                        DateFile.instance.massageDate[10][0].Split(new char[]
+                        {
+                            '|'
+                        })[1]
+                            });
+                        }
+                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer((!flag8) ? 20003 : 20005, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], text2), false);
                         gameObject.GetComponent<Button>().interactable = true;
+
                     }
                     else
                     {
+
                         gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true)), false);
                         gameObject.GetComponent<Button>().interactable = false;
                     }
                     num24++;
                 }
-                IL_1870:;
+                IL_1B43:;
             }
             return true;
         }
@@ -1013,56 +1067,56 @@ namespace TaiwuHentai
             int key2 = int.Parse(DateFile.instance.allWorldDate[DateFile.instance.mianWorldId][402]);
             string text = massageText.Replace("GANG", DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate((__instance.mianEventDate[1] <= 0) ? num : __instance.mianEventDate[1], 19, false)), 0)).Replace("MN", DateFile.instance.GetActorName(0, false, false)).Replace("BN", DateFile.instance.GetActorName(__instance.mianEventDate[1], false, false)).Replace("GN_R", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[(num2 >= 30) ? ((num2 >= 40) ? 3 : 2) : 1].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_0", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[0].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_1", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[1].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_2", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[2].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_3", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[3].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_4", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[4].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_5", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[5].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("GN_6", DateFile.instance.massageDate[5][1].Split(new char[]
             {
-            '|'
+        '|'
             })[6].Split(new char[]
             {
-            '&'
+        '&'
             })[num3]).Replace("MCITY", DateFile.instance.placeWorldDate[key][0]).Replace("MGNG", DateFile.instance.placeWorldDate[key2][0]);
             string[] array = DateFile.instance.eventDate[eventId][4].Split(new char[]
             {
-            '|'
+        '|'
             });
             for (int i = 0; i < array.Length; i++)
             {
@@ -1079,27 +1133,27 @@ namespace TaiwuHentai
                             {
                                 string str = DateFile.instance.GetItemDate(num5, 0, false).Replace(DateFile.instance.massageDate[11][4].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0], "").Replace(DateFile.instance.massageDate[11][4].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1], "");
                                 text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num5, 8, true)), DateFile.instance.massageDate[10][0].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0] + str + DateFile.instance.massageDate[10][0].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1], noChange));
                                 break;
                             }
                         case 3:
                             text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.gongFaDate[num5][2]), DateFile.instance.massageDate[11][4].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[0] + DateFile.instance.gongFaDate[num5][0] + DateFile.instance.massageDate[11][4].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[1], noChange));
                             text = text.Replace(string.Format("GFM{0}", i), DateFile.instance.gongFaDate[num5][99].Replace("“", "‘").Replace("”", "’").Replace("。", "……"));
                             break;
@@ -1110,27 +1164,27 @@ namespace TaiwuHentai
                             {
                                 string str2 = DateFile.instance.GetItemDate(num5, 0, false).Replace(DateFile.instance.massageDate[11][4].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0], "").Replace(DateFile.instance.massageDate[11][4].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1], "");
                                 text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num5, 8, true)), DateFile.instance.massageDate[10][0].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0] + str2 + DateFile.instance.massageDate[10][0].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1], noChange));
                                 break;
                             }
                         case 6:
                             text = text.Replace(string.Format("D{0}", i), DateFile.instance.massageDate[10][0].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[0] + DateFile.instance.baseSkillDate[num5][0] + DateFile.instance.massageDate[10][0].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[1]);
                             break;
                         case 7:
@@ -1139,10 +1193,10 @@ namespace TaiwuHentai
                         case 8:
                             text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.skillDate[num5][2]), DateFile.instance.massageDate[11][4].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[0] + DateFile.instance.skillDate[num5][0] + DateFile.instance.massageDate[11][4].Split(new char[]
                             {
-                        '|'
+                    '|'
                             })[1], noChange));
                             text = text.Replace(string.Format("SFM{0}", i), DateFile.instance.skillDate[num5][99].Replace("“", "‘").Replace("”", "’").Replace("。", "……"));
                             break;
@@ -1151,13 +1205,13 @@ namespace TaiwuHentai
                                 int num6 = __instance.mianEventDate[4];
                                 text = text.Replace(string.Format("D{0}", i), DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0] + DateFile.instance.massageDate[25][2].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[num6] + DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1]);
                                 break;
                             }
@@ -1166,16 +1220,16 @@ namespace TaiwuHentai
                                 int num7 = DateFile.instance.GetActorFavor(false, num, __instance.mianEventDate[1], false, false);
                                 text = text.Replace(string.Format("D{0}", i), (num7 == -1) ? (DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0] + DateFile.instance.SetColoer(20002, DateFile.instance.massageDate[303][2], noChange) + DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1]) : (DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[0] + ActorMenu.instance.Color5(num7, true, -1) + DateFile.instance.massageDate[11][3].Split(new char[]
                                 {
-                        '|'
+                    '|'
                                 })[1]));
                                 break;
                             }
@@ -1186,7 +1240,6 @@ namespace TaiwuHentai
         }
 
     }
-
 
     [HarmonyPatch(typeof(PeopleLifeAI), "AIGetLove")]
     public static class PeopleLifeAI_AIGetLove_Patch
