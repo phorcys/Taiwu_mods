@@ -23,6 +23,9 @@ namespace MoreInfo
         public bool showItemExtraInBank = true;//显示仓库中物品特殊词条
         public bool showItemExtraInShop = true;//显示商店中物品特殊词条
         public bool showGongFaLevel = true;//显示功法等级颜色
+        public bool showGongFaGang = true;//显示功法所属门派
+        public bool showGongFaProgress = true;//强化显示功法进度
+
 
     }
 
@@ -54,12 +57,23 @@ namespace MoreInfo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("物品词条");
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showItemExtraInBag = GUILayout.Toggle(Main.settings.showItemExtraInBag, "显示包裹中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInBank = GUILayout.Toggle(Main.settings.showItemExtraInBank, "显示仓库中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInShop = GUILayout.Toggle(Main.settings.showItemExtraInShop, "显示商店中物品特殊词条", new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("功法增强");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             Main.settings.showGongFaLevel = GUILayout.Toggle(Main.settings.showGongFaLevel, "显示功法等级颜色", new GUILayoutOption[0]);
-
+            Main.settings.showGongFaGang = GUILayout.Toggle(Main.settings.showGongFaGang, "显示功法所属门派", new GUILayoutOption[0]);
+            Main.settings.showGongFaProgress = GUILayout.Toggle(Main.settings.showGongFaProgress, "进度心得显示增强", new GUILayoutOption[0]);
+                       
             GUILayout.EndHorizontal();
         }
 
@@ -137,7 +151,7 @@ namespace MoreInfo
         }
     }
 
-
+    //
     //将仓库中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]    
     public static class SetItem_SetWarehouseItemIcon_Patch
@@ -195,6 +209,43 @@ namespace MoreInfo
             }
         }
     }
+    //人物功法界面根据功法品级显示颜色
+    [HarmonyPatch(typeof(SetGongFaIcon), "SetGongFa")]
+    public static class SetGongFaIcon_SetGongFa_Patch
+    {
+        static void Postfix(SetGongFaIcon __instance, int gongFaId, int actorId)
+        {
+            if (!Main.enabled)
+                return;
+
+            if (Main.settings.showGongFaLevel)
+            {
+                int lv = int.Parse(DateFile.instance.gongFaDate[gongFaId][2]);             
+                __instance.gongFaNameText.text = DateFile.instance.SetColoer(20001 + lv, __instance.gongFaNameText.text);
+            }
+            //功法所属门派
+            if (Main.settings.showGongFaGang)
+            {              
+                int gangId = int.Parse(DateFile.instance.gongFaDate[gongFaId][3]);
+                string gangName = DateFile.instance.presetGangDate[gangId][0];    
+                __instance.gongFaSizeText.text = gangName + "-" + __instance.gongFaSizeText.text;
+            }
+            //根据修习进度与心得变更颜色增加区分度
+            if (Main.settings.showGongFaProgress)
+            {
+                int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId)[0];
+                int colorFix = level / 10;                              
+                __instance.gongFaLevelText.text = DateFile.instance.SetColoer(20001 + colorFix, __instance.gongFaLevelText.text);
+                int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId);
+                __instance.gongFaBookLevelText.text = DateFile.instance.SetColoer(20001 + bookLevel, __instance.gongFaBookLevelText.text);
+            }
+
+
+
+        }
+    }
+
+
 
 }
 
