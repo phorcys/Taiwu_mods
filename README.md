@@ -16,21 +16,23 @@
 
 ****
 ## 新建 Mod流程
-* 新建目录, 将你的mod .cs文件放入
-* 在此目录下放入 Info.json 文件，格式类似：
 
-    {
-      "Id": "HerbRecipes",
-      "DisplayName": "药引烹饪配方精制材料说明",
-      "Author": "phorcys",
-      "Version": "2.3.0",
-      "AssemblyName": "HerbRecipes.dll",
-      "EntryMethod": "HerbRecipes.Main.Load",
-      "Requirements": ["BaseResourceMod"]
-    }
-    
-* 除 最后一行 Requirements 外，其他为必填
-* 运行genvsproj.cmd 生成工程，开始mod开发
+1. 新建目录,将你的mod的 .cs文件放入
+2. 在此目录下放入 Info.json 文件，格式类似：
+```json
+{
+    "Id": "HerbRecipes",
+    "DisplayName": "药引烹饪配方精制材料说明",
+    "Author": "phorcys",
+    "Version": "2.3.0",
+    "AssemblyName": "HerbRecipes.dll",
+    "EntryMethod": "HerbRecipes.Main.Load",
+    "Requirements": ["BaseResourceMod"]
+}
+```
+3. 除 最后一行 Requirements 外，其他为必填
+4. 运行genvsproj.cmd 生成工程，开始mod开发
+
 
 ##Mods 开发辅助工具 repo：
 

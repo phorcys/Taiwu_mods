@@ -2,7 +2,7 @@
     "Id": "LKX_GongFaSizeToOne",
     "DisplayName": "功法大小1格",
     "Author": "小枫泡泡",
-    "Version": "1.0.1",
+    "Version": "1.0.2",
     "AssemblyName": "LKX_GongFaSizeToOne.dll",
     "EntryMethod": "LKX_GongFaSizeToOne.Main.Load"
 }

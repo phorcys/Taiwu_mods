@@ -1,0 +1,8 @@
+﻿{
+    "Id": "MoveBuilding",
+    "DisplayName": "太吾村建筑物搬移",
+    "Author": "Eiffel",
+    "Version": "1.0.0",
+    "AssemblyName": "MoveBuilding.dll",
+    "EntryMethod": "MoveBuilding.Main.Load"
+}
