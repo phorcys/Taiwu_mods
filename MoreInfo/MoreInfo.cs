@@ -23,6 +23,9 @@ namespace MoreInfo
         public bool showItemExtraInEquuipBag = true;//显示装备界面包裹中物品特殊词条
         public bool showItemExtraInBank = true;//显示仓库中物品特殊词条
         public bool showItemExtraInShop = true;//显示商店中物品特殊词条
+        public bool showExtraValue = false;//显示特殊词条加成值
+
+
         public bool showGongFaLevel = true;//显示功法等级颜色
         public bool showGongFaGang = true;//显示功法所属门派
         public bool showGongFaProgress = true;//强化显示功法进度
@@ -67,6 +70,8 @@ namespace MoreInfo
             Main.settings.showItemExtraInEquuipBag = GUILayout.Toggle(Main.settings.showItemExtraInEquuipBag, "显示装备界面包裹中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInBank = GUILayout.Toggle(Main.settings.showItemExtraInBank, "显示仓库中物品特殊词条", new GUILayoutOption[0]);
             Main.settings.showItemExtraInShop = GUILayout.Toggle(Main.settings.showItemExtraInShop, "显示商店中物品特殊词条", new GUILayoutOption[0]);
+            Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", new GUILayoutOption[0]);
+
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("功法增强");
@@ -145,8 +150,10 @@ namespace MoreInfo
                     int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
                     if (val > 0)
                     {
-                          //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = item.Value;
+                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
+                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
+                        break;
+ 
                     }
                 }
             }
@@ -171,7 +178,8 @@ namespace MoreInfo
                     if (val > 0)
                     {
                         //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = item.Value;
+                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
+                        break;
                     }
                 }
             }
@@ -205,7 +213,8 @@ namespace MoreInfo
                     if (val > 0)
                     {
                         //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = item.Value;
+                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
+                        break;
                     }
                 }
             }
@@ -230,12 +239,16 @@ namespace MoreInfo
                     if (val > 0)
                     {
                         //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = item.Value;
+                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
+                        break;
                     }
                 }
             }
         }
     }
+
+
+
     //人物功法界面根据功法品级显示颜色
     [HarmonyPatch(typeof(SetGongFaIcon), "SetGongFa")]
     public static class SetGongFaIcon_SetGongFa_Patch
