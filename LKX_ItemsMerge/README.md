@@ -1,17 +1,13 @@
-# LKX_NewGameActor
-太吾绘卷的mod，开始新游戏时新建人物添加特性
+# LKX_ItemsMerge
+太吾绘卷的mod，将人物身上的多个物品合并为一个
 ## 使用方法
 需要Visual Studio 2017  
 需要Unity3D一堆dll  
 需要UnityModManager里的0Harmony12.dll  
 需要QQ群903110962里的Assembly-CSharp的dll  
 ## MOD说明
-* 锁定新建人物特性加点为10
-* 添加全3级特性或自定义特性
-* 选择是否给初始谷中密友添加特性
-* 可以选择成长类型：关闭、随机、平均、早熟、晚熟
-* 加入新建人物特质“见经识经”
-* 添加传家宝的选择
+* 自动（时节结束）或手动（点击MOD的按钮）合并道具
+* 指定合并哪些道具的类型
 ## 安装说明
 * 使用UnityModManager安装
 * 编译后打包dll文件以及Info.json文件和pdb文件打包成zip，拖入UnityModManager安装
