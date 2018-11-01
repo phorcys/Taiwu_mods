@@ -23,6 +23,11 @@ namespace LKX_ItemsMerge
         public List<int> mergeType = new List<int>();
 
         /// <summary>
+        /// 道具品级
+        /// </summary>
+        public List<int> itemLevel = new List<int>();
+
+        /// <summary>
         /// 保存设置
         /// </summary>
         /// <param name="modEntry"></param>
@@ -96,9 +101,26 @@ namespace LKX_ItemsMerge
                 Main.RunningMergeItems();
             }
 
-            Main.SetGUIToToggle(31, "药品");
-            Main.SetGUIToToggle(22, "工具");
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            Main.SetGUIToToggle(31, "药品", ref Main.settings.mergeType);
+            Main.SetGUIToToggle(22, "工具", ref Main.settings.mergeType);
+            Main.SetGUIToToggle(30, "毒药", ref Main.settings.mergeType);
+            Main.SetGUIToToggle(37, "酒水", ref Main.settings.mergeType);
+            Main.SetGUIToToggle(41, "茶叶", ref Main.settings.mergeType);
+            GUILayout.EndHorizontal();
 
+            GUILayout.Label("选择合并的酒水，茶叶品级。仅针对酒水茶叶有效");
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            Main.SetGUIToToggle(1, "九品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(2, "八品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(3, "七品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(4, "六品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(5, "五品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(6, "四品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(7, "三品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(8, "二品", ref Main.settings.itemLevel);
+            Main.SetGUIToToggle(9, "一品", ref Main.settings.itemLevel);
+            GUILayout.EndHorizontal();
         }
 
         /// <summary>
@@ -115,22 +137,25 @@ namespace LKX_ItemsMerge
         /// </summary>
         /// <param name="index">道具类型index 看item的index 5</param>
         /// <param name="name">开关名称</param>
-        static void SetGUIToToggle(int index, string name)
+        static void SetGUIToToggle(int index, string name, ref List<int> field)
         {
-            bool status = GUILayout.Toggle(Main.settings.mergeType.Contains(index), name);
+            bool status = GUILayout.Toggle(field.Contains(index), name);
             if (GUI.changed)
             {
                 if (status)
                 {
-                    if (!Main.settings.mergeType.Contains(index)) Main.settings.mergeType.Add(index);
+                    if (!field.Contains(index)) field.Add(index);
                 }
                 else
                 {
-                    if (Main.settings.mergeType.Contains(index)) Main.settings.mergeType.Remove(index);
+                    if (field.Contains(index)) field.Remove(index);
                 }
             }
         }
 
+        /// <summary>
+        /// 执行合并道具
+        /// </summary>
         public static void RunningMergeItems()
         {
             if (!Main.enabled && Main.settings.mergeType.Count <= 0) return;
@@ -143,9 +168,11 @@ namespace LKX_ItemsMerge
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
                 {
-                    if (!Main.settings.mergeType.Contains(int.Parse(df.GetItemDate(itemId, 5)))) continue;
-                    Main.logger.Log(itemId.ToString() + "...");
-                    string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902);
+                    string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
+                        level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
+                    if (!Main.settings.mergeType.Contains(int.Parse(type))) continue;
+                    if ((type == "35" || type == "34") && !Main.settings.itemLevel.Contains(int.Parse(level))) continue;
+
                     if (items.ContainsKey(int.Parse(id)))
                     {
                         items[int.Parse(id)][0] += int.Parse(surpluses);
@@ -170,28 +197,9 @@ namespace LKX_ItemsMerge
         }
     }
 
-    /*
-    [HarmonyPatch(typeof(Loading), "LoadGameDateStart2")]
-    public static class GetItemsKeys_For_Loading_LoadScene
-    {
-        static void Postfix()
-        {
-            if (Main.enabled)
-            {
-                List<string> keys = new List<string>(GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(','));
-                int indexTypeNum = keys.IndexOf("5");
-                int indexId = keys.IndexOf("999");
-
-                foreach (string items in GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(new string[] { "\r\n" }, StringSplitOptions.None))
-                {
-                    string[] theItemParams = items.Trim().Split(',');
-                    if (theItemParams[indexTypeNum] == "31") Main.itemsKey.Add(int.Parse(theItemParams[indexId]));
-                }
-            }
-        }
-    }
-    */
-
+    /// <summary>
+    /// 判断是否时节结束时执行
+    /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
     public static class MergeItems_For_SaveDateFile_SaveSaveDate
     {
