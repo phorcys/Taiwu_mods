@@ -171,7 +171,7 @@ namespace LKX_ItemsMerge
                     string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
                         level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
                     if (!Main.settings.mergeType.Contains(int.Parse(type))) continue;
-                    if ((type == "35" || type == "34") && !Main.settings.itemLevel.Contains(int.Parse(level))) continue;
+                    if ((type == "37" || type == "41") && !Main.settings.itemLevel.Contains(int.Parse(level))) continue;
 
                     if (items.ContainsKey(int.Parse(id)))
                     {
