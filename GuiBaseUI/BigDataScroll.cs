@@ -6,9 +6,11 @@ using System;
 
 namespace GuiBaseUI
 {
+
     public delegate void handleSetData(ItemCell go, int index);
     public class BigDataScroll
     {
+
         enum InsertPos
         {
             top,
@@ -18,8 +20,8 @@ namespace GuiBaseUI
         public float cellHeight { get; set; }
         private handleSetData m_funcSetData;
         public handleSetData funcSetData { get { return m_funcSetData; } }
-        private int m_cellCount;
-        public int cellCount
+        private long m_cellCount;
+        public long cellCount
         {
             set
             {
@@ -61,95 +63,55 @@ namespace GuiBaseUI
         private void OnValueChanged(Vector2 pos)
         {
             float value =  1 - pos.y;
-            Debug.Log("value"+ value.ToString());
-            int _startIndex = (int)(value * (cellCount - showCount));
-            Debug.Log("开始index" + _startIndex.ToString());
-            int _endIndex = (int)(value * (cellCount - showCount)) + showCount + 2;
-            Debug.Log("结束index" + _endIndex.ToString());
+             Main.Logger.Log("value"+ value.ToString());
+            long _startIndex = (long)(value * (cellCount - showCount));
+             Main.Logger.Log("开始index" + _startIndex.ToString());
+            long _endIndex = (long)(value * (cellCount - showCount)) + showCount + 2;
+             Main.Logger.Log("结束index" + _endIndex.ToString());
             if (_startIndex < 1)
             {
-                Debug.LogWarning(_startIndex.ToString() + "异常修正1");
+                Main.Logger.Log(_startIndex.ToString() + "异常修正1");
                 _startIndex = 1;
             }
             if(_endIndex > cellCount)
             {
-                Debug.LogWarning(_endIndex.ToString() + "异常修正"+(cellCount).ToString());
+                Main.Logger.Log(_endIndex.ToString() + "异常修正"+(cellCount).ToString());
                 _endIndex = cellCount;
             }
 
 
-            for (int i = startIndex; i <= endIndex; i++)//delete
+            for (long i = startIndex; i <= endIndex; i++)//delete
             {
                 if (i > -1)
                 {
                     if(i< _startIndex)
                     {
-                        Debug.Log("delete top" + i.ToString());
+                         Main.Logger.Log("delete top" + i.ToString());
                         ItemPool.instance.PutItem(funcSetData, content.GetChild(1).gameObject);
                     }
                     else if(i> _endIndex)
                     {
-                        Debug.Log("delete btm" + i.ToString());
+                         Main.Logger.Log("delete btm" + i.ToString());
                         ItemPool.instance.PutItem(funcSetData, content.GetChild(content.childCount - 2).gameObject);
                     }
                 }
             }
-            for (int i = _startIndex; i <= _endIndex; i++)// add
+            for (long i = _startIndex; i <= _endIndex; i++)// add
             {
                 if(i< startIndex)
                 {
-                    Debug.Log("add top" + i.ToString());
+                     Main.Logger.Log("add top" + i.ToString());
                     GameObject item = ItemPool.instance.GetItem(funcSetData, content);
-                    item.transform.SetSiblingIndex(i - _startIndex + 1);
+                    item.transform.SetSiblingIndex((int)(i - _startIndex + 1));
                     Flush(item, i);
                 }else if (i > endIndex)
                 {
-                    Debug.Log("add btm" + i.ToString());
+                     Main.Logger.Log("add btm" + i.ToString());
                     GameObject item = ItemPool.instance.GetItem(funcSetData, content);
                     item.transform.SetSiblingIndex(content.childCount - 2);
                     Flush(item, i);
                 }
             }
-
-
-            //if(endIndex < _startIndex)//全部重置
-            //{
-            //for (int i = 1; i < content.childCount - 2; i++)
-            //{
-            //    ItemPool.instance.PutItem(funcSetData, content.GetChild(1).gameObject);
-            //}
-            //for (int i = _startIndex; i < _endIndex; i++)
-            //{
-            //    GameObject item = ItemPool.instance.GetItem(funcSetData, content);
-            //    item.transform.SetSiblingIndex(i + 1 - _startIndex);
-            //    Flush(item, i);
-            //}
-            //}
-            //else//部分重置
-            //{
-            //    for (int i = startIndex; i < _startIndex; i++)
-            //    {
-            //        ItemPool.instance.PutItem(funcSetData, content.GetChild(1).gameObject);
-            //    }
-            //    for (int i = endIndex; i < _endIndex; i++)
-            //    {
-            //        ItemPool.instance.PutItem(funcSetData, content.GetChild(content.childCount - 2).gameObject);
-            //    }
-            //    for (int i = _startIndex; i <= _endIndex; i++)
-            //    {
-            //        if(_startIndex< startIndex)
-            //        {
-            //            GameObject item = ItemPool.instance.GetItem(funcSetData, content);
-            //            item.transform.SetSiblingIndex(i + 1 - _startIndex);
-            //        }
-            //        else if(_endIndex > endIndex)
-            //        {
-            //            GameObject item = ItemPool.instance.GetItem(funcSetData, content);
-            //            item.transform.SetSiblingIndex(content.childCount - 2);
-            //        }
-            //    }
-            //}
-
 
             startIndex = _startIndex;
             endIndex = _endIndex;
@@ -157,29 +119,37 @@ namespace GuiBaseUI
             top.sizeDelta = new Vector2(0, (startIndex - 1) * cellHeight);
             btm.sizeDelta = new Vector2(0, (cellCount - endIndex) * cellHeight);
 
-            Debug.Log("对象池数量" + ItemPool.instance.pool[funcSetData].Count.ToString() + " 使用的数量" + (content.childCount - 2).ToString());
+             Main.Logger.Log("对象池数量" + ItemPool.instance.pool[funcSetData].Count.ToString() + " 使用的数量" + (content.childCount - 2).ToString());
         }
 
         float maxHeight;
         float windowsHeight;
-        int showCount;
-        int startIndex = -1;
-        int endIndex = -1;
+        long showCount;
+        long startIndex = -1;
+        long endIndex = -1;
         private void InitData()
         {
             maxHeight = cellHeight * m_cellCount;
+            Main.Logger.Log("总高度" + maxHeight.ToString());
             windowsHeight = transform.sizeDelta.y;
-            showCount = (int)(windowsHeight / cellHeight);
-            Debug.Log("显示数量" + showCount.ToString());
-            //OnValueChanged(new Vector2(0, scrollRect.verticalNormalizedPosition));
-            scrollRect.verticalNormalizedPosition = 1;
+            Main.Logger.Log("窗口高度" + windowsHeight.ToString());
+            showCount = (long)(windowsHeight / cellHeight);
+             Main.Logger.Log("显示数量" + showCount.ToString());
+            if (scrollRect.verticalNormalizedPosition != 1)
+            {
+                scrollRect.verticalNormalizedPosition = 1;
+            }
+            else
+            {
+                OnValueChanged(new Vector2(0, scrollRect.verticalNormalizedPosition));
+            }
         }
 
 
 
-        private void Flush(GameObject go, int index)
+        private void Flush(GameObject go, long index)
         {
-            funcSetData(go.GetComponent<ItemCell>(), index);
+            funcSetData(go.GetComponent<ItemCell>(), (int)index);
         }
 
 
@@ -233,7 +203,7 @@ namespace GuiBaseUI
                         return go;
                     }
                 }
-                Debug.LogError("not set item");
+                Main.Logger.Log("not set item");
                 return null;
             }
             public void PutItem(handleSetData func, GameObject item)
@@ -255,7 +225,7 @@ namespace GuiBaseUI
             {
                 if (prefab.GetComponent<ItemCell>() == null)
                 {
-                    Debug.LogError(prefab.ToString() + " don't find ItemCell");
+                    Main.Logger.Log(prefab.ToString() + " don't find ItemCell");
                     return;
                 }
                 prefab.SetActive(false);
@@ -268,9 +238,9 @@ namespace GuiBaseUI
                 else
                 {
                     var v = pool[func];
-                    for (int i = 1; i < v.Count; i++)
+                    for (long i = 1; i < v.Count; i++)
                     {
-                        GameObject.Destroy(v[i]);
+                        GameObject.Destroy(v[(int)i]);
                     }
                     v.Clear();
                     v.Add(prefab);

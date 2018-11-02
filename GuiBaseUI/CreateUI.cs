@@ -17,7 +17,7 @@ namespace GuiBaseUI
     public static class CreateUI
     {
         static int sort = 10000;
-        public static GameObject NewCamera(int sortLayer = int.MinValue)
+        public static GameObject NewCanvas(int sortLayer = int.MinValue)
         {
             //如果没有UI事件系统则创建
             EventSystem eventSystem = GameObject.FindObjectOfType<EventSystem>();
@@ -31,6 +31,7 @@ namespace GuiBaseUI
             GameObject go2 = new GameObject("Canvas", new System.Type[]
             { typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster), });
+            go2.layer = Main.Layer;
             Canvas canvas = go2.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = sortLayer == int.MinValue ? ++sort : sortLayer;
@@ -46,6 +47,7 @@ namespace GuiBaseUI
             //创建ScrollRect
             GameObject go1 = new GameObject("ScrollView", new System.Type[]
            { typeof(RectTransform), typeof(ScrollRect) });
+            go1.layer = Main.Layer;
             RectTransform tf1 = go1.GetComponent<RectTransform>();
             tf1.anchoredPosition = new Vector2(0, 0);
             tf1.sizeDelta = size == default(Vector2) ? new Vector2(100, 100) : size;
@@ -56,6 +58,7 @@ namespace GuiBaseUI
             GameObject go2 = new GameObject("Viewport", new System.Type[]
            { typeof(RectTransform), typeof(Mask),
                 typeof(Image) });
+            go2.layer = Main.Layer;
             RectTransform tf2 = go2.GetComponent<RectTransform>();
             tf2.SetParent(tf1, false);
             tf2.anchorMin = new Vector2(0, 0);
@@ -68,7 +71,8 @@ namespace GuiBaseUI
 
             //创建Content
             GameObject go3 = new GameObject("Content", new System.Type[]
-           { typeof(RectTransform), typeof(ContentSizeFitter)});
+            { typeof(RectTransform), typeof(ContentSizeFitter)});
+            go3.layer = Main.Layer;
             RectTransform tf3 = go3.GetComponent<RectTransform>();
             tf3.SetParent(tf2, false);
             tf3.anchorMin = new Vector2(0, 1);
@@ -105,7 +109,8 @@ namespace GuiBaseUI
             {
                 case BarType.Vertical:
                     GameObject go4 = new GameObject("ScrollbarVertical", new System.Type[]
-                        { typeof(RectTransform), typeof(Image), typeof(Scrollbar)});
+                    { typeof(RectTransform), typeof(Image), typeof(Scrollbar)});
+                    go4.layer = Main.Layer;
                     RectTransform tf4 = go4.GetComponent<RectTransform>();
                     tf4.SetParent(tf1, false);
                     tf4.anchorMin = new Vector2(1, 0);
@@ -120,7 +125,8 @@ namespace GuiBaseUI
                     scrollbar.direction = Scrollbar.Direction.BottomToTop;
 
                     GameObject go5 = new GameObject("SlidingArea", new System.Type[]
-                        { typeof(RectTransform)});
+                    { typeof(RectTransform)});
+                    go5.layer = Main.Layer;
                     RectTransform tf5 = go5.GetComponent<RectTransform>();
                     tf5.SetParent(tf4, false);
                     tf5.anchorMin = new Vector2(0, 0);
@@ -130,7 +136,8 @@ namespace GuiBaseUI
                     tf5.pivot = new Vector2(0.5f, 0.5f);
 
                     GameObject go6 = new GameObject("Handle", new System.Type[]
-                        { typeof(RectTransform), typeof(Image)});
+                    { typeof(RectTransform), typeof(Image)});
+                    go6.layer = Main.Layer;
                     RectTransform tf6 = go6.GetComponent<RectTransform>();
                     tf6.SetParent(tf5, false);
                     tf6.anchorMin = new Vector2(0, 0.5f);
@@ -158,6 +165,7 @@ namespace GuiBaseUI
         {
             GameObject go1 = new GameObject("Image", new System.Type[]
            { typeof(RectTransform), typeof(Image)});
+            go1.layer = Main.Layer;
             RectTransform tf1 = go1.GetComponent<RectTransform>();
             Image image = go1.GetComponent<Image>();
             if(sprite == null)
@@ -178,10 +186,12 @@ namespace GuiBaseUI
         {
             GameObject go1 = new GameObject("Text", new System.Type[]
            { typeof(RectTransform), typeof(Text)});
+            go1.layer = Main.Layer;
             RectTransform tf1 = go1.GetComponent<RectTransform>();
             Text text = go1.GetComponent<Text>();
             text.text = s;
             text.fontSize = 20;
+            text.font = DateFile.instance.font;
             
             if (size == default(Vector2))
             {

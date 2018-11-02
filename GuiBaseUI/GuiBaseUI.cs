@@ -21,6 +21,8 @@ namespace GuiBaseUI
     }
     public static class Main
     {
+        public static Canvas MainCanvas;
+        public static int Layer = 0;
         public static bool onOpen = false;//
         public static bool enabled;
         public static Settings settings;
@@ -40,7 +42,11 @@ namespace GuiBaseUI
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             #endregion
 
-
+            MainCanvas = GameObject.FindObjectOfType<Canvas>();
+            if (MainCanvas!=null)
+            {
+                Layer = MainCanvas.gameObject.layer;
+            }
 
             return true;
         }

@@ -2,11 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ItemCell : MonoBehaviour {
-
-    RectTransform rectTransform;
-    public virtual void Awake()
+namespace GuiBaseUI
+{
+    public class ItemCell : MonoBehaviour
     {
-        rectTransform = GetComponent<RectTransform>();
+
+        RectTransform rectTransform;
+        public virtual void Awake()
+        {
+            rectTransform = GetComponent<RectTransform>();
+        }
+
+        public void SetActive(bool value)
+        {
+            if (gameObject.activeSelf != value)
+            {
+                gameObject.SetActive(value);
+            }
+        }
     }
 }

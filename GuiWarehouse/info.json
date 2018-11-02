@@ -4,4 +4,5 @@
   "Version": "1.2.0",
   "AssemblyName": "GuiWarehouse.dll",
   "EntryMethod": "GuiWarehouse.Main.Load"
+  "Requirements":["GuiBaseUI"]
 }
