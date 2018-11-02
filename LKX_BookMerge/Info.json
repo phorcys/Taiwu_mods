@@ -1,0 +1,8 @@
+﻿{
+    "Id": "LKX_BookMerge",
+    "DisplayName": "书籍合并为一个",
+    "Author": "小枫泡泡",
+    "Version": "1.0.0",
+    "AssemblyName": "LKX_BookMerge.dll",
+    "EntryMethod": "LKX_BookMerge.Main.Load"
+}
