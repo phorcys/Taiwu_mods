@@ -2,7 +2,7 @@
     "Id": "LKX_ItemsMerge",
     "DisplayName": "多个物品合并为一个",
     "Author": "小枫泡泡",
-    "Version": "1.0.2",
+    "Version": "1.0.3",
     "AssemblyName": "LKX_ItemsMerge.dll",
     "EntryMethod": "LKX_ItemsMerge.Main.Load"
 }
