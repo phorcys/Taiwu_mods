@@ -19,6 +19,9 @@ namespace MoreInfo
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+
+        public bool isLoaded = false;//是否为首次Loading
+
         public bool showItemExtraInBag = true;//显示包裹中物品特殊词条
         public bool showItemExtraInEquuipBag = true;//显示装备界面包裹中物品特殊词条
         public bool showItemExtraInBank = true;//显示仓库中物品特殊词条
@@ -29,6 +32,9 @@ namespace MoreInfo
         public bool showGongFaLevel = true;//显示功法等级颜色
         public bool showGongFaGang = true;//显示功法所属门派
         public bool showGongFaProgress = true;//强化显示功法进度
+        public bool showInStudyWindow = true;//在修习界面显示
+        public bool showInLevelUpWindow = true;//在突破界面显示
+
 
 
     }
@@ -80,7 +86,10 @@ namespace MoreInfo
             Main.settings.showGongFaLevel = GUILayout.Toggle(Main.settings.showGongFaLevel, "显示功法等级颜色", new GUILayoutOption[0]);
             Main.settings.showGongFaGang = GUILayout.Toggle(Main.settings.showGongFaGang, "显示功法所属门派", new GUILayoutOption[0]);
             Main.settings.showGongFaProgress = GUILayout.Toggle(Main.settings.showGongFaProgress, "进度心得显示增强", new GUILayoutOption[0]);
-                       
+            Main.settings.showInStudyWindow = GUILayout.Toggle(Main.settings.showInStudyWindow, "在修习界面显示", new GUILayoutOption[0]);
+
+
+
             GUILayout.EndHorizontal();
         }
 
@@ -257,18 +266,12 @@ namespace MoreInfo
         {
             if (!Main.enabled)
                 return;
-
-            if (Main.settings.showGongFaLevel)
-            {
-                int lv = int.Parse(DateFile.instance.gongFaDate[gongFaId][2]);             
-                __instance.gongFaNameText.text = DateFile.instance.SetColoer(20001 + lv, __instance.gongFaNameText.text);
-            }
             //功法所属门派
             if (Main.settings.showGongFaGang)
             {              
                 int gangId = int.Parse(DateFile.instance.gongFaDate[gongFaId][3]);
                 string gangName = DateFile.instance.presetGangDate[gangId][0];    
-                __instance.gongFaSizeText.text = gangName + "-" + __instance.gongFaSizeText.text;
+                __instance.gongFaSizeText.text = gangName + "\n" + __instance.gongFaSizeText.text;
             }
             //根据修习进度与心得变更颜色增加区分度
             if (Main.settings.showGongFaProgress)
@@ -279,11 +282,35 @@ namespace MoreInfo
                 int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId);
                 __instance.gongFaBookLevelText.text = DateFile.instance.SetColoer(20001 + bookLevel, __instance.gongFaBookLevelText.text);
             }
-
-
-
         }
     }
+
+    //HOOK掉功法颜色
+    [HarmonyPatch(typeof(Loading), "LoadingScene")]
+    public static class Loading_LoadingScene_Patch
+    {
+        static void Postfix(Loading __instance, int sceneId, int loadingDateId, bool newGame = false, bool stopBGM = true, int teachingId = -1, bool teachingEnd = false)
+        {
+            if (!Main.enabled || !Main.settings.showGongFaLevel)
+                return;
+            if ( sceneId ==1)
+            {
+                Main.settings.isLoaded = false;
+                return;
+            }                
+            if (Main.settings.isLoaded)
+                return;
+            foreach (var item in DateFile.instance.gongFaDate)
+            {
+                var GData = item.Value;
+                int lv = int.Parse(GData[2]);
+                GData[0] = DateFile.instance.SetColoer(20001 + lv, GData[0]);
+            }
+            Main.settings.isLoaded = true;
+        }
+    }
+
+
 
 
 

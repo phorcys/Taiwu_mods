@@ -2,7 +2,7 @@
   "Id": "MoreInfo",
   "DisplayName": "信息增强",
   "Author": "ignaz_chou",
-  "Version": "1.1.4",
+  "Version": "1.1.5",
   "AssemblyName": "MoreInfo.dll",
   "EntryMethod": "MoreInfo.Main.Load"
 }
