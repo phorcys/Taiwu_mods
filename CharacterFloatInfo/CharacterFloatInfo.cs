@@ -433,7 +433,7 @@ namespace CharacterFloatInfo
                 text += seperator + DateFile.instance.SetColoer(20009, "过世");
                 // todo: 投胎至:XX村，人名
             }
-            else
+            else if (DateFile.instance.actorInjuryDate.ContainsKey(id))
             {
                 int Hp = ActorMenu.instance.Hp(id, false);
                 int maxHp = ActorMenu.instance.MaxHp(id);
@@ -499,6 +499,11 @@ namespace CharacterFloatInfo
                 item = Gethobby(id, 1);
                 text += string.Format("\t\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
 
+                int result1 = GetFertility(id, true);
+                int result2 = GetFertility(id, false);
+                text += string.Format("\t\t生育:<color={1}>{0}%</color>", result1, (result2 > 0?"+":"") + result2, result1 <= 0 ? "red" : "white");
+                if(Main.settings.addonInfo && result2 !=0) text += string.Format("\t<color=#606060FF>{0}%</color>", (result2 > 0?"+":"") + result2);
+
                 if (GetAge(id) > ConstValue.actorMinAge)
                     text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
 
@@ -506,7 +511,7 @@ namespace CharacterFloatInfo
             else if (windowType == WindowType.BuildingWindow)
             {
                 text += DateFile.instance.ActorIsWorking(id) == null ?
-                    "工作岗位:<color=gray>无</color>" :
+                    "工作岗位:<color=#606060FF>无</color>" :
                     string.Format("工作岗位:<color=white>{0}</color>\t\t進度:<color=white>{1}</color>", GetWorkPlace(id), GetWorkingData(id));
             }
             else if (windowType == WindowType.DialogChooseActors)
@@ -558,6 +563,7 @@ namespace CharacterFloatInfo
                         }
                         if (canEnchanceCount > 0) text += "\t\t<color=white>可舞劍:" + canEnchanceCount + "</color>";
                         if (canDeductCount > 0) text += "\t\t<color=white>可撫琴:" + canDeductCount + "</color>";
+                        if (canDeductCount == 0 && canDeductCount == 0) text += "\t\t<color=#606060FF>不能提升</color>";
                         break;
                     case 9305: // 石牢静坐
                     case 9315: // 血池秘法
@@ -754,15 +760,21 @@ namespace CharacterFloatInfo
         //名誉
         public static string GetFame(int id)
         {
-            string text = ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
-            return text;
+            return ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
         }
 
         //立场
         public static string GetGoodness(int id)
         {
-            string text = DateFile.instance.massageDate[9][0].Split('|')[DateFile.instance.GetActorGoodness(id)];
-            return text;
+            return DateFile.instance.massageDate[9][0].Split('|')[DateFile.instance.GetActorGoodness(id)];
+        }
+
+        //生育能力
+        public static int GetFertility(int id, bool plus)
+        {
+            int result = int.Parse(DateFile.instance.GetActorDate(id, 24, plus));
+            if (!plus) result = int.Parse(DateFile.instance.GetActorDate(id, 24, true)) - result;
+            return result;
         }
 
         //喜好
@@ -776,7 +788,6 @@ namespace CharacterFloatInfo
             {
                 text += "\t";
             }
-
             return text;
         }
 
