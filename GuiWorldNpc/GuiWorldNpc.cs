@@ -1,4 +1,4 @@
-ï»¿using Harmony12;
+using Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace GuiWorkActor
+namespace GuiWorldNpc
 {
     public class Settings : UnityModManager.ModSettings
     {
@@ -18,7 +18,7 @@ namespace GuiWorkActor
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
-        public bool open = true; //ä½¿ç”¨é¬¼çš„ä»“åº“
+        public bool open = true; //Ê¹ÓÃ¹íµÄ²Ö¿â
     }
     public static class Main
     {
@@ -30,7 +30,7 @@ namespace GuiWorkActor
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            #region åŸºç¡€è®¾ç½®
+            #region »ù´¡ÉèÖÃ
             settings = Settings.Load<Settings>(modEntry);
             Logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
@@ -46,7 +46,7 @@ namespace GuiWorkActor
             return true;
         }
 
-        static string title = "é¬¼çš„å·¥ä½œé—´";
+        static string title = "¹íµÄ¹¤×÷¼ä";
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
@@ -59,7 +59,7 @@ namespace GuiWorkActor
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
-            Main.settings.open = GUILayout.Toggle(Main.settings.open, "ä½¿ç”¨é¬¼çš„å·¥ä½œé—´");
+            Main.settings.open = GUILayout.Toggle(Main.settings.open, "Ê¹ÓÃ¹íµÄ¹¤×÷¼ä");
             GUILayout.EndHorizontal();
         }
 

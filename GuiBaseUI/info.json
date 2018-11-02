@@ -1,0 +1,7 @@
+﻿{
+  "Id": "GuiBaseUI",
+  "DisplayName": "鬼的UI",
+  "Version": "1.0.0",
+  "AssemblyName": "GuiBaseUI.dll",
+  "EntryMethod": "GuiBaseUI.Main.Load"
+}
