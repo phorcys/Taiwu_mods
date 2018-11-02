@@ -1259,8 +1259,19 @@ namespace CharacterFloatInfo
             {
                 num5 += 100;
             }
+            int xiangFangAddup = 0;
+            foreach (int key in HomeSystem.instance.GetBuildingNeighbor(partId, placeId, buildingIndex, 1))
+            {
+                if (DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(key) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(key) && int.Parse(DateFile.instance.basehomePlaceDate[DateFile.instance.homeBuildingsDate[partId][placeId][key][0]][62]) != 0)
+                {
+                    int singleAddup = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(DateFile.instance.actorsWorkingDate[partId][placeId][key], unknown, true));
+                    if (unknown == 18)
+                        singleAddup += 100;
+                    xiangFangAddup += singleAddup;
+                }
+            }
             int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
-            num5 = num5 * Mathf.Max(moodFavorAddup, 0) / 100;
+            num5 = (num5 + xiangFangAddup) * Mathf.Max(moodFavorAddup, 0) / 100;
 
             int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
             int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);
