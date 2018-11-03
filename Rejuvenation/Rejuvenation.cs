@@ -83,7 +83,7 @@ namespace Rejuvenation
                 return;
             }
 
-            DateFile.instance.ChangeActorGongFa(DateFile.instance.mianActorId, 150369, 0, 0, 0, true);
+            //DateFile.instance.ChangeActorGongFa(DateFile.instance.mianActorId, 150369, 0, 0, 0, true);
 
             if (!DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
             {
@@ -145,7 +145,7 @@ namespace Rejuvenation
                 GUILayout.BeginHorizontal("Box");
                 GUILayout.Label("研读进度："
                     + "正" + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1].ToString()
-                    + "逆" + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2].ToString());
+                    + " 逆" + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2].ToString());
                 GUILayout.BeginHorizontal("Box", GUILayout.Width(300));
                 GUILayout.Label("返老还童后正逆练：");
                 if (GUILayout.Button("<", GUILayout.Width(30)) && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2] - setting.changedGongFaFLevel > 0)
@@ -153,11 +153,13 @@ namespace Rejuvenation
                     Main.setting.changedGongFaFLevel++;
                 }
                 GUILayout.Label("正" + (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1] + setting.changedGongFaFLevel).ToString()
-                    + "逆" + (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2] - setting.changedGongFaFLevel).ToString());
+                    + " 逆" + (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2] - setting.changedGongFaFLevel).ToString());
                 if (GUILayout.Button(">", GUILayout.Width(30)) && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1] + setting.changedGongFaFLevel > 0)
                 {
                     Main.setting.changedGongFaFLevel--;
                 }
+                Main.setting.changedGongFaFLevel = Mathf.Min(Main.setting.changedGongFaFLevel, DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2]);
+                Main.setting.changedGongFaFLevel = Mathf.Max(Main.setting.changedGongFaFLevel, -1 * DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1]);
                 GUILayout.FlexibleSpace();
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal("Box", GUILayout.Width(300));
@@ -206,11 +208,11 @@ namespace Rejuvenation
             if (!DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
             {
                 int[] allQi = DateFile.instance.GetActorAllQi(DateFile.instance.mianActorId);
-                if (allQi[0] + allQi[1] + allQi[2] + allQi[3] + allQi[4] >= 500)
+                if (allQi[0] + allQi[1] + allQi[2] + allQi[3] + allQi[4] >= 500 && DateFile.instance.GetActorValue(DateFile.instance.mianActorId, 601, true) - int.Parse(DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 601, true)) >= 100)
                 {
                     DateFile.instance.ChangeActorGongFa(DateFile.instance.mianActorId, 150369, 50, 0, 0, false);
                 }
-                else if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150002))
+                if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150002))
                 {
                     int[] bookPages = (!DateFile.instance.gongFaBookPages.ContainsKey(150002)) ? new int[10] : DateFile.instance.gongFaBookPages[150002];
                     for (int i = 0; i < 10; i++)
@@ -239,6 +241,12 @@ namespace Rejuvenation
                 }
                 else
                 {
+                    Main.setting.rejuvenatedAge = Mathf.Min(DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25, Main.setting.rejuvenatedAge);
+                    Main.setting.rejuvenationAge = Mathf.Min(Main.setting.rejuvenationAge, 6 + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1] + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2]);
+                    Main.setting.changedGongFaFLevel = Mathf.Min(Main.setting.changedGongFaFLevel, DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2]);
+                    Main.setting.changedGongFaFLevel = Mathf.Max(Main.setting.changedGongFaFLevel, -1 * DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1]);
+
+
                     if (int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]) >= Main.setting.rejuvenatedAge * 30 + 6)
                     {
                         int[] gongFa = new int[] {
