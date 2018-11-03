@@ -87,8 +87,11 @@ namespace Sth4nothing.UseStorageBook
             var df = DateFile.instance;
             int itemType = int.Parse(df.GetItemDate(itemId, 999));
             Main.Logger.Log($"类型: {itemType}");
+            // 技艺书籍
+            if (itemType < 500000)
+                return true;
             // 品级
-            int pinji = int.Parse(df.GetItemDate(itemId, 8, false));
+            int pinji = int.Parse(df.GetItemDate(itemId, 8, false)) - 1;
             Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
