@@ -1,13 +1,14 @@
 ﻿using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
-namespace VillageHeadOfTaiwu
+namespace Sth4nothing.VillageHeadOfTaiwu
 {
     class VillagersList : MonoBehaviour
     {
@@ -33,6 +34,10 @@ namespace VillageHeadOfTaiwu
             /// 采集的资源类型
             /// </summary>
             public int type;
+            /// <summary>
+            /// 每时节采集的资源量
+            /// </summary>
+            internal int resource;
         }
 
         /// <summary>
@@ -97,14 +102,14 @@ namespace VillageHeadOfTaiwu
 
         private void Awake()
         {
-            Main.logger.Log("awake");
+            Main.Logger.Log("awake");
             Instance = this;
             DontDestroyOnLoad(this);
         }
 
         public void Start()
         {
-            Main.logger.Log("start");
+            Main.Logger.Log("start");
 
             Open = false;
             //collapse = false;
@@ -150,28 +155,30 @@ namespace VillageHeadOfTaiwu
             };
             seperatorStyle.normal.textColor = Color.cyan;
 
-            df = DateFile.instance;
-            wms = WorldMapSystem.instance;
+            Init();
 
             CalcWindow();
 
             ToggleWindow();
 
             // 设置点击事件
+            // TODO
             // var btn = UIDate.instance.manpowerText.gameObject.AddComponent<Button>();
-            // btn.interactable = true;
-            // btn.targetGraphic = UIDate.instance.manpowerText;
-            // btn.onClick.AddListener(() => 
-            // {
-            //     VillagersList.Instance.ToggleWindow();
-            //     Main.logger.Log("toggle");
-            // });
+            // btn.GetComponent<Button>().targetGraphic = UIDate.instance.manpowerText;
+            // btn.GetComponent<Button>().interactable = true;
+            // btn.GetComponent<Button>().onClick.AddListener(VillagersList.Instance.ToggleWindow);
+        }
+
+        public void Init()
+        {
+            df = DateFile.instance;
+            wms = WorldMapSystem.instance;
         }
 
         public void CalcWindow()
         {
             windowRect = new Rect(Screen.width * 0.833f, Screen.height * 0.05f, Screen.width * 0.164f, 0);
-            Main.logger.Log(windowRect.ToString());
+            Main.Logger.Log(windowRect.ToString());
         }
         private void PrepareGUI()
         {
@@ -244,14 +251,13 @@ namespace VillageHeadOfTaiwu
                 for (int i = 0; i < 6; i++)
                 {
                     GUILayout.Label($"------------{workStr[i]}-------------     ", seperatorStyle);
-                    var wokers = new List<Worker>(GetWorkers((WorkType)i));
-                    foreach (var worker in wokers)
+                    GetWorkers((WorkType)i).OrderBy(OrderFunc).Do((worker) =>
                     {
                         if (GUILayout.Button(worker.content, buttonStyle))
                         {
                             CancelWork(worker);
                         }
-                    }
+                    });
                 }
                 GUILayout.EndVertical();
                 GUILayout.EndScrollView();
@@ -264,7 +270,7 @@ namespace VillageHeadOfTaiwu
 
         public void Update()
         {
-            if (!Main.enabled)
+            if (!Main.Enabled)
             {
                 Destroy(canvas);
                 Open = false;
@@ -274,12 +280,12 @@ namespace VillageHeadOfTaiwu
                 if (Input.GetKey(KeyCode.PageUp))
                 {
                     scrollPosition.y -= 40;
-                    Main.logger.Log($"pgup {scrollPosition}");
+                    Main.Logger.Log($"pgup {scrollPosition}");
                 }
                 if (Input.GetKey(KeyCode.PageDown))
                 {
                     scrollPosition.y += 40;
-                    Main.logger.Log($"pgdn {scrollPosition}");
+                    Main.Logger.Log($"pgdn {scrollPosition}");
                 }
             }
             if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
@@ -294,7 +300,7 @@ namespace VillageHeadOfTaiwu
         /// </summary>
         public void ToggleWindow()
         {
-            Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
+            Main.Logger.Log($"Toggle {(!Open ? "on" : "off")}");
             Open = !Open;
             BlockGameUI(Open);
             if (Open)
@@ -342,6 +348,13 @@ namespace VillageHeadOfTaiwu
                 Destroy(canvas);
             }
         }
+
+        static int OrderFunc(Worker worker)
+        {
+            return Main.Setting.reverse ? -worker.resource : worker.resource;
+        }
+
+
         /// <summary>
         /// 判断地点是否已经探索出来
         /// </summary>
@@ -371,7 +384,7 @@ namespace VillageHeadOfTaiwu
 
             for (int place = 0; place < size * size; place++)
             {
-                if (Explored(part, place) && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
+                if (df.HaveShow(part, place) > 0 && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
                 {
                     var res = UIDate.instance.GetWorkPower((int)workType, part, place);
                     var man = int.Parse(df.GetNewMapDate(part, place, 12));
@@ -484,6 +497,7 @@ namespace VillageHeadOfTaiwu
                         part = part,
                         place = place,
                         manpower = manpower,
+                        resource = resource,
                         type = type,
                     };
                     yield return worker;
@@ -537,7 +551,7 @@ namespace VillageHeadOfTaiwu
             }
             var width = __instance.gameResolutions[index].width;
             var height = __instance.gameResolutions[index].height;
-            Main.Setting.FitFont(width, height);
+            Main.Setting.FitFontSize(width, height);
             VillagersList.Instance.CalcWindow();
         }
     }
@@ -557,18 +571,20 @@ namespace VillageHeadOfTaiwu
     /// <summary>
     /// 载入游戏时加载VillageList类
     /// </summary>
-    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
-    public class WorldMapSystem_Start_Patch
+    [HarmonyPatch(typeof(UIDate), "Start")]
+    public class UIDate_Start_Patch
     {
         public static void Postfix()
         {
             if (VillagersList.Instance == null)
             {
-                Main.logger.Log($"create ui: {VillagersList.Load()}");
+                Main.Logger.Log($"create ui: {VillagersList.Load()}");
             }
-            else if (!VillagersList.Instance.Open)
+            else
             {
-                VillagersList.Instance.ToggleWindow();
+                VillagersList.Instance.Init();
+                if (!VillagersList.Instance.Open)
+                    VillagersList.Instance.ToggleWindow();
             }
         }
     }
@@ -579,11 +595,24 @@ namespace VillageHeadOfTaiwu
         public int labelSize = 16;
         [XmlIgnore]
         public int buttonSize = 12;
-
+        /// <summary>
+        /// 是否跳过城镇
+        /// </summary>
         public bool skipTown = true;
+        /// <summary>
+        /// 热键 ctrl + ？
+        /// </summary>
         public KeyCode key = KeyCode.F9;
-
-        public void FitFont(int width = 0, int height = 0)
+        /// <summary>
+        /// 是否逆序
+        /// </summary>
+        public bool reverse = false;
+        /// <summary>
+        /// 适配字号
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        public void FitFontSize(int width = 0, int height = 0)
         {
             if (width == 0)
             {
@@ -613,7 +642,7 @@ namespace VillageHeadOfTaiwu
                 labelSize = 22;
                 buttonSize = 18;
             }
-            Main.logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
+            Main.Logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
         }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
@@ -623,27 +652,27 @@ namespace VillageHeadOfTaiwu
 
     public class Main
     {
-        public static UnityModManager.ModEntry.ModLogger logger;
-        public static Settings Setting;
-        public static bool enabled;
+        public static UnityModManager.ModEntry.ModLogger Logger { get; private set; }
+        public static Settings Setting { get; private set; }
+        public static bool Enabled { get; private set; }
 
         public static bool bindingKey = false;
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            enabled = value;
+            Enabled = value;
             return true;
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            logger = modEntry.Logger;
+            Logger = modEntry.Logger;
             Setting = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
-            Setting.FitFont();
+            Setting.FitFontSize();
             return true;
         }
 
@@ -673,6 +702,7 @@ namespace VillageHeadOfTaiwu
             }
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
             Setting.skipTown = GUILayout.Toggle(Setting.skipTown, "忽略城镇");
+            Setting.reverse = GUILayout.Toggle(Setting.reverse, "降序排列");
             GUILayout.EndHorizontal();
         }
 
