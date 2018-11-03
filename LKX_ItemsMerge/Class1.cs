@@ -18,6 +18,16 @@ namespace LKX_ItemsMerge
         public bool autoMerge;
 
         /// <summary>
+        /// 是否开启指定合并大小
+        /// </summary>
+        public bool enabledSize;
+
+        /// <summary>
+        /// 合并最大耐久值
+        /// </summary>
+        public uint itemsSize;
+
+        /// <summary>
         /// 合并道具类型
         /// </summary>
         public List<int> mergeType = new List<int>();
@@ -94,8 +104,16 @@ namespace LKX_ItemsMerge
         {
             GUIStyle redLabelStyle = new GUIStyle();
             redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
-            GUILayout.Label("如果status亮红灯代表mod失效！游戏过程中修改了mod配置需要重新开启游戏让mod生效！", redLabelStyle);
+            GUILayout.Label("如果status亮红灯代表mod失效！", redLabelStyle);
             Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启结束时节时自动合并道具");
+            Main.settings.enabledSize = GUILayout.Toggle(Main.settings.enabledSize, "开启指定合并大小限制");
+
+            if (Main.settings.enabledSize)
+            {
+                string itemSize = GUILayout.TextField(Main.settings.itemsSize.ToString());
+                if (GUI.changed) Main.settings.itemsSize = uint.Parse(itemSize);
+            }
+
             if (GUILayout.Button("手动点击合并"))
             {
                 Main.RunningMergeItems();
@@ -158,7 +176,7 @@ namespace LKX_ItemsMerge
         /// </summary>
         public static void RunningMergeItems()
         {
-            if (!Main.enabled && Main.settings.mergeType.Count <= 0) return;
+            if (!Main.enabled || Main.settings.mergeType.Count <= 0) return;
 
             DateFile df = DateFile.instance;
             Dictionary<int, int[]> items = new Dictionary<int, int[]>();
@@ -170,9 +188,11 @@ namespace LKX_ItemsMerge
                 {
                     string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
                         level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
+
                     if (!Main.settings.mergeType.Contains(int.Parse(type))) continue;
                     if ((type == "37" || type == "41") && !Main.settings.itemLevel.Contains(int.Parse(level))) continue;
-
+                    if (Main.settings.enabledSize && int.Parse(df.itemsDate[itemId][902]) >= Main.settings.itemsSize) continue;
+                    
                     if (items.ContainsKey(int.Parse(id)))
                     {
                         items[int.Parse(id)][0] += int.Parse(surpluses);
@@ -182,16 +202,42 @@ namespace LKX_ItemsMerge
                     {
                         items.Add(int.Parse(id), new int[] { int.Parse(surpluses), int.Parse(limit) });
                     }
-
+                    
                     df.LoseItem(df.mianActorId, itemId, itemsId[itemId], true);
                 }
-
+                
                 foreach (KeyValuePair<int, int[]> item in items)
                 {
-                    int makeItemId = df.MakeNewItem(item.Key);
-                    df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                    df.itemsDate[makeItemId][901] = item.Value[0].ToString();
-                    df.itemsDate[makeItemId][902] = item.Value[1].ToString();
+                    if (Main.settings.enabledSize && Main.settings.itemsSize > 0)
+                    {
+                        int sizeCount = (item.Value[1] / int.Parse(Main.settings.itemsSize.ToString()));
+                        int itemNaiJiu = item.Value[0], itemMaxNaiJiu = item.Value[1];
+                        
+                        for (int i = 0; i <= sizeCount; i++)
+                        {
+                            int makeItemId = df.MakeNewItem(item.Key);
+                            df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                            if (itemNaiJiu > Main.settings.itemsSize)
+                            {
+                                df.itemsDate[makeItemId][901] = Main.settings.itemsSize.ToString();
+                                df.itemsDate[makeItemId][902] = Main.settings.itemsSize.ToString();
+                                itemNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
+                                itemMaxNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
+                            }
+                            else
+                            {
+                                df.itemsDate[makeItemId][901] = itemNaiJiu.ToString();
+                                df.itemsDate[makeItemId][902] = itemMaxNaiJiu >= Main.settings.itemsSize ? Main.settings.itemsSize.ToString() : itemMaxNaiJiu.ToString();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        int makeItemId = df.MakeNewItem(item.Key);
+                        df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                        df.itemsDate[makeItemId][901] = item.Value[0].ToString();
+                        df.itemsDate[makeItemId][902] = item.Value[1].ToString();
+                    }
                 }
             }
         }
