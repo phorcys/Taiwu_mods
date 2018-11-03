@@ -138,7 +138,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 name = "label",
                 alignment = TextAnchor.MiddleCenter,
-                margin = new RectOffset(0, 0, 5, 5),
+                fontSize = Main.Setting.labelSize,
             };
             labelStyle.normal.textColor = Color.yellow;
 
@@ -146,7 +146,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 name = "button",
                 alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(0, 0, 5, 0),
+                fontSize = Main.Setting.buttonSize,
             };
             buttonStyle.normal.textColor = Color.white;
             buttonStyle.richText = true;
@@ -155,6 +155,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 name = "seperator",
                 alignment = TextAnchor.MiddleCenter,
+                fontSize = Main.Setting.buttonSize,
             };
             seperatorStyle.normal.textColor = Color.cyan;
 
@@ -185,10 +186,6 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         }
         private void PrepareGUI()
         {
-            labelStyle.fontSize = Main.Setting.labelSize;
-            buttonStyle.fontSize = Main.Setting.buttonSize;
-            seperatorStyle.fontSize = Main.Setting.buttonSize;
-
             buttonStyle.fixedWidth = windowRect.width - 40;
             seperatorStyle.fixedWidth = windowRect.width - 40;
         }
@@ -363,20 +360,6 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             return Main.Setting.reverse ? -worker.resource : worker.resource;
         }
 
-
-        /// <summary>
-        /// 判断地点是否已经探索出来
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="place"></param>
-        /// <returns></returns>
-        private bool Explored(int part, int place)
-        {
-            return (df.mapPlaceShowDate.ContainsKey(part)
-                && df.mapPlaceShowDate[part].ContainsKey(place)
-                && df.mapPlaceShowDate[part][place] > 0);
-        }
-
         /// <summary>
         /// 分配特定种类资源的采集任务
         /// </summary>
@@ -547,24 +530,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
     }
 
     /// <summary>
-    /// 分辨率调整时调整窗体样式
+    /// 返回主界面时关闭窗口
     /// </summary>
-    [HarmonyPatch(typeof(DateFile), "SetScreenResolution")]
-    public class DateFile_SetScreenResolution_Patch
-    {
-        public static void Prefix(int index, DateFile __instance)
-        {
-            if (VillagersList.Instance.Open)
-            {
-                VillagersList.Instance.ToggleWindow();
-            }
-            var width = __instance.gameResolutions[index].width;
-            var height = __instance.gameResolutions[index].height;
-            Main.Setting.FitFontSize(width, height);
-            VillagersList.Instance.CalcWindow();
-        }
-    }
-
     [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
     public class DateFile_BackToStartMenu_Patch
     {
@@ -616,25 +583,6 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         /// 是否逆序
         /// </summary>
         public bool reverse = false;
-        /// <summary>
-        /// 适配字号
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        public void FitFontSize(int width = 0, int height = 0)
-        {
-            if (width == 0)
-            {
-                width = Mathf.FloorToInt(VillagersList.designWidth);
-            }
-            if (height == 0)
-            {
-                height = Mathf.FloorToInt(VillagersList.designHeight);
-            }
-                labelSize = 18;
-                buttonSize = 15;
-//            Main.Logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
-        }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -663,7 +611,6 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
-            Setting.FitFontSize();
             return true;
         }
 
