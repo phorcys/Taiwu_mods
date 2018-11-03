@@ -318,7 +318,6 @@ namespace CharacterFloatInfo
                     windowType = WindowType.MapActorList;
                 }
             }
-
             isDead = int.Parse(DateFile.instance.GetActorDate(id, 26, false)) > 0;
             if (isDead && !Main.settings.deadActor)
             {
@@ -516,8 +515,7 @@ namespace CharacterFloatInfo
             }
             else if (windowType == WindowType.DialogChooseActors)
             {
-                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315 };
-
+                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315,9366,9321 };
                 if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容. 
 
                 int gangId = int.Parse(DateFile.instance.GetActorDate(MassageWindow.instance.eventMianActorId, 19, false));
@@ -528,6 +526,7 @@ namespace CharacterFloatInfo
                         int num = Math.Min(0, int.Parse(DateFile.instance.GetActorDate(id, 18, false)));
                         text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num < 0 ? "red" : "white");
                         break;
+                    case 9321: // 治疗伤病
                     case 9303: // 起死回生
                         int Hp = ActorMenu.instance.Hp(id, false);
                         int maxHp = ActorMenu.instance.MaxHp(id);
@@ -542,6 +541,7 @@ namespace CharacterFloatInfo
                         int year = ActorMenu.instance.Health(id);
                         text += string.Format("\t\t寿命余下<color={1}>{0}</color>年", year, year > 1 ? "white" : "red");
                         break;
+                    case 9366: // 驱除毒素
                     case 9312: // 五圣秘浴
                         string p = "";
                         for (int i = 51; i <= 56; i++)
@@ -788,6 +788,7 @@ namespace CharacterFloatInfo
             {
                 text += "\t";
             }
+
             return text;
         }
 

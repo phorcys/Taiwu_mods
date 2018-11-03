@@ -40,8 +40,9 @@ namespace ModsCollection
 
             uiStyle.richText = true;
             uiStyle.stretchWidth = true;
-            uiStyle.alignment = TextAnchor.MiddleLeft;
+            uiStyle.alignment = TextAnchor.UpperLeft;
             uiStyle.fixedWidth = 150;
+            uiStyle.fixedHeight = 22;
             uiStyle.imagePosition = ImagePosition.ImageLeft;
             uiStyle.fontSize = 20;
             uiStyle.border = new RectOffset(3, 0, 0, 0);
