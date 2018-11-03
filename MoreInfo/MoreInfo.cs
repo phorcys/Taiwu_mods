@@ -35,6 +35,9 @@ namespace MoreInfo
         public bool showInStudyWindow = true;//在修习界面显示
         public bool showInLevelUpWindow = true;//在突破界面显示
 
+        public bool showStroyLevel = true;//显示奇遇等级
+
+
 
 
     }
@@ -87,8 +90,12 @@ namespace MoreInfo
             Main.settings.showGongFaGang = GUILayout.Toggle(Main.settings.showGongFaGang, "显示功法所属门派", new GUILayoutOption[0]);
             Main.settings.showGongFaProgress = GUILayout.Toggle(Main.settings.showGongFaProgress, "进度心得显示增强", new GUILayoutOption[0]);
             Main.settings.showInStudyWindow = GUILayout.Toggle(Main.settings.showInStudyWindow, "在修习界面显示", new GUILayoutOption[0]);
-
-
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("其他");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", new GUILayoutOption[0]);
 
             GUILayout.EndHorizontal();
         }
@@ -145,14 +152,14 @@ namespace MoreInfo
     //将人物包裹中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
     public static class SetItem_SetActorMenuItemIcon_Patch
-    {              
+    {
         static void Postfix(SetItem __instance, int actorId, int itemId, int actorFavor, int injuryTyp)
         {
-             if (!Main.enabled || !Main.settings.showItemExtraInBag)
-                 return;
+            if (!Main.enabled || !Main.settings.showItemExtraInBag)
+                return;
             int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
             //只针对宝物的属性处理
-            if ( typ == 3 )
+            if (typ == 3)
             {
                 foreach (var item in Main.itemExtraAttr)
                 {
@@ -162,7 +169,7 @@ namespace MoreInfo
                         //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
                         __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
                         break;
- 
+
                     }
                 }
             }
@@ -198,7 +205,7 @@ namespace MoreInfo
 
 
     //将仓库中的的宝物耐久度替换为特殊词条显示
-    [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]    
+    [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]
     public static class SetItem_SetWarehouseItemIcon_Patch
     {
         static void Postfix(SetItem __instance, int actorId, int itemId, bool cantTake, Image itemDragDes = null, int itemDragTyp = -1)
@@ -233,11 +240,11 @@ namespace MoreInfo
     //将商店中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetShopItemIcon")]
     public static class SetItem_SetShopItemIcon_Patch
-    {       
+    {
         static void Postfix(SetItem __instance, int itemId, int itemSize, int desIndex, int changeTyp, int itemMoney, Image dragDes)
         {
             if (!Main.enabled || !Main.settings.showItemExtraInShop)
-                return;            
+                return;
             int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
             //只针对宝物的属性处理
             if (typ == 3)
@@ -268,16 +275,16 @@ namespace MoreInfo
                 return;
             //功法所属门派
             if (Main.settings.showGongFaGang)
-            {              
+            {
                 int gangId = int.Parse(DateFile.instance.gongFaDate[gongFaId][3]);
-                string gangName = DateFile.instance.presetGangDate[gangId][0];    
+                string gangName = DateFile.instance.presetGangDate[gangId][0];
                 __instance.gongFaSizeText.text = gangName + "\n" + __instance.gongFaSizeText.text;
             }
             //根据修习进度与心得变更颜色增加区分度
             if (Main.settings.showGongFaProgress)
             {
                 int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId)[0];
-                int colorFix = level / 10;                              
+                int colorFix = level / 10;
                 __instance.gongFaLevelText.text = DateFile.instance.SetColoer(20001 + colorFix, __instance.gongFaLevelText.text);
                 int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId);
                 __instance.gongFaBookLevelText.text = DateFile.instance.SetColoer(20001 + bookLevel, __instance.gongFaBookLevelText.text);
@@ -293,11 +300,11 @@ namespace MoreInfo
         {
             if (!Main.enabled || !Main.settings.showGongFaLevel)
                 return;
-            if ( sceneId ==1)
+            if (sceneId == 1)
             {
                 Main.settings.isLoaded = false;
                 return;
-            }                
+            }
             if (Main.settings.isLoaded)
                 return;
             foreach (var item in DateFile.instance.gongFaDate)
@@ -310,11 +317,44 @@ namespace MoreInfo
         }
     }
 
+    //奇遇显示等级
+    [HarmonyPatch(typeof(WorldMapPlace), "UpdatePlaceStory")]
+    public static class WorldMapPlace_UpdatePlaceStory_Patch
+    {
+        static void Postfix(WorldMapPlace __instance, int ___placeId)
+        {
+            if (!Main.enabled || !Main.settings.showStroyLevel)
+                return;
+            if (__instance.storyTime.text == "99") return;
+            DateFile df = DateFile.instance;
+            int pid = ___placeId;
+            int partId = df.mianPartId;
+            if (df.HaveShow(partId, pid) <= 0) return;
+            if (!DateFile.instance.HaveStory(partId, pid)) return;
 
+            if (!df.worldMapState[partId].ContainsKey(pid)) return;
+            int storyId = df.worldMapState[partId][pid][0];
+            string level = df.baseStoryDate[storyId][3];
 
+            if (int.Parse(level) < 1) return;
 
+            int storyTime = df.worldMapState[partId][pid][1];
 
+            if (storyTime > 0)
+            {
+                __instance.storyTime.text = "难度:" + level + "时间:" + storyTime;
+                __instance.storyTime.text = string.Format("难度:{0}时间{1}" , level ,storyTime);
 
+                Main.Logger.Log("XXXXXXXXXXXX :" + storyTime);
+            }
+            else
+            {
+                __instance.storyTime.text = "难度:"+ level;
+                Main.Logger.Log("AAAAAAAAAAAAAA :" + storyTime);
+            }
+        }
+    }
+          
 }
 
 
