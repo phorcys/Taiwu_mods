@@ -86,10 +86,10 @@ namespace Sth4nothing.UseStorageBook
         {
             var df = DateFile.instance;
             int itemType = int.Parse(df.GetItemDate(itemId, 999));
-            // Main.Logger.Log($"类型: {itemType}");
+            Main.Logger.Log($"类型: {itemType}");
             // 品级
             int pinji = int.Parse(df.GetItemDate(itemId, 8, false));
-            // Main.Logger.Log($"品级: {pinji}");
+            Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
             // 真传 or 手抄
@@ -105,12 +105,12 @@ namespace Sth4nothing.UseStorageBook
                     gongfa -= 50;
                 else
                     gongfa -= 70;
-                // Main.Logger.Log($"功法: {gongfa}");
+                Main.Logger.Log($"功法: {gongfa}");
                 if (!Main.Setting.gongfa[gongfa])
                     return false;
                 // 帮派
                 int gang = itemType / 100 % 100 - 1;
-                // Main.Logger.Log($"帮派: {gang}");
+                Main.Logger.Log($"帮派: {gang}");
                 if (!Main.Setting.gang[gang])
                     return false;
             }
