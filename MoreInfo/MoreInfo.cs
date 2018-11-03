@@ -143,12 +143,117 @@ namespace MoreInfo
 
 
 
+    public class Changer
+    {
+
+        public static Dictionary<int, string> itemExtraAttr = new Dictionary<int, string>()
+               {
+                    { 50501,"音律"},
+                    { 50502,"弈棋"},
+                    { 50503,"诗书"},
+                    { 50504,"绘画"},
+                    { 50505,"术数"},
+                    { 50506,"品鉴"},
+                    { 50507,"锻造"},
+                    { 50508,"制木"},
+                    { 50509,"医术"},
+                    { 50510,"毒术"},
+                    { 50511,"织锦"},
+                    { 50512,"巧匠"},
+                    { 50513,"道法"},
+                    { 50514,"佛学"},
+                    { 50515,"厨艺"},
+                    { 50516,"杂学"},
+
+                    { 50601,"内功"},
+                    { 50602,"身法"},
+                    { 50603,"绝技"},
+                    { 50604,"拳掌"},
+                    { 50605,"指法"},
+                    { 50606,"腿法"},
+                    { 50607,"暗器"},
+                    { 50608,"剑法"},
+                    { 50609,"刀法"},
+                    { 50610,"长兵"},
+                    { 50611,"奇门"},
+                    { 50612,"软兵"},
+                    { 50613,"御射"},
+                    { 50614,"乐器"},
+               };
+
+        //获取人物名字
+        public string getActorName(int actorId)
+        {
+            return DateFile.instance.GetActorName(actorId, true, false);
+        }
+
+        //获取物品类型
+        public int getItemType(int itemId)
+        {
+            return int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
+        }
+        //获取物品名称
+        public string getItemName(int itemId)
+        {
+            return DateFile.instance.GetItemDate(itemId, 0, false);
+        }
+        //获取特殊词条的名称
+        public string getItemExtraName(int itemId)
+        {
+            string itemName = this.getItemName(itemId);
+            
+            string value = "";
+            foreach (var item in itemExtraAttr)
+            {
+                int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
+                if (val > 0)
+                {
+                    //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
+                    //__instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
+                    value = item.Value;
+                    break;
+                }
+            }
+            return value;
+        }
+
+        //变更文本内容
+        public void changeText(Text text,string newText)
+        {
+            text.text = newText;
+        }
+        //变更宝物名称
+        public void changeDecName(Text text,int itemId)
+        {
+            int typ = this.getItemType(itemId);
+            if (typ != 3) return;
+            string extraName = getItemExtraName(itemId);
+            if (extraName != "")
+            {
+                changeText(text, extraName);
+            }
+        }
+        //变更物品名称
+        public void changeItemName(Text text,int itemId)
+        {
+            int typ = this.getItemType(itemId);
+            switch (typ)
+            {
+                case 3:
+                    changeDecName(text, itemId);
+                    break;
+            }
+            
+        }
+    }
+
     //50061-50066 膂力- 定力
     //51361-51366 膂力%- 悟性% 
     //51367 - 51372 护体% - 闪避%
     //50501 - 50516 音律 - 织锦
     //50601 - 50614 内功 - 杂学
     //DateFile.instance.actorAttrDate actorAttr_date.txt
+
     //将人物包裹中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
     public static class SetItem_SetActorMenuItemIcon_Patch
@@ -157,22 +262,8 @@ namespace MoreInfo
         {
             if (!Main.enabled || !Main.settings.showItemExtraInBag)
                 return;
-            int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
-            //只针对宝物的属性处理
-            if (typ == 3)
-            {
-                foreach (var item in Main.itemExtraAttr)
-                {
-                    int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
-                    if (val > 0)
-                    {
-                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
-                        break;
-
-                    }
-                }
-            }
+            Changer changer = new Changer();
+            changer.changeItemName(__instance.itemNumber, itemId);
         }
     }
 
@@ -184,24 +275,10 @@ namespace MoreInfo
         {
             if (!Main.enabled || !Main.settings.showItemExtraInEquuipBag)
                 return;
-            int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
-            //只针对宝物的属性处理
-            if (typ == 3)
-            {
-                foreach (var item in Main.itemExtraAttr)
-                {
-                    int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
-                    if (val > 0)
-                    {
-                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
-                        break;
-                    }
-                }
-            }
+            Changer changer = new Changer();
+            changer.changeItemName(__instance.itemNumber, itemId);
         }
     }
-
 
 
     //将仓库中的的宝物耐久度替换为特殊词条显示
@@ -210,30 +287,11 @@ namespace MoreInfo
     {
         static void Postfix(SetItem __instance, int actorId, int itemId, bool cantTake, Image itemDragDes = null, int itemDragTyp = -1)
         {
-
-
             if (!Main.enabled || !Main.settings.showItemExtraInBank)
                 return;
-            string actorName = "";
-            actorName = DateFile.instance.GetActorName(actorId, true, false);
-            string itemName = DateFile.instance.GetItemDate(itemId, 0, false);
-
-            int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
-
-            //只针对宝物的属性处理
-            if (typ == 3)
-            {
-                foreach (var item in Main.itemExtraAttr)
-                {
-                    int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
-                    if (val > 0)
-                    {
-                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
-                        break;
-                    }
-                }
-            }
+            Changer changer = new Changer();
+            int typ = changer.getItemType(itemId);
+            changer.changeItemName(__instance.itemNumber, itemId);
         }
     }
 
@@ -245,21 +303,8 @@ namespace MoreInfo
         {
             if (!Main.enabled || !Main.settings.showItemExtraInShop)
                 return;
-            int typ = int.Parse(DateFile.instance.GetItemDate(itemId, 1, false));
-            //只针对宝物的属性处理
-            if (typ == 3)
-            {
-                foreach (var item in Main.itemExtraAttr)
-                {
-                    int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
-                    if (val > 0)
-                    {
-                        //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
-                        __instance.itemNumber.text = !Main.settings.showExtraValue ? item.Value : item.Value + val;
-                        break;
-                    }
-                }
-            }
+            Changer changer = new Changer();
+            changer.changeItemName(__instance.itemNumber, itemId);
         }
     }
 
@@ -343,15 +388,15 @@ namespace MoreInfo
             if (storyTime > 0)
             {
                 __instance.storyTime.text = "难度:" + level + "时间:" + storyTime;
-                __instance.storyTime.text = string.Format("难度:{0}时间{1}" , level ,storyTime);
+                __instance.storyTime.text = string.Format("难度:{0}时间{1}", level, storyTime);
             }
             else
             {
-                __instance.storyTime.text = "难度:"+ level;
+                __instance.storyTime.text = "难度:" + level;
             }
         }
     }
-          
+
 }
 
 
