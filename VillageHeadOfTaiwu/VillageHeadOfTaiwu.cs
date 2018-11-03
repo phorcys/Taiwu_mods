@@ -62,6 +62,9 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             "银钱"
         };
 
+        public const float designWidth = 1600;
+        public const float designHeight = 900;
+
         public static VillagersList Instance { get; private set; }
         static GameObject obj;
 
@@ -177,7 +180,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
         public void CalcWindow()
         {
-            windowRect = new Rect(Screen.width * 0.833f, Screen.height * 0.05f, Screen.width * 0.164f, 0);
+            windowRect = new Rect(designWidth * 0.85f, designHeight * 0.05f, designWidth * 0.145f, 0);
             Main.Logger.Log(windowRect.ToString());
         }
         private void PrepareGUI()
@@ -199,11 +202,17 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 var bgColor = GUI.backgroundColor;
                 var color = GUI.color;
 
+                Matrix4x4 svMat = GUI.matrix;
+                Vector2 resizeRatio = new Vector2((float)Screen.width / designWidth, (float)Screen.height / designHeight);
+                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(resizeRatio.x, resizeRatio.y, 1.0f));
+
                 GUI.backgroundColor = Color.black;
                 GUI.color = Color.white;
-                windowRect = GUILayout.Window(666, windowRect, WindowFunc, "",
-                    windowStyle, GUILayout.Height(Screen.height * 0.73f));
 
+                windowRect = GUILayout.Window(666, windowRect, WindowFunc, "",
+                    windowStyle, GUILayout.Height(designHeight * 0.73f));
+
+                GUI.matrix = svMat;
                 GUI.backgroundColor = bgColor;
                 GUI.color = color;
             }
@@ -242,11 +251,11 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                     }
                 }
                 GUILayout.EndVertical();
-                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
 
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
                     GUILayout.Width(windowRect.width - 20),
-                    GUILayout.MaxHeight(Screen.height * 0.73f));
+                    GUILayout.MaxHeight(designHeight * 0.73f));
                 GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
@@ -264,7 +273,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             }
             else
             {
-                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / Screen.width, 0.95f - 25f / Screen.height);
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / designWidth, 0.95f - 25f / designHeight);
             }
         }
 
@@ -337,8 +346,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 DontDestroyOnLoad(canvas);
                 var panel = new GameObject("panel", typeof(Image));
                 panel.transform.SetParent(canvas.transform);
-                panel.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 0.2f);
-                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
+                panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
                 panel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.95f);
                 panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
                 panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
@@ -616,33 +625,15 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         {
             if (width == 0)
             {
-                width = Screen.width;
+                width = Mathf.FloorToInt(VillagersList.designWidth);
             }
             if (height == 0)
             {
-                height = Screen.height;
+                height = Mathf.FloorToInt(VillagersList.designHeight);
             }
-            if (height <= 800)
-            {
-                labelSize = 16;
-                buttonSize = 12;
-            }
-            else if (height <= 900)
-            {
                 labelSize = 18;
                 buttonSize = 15;
-            }
-            else if (height <= 1100)
-            {
-                labelSize = 20;
-                buttonSize = 16;
-            }
-            else
-            {
-                labelSize = 22;
-                buttonSize = 18;
-            }
-            Main.Logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
+//            Main.Logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
         }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
