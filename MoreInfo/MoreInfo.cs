@@ -344,13 +344,10 @@ namespace MoreInfo
             {
                 __instance.storyTime.text = "难度:" + level + "时间:" + storyTime;
                 __instance.storyTime.text = string.Format("难度:{0}时间{1}" , level ,storyTime);
-
-                Main.Logger.Log("XXXXXXXXXXXX :" + storyTime);
             }
             else
             {
                 __instance.storyTime.text = "难度:"+ level;
-                Main.Logger.Log("AAAAAAAAAAAAAA :" + storyTime);
             }
         }
     }
