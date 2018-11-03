@@ -17,9 +17,14 @@ namespace HomeShopSort
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+        public static int sortModeNone = 0;
+        public static int sortModeReal = 1;
+        public static int sortModeAssume = 2;
         public bool showEfficiencyAsMyWay = false;//显示效率占理论效率的最大值
         public bool showEfficienctInBottom = true;//显示在正下方
         public bool showEfficienctUsingDifferentColor = true;//用不同颜色显示
+        public int sortMode = 0;//排序模式
+        public int assumeTalent = 80;//假想数值
     }
 
     public static class Main
@@ -27,6 +32,7 @@ namespace HomeShopSort
         public static bool enabled;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
+        public static String[] toolBarText = { "不排序","按实际效率排序","按假想效率排序" };
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -52,7 +58,15 @@ namespace HomeShopSort
             Main.settings.showEfficiencyAsMyWay = GUILayout.Toggle(Main.settings.showEfficiencyAsMyWay, "用占最大效率的百分比显示效率", new GUILayoutOption[0]);
             Main.settings.showEfficienctInBottom = GUILayout.Toggle(Main.settings.showEfficienctInBottom, "显示在建筑名上而非左上角", new GUILayoutOption[0]);
             Main.settings.showEfficienctUsingDifferentColor = GUILayout.Toggle(Main.settings.showEfficienctUsingDifferentColor, "用不同颜色显示效率", new GUILayoutOption[0]);
+            Main.settings.sortMode = GUILayout.Toolbar(Main.settings.sortMode, toolBarText);
             GUILayout.EndHorizontal();
+            if (Main.settings.sortMode == Settings.sortModeAssume)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("假定所有厢房里的npc资质为:");
+                int.TryParse(GUILayout.TextField(Main.settings.assumeTalent.ToString(), 3, GUILayout.Width(90)), out Main.settings.assumeTalent);
+                GUILayout.EndHorizontal();
+            }
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -72,7 +86,7 @@ namespace HomeShopSort
                 UnityEngine.Object.DestroyImmediate(HomeSystem.instance.listActorsHolder.GetChild(0).gameObject);
         }
     }
-    //将显示人物的物体重排序(实际上是对每个物体重新设置了内容)
+    //显示工作信息
     [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding", new Type[] { })]
     public static class HomeBuilding_UpdateBuilding_Patch
     {
@@ -97,7 +111,7 @@ namespace HomeShopSort
                         int color = 20002 + 6;
                         if (Main.settings.showEfficienctUsingDifferentColor)
                         {
-                            int percent = 100 * eff / total;
+                            int percent = eff / 2;
                             if (percent >= 90)
                                 color = 20002 + 2;
                             else if (percent >= 70)
@@ -142,6 +156,8 @@ namespace HomeShopSort
             if (!Main.enabled)
                 return;
             if (!HomeSystem.instance.buildingWindowOpend)
+                return;
+            if (Main.settings.sortMode == Settings.sortModeNone)
                 return;
             int key = HomeSystem.instance.homeMapPartId;
             int key2 = HomeSystem.instance.homeMapPlaceId;
@@ -200,7 +216,7 @@ namespace HomeShopSort
             if (partId < 0 || placeId < 0)
                 return -1;
             int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
-            int unknown = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
+            int requiredTalentIndex = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
             int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
             int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
             int moodFavorAddup = 40 + favorLvl * 10;
@@ -228,15 +244,32 @@ namespace HomeShopSort
             {
                 moodFavorAddup += 10;
             }
-            int num5 = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(workerId, unknown, true));
-            if (unknown == 18)
+            int talent = (requiredTalentIndex <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(workerId, requiredTalentIndex, true));
+            if (requiredTalentIndex == 18)//18=声望
             {
-                num5 += 100;
+                talent += 100;
             }
-            int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
-            num5 = num5 * Mathf.Max(moodFavorAddup, 0) / 100;
+            int xiangFangAddup = 0;
+            foreach (int key in HomeSystem.instance.GetBuildingNeighbor(partId, placeId, buildingIndex,1))
+            {
+                if (DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(key) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(key) && int.Parse(DateFile.instance.basehomePlaceDate[DateFile.instance.homeBuildingsDate[partId][placeId][key][0]][62]) != 0)
+                {
+                    int singleAddup = 0;
+                    if (Main.settings.sortMode == Settings.sortModeReal)
+                    {
+                        singleAddup = (requiredTalentIndex <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(DateFile.instance.actorsWorkingDate[partId][placeId][key], requiredTalentIndex, true));
+                        if (requiredTalentIndex == 18)
+                            singleAddup += 100;
+                    }
+                    else
+                        singleAddup = Main.settings.assumeTalent;
+                    xiangFangAddup += singleAddup;
+                }
+            }
 
-            int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
+            talent = (talent+xiangFangAddup) * Mathf.Max(moodFavorAddup, 0) / 100;
+            int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
+            int efficiency = Mathf.Clamp(talent * 100 / num6, 50, 200);
             int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);
             if (total > 0)
                 return efficiency;

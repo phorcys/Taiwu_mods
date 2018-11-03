@@ -219,8 +219,7 @@ namespace LKX_NewGameActor
 
                 GUILayout.Label("义父所制会覆盖原有道具效果。");
                 GUILayout.Label("传家宝数量：" + Main.settings.itemsCount.ToString());
-                uint itemsCount = (uint)GUILayout.HorizontalScrollbar(Main.settings.itemsCount, 1, 1, 10);
-                if (GUI.changed) Main.settings.itemsCount = itemsCount;
+                Main.settings.itemsCount = (uint) GUILayout.HorizontalScrollbar(Main.settings.itemsCount, 1, 1, 10);
             }
         }
 

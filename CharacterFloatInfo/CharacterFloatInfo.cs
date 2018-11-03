@@ -1,4 +1,4 @@
-using Harmony12;
+﻿using Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,14 +78,14 @@ namespace CharacterFloatInfo
             GUILayout.Label("浮窗显示区域");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物列表", new GUILayoutOption[0]);
-            Main.settings.enableMAN = GUILayout.Toggle(Main.settings.enableMAN, "地块邻格人物列表", new GUILayoutOption[0]);
-            Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主角及同道头像", new GUILayoutOption[0]);
-            Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话界面的主角", new GUILayoutOption[0]);
-            Main.settings.enableMAC = GUILayout.Toggle(Main.settings.enableMAC, "对话界面的人物选择", new GUILayoutOption[0]);
-            Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配界面", new GUILayoutOption[0]);
-            Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "人物信息界面", new GUILayoutOption[0]);
-            Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系界面", new GUILayoutOption[0]);
+            Main.settings.enableMAL = GUILayout.Toggle(Main.settings.enableMAL, "地块人物", new GUILayoutOption[0]);
+            Main.settings.enableMAN = GUILayout.Toggle(Main.settings.enableMAN, "地块邻格", new GUILayoutOption[0]);
+            Main.settings.enableTA = GUILayout.Toggle(Main.settings.enableTA, "主画面同道", new GUILayoutOption[0]);
+            Main.settings.enableDI = GUILayout.Toggle(Main.settings.enableDI, "对话对象", new GUILayoutOption[0]);
+            Main.settings.enableMAC = GUILayout.Toggle(Main.settings.enableMAC, "对话选择人物", new GUILayoutOption[0]);
+            Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配", new GUILayoutOption[0]);
+            Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "同道列表", new GUILayoutOption[0]);
+            Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("展示內容");
@@ -209,7 +209,6 @@ namespace CharacterFloatInfo
     {
         public static List<string> actorMassage = new List<string>();
         public static int lastActorID = 0;
-        public static bool isPeopleActor;
         public static bool isDead;
         public static bool smallerWindow;
         public static WindowType windowType;
@@ -251,80 +250,74 @@ namespace CharacterFloatInfo
             if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
 
             bool needShow = false;
-            int id = -1;
-            isPeopleActor = tips.tag == "PeopleActor";
             string[] array = tips.name.Split(',');
+            int id = array.Length>1 ? int.Parse(array[1]) : 0;
 
             //大地圖下面的太吾自己的頭像
-            if (array[0] == "PlayerFaceButton" && Main.settings.enableTA)
+            if (array[0] == "PlayerFaceButton")
             {
                 id = DateFile.instance.mianActorId;
-                needShow = true;
+                needShow = Main.settings.enableTA;
                 windowType = WindowType.TeamActor;
             }
             else
             //大地圖下面的隊友頭像
-            if (tips.tag == "TeamActor" && Main.settings.enableTA)
+            if (tips.tag == "TeamActor")
             {
-                id = DateFile.instance.acotrTeamDate[array[1].Length > 0 ? int.Parse(array[1]) : 0];
-                needShow = id > 0;
+                id = DateFile.instance.acotrTeamDate[ id ];
+                needShow = id > 0 && Main.settings.enableTA;
                 windowType = WindowType.TeamActor;
             }
             else
-            //建筑/地图左边的列表
-            if (array[0] == "Actor")
+            //同道列表
+            if (tips.transform.parent.name == "ActorListMianHolder")
             {
-                id = int.Parse(array[1]);
-                if (DateFile.instance.actorsDate.ContainsKey(id)) //检查人物列表 以排除大地图第三列无名敌人引起的错误
-                {
-                    if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId && Main.settings.enableMAL) //当前格显示
-                    {
-                        needShow = true;
-                        windowType = WindowType.MapActorList;
-                    }
-                    if (WorldMapSystem.instance.choosePlaceId != DateFile.instance.mianPlaceId && WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId) && Main.settings.enableMAN) //邻格显示
-                    {
-                        needShow = true;
-                        windowType = WindowType.MapActorList;
-                    }
-                    if (HomeSystem.instance.buildingWindowOpend && Main.settings.enableBW)
-                    {
-                        needShow = true;
-                        windowType = WindowType.BuildingWindow;
-                    }
-                    if (ActorMenu.instance.actorMenu.activeSelf && Main.settings.enableAM)
-                    {
-                        needShow = true;
-                        windowType = WindowType.ActorMenu;
-                        if (!Main.settings.enableRI && isPeopleActor)
-                        {
-                            needShow = false;
-                        }
-                    }
-                    if (ActorMenu.instance.actorMenu.activeSelf && ActorMenu.instance.actorMenuIndex == 7 && Main.settings.enableRI)
-                    {
-                        needShow = true;
-                        windowType = WindowType.Relationship;
-                        if (!Main.settings.enableAM && !isPeopleActor)
-                        {
-                            needShow = false;
-                        }
-                    }
-                    if (MassageWindow.instance.actorWindow.activeInHierarchy)
-                    {
-                        windowType = WindowType.DialogChooseActors;
-                        needShow = Main.settings.enableMAC;
-                    }
-                }
+                needShow = id > 0 && Main.settings.enableAM;
+                windowType = WindowType.ActorMenu;
+            }
+            else
+            //人物訊息內的關係頁及輪迴前世
+            if (tips.transform.parent.name == "ActorListHolder" || (ActorMenu.instance.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
+            {
+                needShow = Main.settings.enableRI;
+                windowType = WindowType.Relationship;
+            }
+            else
+            //太吾村內工作人員選單
+            if (HomeSystem.instance.buildingWindow.gameObject.activeSelf && tips.transform.parent.name == "ActorHolder")
+            {
+                needShow = Main.settings.enableBW;
+                windowType = WindowType.BuildingWindow;
+            }
+            else
+            //对话界面的人物选择
+            if (MassageWindow.instance.actorWindow.activeInHierarchy && tips.transform.parent.name == "ActorHolder")
+            {
+                needShow = Main.settings.enableMAC;
+                windowType = WindowType.DialogChooseActors;
             }
             //对话窗口的人物头像
-            else if (array[0] == "FaceHolder" && Main.settings.enableDI)
+            else if (array[0] == "FaceHolder" )
             {
                 id = MassageWindow.instance.eventMianActorId;
-                needShow = true;
+                needShow = Main.settings.enableDI;
                 windowType = WindowType.Dialog;
             }
-
+            else
+            //建筑/地图左边的列表
+            if (array[0] == "Actor" && DateFile.instance.actorsDate.ContainsKey(id))
+            {
+                if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId) //当前格显示
+                {
+                    needShow = Main.settings.enableMAL;
+                    windowType = WindowType.MapActorList;
+                }
+                else if (WorldMapSystem.instance.choosePlaceId != DateFile.instance.mianPlaceId && WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId)) //邻格显示
+                {
+                    needShow = Main.settings.enableMAN;
+                    windowType = WindowType.MapActorList;
+                }
+            }
             isDead = int.Parse(DateFile.instance.GetActorDate(id, 26, false)) > 0;
             if (isDead && !Main.settings.deadActor)
             {
@@ -439,7 +432,7 @@ namespace CharacterFloatInfo
                 text += seperator + DateFile.instance.SetColoer(20009, "过世");
                 // todo: 投胎至:XX村，人名
             }
-            else
+            else if (DateFile.instance.actorInjuryDate.ContainsKey(id))
             {
                 int Hp = ActorMenu.instance.Hp(id, false);
                 int maxHp = ActorMenu.instance.MaxHp(id);
@@ -498,27 +491,31 @@ namespace CharacterFloatInfo
             {
                 text += string.Format("轮回:<color=white>{0}</color>", GetSamsara(id));
 
-                text += GetSamsara(id) != "0" ? string.Format(" ◆ 前世:<color=white>{0}</color>", GetSamsaraName(id) ): "";
+                text += GetSamsara(id) != "0" ? string.Format(" ◆ 前世:<color=white>{0}</color>", GetSamsaraName(id)) : "";
 
                 string item = Gethobby(id, 0);
                 text += string.Format("\t\t喜好:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
                 item = Gethobby(id, 1);
                 text += string.Format("\t\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
 
+                int result1 = GetFertility(id, true);
+                int result2 = GetFertility(id, false);
+                text += string.Format("\t\t生育:<color={1}>{0}%</color>", result1, (result2 > 0?"+":"") + result2, result1 <= 0 ? "red" : "white");
+                if(Main.settings.addonInfo && result2 !=0) text += string.Format("\t<color=#606060FF>{0}%</color>", (result2 > 0?"+":"") + result2);
+
                 if (GetAge(id) > ConstValue.actorMinAge)
-                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count );    // todo: 改為顯示所有孩子名
+                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
 
             }
             else if (windowType == WindowType.BuildingWindow)
             {
                 text += DateFile.instance.ActorIsWorking(id) == null ?
-                    "工作岗位:<color=gray>无</color>" :
+                    "工作岗位:<color=#606060FF>无</color>" :
                     string.Format("工作岗位:<color=white>{0}</color>\t\t進度:<color=white>{1}</color>", GetWorkPlace(id), GetWorkingData(id));
             }
             else if (windowType == WindowType.DialogChooseActors)
             {
-                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315 };
-
+                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315,9366,9321 };
                 if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容. 
 
                 int gangId = int.Parse(DateFile.instance.GetActorDate(MassageWindow.instance.eventMianActorId, 19, false));
@@ -527,14 +524,15 @@ namespace CharacterFloatInfo
                 {
                     case 9301: // 念经忏悔
                         int num = Math.Min(0, int.Parse(DateFile.instance.GetActorDate(id, 18, false)));
-                        text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num<0?"red":"white");
+                        text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num < 0 ? "red" : "white");
                         break;
+                    case 9321: // 治疗伤病
                     case 9303: // 起死回生
                         int Hp = ActorMenu.instance.Hp(id, false);
                         int maxHp = ActorMenu.instance.MaxHp(id);
                         int Sp = ActorMenu.instance.Sp(id, false);
                         int maxSp = ActorMenu.instance.MaxSp(id);
-                        text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp==0?"white":"red", Sp==0?"white":"red" );
+                        text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp == 0 ? "white" : "red", Sp == 0 ? "white" : "red");
                         break;
                     case 9307: // 王禅典籍
                         text += string.Format("\t\t处世立场:{0}", DateFile.instance.GetActorDate(id, 18, false));
@@ -543,6 +541,7 @@ namespace CharacterFloatInfo
                         int year = ActorMenu.instance.Health(id);
                         text += string.Format("\t\t寿命余下<color={1}>{0}</color>年", year, year > 1 ? "white" : "red");
                         break;
+                    case 9366: // 驱除毒素
                     case 9312: // 五圣秘浴
                         string p = "";
                         for (int i = 51; i <= 56; i++)
@@ -553,7 +552,7 @@ namespace CharacterFloatInfo
                         break;
                     case 9304: // 七星调元
                         float hurt = int.Parse(DateFile.instance.GetActorDate(id, 39)) / 10;
-                        text += string.Format("\t\t內息:<color={1}>{0:0.#}</color>", hurt, hurt == 0?"white":"red");
+                        text += string.Format("\t\t內息:<color={1}>{0:0.#}</color>", hurt, hurt == 0 ? "white" : "red");
                         break;
                     case 9308: // 玉镜沉思
                         int canDeductCount = 0, canEnchanceCount = 0;
@@ -564,6 +563,7 @@ namespace CharacterFloatInfo
                         }
                         if (canEnchanceCount > 0) text += "\t\t<color=white>可舞劍:" + canEnchanceCount + "</color>";
                         if (canDeductCount > 0) text += "\t\t<color=white>可撫琴:" + canDeductCount + "</color>";
+                        if (canDeductCount == 0 && canDeductCount == 0) text += "\t\t<color=#606060FF>不能提升</color>";
                         break;
                     case 9305: // 石牢静坐
                     case 9315: // 血池秘法
@@ -760,15 +760,21 @@ namespace CharacterFloatInfo
         //名誉
         public static string GetFame(int id)
         {
-            string text = ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
-            return text;
+            return ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
         }
 
         //立场
         public static string GetGoodness(int id)
         {
-            string text = DateFile.instance.massageDate[9][0].Split('|')[DateFile.instance.GetActorGoodness(id)];
-            return text;
+            return DateFile.instance.massageDate[9][0].Split('|')[DateFile.instance.GetActorGoodness(id)];
+        }
+
+        //生育能力
+        public static int GetFertility(int id, bool plus)
+        {
+            int result = int.Parse(DateFile.instance.GetActorDate(id, 24, plus));
+            if (!plus) result = int.Parse(DateFile.instance.GetActorDate(id, 24, true)) - result;
+            return result;
         }
 
         //喜好
@@ -799,7 +805,7 @@ namespace CharacterFloatInfo
                     num.ToString(),
                     (num < 10 ? "\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : "\u00A0"),
                     shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : (smallerWindow ? "" : "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"),
-                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "\u00A0" :"\u00A0\u00A0")));
+                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "\u00A0" : "\u00A0\u00A0")));
 
             return text;
         }
@@ -1254,8 +1260,19 @@ namespace CharacterFloatInfo
             {
                 num5 += 100;
             }
+            int xiangFangAddup = 0;
+            foreach (int key in HomeSystem.instance.GetBuildingNeighbor(partId, placeId, buildingIndex, 1))
+            {
+                if (DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(key) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(key) && int.Parse(DateFile.instance.basehomePlaceDate[DateFile.instance.homeBuildingsDate[partId][placeId][key][0]][62]) != 0)
+                {
+                    int singleAddup = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(DateFile.instance.actorsWorkingDate[partId][placeId][key], unknown, true));
+                    if (unknown == 18)
+                        singleAddup += 100;
+                    xiangFangAddup += singleAddup;
+                }
+            }
             int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
-            num5 = num5 * Mathf.Max(moodFavorAddup, 0) / 100;
+            num5 = (num5 + xiangFangAddup) * Mathf.Max(moodFavorAddup, 0) / 100;
 
             int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
             int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);

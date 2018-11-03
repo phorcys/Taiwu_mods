@@ -1,25 +1,48 @@
 ﻿using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
-namespace VillageHeadOfTaiwu
+namespace Sth4nothing.VillageHeadOfTaiwu
 {
     class VillagersList : MonoBehaviour
     {
         class Worker
         {
+            /// <summary>
+            /// 显示在列表中的任务字符串
+            /// </summary>
             public string content;
+            /// <summary>
+            /// 坐标part
+            /// </summary>
             public int part;
+            /// <summary>
+            /// 坐标place
+            /// </summary>
             public int place;
+            /// <summary>
+            /// 消耗的人力
+            /// </summary>
             public int manpower;
+            /// <summary>
+            /// 采集的资源类型
+            /// </summary>
             public int type;
+            /// <summary>
+            /// 每时节采集的资源量
+            /// </summary>
+            internal int resource;
         }
 
+        /// <summary>
+        /// 采集的资源类型
+        /// </summary>
         enum WorkType
         {
             FOOD,
@@ -38,6 +61,9 @@ namespace VillageHeadOfTaiwu
             "药材",
             "银钱"
         };
+
+        public const float designWidth = 1600;
+        public const float designHeight = 900;
 
         public static VillagersList Instance { get; private set; }
         static GameObject obj;
@@ -64,8 +90,11 @@ namespace VillageHeadOfTaiwu
         {
             try
             {
-                obj = new GameObject("Villagers", typeof(VillagersList));
-                DontDestroyOnLoad(obj);
+                if (obj == null)
+                {
+                    obj = new GameObject("Villagers", typeof(VillagersList));
+                    DontDestroyOnLoad(obj);
+                }
             }
             catch (Exception)
             {
@@ -76,14 +105,14 @@ namespace VillageHeadOfTaiwu
 
         private void Awake()
         {
-            Main.logger.Log("awake");
+            Main.Logger.Log("awake");
             Instance = this;
             DontDestroyOnLoad(this);
         }
 
         public void Start()
         {
-            Main.logger.Log("start");
+            Main.Logger.Log("start");
 
             Open = false;
             //collapse = false;
@@ -99,9 +128,9 @@ namespace VillageHeadOfTaiwu
             collapseStyle = new GUIStyle
             {
                 name = "collapse",
-                fontSize = 14,
-                alignment = TextAnchor.MiddleCenter,
-                margin = new RectOffset(5, 5, 5, 5),
+                fontSize = 12,
+                alignment = TextAnchor.MiddleRight,
+                fixedWidth = 25f,
             };
             collapseStyle.normal.textColor = Color.red;
 
@@ -109,7 +138,7 @@ namespace VillageHeadOfTaiwu
             {
                 name = "label",
                 alignment = TextAnchor.MiddleCenter,
-                margin = new RectOffset(0, 0, 5, 5),
+                fontSize = Main.Setting.labelSize,
             };
             labelStyle.normal.textColor = Color.yellow;
 
@@ -117,7 +146,7 @@ namespace VillageHeadOfTaiwu
             {
                 name = "button",
                 alignment = TextAnchor.MiddleLeft,
-                margin = new RectOffset(0, 0, 5, 0),
+                fontSize = Main.Setting.buttonSize,
             };
             buttonStyle.normal.textColor = Color.white;
             buttonStyle.richText = true;
@@ -126,26 +155,37 @@ namespace VillageHeadOfTaiwu
             {
                 name = "seperator",
                 alignment = TextAnchor.MiddleCenter,
+                fontSize = Main.Setting.buttonSize,
             };
             seperatorStyle.normal.textColor = Color.cyan;
 
-            df = DateFile.instance;
-            wms = WorldMapSystem.instance;
+            Init();
 
             CalcWindow();
+
+            ToggleWindow();
+
+            // 设置点击事件
+            // TODO
+            // var btn = UIDate.instance.manpowerText.gameObject.AddComponent<Button>();
+            // btn.GetComponent<Button>().targetGraphic = UIDate.instance.manpowerText;
+            // btn.GetComponent<Button>().interactable = true;
+            // btn.GetComponent<Button>().onClick.AddListener(VillagersList.Instance.ToggleWindow);
+        }
+
+        public void Init()
+        {
+            df = DateFile.instance;
+            wms = WorldMapSystem.instance;
         }
 
         public void CalcWindow()
         {
-            windowRect = new Rect(Screen.width * 0.833f, Screen.height * 0.05f, Screen.width * 0.164f, 0);
-            Main.logger.Log(windowRect.ToString());
+            windowRect = new Rect(designWidth * 0.85f, designHeight * 0.05f, designWidth * 0.145f, 0);
+            Main.Logger.Log(windowRect.ToString());
         }
         private void PrepareGUI()
         {
-            labelStyle.fontSize = Main.Setting.labelSize;
-            buttonStyle.fontSize = Main.Setting.buttonSize;
-            seperatorStyle.fontSize = Main.Setting.buttonSize;
-
             buttonStyle.fixedWidth = windowRect.width - 40;
             seperatorStyle.fixedWidth = windowRect.width - 40;
         }
@@ -159,11 +199,17 @@ namespace VillageHeadOfTaiwu
                 var bgColor = GUI.backgroundColor;
                 var color = GUI.color;
 
+                Matrix4x4 svMat = GUI.matrix;
+                Vector2 resizeRatio = new Vector2((float)Screen.width / designWidth, (float)Screen.height / designHeight);
+                GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(resizeRatio.x, resizeRatio.y, 1.0f));
+
                 GUI.backgroundColor = Color.black;
                 GUI.color = Color.white;
-                windowRect = GUILayout.Window(666, windowRect, WindowFunc, "",
-                    windowStyle, GUILayout.Height(Screen.height * 0.73f));
 
+                windowRect = GUILayout.Window(666, windowRect, WindowFunc, "",
+                    windowStyle, GUILayout.Height(designHeight * 0.73f));
+
+                GUI.matrix = svMat;
                 GUI.backgroundColor = bgColor;
                 GUI.color = color;
             }
@@ -171,77 +217,81 @@ namespace VillageHeadOfTaiwu
 
         private void WindowFunc(int windowId)
         {
-            if (GUILayout.Button((collapse ? "展开" : "收起"), collapseStyle))
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(windowRect.width - 35f);
+            if (GUILayout.Button((collapse ? "展" : "收"), collapseStyle))
             {
                 collapse = !collapse;
             }
-            GUILayout.BeginVertical();
-            for (int i = 0; i < 6; i++)
-            {
-                if (i % 3 == 0)
-                {
-                    GUILayout.BeginHorizontal();
-                }
-                if (GUILayout.Button(workStr[i], labelStyle))
-                {
-                    ArrangeWork((WorkType)i);
-                }
-                if (i % 3 < 2)
-                {
-                    GUILayout.Label("|");
-                }
-                else if (i % 3 == 2)
-                {
-                    GUILayout.EndHorizontal();
-                }
-            }
-            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+
             if (!collapse)
             {
-                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
-
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
-                    GUILayout.Width(windowRect.width - 20),
-                    GUILayout.MaxHeight(Screen.height * 0.73f));
                 GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
-                    GUILayout.Label($"------------{workStr[i]}-------------", seperatorStyle);
-                    var wokers = new List<Worker>(GetWorkers((WorkType)i));
-                    foreach (var worker in wokers)
+                    if (i % 3 == 0)
+                    {
+                        GUILayout.BeginHorizontal();
+                    }
+                    if (GUILayout.Button(workStr[i], labelStyle))
+                    {
+                        ArrangeWork((WorkType)i);
+                    }
+                    if (i % 3 < 2)
+                    {
+                        GUILayout.Label("|");
+                    }
+                    else if (i % 3 == 2)
+                    {
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                GUILayout.EndVertical();
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
+
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
+                    GUILayout.Width(windowRect.width - 20),
+                    GUILayout.MaxHeight(designHeight * 0.73f));
+                GUILayout.BeginVertical();
+                for (int i = 0; i < 6; i++)
+                {
+                    GUILayout.Label($"------------{workStr[i]}-------------     ", seperatorStyle);
+                    GetWorkers((WorkType)i).OrderBy(OrderFunc).Do((worker) =>
                     {
                         if (GUILayout.Button(worker.content, buttonStyle))
                         {
                             CancelWork(worker);
                         }
-                    }
+                    });
                 }
                 GUILayout.EndVertical();
                 GUILayout.EndScrollView();
             }
             else
             {
-                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.84f);
+                canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / designWidth, 0.95f - 25f / designHeight);
             }
         }
 
         public void Update()
         {
-            if (!Main.enabled)
+            if (!Main.Enabled)
             {
                 Destroy(canvas);
+                Open = false;
             }
             if (Open)
             {
                 if (Input.GetKey(KeyCode.PageUp))
                 {
                     scrollPosition.y -= 40;
-                    Main.logger.Log($"pgup {scrollPosition}");
+                    Main.Logger.Log($"pgup {scrollPosition}");
                 }
                 if (Input.GetKey(KeyCode.PageDown))
                 {
                     scrollPosition.y += 40;
-                    Main.logger.Log($"pgdn {scrollPosition}");
+                    Main.Logger.Log($"pgdn {scrollPosition}");
                 }
             }
             if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
@@ -256,7 +306,7 @@ namespace VillageHeadOfTaiwu
         /// </summary>
         public void ToggleWindow()
         {
-            Main.logger.Log($"Toggle {(!Open ? "on" : "off")}");
+            Main.Logger.Log($"Toggle {(!Open ? "on" : "off")}");
             Open = !Open;
             BlockGameUI(Open);
             if (Open)
@@ -293,8 +343,8 @@ namespace VillageHeadOfTaiwu
                 DontDestroyOnLoad(canvas);
                 var panel = new GameObject("panel", typeof(Image));
                 panel.transform.SetParent(canvas.transform);
-                panel.GetComponent<Image>().color = new Color(0.6f, 0.6f, 0.6f, 0.2f);
-                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / Screen.width, 0.22f);
+                panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
                 panel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.95f);
                 panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
                 panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
@@ -304,17 +354,10 @@ namespace VillageHeadOfTaiwu
                 Destroy(canvas);
             }
         }
-        /// <summary>
-        /// 判断地点是否已经探索出来
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="place"></param>
-        /// <returns></returns>
-        private bool Explored(int part, int place)
+
+        static int OrderFunc(Worker worker)
         {
-            return (df.mapPlaceShowDate.ContainsKey(part)
-                && df.mapPlaceShowDate[part].ContainsKey(place)
-                && df.mapPlaceShowDate[part][place] > 0);
+            return Main.Setting.reverse ? -worker.resource : worker.resource;
         }
 
         /// <summary>
@@ -333,7 +376,7 @@ namespace VillageHeadOfTaiwu
 
             for (int place = 0; place < size * size; place++)
             {
-                if (Explored(part, place) && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
+                if (df.HaveShow(part, place) > 0 && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
                 {
                     var res = UIDate.instance.GetWorkPower((int)workType, part, place);
                     var man = int.Parse(df.GetNewMapDate(part, place, 12));
@@ -446,6 +489,7 @@ namespace VillageHeadOfTaiwu
                         part = part,
                         place = place,
                         manpower = manpower,
+                        resource = resource,
                         type = type,
                     };
                     yield return worker;
@@ -486,33 +530,38 @@ namespace VillageHeadOfTaiwu
     }
 
     /// <summary>
-    /// 分辨率调整时调整窗体样式
+    /// 返回主界面时关闭窗口
     /// </summary>
-    [HarmonyPatch(typeof(DateFile), "SetScreenResolution")]
-    public class DateFile_SetScreenResolution_Patch
+    [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
+    public class DateFile_BackToStartMenu_Patch
     {
-        public static void Prefix(int index, DateFile __instance)
+        static void Prefix()
         {
-            if (VillagersList.Instance.Open)
+            if (VillagersList.Instance != null && VillagersList.Instance.Open)
             {
                 VillagersList.Instance.ToggleWindow();
             }
-            var width = __instance.gameResolutions[index].width;
-            var height = __instance.gameResolutions[index].height;
-            Main.Setting.FitFont(width, height);
-            VillagersList.Instance.CalcWindow();
         }
     }
 
     /// <summary>
     /// 载入游戏时加载VillageList类
     /// </summary>
-    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
-    public class WorldMapSystem_Start_Patch
+    [HarmonyPatch(typeof(UIDate), "Start")]
+    public class UIDate_Start_Patch
     {
         public static void Postfix()
         {
-            Main.logger.Log($"create ui: {VillagersList.Load()}");
+            if (VillagersList.Instance == null)
+            {
+                Main.Logger.Log($"create ui: {VillagersList.Load()}");
+            }
+            else
+            {
+                VillagersList.Instance.Init();
+                if (!VillagersList.Instance.Open)
+                    VillagersList.Instance.ToggleWindow();
+            }
         }
     }
 
@@ -522,42 +571,18 @@ namespace VillageHeadOfTaiwu
         public int labelSize = 16;
         [XmlIgnore]
         public int buttonSize = 12;
-
+        /// <summary>
+        /// 是否跳过城镇
+        /// </summary>
         public bool skipTown = true;
+        /// <summary>
+        /// 热键 ctrl + ？
+        /// </summary>
         public KeyCode key = KeyCode.F9;
-
-        public void FitFont(int width = 0, int height = 0)
-        {
-            if (width == 0)
-            {
-                width = Screen.width;
-            }
-            if (height == 0)
-            {
-                height = Screen.height;
-            }
-            if (height <= 800)
-            {
-                labelSize = 16;
-                buttonSize = 12;
-            }
-            else if (height <= 900)
-            {
-                labelSize = 18;
-                buttonSize = 15;
-            }
-            else if (height <= 1100)
-            {
-                labelSize = 20;
-                buttonSize = 16;
-            }
-            else
-            {
-                labelSize = 22;
-                buttonSize = 18;
-            }
-            Main.logger.Log($"width:{width}, height:{height}, label:{labelSize}, button:{buttonSize}");
-        }
+        /// <summary>
+        /// 是否逆序
+        /// </summary>
+        public bool reverse = false;
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -566,27 +591,26 @@ namespace VillageHeadOfTaiwu
 
     public class Main
     {
-        public static UnityModManager.ModEntry.ModLogger logger;
-        public static Settings Setting;
-        public static bool enabled;
+        public static UnityModManager.ModEntry.ModLogger Logger { get; private set; }
+        public static Settings Setting { get; private set; }
+        public static bool Enabled { get; private set; }
 
         public static bool bindingKey = false;
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            enabled = value;
+            Enabled = value;
             return true;
         }
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            logger = modEntry.Logger;
+            Logger = modEntry.Logger;
             Setting = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
-            Setting.FitFont();
             return true;
         }
 
@@ -616,6 +640,7 @@ namespace VillageHeadOfTaiwu
             }
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
             Setting.skipTown = GUILayout.Toggle(Setting.skipTown, "忽略城镇");
+            Setting.reverse = GUILayout.Toggle(Setting.reverse, "降序排列");
             GUILayout.EndHorizontal();
         }
 
