@@ -13,3 +13,5 @@
 3. 天才血脈 & 全民天才 https://bbs.nga.cn/read.php?tid=15426564
 
 4. 个人用合理向练功房 https://bbs.nga.cn/read.php?tid=15394342
+
+5. 建筑2回合，上限50级，维护费改稅收 http://bbs.3dmgame.com/thread-5794755-1-1.html

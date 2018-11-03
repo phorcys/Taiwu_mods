@@ -1,104 +1,95 @@
-﻿using Harmony12;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace ModsCollection
 {
-    // 非太吾村民,也可邀為同道.  (把關係當作結義金蘭)
-    [HarmonyPatch(typeof(MassageWindow), "SetMassageWindow")]
-    public static class Patch1
+    public class Patchings
     {
-        static bool isFellow = false;
-        public static void Prefix(int[] baseEventDate, int chooseId)
+        private void FetchAgeData(int age, string str)
         {
-//            Main.Logger.Log(string.Join(", ",Array.ConvertAll(baseEventDate, i => i.ToString())));
-//            Main.Logger.Log( chooseId.ToString() );
-//            int num = baseEventDate[2];
-//            Main.Logger.Log(num.ToString());
-//            int num2 = int.Parse(DateFile.instance.eventDate[num][2]);
-//            Main.Logger.Log(num2.ToString());
-//            int num3 = DateFile.instance.MianActorID();
-//            Main.Logger.Log(num3.ToString());
-//            int num4 = (num2 != 0) ? ((num2 != -1) ? num2 : num3) : baseEventDate[1];
-//            Main.Logger.Log(num4.ToString());
-//            int num5 = int.Parse(DateFile.instance.GetActorDate(num4, 19, false));
-//            Main.Logger.Log(num5.ToString());
-//            int gangValueId2 = DateFile.instance.GetGangValueId(num5, int.Parse(DateFile.instance.GetActorDate(num4, 20, false)));
-//            Main.Logger.Log(gangValueId2.ToString());
-//            Main.Logger.Log(DateFile.instance.presetGangGroupDateValue[gangValueId2].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join() );
-//            Main.Logger.Log( DateFile.instance.presetGangGroupDateValue[gangValueId2][812] );
-
-            if (Main.settings.patch1 == 0) return;
-            if (chooseId != 1000000004) return; // 亲近……
-            isFellow = DateFile.instance.GetActorSocial(DateFile.instance.MianActorID(), 308, false).Contains(baseEventDate[1]);
-            if (!isFellow) DateFile.instance.AddSocial(DateFile.instance.MianActorID(), baseEventDate[1], 308);
-        }
-        public static void Postfix(int[] baseEventDate, int chooseId)
-        {
-            if (Main.settings.patch1 == 0) return;
-            if (chooseId != 1000000004) return;
-            if (!isFellow) DateFile.instance.RemoveActorSocial(DateFile.instance.MianActorID(), baseEventDate[1], 308);
-        }
-    }
-
-    [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
-    public static class WindowManage_WindowSwitch_Patch
-    {
-        [HarmonyAfter(new string[] { "CharacterFloatInfo" })]
-        public static void Postfix(ref int ___tipsW)
-        {
-            if (Main.settings.patch3a && ___tipsW == 680) ___tipsW = 760;
-        }
-    }
-
-    // 人口数量控制
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
-    public static class Loading_LoadBaseDate_Patch
-    {
-        public static void Postfix()
-        {
-//            Main.Logger.Log("Loading_LoadBaseDate_Patch");
-            Patch2();
-            Patch3();
-            Patch4();
+            int[] fields = { 2, 3, 4, 5, 6, 7, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112 };
+            string[] data = str.Split(',');
+            for (int i = 0; i < fields.Length; i++)
+                DateFile.instance.ageDate[age][fields[i]] = data[i];
         }
 
-        public static void Patch2()
+        public void FetchGangGroupValue(string data)
         {
-            if (Main.settings.patch2 == 0) return;
-
-            switch (Main.settings.patch2)
+            int[] keys = { 1, 1001, 101, 801, 802, 803, 804, 805, 806, 807, 808, 809, 810, 815, 816, 817, 819, 811, 812, 818, 813, 1002, 1003, 201, 301, 401, 501, 502, 601, 602, 701, 711, 712, 713, 721, 731, 741, 751 };
+            string[] fields = data.Split(',');
+            if (!DateFile.instance.presetGangGroupDateValue.ContainsKey(int.Parse(fields[0]))) DateFile.instance.presetGangGroupDateValue.Add(int.Parse(fields[0]), new Dictionary<int, string>());
+            for (int i = 1; i <= keys.Length; i++)
             {
-                case 0:
-                    break;
-                case 3:
-                case 1:
-                    DateFile.instance.actorFeaturesDate[4001][50024] = "1000"; //真阳纯阴
-                    DateFile.instance.actorFeaturesDate[4002][50024] = "-1000"; //杂阳毁阴  
-                    // 上面這樣執行,對有性經驗但沒孩子的人,造成不能生育!  而且原本單身的,變成高生育率. 開發思路有錯,待修改.
-
-                    if (Main.settings.patch2 == 3) goto case 2;
-                    break;
-                case 2:
-                    DateFile.instance.actorFeaturesDate[5001][50024] = "2000"; //璞玉韬光
-                    DateFile.instance.actorFeaturesDate[5002][50024] = "2000"; //神锋敛彩
-                    DateFile.instance.actorFeaturesDate[4004][50024] = "2000"; //被迫屈从
-                    DateFile.instance.actorFeaturesDate[4005][50024] = "2000"; //龙岛忠仆
-                    break;
+                if (!DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].ContainsKey(keys[i - 1]))
+                    DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].Add(keys[i - 1], fields[i]);
+                else
+                    DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])][keys[i - 1]] = fields[i];
             }
         }
-        // 天才世界 & 天才血脈 
-        public static void Patch3()
+
+        public void FetchEvent(string data)
         {
-            if (Main.settings.patch3b) //每月行動力100
+            string[] fields = data.Split(',');
+
+            if (!DateFile.instance.eventDate.ContainsKey(int.Parse(fields[0]))) DateFile.instance.eventDate.Add(int.Parse(fields[0]), new Dictionary<int, string>());
+
+            for (int i = 2; i < fields.Length; i++)
             {
-                foreach (int age in DateFile.instance.ageDate.Keys)
+                if (!DateFile.instance.eventDate[int.Parse(fields[0])].ContainsKey(i - 1)) 
+                    DateFile.instance.eventDate[int.Parse(fields[0])].Add(i - 1, fields[i]);
+                else
+                    DateFile.instance.eventDate[int.Parse(fields[0])][i - 1] = fields[i];
+            }
+        }
+
+        // 非太吾村民,也可邀為同道
+        public void Patch1()
+        {
+            if (Main.settings.patch1 == 1)
+            {
+                DateFile.instance.eventDate[9001][5] = "900100001|900100002|900100003|900100004";
+                FetchEvent("900100004,,,-1,（邀为同道……）,1,,NOF|FA&5,-1,END&90031&1,0,,0");
+            }
+            else // 還原遊戲預設值,
+            {
+                DateFile.instance.eventDate[9001][5] = "900100001|900100002|900100003";
+                DateFile.instance.eventDate.Remove(900100004);
+            }
+        }
+
+        // 人口数量控制
+        public void Patch2()
+        {
+            if (Main.settings.patch2 == 1)
+            {
+                switch (Main.settings.patch2)
                 {
-                    DateFile.instance.ageDate[age][1] = "100";
+                    case 0:
+                        break;
+                    case 3:
+                    case 1:
+                        DateFile.instance.actorFeaturesDate[4001][50024] = "1000"; //真阳纯阴
+                        DateFile.instance.actorFeaturesDate[4002][50024] = "-1000"; //杂阳毁阴  
+                        if (Main.settings.patch2 == 3) goto case 2;
+                        break;
+                    case 2:
+                        DateFile.instance.actorFeaturesDate[5001][50024] = "2000"; //璞玉韬光
+                        DateFile.instance.actorFeaturesDate[5002][50024] = "2000"; //神锋敛彩
+                        DateFile.instance.actorFeaturesDate[4004][50024] = "2000"; //被迫屈从
+                        DateFile.instance.actorFeaturesDate[4005][50024] = "2000"; //龙岛忠仆
+                        break;
                 }
             }
+            else
+            {// 還原遊戲預設值,
+                int[] editedFeatures = { 4001, 4002, 5001, 5002, 4004, 4005 };
+                foreach (int featureId in editedFeatures)
+                    DateFile.instance.actorFeaturesDate[featureId][50024] = "0";
+            }
+        }
 
+        // 天才世界 & 天才血脈 
+        public void Patch3()
+        {
             if (Main.settings.patch3a) //優質血脈遺傳
             {
                 foreach (int FeatureId in DateFile.instance.actorFeaturesDate.Keys)
@@ -109,42 +100,163 @@ namespace ModsCollection
                     }
                 }
             }
+            else
+            { // 還原
+                foreach (int FeatureId in DateFile.instance.actorFeaturesDate.Keys)
+                {
+                    if (FeatureId != 5001 && FeatureId != 5002 && DateFile.instance.actorFeaturesDate[FeatureId][4] == "3")
+                    {
+                        DateFile.instance.actorFeaturesDate[FeatureId][10] = "0";
+                    }
+                }
+            }
+
+
+            if (Main.settings.patch3b) //每月行動力100
+            {
+                foreach (int age in DateFile.instance.ageDate.Keys)
+                {
+                    DateFile.instance.ageDate[age][1] = "100";
+                }
+            }
+            else
+            { // 還原
+                int age = 0;
+                while (age <= 4) DateFile.instance.ageDate[age++][1] = "10";
+                while (age <= 14) DateFile.instance.ageDate[age++][1] = "20";
+                while (age <= 39) DateFile.instance.ageDate[age++][1] = "30";
+                while (age <= 89) DateFile.instance.ageDate[age++][1] = "20";
+                while (age <= 100) DateFile.instance.ageDate[age++][1] = "10";
+            }
+
 
             if (Main.settings.patch3c) //全世界都變天才
             {
                 foreach (int age in DateFile.instance.ageDate.Keys)
                 {
-                    DateFile.instance.ageDate[age][2] = "200";
-                    DateFile.instance.ageDate[age][3] = "200";
-                    DateFile.instance.ageDate[age][4] = "200";
-                    DateFile.instance.ageDate[age][5] = "200";
-                    DateFile.instance.ageDate[age][6] = "200";
-                    DateFile.instance.ageDate[age][7] = "200";
-                    DateFile.instance.ageDate[age][101] = "120";
-                    DateFile.instance.ageDate[age][102] = "120";
-                    DateFile.instance.ageDate[age][103] = "120";
-                    DateFile.instance.ageDate[age][104] = "120";
-                    DateFile.instance.ageDate[age][105] = "120";
-                    DateFile.instance.ageDate[age][106] = "120";
-                    DateFile.instance.ageDate[age][107] = "120";
-                    DateFile.instance.ageDate[age][108] = "120";
-                    DateFile.instance.ageDate[age][109] = "120";
-                    DateFile.instance.ageDate[age][110] = "120";
-                    DateFile.instance.ageDate[age][111] = "120";
-                    DateFile.instance.ageDate[age][112] = "120";
+                    int[] fields = { 2, 3, 4, 5, 6, 7 };
+                    foreach (int field in fields)
+                    {
+                        DateFile.instance.ageDate[age][field] = "200";
+                    }
+                    int[] fields2 = { 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112 };
+                    foreach (int field in fields2)
+                    {
+                        DateFile.instance.ageDate[age][field] = "120";
+                    }
                 }
+            }
+            else
+            { //還原
+                FetchAgeData(0, "0,15,-20,0,15,-20,10,10,10,10,10,10,0,0,0,0,0,0");
+                FetchAgeData(1, "0,15,-20,0,15,-20,10,10,10,10,10,10,0,0,0,0,0,0");
+                FetchAgeData(2, "0,15,-20,0,15,-20,10,10,10,10,10,10,0,0,0,0,0,0");
+                FetchAgeData(3, "0,15,-20,0,15,-20,10,10,10,10,10,10,0,0,0,0,0,0");
+                FetchAgeData(4, "0,15,-20,0,15,-20,10,10,10,10,10,10,10,10,10,10,10,10");
+                FetchAgeData(5, "0,14,-18,0,14,-18,15,17,19,21,19,14,15,14,19,15,14,21");
+                FetchAgeData(6, "0,14,-18,0,14,-18,20,24,28,32,28,18,20,18,28,20,18,32");
+                FetchAgeData(7, "0,14,-18,0,14,-18,25,31,37,43,37,22,25,22,37,25,22,43");
+                FetchAgeData(8, "0,14,-18,0,14,-18,30,38,46,54,46,26,30,26,46,30,26,54");
+                FetchAgeData(9, "0,14,-18,0,14,-18,35,45,55,65,55,30,35,30,55,35,30,65");
+                FetchAgeData(10, "0,13,-16,0,13,-16,40,52,64,76,64,34,40,34,64,40,34,76");
+                FetchAgeData(11, "0,13,-16,0,13,-16,45,59,73,87,73,38,45,38,73,45,38,87");
+                FetchAgeData(12, "0,13,-16,0,13,-16,50,66,82,98,82,42,50,42,82,50,42,98");
+                FetchAgeData(13, "0,13,-16,0,13,-16,55,73,91,109,91,46,55,46,91,55,46,109");
+                FetchAgeData(14, "0,13,-16,0,13,-16,60,80,100,120,100,50,60,50,100,60,50,120");
+                FetchAgeData(15, "0,12,-14,0,12,-14,70,90,110,120,110,55,70,55,110,70,55,120");
+                FetchAgeData(16, "0,12,-14,0,12,-14,80,100,120,120,120,60,80,60,120,80,60,120");
+                FetchAgeData(17, "0,12,-14,0,12,-14,90,110,120,120,120,65,90,65,120,90,65,120");
+                FetchAgeData(18, "0,12,-14,0,12,-14,100,120,120,120,120,70,100,70,120,100,70,120");
+                FetchAgeData(19, "0,12,-14,0,12,-14,110,120,120,110,120,75,110,75,120,110,75,115");
+                FetchAgeData(20, "0,11,-12,0,11,-12,120,120,120,100,120,80,120,80,120,120,80,110");
+                FetchAgeData(21, "0,11,-12,0,11,-12,120,120,118,99,118,81,120,81,118,120,81,110");
+                FetchAgeData(22, "0,11,-12,0,11,-12,120,120,116,98,116,82,120,82,116,120,82,110");
+                FetchAgeData(23, "0,11,-12,0,11,-12,120,120,114,97,114,83,120,83,114,120,83,110");
+                FetchAgeData(24, "0,11,-12,0,11,-12,120,120,112,96,112,84,120,84,112,120,84,110");
+                FetchAgeData(25, "0,10,-10,0,10,-10,120,120,110,95,110,85,120,85,110,120,85,110");
+                FetchAgeData(26, "0,10,-10,0,10,-10,120,120,108,94,108,86,120,86,108,120,86,110");
+                FetchAgeData(27, "0,10,-10,0,10,-10,120,120,106,93,106,87,120,87,106,120,87,110");
+                FetchAgeData(28, "0,10,-10,0,10,-10,120,120,104,92,104,88,120,88,104,120,88,110");
+                FetchAgeData(29, "0,10,-10,0,10,-10,120,120,102,91,102,89,120,89,102,120,89,110");
+                FetchAgeData(30, "0,-10,10,0,-10,10,120,120,100,90,100,90,120,90,100,120,90,110");
+                FetchAgeData(31, "0,-10,10,0,-10,10,120,118,99,90,99,91,120,91,99,118,91,109");
+                FetchAgeData(32, "0,-10,10,0,-10,10,120,116,98,90,98,92,120,92,98,116,92,108");
+                FetchAgeData(33, "0,-10,10,0,-10,10,120,114,97,90,97,93,120,93,97,114,93,107");
+                FetchAgeData(34, "0,-10,10,0,-10,10,120,112,96,90,96,94,120,94,96,112,94,106");
+                FetchAgeData(35, "0,-11,12,0,-11,12,120,110,95,90,95,95,120,95,95,110,95,105");
+                FetchAgeData(36, "0,-11,12,0,-11,12,120,108,94,90,94,96,120,96,94,108,96,104");
+                FetchAgeData(37, "0,-11,12,0,-11,12,120,106,93,90,93,97,120,97,93,106,97,103");
+                FetchAgeData(38, "0,-11,12,0,-11,12,120,104,92,90,92,98,120,98,92,104,98,102");
+                FetchAgeData(39, "0,-11,12,0,-11,12,120,102,91,90,91,99,120,99,91,102,99,101");
+                FetchAgeData(40, "0,-12,14,0,-12,14,120,100,90,90,90,100,120,100,90,100,100,100");
+                FetchAgeData(41, "0,-12,14,0,-12,14,118,99,89,91,90,101,118,100,89,98,100,100");
+                FetchAgeData(42, "0,-12,14,0,-12,14,116,98,88,92,90,102,116,100,88,96,100,100");
+                FetchAgeData(43, "0,-12,14,0,-12,14,114,97,87,93,90,103,114,100,87,94,100,100");
+                FetchAgeData(44, "0,-12,14,0,-12,14,112,96,86,94,90,104,112,100,86,92,100,100");
+                FetchAgeData(45, "0,-13,16,0,-13,16,110,95,85,95,90,105,110,100,85,90,100,100");
+                FetchAgeData(46, "0,-13,16,0,-13,16,108,94,84,96,90,106,108,100,84,88,100,100");
+                FetchAgeData(47, "0,-13,16,0,-13,16,106,93,83,97,90,107,106,100,83,86,100,100");
+                FetchAgeData(48, "0,-13,16,0,-13,16,104,92,82,98,90,108,104,100,82,84,100,100");
+                FetchAgeData(49, "0,-13,16,0,-13,16,102,91,81,99,90,109,102,100,81,82,100,100");
+                FetchAgeData(50, "0,-14,18,0,-14,18,100,90,80,100,90,110,100,100,80,80,100,100");
+                FetchAgeData(51, "0,-14,18,0,-14,18,99,89,79,100,91,111,99,101,79,78,101,99");
+                FetchAgeData(52, "0,-14,18,0,-14,18,98,88,78,100,92,112,98,102,78,76,102,98");
+                FetchAgeData(53, "0,-14,18,0,-14,18,97,87,77,100,93,113,97,103,77,74,103,97");
+                FetchAgeData(54, "0,-14,18,0,-14,18,96,86,76,100,94,114,96,104,76,72,104,96");
+                FetchAgeData(55, "0,-15,20,0,-15,20,95,85,75,100,95,115,95,105,75,70,105,95");
+                FetchAgeData(56, "0,-15,20,0,-15,20,94,84,74,100,96,116,94,106,74,68,106,94");
+                FetchAgeData(57, "0,-15,20,0,-15,20,93,83,73,100,97,117,93,107,73,66,107,93");
+                FetchAgeData(58, "0,-15,20,0,-15,20,92,82,72,100,98,118,92,108,72,64,108,92");
+                FetchAgeData(59, "0,-15,20,0,-15,20,91,81,71,100,99,119,91,109,71,62,109,91");
+                FetchAgeData(60, "0,-16,22,0,-16,22,90,80,70,100,100,120,90,110,70,60,110,90");
+                FetchAgeData(61, "0,-16,22,0,-16,22,89,79,69,100,100,120,89,110,69,61,110,89");
+                FetchAgeData(62, "0,-16,22,0,-16,22,88,78,68,100,100,120,88,110,68,62,110,88");
+                FetchAgeData(63, "0,-16,22,0,-16,22,87,77,67,100,100,120,87,110,67,63,110,87");
+                FetchAgeData(64, "0,-16,22,0,-16,22,86,76,66,100,100,120,86,110,66,64,110,86");
+                FetchAgeData(65, "0,-17,24,0,-17,24,85,75,65,100,100,120,85,110,65,65,110,85");
+                FetchAgeData(66, "0,-17,24,0,-17,24,84,74,64,100,100,120,84,110,64,66,110,84");
+                FetchAgeData(67, "0,-17,24,0,-17,24,83,73,63,100,100,120,83,110,63,67,110,83");
+                FetchAgeData(68, "0,-17,24,0,-17,24,82,72,62,100,100,120,82,110,62,68,110,82");
+                FetchAgeData(69, "0,-17,24,0,-17,24,81,71,61,100,100,120,81,110,61,69,110,81");
+                FetchAgeData(70, "0,-18,26,0,-18,26,80,70,60,100,100,120,80,110,60,70,110,80");
+                FetchAgeData(71, "0,-18,26,0,-18,26,79,69,59,102,100,120,79,111,59,71,111,79");
+                FetchAgeData(72, "0,-18,26,0,-18,26,78,68,58,104,100,120,78,112,58,72,112,78");
+                FetchAgeData(73, "0,-18,26,0,-18,26,77,67,57,106,100,120,77,113,57,73,113,77");
+                FetchAgeData(74, "0,-18,26,0,-18,26,76,66,56,108,100,120,76,114,56,74,114,76");
+                FetchAgeData(75, "0,-19,28,0,-19,28,75,65,55,110,100,120,75,115,55,75,115,75");
+                FetchAgeData(76, "0,-19,28,0,-19,28,74,64,54,112,100,120,74,116,54,76,116,74");
+                FetchAgeData(77, "0,-19,28,0,-19,28,73,63,53,114,100,120,73,117,53,77,117,73");
+                FetchAgeData(78, "0,-19,28,0,-19,28,72,62,52,116,100,120,72,118,52,78,118,72");
+                FetchAgeData(79, "0,-19,28,0,-19,28,71,61,51,118,100,120,71,119,51,79,119,71");
+                FetchAgeData(80, "0,-20,30,0,-20,30,70,60,50,120,100,120,70,120,50,80,120,70");
+                FetchAgeData(81, "0,-20,30,0,-20,30,69,59,50,120,102,120,69,120,50,81,120,69");
+                FetchAgeData(82, "0,-20,30,0,-20,30,68,58,50,120,104,120,68,120,50,82,120,68");
+                FetchAgeData(83, "0,-20,30,0,-20,30,67,57,50,120,106,120,67,120,50,83,120,67");
+                FetchAgeData(84, "0,-20,30,0,-20,30,66,56,50,120,108,120,66,120,50,84,120,66");
+                FetchAgeData(85, "0,-20,30,0,-20,30,65,55,50,120,110,120,65,120,50,85,120,65");
+                FetchAgeData(86, "0,-20,30,0,-20,30,64,54,50,120,112,120,64,120,50,86,120,64");
+                FetchAgeData(87, "0,-20,30,0,-20,30,63,53,50,120,114,120,63,120,50,87,120,63");
+                FetchAgeData(88, "0,-20,30,0,-20,30,62,52,50,120,116,120,62,120,50,88,120,62");
+                FetchAgeData(89, "0,-20,30,0,-20,30,61,51,50,120,118,120,61,120,50,89,120,61");
+                FetchAgeData(90, "0,-20,30,0,-20,30,60,50,50,120,120,120,60,120,50,90,120,60");
+                FetchAgeData(91, "0,-20,30,0,-20,30,59,50,50,120,120,120,59,120,50,91,120,59");
+                FetchAgeData(92, "0,-20,30,0,-20,30,58,50,50,120,120,120,58,120,50,92,120,58");
+                FetchAgeData(93, "0,-20,30,0,-20,30,57,50,50,120,120,120,57,120,50,93,120,57");
+                FetchAgeData(94, "0,-20,30,0,-20,30,56,50,50,120,120,120,56,120,50,94,120,56");
+                FetchAgeData(95, "0,-20,30,0,-20,30,55,50,50,120,120,120,55,120,50,95,120,55");
+                FetchAgeData(96, "0,-20,30,0,-20,30,54,50,50,120,120,120,54,120,50,96,120,54");
+                FetchAgeData(97, "0,-20,30,0,-20,30,53,50,50,120,120,120,53,120,50,97,120,53");
+                FetchAgeData(98, "0,-20,30,0,-20,30,52,50,50,120,120,120,52,120,50,98,120,52");
+                FetchAgeData(99, "0,-20,30,0,-20,30,51,50,50,120,120,120,51,120,50,99,120,51");
             }
         }
 
         // 个人用合理向练功房
-        public static void Patch4()
+        public void Patch4()
         {
-//            Main.Logger.Log("Patch 4:"+Main.settings.patch4.ToString());
             if (Main.settings.patch4 == 0) return;
 
-//            Main.Logger.Log("Patch start");
             FetchEvent("9013,城镇平民特殊互动,0,0,,1,901300001|901300002|901300003|901300004|901300005|901300006|901300007|901300008|901300009|901300010|1000011120|1000011130|1000011140,,,,0,,0");
-//            Main.Logger.Log("Patch FetchEvent 9013");
             FetchEvent("9898,青梅竹马互动,0,0,要用我的功力来模拟相枢化身？不会有危险吧……,1,1000011111|1000011112|1000011113|1000011114|1000011115|1000011116|1000011117|1000011118|1000011119|900700001,,,,0,,0");
             FetchEvent("1000011110,,,-1,（相枢幻身……）\n<color=#4B4B4BFF>（消耗银钱：1000；消耗威望：1000；消耗时间：5）</color>,1,,FA&6|TIME&5,9898,TIME&5|RES&5&-1000|RES&6&-1000,0,,0");
             FetchEvent("1000011111,,,-1,请助我一臂之力！（化身·莫女衣……）,1,,,-1,BAT&100101&0,0,,0");
@@ -392,57 +504,169 @@ namespace ModsCollection
             FetchEnemyTeam("100108,0,0,10,0,0,300,2008,0|0,6009|6009|6009,100,40,0,3,1,100,1,1,-1,100,0,3,176&1,185&1,186&1");
             FetchEnemyTeam("100109,0,0,10,0,0,300,2009,0|0,6009|6009|6009,100,40,0,3,1,100,1,1,-1,100,0,3,176&1,185&1,186&1");
 
-//            Main.Logger.Log("Patch 4 loaded");
         }
 
-        public static void FetchEnemyTeam(string data)
+        public void FetchEnemyTeam(string data)
         {
-            int[] keys = Array.ConvertAll("99,6,7,15,17,16,1,12,2,10,3,4,5,8,9,11,13,14,23,97,98,101,102,103".Split(','), int.Parse);
+            int[] keys = { 99, 6, 7, 15, 17, 16, 1, 12, 2, 10, 3, 4, 5, 8, 9, 11, 13, 14, 23, 97, 98, 101, 102, 103 };
             string[] fields = data.Split(',');
             if (!DateFile.instance.enemyTeamDate.ContainsKey(int.Parse(fields[0]))) DateFile.instance.enemyTeamDate.Add(int.Parse(fields[0]), new Dictionary<int, string>());
-//            Main.Logger.Log(DateFile.instance.enemyTeamDate[int.Parse(fields[0])].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
             for (int i = 1; i <= keys.Length; i++)
             {
                 if (!DateFile.instance.enemyTeamDate[int.Parse(fields[0])].ContainsKey(keys[i - 1])) DateFile.instance.enemyTeamDate[int.Parse(fields[0])].Add(keys[i - 1], "");
-                DateFile.instance.enemyTeamDate[int.Parse(fields[0])][keys[i-1]] = fields[i];
+                DateFile.instance.enemyTeamDate[int.Parse(fields[0])][keys[i - 1]] = fields[i];
             }
-//            Main.Logger.Log(DateFile.instance.enemyTeamDate[int.Parse(fields[0])].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
-//            Main.Logger.Log("FetchEnemyTeam:" + fields[0]);
         }
 
-        public static void FetchGangGroupValue(string data)
+        // 种田派终极mod 
+        public void Patch5()
         {
-            int[] keys = Array.ConvertAll("1,1001,101,801,802,803,804,805,806,807,808,809,810,815,816,817,819,811,812,818,813,1002,1003,201,301,401,501,502,601,602,701,711,712,713,721,731,741,751".Split(','), int.Parse);
-            string[] fields = data.Split(',');
-            if (!DateFile.instance.presetGangGroupDateValue.ContainsKey(int.Parse(fields[0]))) DateFile.instance.presetGangGroupDateValue.Add(int.Parse(fields[0]), new Dictionary<int, string>());
-            //            Main.Logger.Log(DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
-            for (int i = 1; i <= keys.Length; i++)
+            int[] buildings = {
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 20001, 20002, 20003,  //天然資源 column_31="0|3"
+                10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010, 11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010, //資源關連建築
+                1001, 1002, 1003, 1004, 1005, 1006, //太吾村, 居所, 箱房, 太吾村倉庫, 祠堂, 驿站
+                2001, 2101, 2201, 2301, 2401, 2501, 2601, 2701, 2801, 2901, 3001, 3101, 3201, 3301, 3401, 3501, 3601, // 太吾村基本建築
+                2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, //練功房扩展建筑
+                2102, 2103, 2104, 2105, 2106, 2107, //琴舍扩展建筑
+                2202, 2203, 2204, 2205, 2206, 2207, //弈轩扩展建筑
+                2302, 2303, 2304, 2305, 2306, 2307, //书房扩展建筑
+                2402, 2403, 2404, 2405, 2406, 2407, //画阁扩展建筑
+                2502, 2503, 2504, 2505, 2506, 2507, //观星台扩展建筑
+                3302, 3303, 3304, 3305, 3306, 3307, //云房扩展建筑
+                3402, 3403, 3404, 3405, 3406, 3407, //禅房扩展建筑
+                2602, 2603, 2604, 2605, 2606, 2607, 2608, 2609, 2610, //甘泉厅扩展建筑
+                2702, 2703, 2704, 2705, 2706, 2707, 2708, 2709, 2710, //火炼室扩展建筑
+                2802, 2803, 2804, 2805, 2806, 2807, 2808, 2809, 2810, //木工房扩展建筑
+                2902, 2903, 2904, 2905, 2906, 2907, 2908, 2909, 2910, //药房扩展建筑
+                3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010, //幽室扩展建筑
+                3102, 3103, 3104, 3105, 3106, 3107, 3108, 3109, 3110, //绣楼扩展建筑
+                3202, 3203, 3204, 3205, 3206, 3207, 3208, 3209, 3210, //巧匠屋扩展建筑
+                3502, 3503, 3504, 3505, 3506, 3507, 3508, 3509, 3510, //食窖扩展建筑
+                3602, 3603, 3604, 3605, 3606, 3607, 3608, 3609, 3610, 3611, //长街扩展建筑
+                };
+
+            if (Main.settings.patch5a) //建筑2回合
             {
-                if (!DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].ContainsKey(keys[i - 1])) DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].Add(keys[i - 1], "");
-                DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])][keys[i-1]] = fields[i];
+                foreach (int id in buildings)
+                {
+                    if (System.Math.Abs(int.Parse(DateFile.instance.basehomePlaceDate[id][21]))>2)
+                        DateFile.instance.basehomePlaceDate[id][21] = "2";
+                }
             }
-//            Main.Logger.Log(DateFile.instance.presetGangGroupDateValue[int.Parse(fields[0])].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
-//            Main.Logger.Log("FetchGangGroupValue:" + fields[0]);
-        }
-        public static void FetchEvent(string data)
-        {
-//            Main.Logger.Log("FetchEvent start:" + data);
-            string[] fields = data.Split(',');
-//            Main.Logger.Log("fields.Length = " + fields.Length);
+            else
+            {//還原
+                Dictionary<int, int> data21 = new Dictionary<int, int>(){
+                    {4,-20},{101,-20},{106,-20},{108,-20},{110,-20},{0,0},{1007,0},{1008,0},{1009,0},{1010,0},{1011,0},{1012,0},{1013,0},{1014,0},{1015,0},{1016,0},{1017,0},{1018,0},{1019,0},{1020,0},{1021,0},{1022,0},{1023,0},{1024,0},{30001,0},{30002,0},{30003,0},{30004,0},{30005,0},{30006,0},{30007,0},{30008,0},{30009,0},{30010,0},{30011,0},{30012,0},{30013,0},{30014,0},{30015,0},{31001,0},{31002,0},{31003,0},{31004,0},{31005,0},{31006,0},{31007,0},{31008,0},{31009,0},{31010,0},{31011,0},{31012,0},{31013,0},{31014,0},{31015,0},{32001,0},{32002,0},{32003,0},{40001,0},{40002,0},{40003,0},{2602,1},{20001,1},{1,2},{3,2},{7,2},{9,2},{1002,2},{2001,2},{2005,2},{2006,2},{2007,2},{2008,2},{2009,2},{2010,2},{2011,2},{2012,2},{2013,2},{2014,2},{2015,2},{2101,2},{2201,2},{2301,2},{2401,2},{2501,2},{2601,2},{2701,2},{2801,2},{2901,2},{3001,2},{3101,2},{3201,2},{3301,2},{3401,2},{3501,2},{3601,2},{10001,2},{10002,2},{10003,2},{10004,2},{10005,2},{10006,2},{10007,2},{10008,2},{10009,2},{10010,2},{20002,2},{2,3},{5,3},{8,3},{10,3},{1003,3},{1004,3},{1006,3},{2002,3},{2003,3},{2004,3},{2019,3},{2020,3},{2021,3},{2022,3},{2023,3},{2024,3},{2025,3},{2026,3},{2027,3},{2028,3},{2029,3},{2030,3},{2102,3},{2202,3},{2302,3},{2402,3},{2502,3},{2603,3},{2702,3},{2802,3},{2902,3},{3002,3},{3102,3},{3202,3},{3302,3},{3402,3},{3502,3},{3602,3},{3603,3},{3604,3},{3605,3},{20003,3},{6,4},{105,5},{107,5},{1005,5},{2016,5},{2017,5},{2018,5},{103,6},{109,6},{2031,6},{2103,6},{2104,6},{2203,6},{2204,6},{2303,6},{2304,6},{2403,6},{2404,6},{2503,6},{2504,6},{2604,6},{2605,6},{2703,6},{2704,6},{2803,6},{2804,6},{2903,6},{2904,6},{3003,6},{3004,6},{3103,6},{3104,6},{3203,6},{3204,6},{3303,6},{3304,6},{3403,6},{3404,6},{3503,6},{3504,6},{3606,6},{3607,6},{102,8},{104,8},{2032,8},{2105,8},{2106,8},{2205,8},{2206,8},{2305,8},{2306,8},{2405,8},{2406,8},{2505,8},{2506,8},{2606,8},{2607,8},{2608,8},{2609,8},{2705,8},{2706,8},{2707,8},{2708,8},{2805,8},{2806,8},{2807,8},{2808,8},{2905,8},{2906,8},{2907,8},{2908,8},{3005,8},{3006,8},{3007,8},{3008,8},{3105,8},{3106,8},{3107,8},{3108,8},{3205,8},{3206,8},{3207,8},{3208,8},{3305,8},{3306,8},{3405,8},{3406,8},{3505,8},{3506,8},{3507,8},{3508,8},{3608,8},{3609,8},{3610,8},{3611,8},{11001,8},{11002,8},{11003,8},{11004,8},{11005,8},{11006,8},{11007,8},{11008,8},{11009,8},{11010,8},{1001,10},{2033,12},{2107,12},{2207,12},{2307,12},{2407,12},{2507,12},{2610,12},{2709,12},{2809,12},{2909,12},{3009,12},{3109,12},{3209,12},{3307,12},{3407,12},{3509,12},{2710,18},{2810,18},{2910,18},{3010,18},{3110,18},{3210,18},{3510,18}
+                };
+                foreach (int buildingId in buildings)
+                    DateFile.instance.basehomePlaceDate[buildingId][21] = data21[buildingId].ToString();
+            }
 
-            if (!DateFile.instance.eventDate.ContainsKey(int.Parse(fields[0]))) DateFile.instance.eventDate.Add(int.Parse(fields[0]),new Dictionary<int, string>());
-//            Main.Logger.Log(DateFile.instance.eventDate[int.Parse(fields[0])].Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
-
-            for (int i = 2; i < fields.Length; i++)
+            if (Main.settings.patch5b) //建筑上限50级
             {
-
-                if (!DateFile.instance.eventDate[int.Parse(fields[0])].ContainsKey(i - 1)) DateFile.instance.eventDate[int.Parse(fields[0])].Add(i - 1, "");
-//                Main.Logger.Log("FetchEvent: fields[" + (i - 1).ToString() + "] '" + DateFile.instance.eventDate[int.Parse(fields[0])][i - 1] + "' > '" + fields[i] + "'");
-                DateFile.instance.eventDate[int.Parse(fields[0])][i - 1] = fields[i];
-                
+                foreach (int id in buildings)
+                {
+                    DateFile.instance.basehomePlaceDate[id][1] = "50";
+                }
             }
-//            Main.Logger.Log("FetchEvent:" + fields[0]);
-        }
+            else
+            {//還原
+                List<int> dataIs1 = new List<int>() { 2507, 2709, 2809, 2909, 3009, 3109, 3209, 3509, 40001, 40002, 40003 };
+                List<int> dataIs10 = new List<int>() { 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2105, 2106, 2205, 2206, 2305, 2306, 2405, 2406, 2505, 2506, 2606, 2607, 2705, 2706, 2805, 2806, 2905, 2906, 3005, 3006, 3105, 3106, 3205, 3206, 3305, 3306, 3405, 3406, 3505, 3506, 3608, 3609 };
 
+                foreach (int buildingId in buildings)
+                {
+                    if (dataIs1.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][1] = "1";
+                    else if (dataIs10.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][1] = "10";
+                    else DateFile.instance.basehomePlaceDate[buildingId][1] = "20";
+                }
+            }
+
+            if (Main.settings.patch5c) //维护费改為稅收
+            {
+                foreach (int id in buildings)
+                {
+                    if (DateFile.instance.basehomePlaceDate[id][74] != "0")
+                        DateFile.instance.basehomePlaceDate[id][74] = System.Math.Abs(int.Parse(DateFile.instance.basehomePlaceDate[id][74]) * -1).ToString();
+                }
+                DateFile.instance.massageDate[2][3] = "建筑物收入";
+            }
+            else
+            {
+                List<int> dataIs10 = new List<int>() { 2602 };
+                List<int> dataIs25 = new List<int>() { 1002, 2001, 2030, 2101, 2102, 2201, 2202, 2301, 2302, 2401, 2402, 2501, 2502, 2601, 2603, 2701, 2702, 2801, 2802, 2901, 2902, 3001, 3002, 3101, 3102, 3201, 3202, 3301, 3302, 3401, 3402, 3501, 3502, 3601, 3602, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010 };
+                List<int> dataIs50 = new List<int>() { 1003, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2031, 2103, 2104, 2203, 2204, 2303, 2304, 2403, 2404, 2503, 2504, 2604, 2605, 2703, 2704, 2803, 2804, 2903, 2904, 3003, 3004, 3103, 3104, 3203, 3204, 3303, 3304, 3403, 3404, 3503, 3504, 3603, 3606, 3607 };
+                List<int> dataIs75 = new List<int>() { 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2032, 2105, 2106, 2205, 2206, 2305, 2306, 2405, 2406, 2505, 2506, 2606, 2607, 2705, 2706, 2805, 2806, 2905, 2906, 3005, 3006, 3105, 3106, 3205, 3206, 3305, 3306, 3405, 3406, 3505, 3506, 3604, 3608, 3609 };
+                List<int> dataIs100 = new List<int>() { 2033, 2107, 2207, 2307, 2407, 2507, 2608, 2609, 2610, 2707, 2708, 2709, 2710, 2807, 2808, 2809, 2810, 2907, 2908, 2909, 2910, 3007, 3008, 3009, 3010, 3107, 3108, 3109, 3110, 3207, 3208, 3209, 3210, 3307, 3407, 3507, 3508, 3509, 3510, 3605, 3610, 3611, 11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010 };
+                foreach (int buildingId in buildings)
+                {
+                    if (dataIs10.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][74] = "10";
+                    else if (dataIs25.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][74] = "25";
+                    else if (dataIs50.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][74] = "50";
+                    else if (dataIs75.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][74] = "75";
+                    else if (dataIs100.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][74] = "100";
+                    else DateFile.instance.basehomePlaceDate[buildingId][74] = "0";
+                }
+                DateFile.instance.massageDate[2][3] = "建筑维护费";
+            }
+
+            if (Main.settings.patch5d) //倉庫容量提昇
+            {
+                 DateFile.instance.basehomePlaceDate[1001][63] = "3000"; 
+                 DateFile.instance.basehomePlaceDate[1005][63] = "1500"; 
+                 DateFile.instance.basehomePlaceDate[1006][63] = "1500"; 
+            }
+            else
+            {
+                DateFile.instance.basehomePlaceDate[1001][63] = "0";
+                DateFile.instance.basehomePlaceDate[1005][63] = "0";
+                DateFile.instance.basehomePlaceDate[1006][63] = "0";
+                DateFile.instance.basehomePlaceDate[2002][63] = "0";
+            }
+
+            if (Main.settings.patch5e) //工作效率提昇
+            {
+                foreach (int id in buildings)
+                {
+                    if (DateFile.instance.basehomePlaceDate[id][91] != "0")
+                        DateFile.instance.basehomePlaceDate[id][91] = "500"; //降低任務目標
+                    if (DateFile.instance.basehomePlaceDate[id][51] != "0")
+                        DateFile.instance.basehomePlaceDate[id][51] = "20"; //降低友好需求
+                }
+            }
+            else
+            {//還原
+                List<int> dataIs500 = new List<int>() { 1006, 2030, 2031, 2102, 2104, 2202, 2204, 2302, 2304, 2402, 2404, 2502, 2504, 2602, 2603, 2605, 2610, 2702, 2704, 2802, 2804, 2902, 2904, 3002, 3004, 3102, 3104, 3202, 3204, 3302, 3304, 3402, 3404, 3502, 3504, 3602, 3603, 3604, 3605, 3607, 3610, 3611 };
+                List<int> dataIs1000 = new List<int>() { 2608, 2609, 2707, 2708, 2807, 2808, 2907, 2908, 3007, 3008, 3107, 3108, 3207, 3208, 3507, 3508, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010 };
+                List<int> dataIs1500 = new List<int>() { 11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010 };
+                List<int> dataIs3000 = new List<int>() { 2032, 2103, 2203, 2303, 2403, 2503, 2604, 2703, 2803, 2903, 3003, 3103, 3203, 3303, 3403, 3503, 3606 };
+                foreach (int buildingId in buildings)
+                {
+                    if (dataIs500.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][91] = "500";
+                    else if (dataIs1000.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][91] = "1000";
+                    else if (dataIs1500.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][91] = "1500";
+                    else if (dataIs3000.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][91] = "3000";
+                    else DateFile.instance.basehomePlaceDate[buildingId][91] = "0";
+                }
+                List<int> dataIs20 = new List<int>() { 2602, 3602 };
+                List<int> dataIs30 = new List<int>() { 1006, 2102, 2202, 2302, 2402, 2502, 2603, 2702, 2802, 2902, 3002, 3102, 3202, 3302, 3402, 3502, 3603, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009, 10010 };
+                List<int> dataIs40 = new List<int>() { 2103, 2203, 2303, 2403, 2503, 2604, 2703, 2803, 2903, 3003, 3103, 3203, 3303, 3403, 3503, 3604, 3606 };
+                List<int> dataIs50 = new List<int>() { 2104, 2204, 2304, 2404, 2504, 2605, 2704, 2804, 2904, 3004, 3104, 3204, 3304, 3404, 3504, 3605, 3607, 11001, 11002, 11003, 11004, 11005, 11006, 11007, 11008, 11009, 11010 };
+                List<int> dataIs60 = new List<int>() { 2608, 2609, 2610, 2707, 2708, 2807, 2808, 2907, 2908, 3007, 3008, 3107, 3108, 3207, 3208, 3507, 3508, 3610, 3611 };
+                List<int> dataIs100 = new List<int>() { 2030, 2031, 2032 };
+                foreach (int buildingId in buildings)
+                {
+                   if (dataIs20.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "20";
+                    else if (dataIs30.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "30";
+                    else if (dataIs40.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "40";
+                    else if (dataIs50.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "50";
+                    else if (dataIs60.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "60";
+                    else if (dataIs100.Contains(buildingId)) DateFile.instance.basehomePlaceDate[buildingId][51] = "100";
+                    else DateFile.instance.basehomePlaceDate[buildingId][74] = "0";
+                }
+
+            }
+
+        }
     }
 }
