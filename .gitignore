@@ -337,6 +337,3 @@ Properties
 *.exe
 *.sln
 build
-CMakeLists.txt
-CMakeLists.txt
-genvsproj.cmd
