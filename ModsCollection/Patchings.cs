@@ -629,7 +629,7 @@ namespace ModsCollection
                 foreach (int id in buildings)
                 {
                     if (DateFile.instance.basehomePlaceDate[id][91] != "0")
-                        DateFile.instance.basehomePlaceDate[id][91] = "500"; //降低任務目標
+                        DateFile.instance.basehomePlaceDate[id][91] = "400"; //降低任務目標, 每時節50%
                     if (DateFile.instance.basehomePlaceDate[id][51] != "0")
                         DateFile.instance.basehomePlaceDate[id][51] = "20"; //降低友好需求
                 }
