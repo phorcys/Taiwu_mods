@@ -93,7 +93,7 @@ namespace Sth4nothing.UseStorageBook
             int bookId = int.Parse(df.GetItemDate(itemId, 32));
             
             // 品级
-            int pinji = int.Parse(df.gongFaDate[bookId][2]);
+            int pinji = int.Parse(df.gongFaDate[bookId][2]) - 1;
             Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
