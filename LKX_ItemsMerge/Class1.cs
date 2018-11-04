@@ -235,7 +235,8 @@ namespace LKX_ItemsMerge
                     string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
                         level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
                     
-                    if (!Main.settings.drugsLevel.Contains(int.Parse(level)) && type != "31") continue;
+                    if (type != "31") continue;
+                    if (!Main.settings.drugsLevel.Contains(int.Parse(level))) continue;
                     if (int.Parse(surpluses) < (Main.settings.drugsCount * Main.settings.drugsSize)) continue;
 
                     if (!items.ContainsKey(int.Parse(id))) items.Add(int.Parse(id), itemId);
