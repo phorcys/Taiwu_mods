@@ -1,8 +1,8 @@
 ﻿{
   "Id": "GuiWarehouse",
-  "DisplayName": "鬼的仓库",
+  "DisplayName": "鬼的仓库优化",
   "Version": "1.2.0",
   "AssemblyName": "GuiWarehouse.dll",
-  "EntryMethod": "GuiWarehouse.Main.Load"
+  "EntryMethod": "GuiWarehouse.Main.Load",
   "Requirements":["GuiBaseUI"]
 }

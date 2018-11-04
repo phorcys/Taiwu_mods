@@ -1,166 +1,273 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using GuiBaseUI;
+using System.Linq;
 
 namespace GuiWarehouse
 {
-    public class NewWarehouse
+    public class NewWarehouse:MonoBehaviour
     {
-        static NewWarehouse instance;
-        public static NewWarehouse Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = new NewWarehouse();
-                }
-                else if(instance.gameObject==null)
-                {
-                    instance.Init();
-                }
-                return instance;
-            }
-        }
-        private NewWarehouse()
-        {
-            Main.Logger.Log("NewWarehouse 29");
-            Init();
-        }
-
-        private void Init()
-        {
-            GameObject Canvas = CreateUI.NewCanvas();
-
-            Main.Logger.Log("Init 35");
-            RectTransform actorItemHolder = ((RectTransform)Warehouse.instance.actorItemHolder[1]);
-            //Vector2 size = actorItemHolder.sizeDelta;
-            Vector2 size = new Vector2(600, 600);
-            gameObject = actorItemHolder.parent.gameObject;
-
-            GameObject left = CreateUI.NewScrollView(size, BarType.Vertical, ContentType.VerticalLayout);
-            left.transform.SetParent(Canvas.transform, false);
-            Canvas canvas = left.AddComponent<Canvas>();
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = GuiBaseUI.Main.MainCanvas.sortingOrder + 100;
-
-
-            GameObject prefab = Warehouse.instance.warehouseItemIcon;
-            RectTransform rPrefab = (RectTransform)prefab.transform;
-            GameObject itemCell = new GameObject("itemCell", new Type[] { typeof(RectTransform),typeof(Image) });
-            itemCell.layer = GuiBaseUI.Main.Layer;
-            RectTransform rItemCell = (RectTransform)itemCell.transform;
-            rItemCell.SetParent(actorItemHolder.parent,false);
-            rItemCell.anchorMin = new Vector2(0.5f, 0.5f);
-            rItemCell.anchorMax = new Vector2(0.5f, 0.5f);
-            rItemCell.anchoredPosition = new Vector2(0, 0);
-            rItemCell.pivot = new Vector2(0.5f, 0.5f);
-            //rItemCell.sizeDelta = new Vector2(rPrefab.sizeDelta.x * 8 + 20, rPrefab.sizeDelta.y);
-            rItemCell.sizeDelta = new Vector2(600, 600 / 8);
-            HorizontalLayoutGroup hor = itemCell.AddComponent<HorizontalLayoutGroup>();
-            hor.childControlHeight = false;
-            hor.childControlWidth = false;
-            hor.childForceExpandHeight = false;
-            hor.childForceExpandWidth = false;
-            hor.childAlignment = TextAnchor.UpperLeft;
-            for (int i = 0; i < 8; i++)
-            {
-                GameObject go = UnityEngine.Object.Instantiate(prefab);
-                go.transform.SetParent(rPrefab, false);
-                RectTransform rect = (RectTransform)go.transform;
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = new Vector2(0, 0);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(600 / 8, 600 / 8);
-                Main.Logger.Log("Init i " + i.ToString());
-            }
-            itemCell.SetActive(false);
-            WarehouseItem warehouseItem = itemCell.AddComponent<WarehouseItem>();
-            bigDataScroll = new BigDataScroll(left.GetComponent<ScrollRect>(), warehouseItem, SetData);
-            //bigDataScroll.cellHeight = rPrefab.sizeDelta.y;
-            bigDataScroll.cellHeight = 600 / 8;
-            Main.Logger.Log("Init 69");
-
-            //test(GuiBaseUI.Main.MainCanvas.transform,0);
-        }
-
-        //��ӡUI�ṹ
-        //public void test(Transform tf, int idx)
-        //{
-        //    string s = "";
-        //    for (int i = 0; i < idx; i++)
-        //    {
-        //        s += "--";
-        //    }
-        //    s += tf.ToString();
-        //    Main.Logger.Log(s);
-        //    idx++;
-        //    for (int i = 0; i < tf.childCount; i++)
-        //    {
-        //        Transform child = tf.GetChild(i);
-        //        test(child, idx);
-        //    }
-        //}
-
-        GameObject gameObject;
+        private bool actor;
+        private int typ;
         BigDataScroll bigDataScroll;
-        private List<int> m_data;
-        public List<int> data { set
+        public ScrollRect scrollRect;
+        private int[] m_data;
+        public int[] data
+        {
+            set
             {
-                Main.Logger.Log("Init 2222");
                 m_data = value;
-                if (bigDataScroll != null)
-                {
-                    int count = m_data.Count / 8 + 1;
-                    Main.Logger.Log(m_data.Count.ToString()+" Init count" +count.ToString());
-                    bigDataScroll.cellCount = count;
-                }
+                SetData();
             }
             get
             {
                 return m_data;
             }
         }
+        public bool setClick = false;
+        public bool isInit = false;
 
-        private void SetData(ItemCell itemCell,int index)
+
+        public void Init(bool actor,int typ)
         {
-            Main.Logger.Log("SetData ItemCell " + index.ToString());
-            bool actor = false;
-            int num4 = -999;
-            bool cantTake = HomeSystem.instance.homeMapPartId != DateFile.instance.mianPartId || HomeSystem.instance.homeMapPlaceId != DateFile.instance.mianPlaceId;
-            WarehouseItem item = (WarehouseItem)itemCell;
-            ChildData[] childDatas = item.childDatas;
-            for (int i = 0; i < childDatas.Length; i++)
+            Main.Logger.Log("NewWarehouse Init " + actor.ToString());
+            this.actor = actor;
+            this.typ = typ;
+            InitUI();
+        }
+
+        private void InitUI()
+        {
+            isInit = true;;
+
+            Vector2 size = new Vector2(650, 650);
+            Vector2 leftPos = actor ? new Vector2(-size.x * 0f, 0) : new Vector2(size.x * 0f, 0);
+
+            GameObject scrollView = CreateUI.NewScrollView(size, BarType.Vertical, ContentType.VerticalLayout);
+            scrollRect = scrollView.GetComponent<ScrollRect>();
+            scrollRect.verticalNormalizedPosition = 1;
+            Image imgScrollView = scrollView.GetComponentInChildren<Image>();
+            imgScrollView.color = new Color(0.5f, 0.5f, 0.5f, 0.005f);
+            imgScrollView.raycastTarget = false;
+            RectTransform rScrollView = ((RectTransform)scrollView.transform);
+            rScrollView.SetParent(gameObject.transform, false);
+            rScrollView.anchoredPosition = leftPos;
+
+            scrollView.GetComponentInChildren<Mask>().enabled = false;
+
+            GameObject image = new GameObject("line", new System.Type[] { typeof(RectTransform) });
+            RectTransform rItemCell = image.GetComponent<RectTransform>();
+            rItemCell.SetParent(transform, false);
+            rItemCell.anchoredPosition = new Vector2(10000, 10000);
+
+
+            GameObject prefab = Warehouse.instance.warehouseItemIcon;
+
+
+            for (int i = 0; i < Main.settings.numberOfColumns; i++)
             {
-                int idx = (index - 1) * 8 + index - 1;
-                ChildData childData = childDatas[i];
-                if (idx < m_data.Count)
+                GameObject go = UnityEngine.Object.Instantiate(prefab);
+                go.transform.SetParent(rItemCell, false);
+            }
+
+
+            rItemCell.sizeDelta = new Vector2(size.x, size.x / Main.settings.numberOfColumns);
+            GridLayoutGroup gridLayoutGroup = image.AddComponent<GridLayoutGroup>();
+            gridLayoutGroup.cellSize = size / Main.settings.numberOfColumns * 0.9f;
+            gridLayoutGroup.spacing = 0.05f * size / Main.settings.numberOfColumns;
+            gridLayoutGroup.padding.left = (int)(size.x / Main.settings.numberOfColumns * 0.05f);
+            gridLayoutGroup.padding.top = (int)(size.x / Main.settings.numberOfColumns * 0.05f);
+
+
+            WarehouseItem itemCell = image.AddComponent<WarehouseItem>();
+            bigDataScroll = gameObject.AddComponent<BigDataScroll>();
+            bigDataScroll.Init(scrollRect, itemCell, SetCell);
+            bigDataScroll.cellHeight = size.x / Main.settings.numberOfColumns;
+
+            Transform parent = transform.parent;
+            ScrollRect scroll = parent.GetComponent<ScrollRect>();
+            if (scroll != null)
+            {
+                if (scroll.verticalScrollbar != null)
                 {
-                    Main.Logger.Log("true"+ idx.ToString());
-                    int num5 = m_data[idx];
-                    GameObject go = childData.gameObject;
-                    if (!go.activeSelf)
+                    Image other = scroll.verticalScrollbar.GetComponent<Image>();
+                    if (other != null)
                     {
-                        go.SetActive(true);
+                        RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical");
+                        //rect.sizeDelta = new Vector2(10, 0);
+                        Image my = rect.GetComponent<Image>();
+                        my.color = new Color(10.9490196f, 0.509803951f, 0.203921571f);
+                        my.sprite = other.sprite;
+                        my.type = Image.Type.Sliced;
                     }
-                    go.name = "WarehouseItem," + num5;
-                    childData.setItem.SetWarehouseItemIcon(num4, num5, cantTake, Warehouse.instance.actorItemDes, 202);
-                }
-                else
-                {
-                    Main.Logger.Log("false" + idx.ToString());
-                    GameObject go = childData.gameObject;
-                    if (go.activeSelf)
+                    else
                     {
-                        go.SetActive(false);
+                        Main.Logger.Log("没找到 ScrollbarVertical Image");
+                    }
+
+                    if (scroll.verticalScrollbar.targetGraphic != null)
+                    {
+                        Image other2 = scroll.verticalScrollbar.targetGraphic.GetComponent<Image>();
+                        if (other != null)
+                        {
+                            RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical/SlidingArea/Handle");
+                            //rect.sizeDelta = new Vector2(10, 10);
+                            Image my = rect.GetComponent<Image>();
+                            my.color = new Color(0.3882353f, 0.807843149f, 0.8156863f);
+                            my.sprite = other2.sprite;
+                            my.type = Image.Type.Sliced;
+                        }
+                        else
+                        {
+                            Main.Logger.Log("没找到 Handle Image");
+                        }
+                    }
+                    else
+                    {
+                        Main.Logger.Log("没找到 Handle");
+                    }
+                }
+            }
+            else
+            {
+                Main.Logger.Log("没找到 ScrollbarVertical");
+            }
+
+            SetData();
+        }
+
+        private void SetData()
+        {
+            if (bigDataScroll != null&& m_data!=null&& isInit)
+            {
+                int count = m_data.Length / Main.settings.numberOfColumns + 1;
+                bigDataScroll.cellCount = count;
+                if (!Main.OnChangeItem)
+                {
+                    scrollRect.verticalNormalizedPosition = 1;
+                }
+            }
+        }
+
+        private void SetCell(ItemCell itemCell, int index)
+        {
+            if (actor)
+            {
+                int num2 = DateFile.instance.MianActorID();
+                bool flag = !Main.settings.remoteWarehouse;
+                if (flag)
+                {
+                    flag = HomeSystem.instance.homeMapPartId != DateFile.instance.mianPartId || HomeSystem.instance.homeMapPlaceId != DateFile.instance.mianPlaceId;
+                }
+                WarehouseItem item = itemCell as WarehouseItem;
+                if (item == null)
+                {
+                    Main.Logger.Log("WarehouseItem出错。。。");
+                    return;
+                }
+                ChildData[] childDatas = item.childDatas;
+                for (int i = 0; i < Main.settings.numberOfColumns; i++)
+                {
+                    int idx = (index - 1) * Main.settings.numberOfColumns + index - 1 + i;
+                    if (i < childDatas.Length)
+                    {
+                        ChildData childData = childDatas[i];
+                        if (idx < m_data.Length)
+                        {
+                            int num3 = m_data[idx];
+                            GameObject go = childData.gameObject;
+                            if (!go.activeSelf)
+                            {
+                                go.SetActive(true);
+                            }
+                            go.name = "ActorItem," + num3;
+                            childData.setItem.SetWarehouseItemIcon(num2, num3, int.Parse(DateFile.instance.GetItemDate(num3, 3, true)) != 1 || flag);
+                        }
+                        else
+                        {
+                            GameObject go = childData.gameObject;
+                            if (go.activeSelf)
+                            {
+                                go.SetActive(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Main.Logger.Log("数据出错。。。");
+                    }
+                }
+            }
+            else
+            {
+                int num4 = -999;
+                bool cantTake = !Main.settings.remoteWarehouse;
+                if (cantTake)
+                {
+                    cantTake = HomeSystem.instance.homeMapPartId != DateFile.instance.mianPartId || HomeSystem.instance.homeMapPlaceId != DateFile.instance.mianPlaceId;
+                }
+                WarehouseItem item = itemCell as WarehouseItem;
+                if (item == null)
+                {
+                    Main.Logger.Log("WarehouseItem出错。。。");
+                    return;
+                }
+                ChildData[] childDatas = item.childDatas;
+                for (int i = 0; i < Main.settings.numberOfColumns; i++)
+                {
+                    int idx = (index - 1) * Main.settings.numberOfColumns + index - 1 + i;
+                    if (i < childDatas.Length)
+                    {
+                        ChildData childData = childDatas[i];
+                        if (idx < m_data.Length)
+                        {
+                            int num5 = m_data[idx];
+                            GameObject go = childData.gameObject;
+                            if (!go.activeSelf)
+                            {
+                                go.SetActive(true);
+                            }
+                            go.name = "WarehouseItem," + num5;
+                            childData.setItem.SetWarehouseItemIcon(num4, num5, cantTake);
+                        }
+                        else
+                        {
+                            GameObject go = childData.gameObject;
+                            if (go.activeSelf)
+                            {
+                                go.SetActive(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Main.Logger.Log("数据出错。。。");
                     }
                 }
             }
         }
 
+        private void Update()
+        {
+            if (!gameObject.activeInHierarchy | m_data == null | scrollRect == null)
+            {
+                return;
+            }
+            var mousePosition = Input.mousePosition;
+            var mouseOnPackage = mousePosition.x > Screen.width / 2;
+
+            var v = Input.GetAxis("Mouse ScrollWheel");
+            if (v != 0)
+            {
+                if (mouseOnPackage == actor)
+                {
+                    float count = m_data.Length / Main.settings.numberOfColumns + 1;
+                    scrollRect.verticalNormalizedPosition += v / count * Main.settings.scrollSpeed;
+                }
+            }
+        }
     }
 
 }

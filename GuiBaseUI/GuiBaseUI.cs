@@ -65,5 +65,37 @@ namespace GuiBaseUI
         {
             GUILayout.Label(title, GUILayout.Width(300));
         }
+
+
+
+        public static void LogAllChild(Transform tf, bool logSize = false, int idx = 0)
+        {
+            string s = "";
+            for (int i = 0; i < idx; i++)
+            {
+                s += "-- ";
+            }
+            s += tf.name;
+            if (logSize)
+            {
+                RectTransform rect = tf as RectTransform;
+                if (rect == null)
+                {
+                    s += " scale=" + tf.localScale.ToString();
+                }
+                else
+                {
+                    s += " sizeDelta=" + rect.sizeDelta.ToString();
+                }
+            }
+            Logger.Log(s);
+
+            idx++;
+            for (int i = 0; i < tf.childCount; i++)
+            {
+                Transform child = tf.GetChild(i);
+                LogAllChild(child,logSize, idx);
+            }
+        }
     }
 }

@@ -19,12 +19,23 @@ namespace GuiWarehouse
             return instance;
         }
 
-        public int[] data = new int[153];
-        public int[] data2 = new int[88];
+        public int[] data = new int[1];
+        public int[] data2 = new int[1];
+
         public string[] titleName = new string[] { "全部", "制作", "丹药", "食物", "装备", "图书", "其他" };
-        private string[] levelClassify = new string[] { "全部", "一品", "二品", "三品", "四品", "五品", "六品", "七品", "八品", "九品", };
-        private string[] bookClassify = new string[] { "全部", "未读", "功法", "身法", "绝技", "四书", "五经", };
-        private string[] attrClassify = new string[] { "全部", "内功", "身法", "绝技", "琴", "棋", "书", "画", "佛", "道", "食物", "杂学", "品鉴" };
+
+        public string[] levelClassify = new string[] { "全部", "一品", "二品", "三品", "四品", "五品", "六品", "七品", "八品", "九品", };
+
+        public string[] bookClassify = new string[] {"全部", "未读", "内功", "身法", "绝技","拳掌","指法","腿法","暗器","剑法","刀法","长兵","奇门","软兵","御射","乐器",
+            "音律", "弈棋", "诗书", "绘画", "术数", "品鉴", "制木", "锻造", "锦织", "巧匠", "医术", "毒术","道法","佛法","厨艺","杂学", };
+
+        //public string[] attrClassify =new string[]  {"全部", "宝物","内功", "身法", "绝技","拳掌","指法","腿法","暗器","剑法","刀法","长兵","奇门","软兵","御射","乐器",
+        //    "音律", "弈棋", "诗书", "绘画", "术数", "品鉴", "制木", "锻造", "锦织", "巧匠", "医术", "毒术","道法","佛法","厨艺","杂学", };
+
+
+
+        public int[] showBookClassify = new int[] { 1, 0, 0, 1, 1, 1, 0 };
+        //public int[] showAttrClassify = new int[] { 0, 0, 0, 1, 1, 0, 0 };
 
         private string[] color = new string[] { "#E9D443","#FFFFFF","#7E7E7E","#60e038","#2FA4FF","#B350FF","#F5691E","#F63333","#F8DC1E","#E9D443" };
 
@@ -39,8 +50,10 @@ namespace GuiWarehouse
                     if (DateFile.instance != null)
                     {
                         actorId = DateFile.instance.MianActorID();
-                        SelectTitle(true, Main.settings.openTitle);
-                        SelectTitle(false, Main.settings.openTitle);
+                        //SelectTitle(true, Main.settings.openTitle);
+                        //SelectTitle(false, Main.settings.openTitle);
+                        SelectTitle(true, 0);
+                        SelectTitle(false, 0);
                     }
                 }
             }
@@ -129,17 +142,40 @@ namespace GuiWarehouse
 
         }
 
+        
         public void OnGUI()
         {
+
+            int sw = Screen.width;//屏幕宽度
+            int sh = Screen.height;//屏幕高度
+            int int1 = (1280/128);//间隔
+            int int2 = (1280/24);//宽度
+            int int3 = (1280/ 48);//高度
+
+            if (!open && Main.settings != null && Warehouse.instance != null && Warehouse.instance.warehouseWindow)
+            {
+                if (Main.settings.useWarehouse == 0 && Warehouse.instance.warehouseWindow.activeSelf)
+                {
+
+                    int idx = 0;
+                    SetSelectButton(Main.MaxLevelClassify(), levelClassify, ref Main.settings.levelClassify, ref idx, int1, int2, int3);
+                    if ((showBookClassify[Warehouse.instance.actorItemTyp] | showBookClassify[Warehouse.instance.warehouseItemTyp]) == 1)
+                    {
+                        SetSelectButton(Main.MaxBookClassify(), bookClassify, ref Main.settings.bookClassify, ref idx, int1, int2, int3);
+                    }
+                    //if ((showAttrClassify[Warehouse.instance.actorItemTyp] | showAttrClassify[Warehouse.instance.warehouseItemTyp]) == 1)
+                    //{
+                    //    SetSelectButton(Main.MaxAttrClassify(), attrClassify, ref Main.settings.attrClassify, ref idx, int1, int2, int3);
+                    //}
+                }
+            }
+
 
             if (!open)
             {
                 return;
             }
             int on = -1;
-
-            int sw = Screen.width;//屏幕宽度
-            int sh = Screen.height;//屏幕高度
             GUI.Box(new Rect(0, 0, sw, sh), string.Empty);
             GUI.Box(new Rect(0, 0, sw, sh), string.Empty);
             GUI.Box(new Rect(0, 0, sw, sh), string.Empty);
@@ -306,6 +342,68 @@ namespace GuiWarehouse
             }
         }
 
+        void SetSelectButton(int max,string[] nameArray,ref int record,ref int idx,int int1,int int2,int int3)
+        {
+            int lineCount = 16;
+            int cur = record;
+            int left = 0;
+            for (int i = 0; i < nameArray.Length; i++)
+            {
+                bool value = false;
+                if (i == 0)
+                {
+                    value = cur == max;
+                }
+                else
+                {
+                    value = ((1 << (i - 1)) | cur) == cur;
+                }
+                string btnName = nameArray[i];
+                if (value)
+                {
+                    btnName = "<color=#2FA4FF>" + btnName + "</color>";
+                }
+                if (GUI.Button(new Rect(int1 + i * (int1 + int2)+ left, int1 + idx * (int1 + int3), int2, int3), btnName))
+                {
+                    if (i == 0)
+                    {
+                        if (value)
+                        {
+                            cur = 0;
+                        }
+                        else
+                        {
+                            cur = max;
+                        }
+                    }
+                    else
+                    {
+                        if (value)
+                        {
+                            cur -= cur & (1 << (i - 1));
+                        }
+                        else
+                        {
+                            cur |= 1 << (i - 1);
+                        }
+                    }
+                    if (((i+1)% lineCount) == 0)
+                    {
+                        idx++;
+                        left = - (i+1) * (int1 + int2);
+                    }
+                }
+            }
+            if (cur != record)
+            {
+                Main.Logger.Log(record + " ==> " + cur);
+                record = cur;
+                Main.Warehouse_UpdateActorItems_Patch.UpdateData();
+            }
+            idx++;
+
+        }
+
         string GetItemName(bool actor, int itemId)
         {
             string des;
@@ -328,6 +426,7 @@ namespace GuiWarehouse
             for (int i = 0; i < list3.Count; i++)
             {
                 int num7 = list3[i];
+
                 if (DateFile.instance.presetitemDate[int.Parse(DateFile.instance.GetItemDate(itemId, 999, true))].ContainsKey(num7) && int.Parse(DateFile.instance.buffAttrDate[num7][8]) != 0)
                 {
                     int num8 = int.Parse(DateFile.instance.GetItemDate(itemId, num7, true));
@@ -692,7 +791,7 @@ namespace GuiWarehouse
          * 
          * */
 
-        string GetDes(bool actor, int itemId, out int line)
+        public string GetDes(bool actor, int itemId, out int line)
         {
             line = 2;
             string des = DateFile.instance.GetItemDate(itemId, 99, true) + "\n\n";

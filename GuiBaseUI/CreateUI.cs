@@ -11,6 +11,7 @@ namespace GuiBaseUI
     }
     public enum ContentType
     {
+        Node,
         Grid,
         VerticalLayout,
     }
@@ -68,6 +69,8 @@ namespace GuiBaseUI
             tf2.pivot = new Vector2(0, 1);
             Image image2 = go2.GetComponent<Image>();
             image2.color = new Color(0.5568628f, 0.5568628f, 0.5568628f);
+            Mask mask = go2.GetComponent<Mask>();
+            mask.showMaskGraphic = false;
 
             //创建Content
             GameObject go3 = new GameObject("Content", new System.Type[]
@@ -161,6 +164,7 @@ namespace GuiBaseUI
             return go1;
         }
 
+        // 创建图片
         public static GameObject NewImage(Sprite sprite = null)
         {
             GameObject go1 = new GameObject("Image", new System.Type[]
@@ -181,7 +185,7 @@ namespace GuiBaseUI
             return go1;
         }
 
-
+        // 创建文本
         public static GameObject NewText(string s = null,Vector2 size=default(Vector2))
         {
             GameObject go1 = new GameObject("Text", new System.Type[]
@@ -202,6 +206,156 @@ namespace GuiBaseUI
                 tf1.sizeDelta = size;
             }
             
+
+            return go1;
+        }
+
+        public static GameObject New()
+        {
+            GameObject go1 = new GameObject("", new System.Type[]
+           { typeof(RectTransform), typeof(Text)});
+
+
+            return go1;
+        }
+
+        // 创建下拉框
+        public static GameObject NewDropdown(string[] options)
+        {
+            GameObject go1 = new GameObject("Dropdown", new System.Type[]
+           { typeof(RectTransform), typeof(Dropdown),typeof(Image)});
+            go1.layer = Main.Layer;
+            RectTransform tf1 = go1.GetComponent<RectTransform>();
+            tf1.sizeDelta = new Vector2(200, 30);
+            Image image = go1.GetComponent<Image>();
+            image.color = new Color(1, 0, 0, 1);
+            Dropdown dropdown = go1.GetComponent<Dropdown>();
+            dropdown.targetGraphic = image;
+
+            GameObject go2 = new GameObject("Label", new System.Type[]
+           { typeof(RectTransform), typeof(Text)});
+            go2.layer = Main.Layer;
+            RectTransform tf2 = go2.GetComponent<RectTransform>();
+            tf2.SetParent(tf1, false);
+            tf2.anchorMin = new Vector2(0, 0);
+            tf2.anchorMax = new Vector2(1, 1);
+            tf2.anchoredPosition = new Vector2(-7.5f, 0.5f);
+            tf2.sizeDelta = new Vector2(-35, -13);
+            tf2.pivot = new Vector2(0.5f, 0.5f);
+            Text text = go2.GetComponent<Text>();
+            text.fontSize = 14;
+            text.font = DateFile.instance.font;
+            text.color = new Color(0, 0, 0);
+            text.alignment = TextAnchor.MiddleLeft;
+
+
+            GameObject go3 = new GameObject("Arrow", new System.Type[]
+           { typeof(RectTransform), typeof(Image)});
+            go3.layer = Main.Layer;
+            RectTransform tf3 = go3.GetComponent<RectTransform>();
+            tf3.SetParent(tf1, false);
+            tf3.anchorMin = new Vector2(1f, 0.5f);
+            tf3.anchorMax = new Vector2(1f, 0.5f);
+            tf3.anchoredPosition = new Vector2(-15f, 0f);
+            tf3.sizeDelta = new Vector2(20, 20);
+            tf3.pivot = new Vector2(0.5f, 0.5f);
+            Image img3 = go3.GetComponent<Image>();
+            img3.color = new Color(1, 1, 0, 1);
+
+            GameObject go4 = NewScrollView(default(Vector2), BarType.Vertical, ContentType.Node);
+            go4.SetActive(false);
+            go4.name = "Template";
+            RectTransform tf4 = go4.GetComponent<RectTransform>();
+            tf4.SetParent(tf1, false);
+            tf4.anchorMin = new Vector2(0, 0);
+            tf4.anchorMax = new Vector2(1, 0);
+            tf4.anchoredPosition = new Vector2(0, 2);
+            tf4.sizeDelta = new Vector2(0, 150);
+            tf4.pivot = new Vector2(0.5f, 1);
+            ScrollRect scrollRect = go4.GetComponent<ScrollRect>();
+            scrollRect.content.sizeDelta = new Vector2(0, 28);
+            scrollRect.viewport.sizeDelta = new Vector2(-18, 0);
+            Image img4 = go4.AddComponent<Image>();
+
+            GameObject go5 = new GameObject("Item", new System.Type[]
+                       { typeof(RectTransform),typeof(Toggle)});
+            go5.layer = Main.Layer;
+            RectTransform tf5 = go5.GetComponent<RectTransform>();
+            tf5.SetParent(scrollRect.content, false);
+            tf5.anchorMin = new Vector2(0, 0.5f);
+            tf5.anchorMax = new Vector2(1, 0.5f);
+            tf5.anchoredPosition = new Vector2(0, 0);
+            tf5.sizeDelta = new Vector2(0, 20);
+            tf5.pivot = new Vector2(0.5f, 0.5f);
+            Toggle toggle = go5.GetComponent<Toggle>();
+
+
+
+            GameObject go6 = new GameObject("Item Background", new System.Type[]
+                { typeof(RectTransform), typeof(Image)});
+            go6.layer = Main.Layer;
+            RectTransform tf6 = go6.GetComponent<RectTransform>();
+            tf6.SetParent(tf5, false);
+            tf6.anchorMin = new Vector2(0, 0);
+            tf6.anchorMax = new Vector2(1, 1);
+            tf6.anchoredPosition = new Vector2(0, 0);
+            tf6.sizeDelta = new Vector2(0, 0);
+            tf6.pivot = new Vector2(0.5f, 0.5f);
+            Image img6 = go6.GetComponent<Image>();
+            img6.color = new Color(1, 0, 0, 1);
+
+
+            GameObject go7 = new GameObject("Item Checkmark", new System.Type[]
+                { typeof(RectTransform), typeof(Image)});
+            go7.layer = Main.Layer;
+            RectTransform tf7 = go7.GetComponent<RectTransform>();
+            tf7.SetParent(tf5, false);
+            tf7.anchorMin = new Vector2(0, 0.5f);
+            tf7.anchorMax = new Vector2(0, 0.5f);
+            tf7.anchoredPosition = new Vector2(10, 0);
+            tf7.sizeDelta = new Vector2(20, 20);
+            tf7.pivot = new Vector2(0.5f, 0.5f);
+            Image img7 = go7.GetComponent<Image>();
+            img7.color = new Color(1, 1, 0, 1);
+
+
+            GameObject go8 = new GameObject("Item Label", new System.Type[]
+                { typeof(RectTransform), typeof(Text)});
+            go8.layer = Main.Layer;
+            RectTransform tf8 = go8.GetComponent<RectTransform>();
+            tf8.SetParent(tf5, false);
+            tf8.anchorMin = new Vector2(0, 0);
+            tf8.anchorMax = new Vector2(1, 1);
+            tf8.anchoredPosition = new Vector2(0, 0);
+            tf8.sizeDelta = new Vector2(0, 0);
+            tf8.pivot = new Vector2(0.5f, 0.5f);
+            Text t8 = go8.GetComponent<Text>();
+            t8.fontSize = 14;
+            t8.color = new Color(0, 0, 0);
+
+            toggle.targetGraphic = img6;
+            toggle.graphic = img7;
+
+            dropdown.targetGraphic = image;
+            dropdown.template = tf4;
+            dropdown.captionText = text;
+            dropdown.itemText = t8;
+            dropdown.options = new System.Collections.Generic.List<Dropdown.OptionData>();
+            for (int i = 0; i < options.Length; i++)
+            {
+                dropdown.options.Add(new Dropdown.OptionData(options[i]));
+            }
+            if (options.Length > 0)
+            {
+                text.text = options[0];
+                t8.text = options[0];
+            }
+            else
+            {
+                text.text = string.Empty;
+                t8.text = string.Empty;
+            }
+
 
             return go1;
         }

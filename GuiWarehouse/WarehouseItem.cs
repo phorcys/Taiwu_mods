@@ -12,18 +12,20 @@ namespace GuiWarehouse
         public override void Awake()
         {
             base.Awake();
-            childDatas = new ChildData[8];
-            for (int i = 0; i < 8; i++)
+            childDatas = new ChildData[Main.settings.numberOfColumns];
+            for (int i = 0; i < Main.settings.numberOfColumns; i++)
             {
                 Transform child = transform.GetChild(i);
                 childDatas[i] = new ChildData(child);
             }
+            //Main.Logger.Log("WarehouseItem Awake " + childDatas.Length);
         }
     }
     public struct ChildData
     {
         public GameObject gameObject;
         public SetItem setItem;
+
         public ChildData(Transform child)
         {
             gameObject = child.gameObject;

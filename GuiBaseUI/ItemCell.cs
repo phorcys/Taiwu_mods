@@ -1,16 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GuiBaseUI
 {
     public class ItemCell : MonoBehaviour
     {
 
-        RectTransform rectTransform;
+       public RectTransform rectTransform;
         public virtual void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                rectTransform = gameObject.AddComponent<RectTransform>();
+            }
+
         }
 
         public void SetActive(bool value)
