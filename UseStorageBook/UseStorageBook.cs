@@ -90,8 +90,10 @@ namespace Sth4nothing.UseStorageBook
             // 技艺书籍
             if (itemType < 500000)
                 return true;
+            int bookId = int.Parse(df.GetItemDate(itemId, 32));
+            
             // 品级
-            int pinji = int.Parse(df.GetItemDate(itemId, 8, false)) - 1;
+            int pinji = int.Parse(df.gongFaDate[bookId][2]);
             Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
@@ -100,23 +102,16 @@ namespace Sth4nothing.UseStorageBook
                 return false;
             if (itemType >= 700000 && !Main.Setting.tof[1])
                 return false;
-            if (itemType > 500000)
-            {
-                // 功法类型
-                int gongfa = itemType / 10000;
-                if (gongfa < 70)
-                    gongfa -= 50;
-                else
-                    gongfa -= 70;
-                Main.Logger.Log($"功法: {gongfa}");
-                if (!Main.Setting.gongfa[gongfa])
-                    return false;
-                // 帮派
-                int gang = itemType / 100 % 100 - 1;
-                Main.Logger.Log($"帮派: {gang}");
-                if (!Main.Setting.gang[gang])
-                    return false;
-            }
+            // 功法类型
+            int gongfa = int.Parse(df.gongFaDate[bookId][1]);
+            Main.Logger.Log($"功法: {gongfa}");
+            if (!Main.Setting.gongfa[gongfa])
+                return false;
+            // 帮派
+            int gang = int.Parse(df.gongFaDate[bookId][3]);
+            Main.Logger.Log($"帮派: {gang}");
+            if (!Main.Setting.gang[gang])
+                return false;
             return true;
         }
     }
@@ -269,7 +264,7 @@ namespace Sth4nothing.UseStorageBook
         public static bool Enabled { get; private set; }
         public static Settings Setting { get; private set; }
 
-        public static string[] gang = { "少林", "峨眉", "百花", "武当", "元山", "狮相", "然山", "璇女", "铸剑", "空桑", "金刚", "五仙", "界青", "伏龙", "血吼", "其他" };
+        public static string[] gang = { "其他", "少林", "峨眉", "百花", "武当", "元山", "狮相", "然山", "璇女", "铸剑", "空桑", "金刚", "五仙", "界青", "伏龙", "血吼" };
 
         public static string[] gongfa = { "内功", "轻功", "绝技", "拳掌", "指法", "腿法", "暗器", "剑法", "刀法", "长兵", "奇门", "软兵", "御射", "乐器" };
 
