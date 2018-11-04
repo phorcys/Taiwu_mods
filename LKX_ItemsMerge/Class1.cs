@@ -28,6 +28,21 @@ namespace LKX_ItemsMerge
         public uint itemsSize;
 
         /// <summary>
+        /// 药品拆分数量
+        /// </summary>
+        public uint drugsCount;
+
+        /// <summary>
+        /// 药品拆分大小
+        /// </summary>
+        public int drugsSize;
+
+        /// <summary>
+        /// 药品拆分品级
+        /// </summary>
+        public List<int> drugsLevel = new List<int>();
+
+        /// <summary>
         /// 合并道具类型
         /// </summary>
         public List<int> mergeType = new List<int>();
@@ -111,6 +126,7 @@ namespace LKX_ItemsMerge
             if (Main.settings.enabledSize)
             {
                 string itemSize = GUILayout.TextField(Main.settings.itemsSize.ToString());
+                if (itemSize == "" || itemSize == null) itemSize = "0";
                 if (GUI.changed) Main.settings.itemsSize = uint.Parse(itemSize);
             }
 
@@ -139,6 +155,36 @@ namespace LKX_ItemsMerge
             Main.SetGUIToToggle(8, "二品", ref Main.settings.itemLevel);
             Main.SetGUIToToggle(9, "一品", ref Main.settings.itemLevel);
             GUILayout.EndHorizontal();
+
+            GUILayout.Label("");
+
+            GUILayout.Label("拆分药品一般用于送礼，拆分只判断单个药品耐久。建议和合并大小限制配合使用。");
+            GUILayout.Label("一个例子：有2个100耐久药品，拆分大小为5，拆分数量为20。此时拆解会成功。");
+            GUILayout.Label("一个例子：有2个100耐久药品，拆分大小为5，拆分数量为40。此时拆解会失败。");
+            if (GUILayout.Button("手动拆分药品"))
+            {
+                Main.ResolveMergeDrugs();
+            }
+
+            GUILayout.Label("选择拆分的大小。");
+            Main.settings.drugsSize = GUILayout.SelectionGrid(Main.settings.drugsSize, new string[] { "不拆", "最大2", "最大3", "最大4", "最大5" }, 5);
+            GUILayout.Label("选择允许拆分的品级。");
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            Main.SetGUIToToggle(1, "九品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(2, "八品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(3, "七品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(4, "六品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(5, "五品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(6, "四品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(7, "三品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(8, "二品", ref Main.settings.drugsLevel);
+            Main.SetGUIToToggle(9, "一品", ref Main.settings.drugsLevel);
+            GUILayout.EndHorizontal();
+            GUILayout.Label("拆分的数量。");
+            string drugsItemCount = GUILayout.TextField(Main.settings.drugsCount.ToString());
+            if (drugsItemCount == "" || drugsItemCount == null) drugsItemCount = "0";
+            if (GUI.changed) Main.settings.drugsCount = uint.Parse(drugsItemCount);
+            
         }
 
         /// <summary>
@@ -169,6 +215,63 @@ namespace LKX_ItemsMerge
                     if (field.Contains(index)) field.Remove(index);
                 }
             }
+        }
+
+        /// <summary>
+        /// 拆分药品
+        /// </summary>
+        public static void ResolveMergeDrugs()
+        {
+            if (!Main.enabled || Main.settings.drugsCount <= 0) return;
+
+            DateFile df = DateFile.instance;
+            Dictionary<int, int> items = new Dictionary<int, int>();
+            Dictionary<int, int> itemsId = new Dictionary<int, int>();
+            if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
+            {
+                List<int> buffer = itemsId.Keys.ToList();
+                foreach (int itemId in buffer)
+                {
+                    string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
+                        level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
+                    
+                    if (!Main.settings.drugsLevel.Contains(int.Parse(level)) && type != "31") continue;
+                    if (int.Parse(surpluses) < (Main.settings.drugsCount * Main.settings.drugsSize)) continue;
+
+                    if (!items.ContainsKey(int.Parse(id))) items.Add(int.Parse(id), itemId);
+                    
+                }
+                Main.logger.Log(items.Count.ToString());
+                if (items.Count <= 0)
+                {
+                    Main.logger.Log("拆分失败：没有找到足够拆分的药品，合并后再试试。");
+                }
+                else
+                {
+                    foreach (KeyValuePair<int, int> item in items)
+                    {
+                        Dictionary<int, string> baseItem = df.itemsDate[item.Value];
+                        int size = Main.settings.drugsSize;
+                        if (Main.settings.drugsSize <= 0) size = 2;
+                        if (Main.settings.drugsSize > 5) size = 5;
+
+                        for (int i = 0; i < Main.settings.drugsCount; i++)
+                        {
+                            if (int.Parse(df.itemsDate[item.Value][901]) == size) break;
+
+                            int makeItemId = df.MakeNewItem(item.Key);
+                            df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                            df.itemsDate[makeItemId][901] = size.ToString();
+                            df.itemsDate[makeItemId][902] = size.ToString();
+                            df.itemsDate[item.Value][901] = (int.Parse(df.itemsDate[item.Value][901]) - size).ToString();
+                            df.itemsDate[item.Value][902] = (int.Parse(df.itemsDate[item.Value][902]) - size).ToString();
+                        }
+                    }
+                    Main.logger.Log("拆分成功。");
+                }
+            }
+
+            Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
         }
 
         /// <summary>
