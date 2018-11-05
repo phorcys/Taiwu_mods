@@ -98,7 +98,7 @@ namespace GuiWarehouse
                         RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical");
                         //rect.sizeDelta = new Vector2(10, 0);
                         Image my = rect.GetComponent<Image>();
-                        my.color = new Color(10.9490196f, 0.509803951f, 0.203921571f);
+                        //my.color = new Color(10.9490196f, 0.509803951f, 0.203921571f);
                         my.sprite = other.sprite;
                         my.type = Image.Type.Sliced;
                     }
@@ -115,7 +115,7 @@ namespace GuiWarehouse
                             RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical/SlidingArea/Handle");
                             //rect.sizeDelta = new Vector2(10, 10);
                             Image my = rect.GetComponent<Image>();
-                            my.color = new Color(0.3882353f, 0.807843149f, 0.8156863f);
+                            //my.color = new Color(0.3882353f, 0.807843149f, 0.8156863f);
                             my.sprite = other2.sprite;
                             my.type = Image.Type.Sliced;
                         }

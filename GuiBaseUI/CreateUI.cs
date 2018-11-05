@@ -123,7 +123,7 @@ namespace GuiBaseUI
                     tf4.pivot = new Vector2(1, 1);
                     Image image4 = go4.GetComponent<Image>();
                     image4.sprite = default(Sprite);
-                    image4.color = new Color(0, 0, 0, 1 / 255f);
+                    image4.color = new Color(0.9490196f, 0.509803951f, 0.503921571f);
                     Scrollbar scrollbar = go4.GetComponent<Scrollbar>();
                     scrollbar.direction = Scrollbar.Direction.BottomToTop;
 
@@ -150,7 +150,7 @@ namespace GuiBaseUI
                     tf6.pivot = new Vector2(0.5f, 0.5f);
                     Image image6 = go6.GetComponent<Image>();
                     image6.sprite = default(Sprite);
-                    image6.color = new Color(0.894117653f, 0.3137255f, 0.3019608f);
+                    image6.color = new Color(0.5882353f, 0.807843149f, 0.8156863f);
 
                     scrollbar.targetGraphic = image6;
                     scrollbar.handleRect = tf6;

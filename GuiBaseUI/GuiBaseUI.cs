@@ -18,6 +18,14 @@ namespace GuiBaseUI
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+
+        public static float bgR;
+        public static float bgG;
+        public static float bgB;
+
+        public static float handR;
+        public static float handG;
+        public static float handB;
     }
     public static class Main
     {

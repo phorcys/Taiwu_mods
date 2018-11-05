@@ -1,7 +1,8 @@
 ﻿{
   "Id": "GuiWorldNpc",
-  "DisplayName": "鬼的工作间",
+  "DisplayName": "鬼的世界NPC",
   "Version": "1.0.0",
   "AssemblyName": "GuiWorldNpc.dll",
-  "EntryMethod": "GuiWorldNpc.Main.Load"
+  "EntryMethod": "GuiWorldNpc.Main.Load",
+  "Requirements":["GuiBaseUI"]
 }
