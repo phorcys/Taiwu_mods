@@ -252,8 +252,8 @@ namespace LKX_ItemsMerge
                     foreach (KeyValuePair<int, int> item in items)
                     {
                         Dictionary<int, string> baseItem = df.itemsDate[item.Value];
-                        int size = Main.settings.drugsSize;
-                        if (Main.settings.drugsSize <= 0) size = 2;
+                        int size = Main.settings.drugsSize + 1;
+                        if (Main.settings.drugsSize <= 1) size = 2;
                         if (Main.settings.drugsSize > 5) size = 5;
 
                         for (int i = 0; i < Main.settings.drugsCount; i++)
