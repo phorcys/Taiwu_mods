@@ -19,13 +19,13 @@ namespace GuiBaseUI
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
 
-        public static float bgR;
-        public static float bgG;
-        public static float bgB;
+        public float bgR = 0.9490196f;
+        public float bgG = 0.509803951f;
+        public float bgB = 0.503921571f;
 
-        public static float handR;
-        public static float handG;
-        public static float handB;
+        public float handR = 0.5882353f;
+        public float handG = 0.807843149f;
+        public float handB = 0.8156863f;
     }
     public static class Main
     {
@@ -72,6 +72,7 @@ namespace GuiBaseUI
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+            Main.settings.bgR = GUILayout.HorizontalSlider(Main.settings.bgR, 0, 1);
         }
 
 
