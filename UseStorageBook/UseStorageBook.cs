@@ -1,13 +1,15 @@
 using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
-namespace UseStorageBook
+namespace Sth4nothing.UseStorageBook
 {
     [HarmonyPatch(typeof(HomeSystem), "SetBook")]
     public static class HomeSystem_SetBook_Patch
@@ -15,19 +17,13 @@ namespace UseStorageBook
         /// <summary>
         /// 将HomeSystem.SetBook 修改为 NewSetBook
         /// </summary>
-        /// <param name="instructions"></param>
         /// <returns></returns>
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static bool Prefix()
         {
-            Main.logger.Log("start to patch SetBook");
-            List<CodeInstruction> list = new List<CodeInstruction>(instructions);
-            list.InsertRange(0, new CodeInstruction[]
-            {
-                new CodeInstruction(OpCodes.Call, typeof(HomeSystem_SetBook_Patch).GetMethod("NewSetBook", BindingFlags.Public | BindingFlags.Static)),
-                new CodeInstruction(OpCodes.Ret),
-            });
-            Main.logger.Log("success!");
-            return list;
+            if (!Main.Enabled)
+                return true;
+            NewSetBook();
+            return false;
         }
 
         /// <summary>
@@ -38,11 +34,11 @@ namespace UseStorageBook
             var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
             RemoveBook.Invoke(HomeSystem.instance, null);
             List<int> list = new List<int>();
-            if (!Main.Enabled || Main.Setting.pack)
+            if (!Main.Enabled || Main.Setting.repo[0])
             {
                 list.AddRange(ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys);
             }
-            if (Main.Enabled && Main.Setting.warehouse)
+            if (Main.Enabled && Main.Setting.repo[1])
             {
                 list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
             }
@@ -50,8 +46,12 @@ namespace UseStorageBook
             for (int i = 0; i < list.Count; i++)
             {
                 int num = list[i];
+
                 if (int.Parse(DateFile.instance.GetItemDate(num, 31, true)) == HomeSystem.instance.studySkillTyp)
                 {
+                    if (!CheckBook(num))
+                        continue;
+
                     GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(HomeSystem.instance.bookIcon, Vector3.zero, Quaternion.identity);
                     gameObject.name = "Item," + num;
                     gameObject.transform.SetParent(HomeSystem.instance.bookHolder, false);
@@ -76,6 +76,43 @@ namespace UseStorageBook
                     }
                 }
             }
+        }
+        /// <summary>
+        /// 检查物品id是否满足条件
+        /// </summary>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
+        private static bool CheckBook(int itemId)
+        {
+            var df = DateFile.instance;
+            int itemType = int.Parse(df.GetItemDate(itemId, 999));
+            Main.Logger.Log($"类型: {itemType}");
+            // 技艺书籍
+            if (itemType < 500000)
+                return true;
+            int bookId = int.Parse(df.GetItemDate(itemId, 32));
+            
+            // 品级
+            int pinji = int.Parse(df.gongFaDate[bookId][2]) - 1;
+            Main.Logger.Log($"品级: {pinji}");
+            if (!Main.Setting.pinji[pinji])
+                return false;
+            // 真传 or 手抄
+            if (itemType < 700000 && !Main.Setting.tof[0])
+                return false;
+            if (itemType >= 700000 && !Main.Setting.tof[1])
+                return false;
+            // 功法类型
+            int gongfa = int.Parse(df.gongFaDate[bookId][1]);
+            Main.Logger.Log($"功法: {gongfa}");
+            if (!Main.Setting.gongfa[gongfa])
+                return false;
+            // 帮派
+            int gang = int.Parse(df.gongFaDate[bookId][3]);
+            Main.Logger.Log($"帮派: {gang}");
+            if (!Main.Setting.gang[gang])
+                return false;
+            return true;
         }
     }
 
@@ -144,21 +181,98 @@ namespace UseStorageBook
 
     public class Settings : UnityModManager.ModSettings
     {
-        public bool warehouse = true;
-        public bool pack = true;
+        public MyDict gang = new MyDict();
+        public MyDict gongfa = new MyDict();
+        public MyDict pinji = new MyDict();
+        public MyDict tof = new MyDict();
+        public MyDict repo = new MyDict();
 
+        public void Init()
+        {
+            for (int i = 0; i < Main.gang.Length; i++)
+            {
+                if (!gang.ContainsKey(i))
+                    gang[i] = true;
+            }
+            for (int i = 0; i < Main.gongfa.Length; i++)
+            {
+                if (!gongfa.ContainsKey(i))
+                    gongfa[i] = true;
+            }
+            for (int i = 0; i < Main.pinji.Length; i++)
+            {
+                if (!pinji.ContainsKey(i))
+                    pinji[i] = true;
+            }
+            for (int i = 0; i < Main.tof.Length; i++)
+            {
+                if (!tof.ContainsKey(i))
+                    tof[i] = true;
+            }
+            for (int i = 0; i < Main.repo.Length; i++)
+            {
+                if (!repo.ContainsKey(i))
+                    repo[i] = true;
+            }
+        }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
         }
     }
+    public class MyDict : Dictionary<int, bool>, IXmlSerializable
+    {
+        public System.Xml.Schema.XmlSchema GetSchema()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReadXml(System.Xml.XmlReader reader)
+        {
+            if (reader.IsEmptyElement)
+                return;
+
+            reader.Read();
+            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            {
+                Debug.Assert(reader.Name == "Pair");
+                reader.MoveToAttribute("key");
+                var key = int.Parse(reader.Value);
+                reader.MoveToContent();
+                var val = bool.Parse(reader.Value);
+                this[key] = val;
+                reader.Read();
+            }
+        }
+
+        public void WriteXml(System.Xml.XmlWriter writer)
+        {
+            foreach (int key in this.Keys)
+            {
+                writer.WriteStartElement("Pair");
+                writer.WriteAttributeString("key", key.ToString());
+                writer.WriteString(this[key].ToString());
+                writer.WriteEndElement();
+            }
+        }
+    }
 
     public class Main
     {
-        public static UnityModManager.ModEntry.ModLogger logger;
+        public static UnityModManager.ModEntry.ModLogger Logger;
 
-        public static bool Enabled {get; private set;}
-        public static Settings Setting {get; private set;}
+        public static bool Enabled { get; private set; }
+        public static Settings Setting { get; private set; }
+
+        public static string[] gang = { "其他", "少林", "峨眉", "百花", "武当", "元山", "狮相", "然山", "璇女", "铸剑", "空桑", "金刚", "五仙", "界青", "伏龙", "血吼" };
+
+        public static string[] gongfa = { "内功", "轻功", "绝技", "拳掌", "指法", "腿法", "暗器", "剑法", "刀法", "长兵", "奇门", "软兵", "御射", "乐器" };
+
+        public static string[] pinji = { "九品", "八品", "七品", "六品", "五品", "四品", "三品", "二品", "一品" };
+
+        public static string[] tof = { "真传", "手抄" };
+
+        public static string[] repo = { "背包", "仓库" };
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -168,21 +282,56 @@ namespace UseStorageBook
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            logger = modEntry.Logger;
+            Logger = modEntry.Logger;
             Setting = Settings.Load<Settings>(modEntry);
+            Setting.Init();
+
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
         }
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
-            Setting.warehouse = GUILayout.Toggle(Setting.warehouse, "仓库");
-            Setting.pack = GUILayout.Toggle(Setting.pack, "包裹");
+            for (int i = 0; i < repo.Length; i++)
+            {
+                Setting.repo[i] = GUILayout.Toggle(Setting.repo[i], repo[i], GUILayout.Width(50));
+            }
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < tof.Length; i++)
+            {
+                Setting.tof[i] = GUILayout.Toggle(Setting.tof[i], tof[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < pinji.Length; i++)
+            {
+                Setting.pinji[i] = GUILayout.Toggle(Setting.pinji[i], pinji[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < gongfa.Length; i++)
+            {
+                Setting.gongfa[i] = GUILayout.Toggle(Setting.gongfa[i], gongfa[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < gang.Length; i++)
+            {
+                Setting.gang[i] = GUILayout.Toggle(Setting.gang[i], gang[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)

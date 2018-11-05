@@ -9,7 +9,6 @@ namespace ModsCollection
     public class Settings : UnityModManager.ModSettings
     {
         public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
-        // 預設開啟
         public int patch1 = 1;
         public int patch2 = 2;
         public bool patch3a = true;
@@ -82,13 +81,13 @@ namespace ModsCollection
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("个人用合理向练功房 *", labelStyle, GUILayout.Width(250));
+            GUILayout.Label("* 个人用合理向练功房", labelStyle, GUILayout.Width(250));
             settings.patch4 = GUILayout.SelectionGrid(settings.patch4, new string[] { "关闭", "启用" }, 2, toggleStyle);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("种田派(改) *", labelStyle, GUILayout.Width(250));
+            GUILayout.Label("种田派(改)", labelStyle, GUILayout.Width(250));
             settings.patch5a = GUILayout.Toggle(settings.patch5a, "建筑\n降低人力", toggleStyle, GUILayout.Width(120));
             settings.patch5b = GUILayout.Toggle(settings.patch5b, "等级上限\n提升", toggleStyle, GUILayout.Width(145));
             settings.patch5c = GUILayout.Toggle(settings.patch5c, "维护费\n改税收", toggleStyle, GUILayout.Width(120));
