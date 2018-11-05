@@ -88,7 +88,7 @@ namespace GuiBaseUI
                     s += " sizeDelta=" + rect.sizeDelta.ToString();
                 }
             }
-            Logger.Log(s);
+            Main.Logger.Log(s);
 
             idx++;
             for (int i = 0; i < tf.childCount; i++)
