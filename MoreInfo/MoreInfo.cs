@@ -25,6 +25,12 @@ namespace MoreInfo
         public bool showExtraName = true;//显示特殊词条
         public bool showBookGang = true;//显示书籍门派
         public bool showBlueprintName = true;//显示图纸名称
+        public bool showOtherBookAbility = true;//显示技艺书对应技艺名称
+        public bool showMagerialName = true;//显示材料名称
+        public bool showFoodExtraName = true;//显示食物特殊词条
+
+
+
 
         public bool showInBag = true;//显示包裹中物品特殊词条
         public bool showInEquuipBag = true;//显示装备界面包裹中物品特殊词条
@@ -75,8 +81,13 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showExtraName = GUILayout.Toggle(Main.settings.showExtraName, "显示宝物特殊词条", new GUILayoutOption[0]);
+            Main.settings.showFoodExtraName = GUILayout.Toggle(Main.settings.showFoodExtraName, "显示食物特殊词条", new GUILayoutOption[0]);
             Main.settings.showBookGang = GUILayout.Toggle(Main.settings.showBookGang, "显示书籍门派", new GUILayoutOption[0]);
             Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "显示图纸名称", new GUILayoutOption[0]);
+            Main.settings.showOtherBookAbility = GUILayout.Toggle(Main.settings.showOtherBookAbility, "显示技艺书技艺", new GUILayoutOption[0]);
+            Main.settings.showMagerialName = GUILayout.Toggle(Main.settings.showMagerialName, "显示材料类别", new GUILayoutOption[0]);
+
+
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -120,7 +131,16 @@ namespace MoreInfo
     public class Changer
     {
 
-        public static Dictionary<int, string> itemExtraAttr = new Dictionary<int, string>()
+
+
+        //50061-50066 膂力- 定力
+        //51361-51366 膂力%- 悟性% 
+        //51367 - 51372 护体% - 闪避%
+        //50501 - 50516 音律 - 织锦
+        //50601 - 50614 内功 - 杂学
+        //DateFile.instance.actorAttrDate actorAttr_date.txt
+
+        public static Dictionary<int, string> itemExtraAttrType1 = new Dictionary<int, string>()
                {
                     { 50501,"音律"},
                     { 50502,"弈棋"},
@@ -153,6 +173,28 @@ namespace MoreInfo
                     { 50612,"软兵"},
                     { 50613,"御射"},
                     { 50614,"乐器"},
+               };
+
+        public static Dictionary<int, string> itemExtraAttrType2 = new Dictionary<int, string>()
+               {
+                {51361,"膂力%"},
+                {51362,"体质%"},
+                {51363,"灵敏%"},
+                {51364,"根骨%"},
+                {51365,"悟性%"},
+                {51366,"定力%"},
+               };
+
+        //材料分类
+        public static Dictionary<int, string> materialType = new Dictionary<int, string>()
+               {
+                    { 0,""},
+                    { 1,"硬"},
+                    { 2,"软"},
+                    { 7,"铁"},
+                    { 8,"木"},
+                    { 11,"布"},
+                    { 12,"玉"},
                };
 
         //获取人物名字
@@ -206,19 +248,33 @@ namespace MoreInfo
             return int.Parse(DateFile.instance.GetItemDate(itemId, 506, false));
         }
 
+        //物品制作类型
+        public int getMakeType(int itemId)
+        {
+            //0为材料包，7铁8木9药10毒11布12玉15食材
+            return int.Parse(DateFile.instance.GetItemDate(itemId, 41, false));
+        }
+
+        //物品制作成品方向
+        public int getProductType(int itemId)
+        {
+            //0无法制作-装备类1硬2软
+            return int.Parse(DateFile.instance.GetItemDate(itemId, 48, false));
+        }
+
         //获取物品名称
         public string getItemName(int itemId)
         {
             return DateFile.instance.GetItemDate(itemId, 0, false);
         }
 
-        //获取特殊词条的名称
-        public string getItemExtraName(int itemId)
+        //获取一类词条的名称
+        public string getItemExtraNameType1(int itemId)
         {
             string itemName = this.getItemName(itemId);
 
             string value = "";
-            foreach (var item in itemExtraAttr)
+            foreach (var item in itemExtraAttrType1)
             {
                 int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
                 if (val > 0)
@@ -231,34 +287,49 @@ namespace MoreInfo
             return value;
         }
 
+        //获取二类词条的名称
+        public string getItemExtraNameType2(int itemId)
+        {
+            string itemName = this.getItemName(itemId);
+
+            string value = "";
+            foreach (var item in itemExtraAttrType2)
+            {
+                int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
+                if (val > 0)
+                {                    
+                    value = item.Value;
+                    break;
+                }
+            }
+            return value;
+        }
+
+
+
         //变更文本内容
         public void changeText(Text text, string newText)
         {
             text.text = newText;
         }
 
-        //变更宝物名称
-        public void changeDecName(Text text, int itemId)
+        //按照特殊词条类型1显示名称（功法技艺加成等）add决定了是否同时显示耐久。耐久度大于10的显示不下
+        public void changeDecNameType1(Text text, int itemId,bool add = false)
         {
-            string extraName = getItemExtraName(itemId);
+            string extraName = getItemExtraNameType1(itemId);
             if (extraName != "")
             {
-                changeText(text, extraName);
+                text.text = add ? extraName + text.text : extraName;
             }
         }
-
-        //变更装备名称
-        public void changeEquipName(Text text, int itemId)
+        //按照特殊词条类型2显示名称装备的膂力-悟性等百分比加成
+        public void changeDecNameType2(Text text, int itemId, bool add = false)
         {
-            if (!Main.settings.showExtraName) return;
-            int typ2 = getItemSecondType(itemId);
-            switch (typ2)
+            string extraName = getItemExtraNameType2(itemId);
+            if (extraName != "")
             {
-                case 13: //宝物
-                    changeDecName(text, itemId);
-                    break;
+                text.text = add ? extraName + text.text : extraName;
             }
-
         }
 
         //变更图纸名称
@@ -269,19 +340,82 @@ namespace MoreInfo
             changeText(text, name);
         }
 
+        //变更功法书名称
+        public void changeGongFaBookName(Text text, int itemId)
+        {
+            if (!Main.settings.showBookGang) return;
+            int gongFaId = getGongFaId(itemId);
+            string gangName = getGangName(gongFaId);
+            gangName = gangName.Substring(0, 2);
+            text.text = gangName + text.text;
+        }
+
+        //变更技艺书名称
+        public void changeAbilityBookName(Text text, int itemid, int typ3)
+        {
+            if (!Main.settings.showOtherBookAbility) return;
+            string abilityName = itemExtraAttrType1[typ3 + 50501 - 4];
+            text.text = abilityName + text.text;
+        }
+
         //变更书籍名称
         public void changeBookName(Text text, int itemId)
         {
-            if (!Main.settings.showBookGang) return;
             int typ3 = getItemThirdType(itemId);
             //4-19为技艺，20-33为功法
             if (typ3 >= 20)
             {
-                int gongFaId = getGongFaId(itemId);
-                string gangName = getGangName(gongFaId);
-                text.text = gangName + "\n" + text.text;
-                //changeText(text, gangName);
+                changeGongFaBookName(text, itemId);
             }
+            else
+            {
+                if (typ3 < 20 && typ3 >= 4)
+                {
+                    changeAbilityBookName(text, itemId, typ3);
+                }
+            }
+        }
+
+ 
+        //变更制造类物品名称
+        public void changeType1Name(Text text, int itemId)
+        {
+            if (!Main.settings.showMagerialName) return;
+            int mtyp = getMakeType(itemId);
+
+            if (mtyp == 0) //材料包
+            {
+                string name = getItemName(itemId);
+                name = name.Substring(name.Length - 2);
+                text.text = name + text.text;
+            }
+            int ptyp = getProductType(itemId);
+            if (ptyp == 0) return;//只显示可制作物品的材料
+            //暂不处理药材食材和毒药
+            switch (mtyp)
+            {
+                case 7:
+                    text.text = materialType[ptyp] + materialType[mtyp] + text.text;
+                    break;
+                case 8:
+                    text.text = materialType[ptyp] + materialType[mtyp] + text.text;
+                    break;
+                case 11:
+                    text.text = materialType[ptyp] + materialType[mtyp] + text.text;
+                    break;
+                case 12:
+                    text.text = materialType[ptyp] + materialType[mtyp] + text.text;
+                    break;
+            }
+        }
+
+        
+        //变更食物名称
+        public void changeType3Name(Text text, int itemId)
+        {
+            if (!Main.settings.showFoodExtraName) return;
+            changeDecNameType1(text, itemId,true);     
+
         }
 
         //变更图书与图纸名称
@@ -299,12 +433,42 @@ namespace MoreInfo
             }
         }
 
+        //变更装备名称
+        public void changeEquipName(Text text, int itemId)
+        {
+            if (!Main.settings.showExtraName) return;
+            int typ2 = getItemSecondType(itemId);
+            switch (typ2)
+            {
+                case 13: //宝物
+                    changeDecNameType1(text, itemId);
+                    break;
+                case 14: //帽子
+                    changeDecNameType2(text, itemId);
+                    break;
+                case 15: //鞋子
+                    changeDecNameType2(text, itemId);
+                    break;
+                case 16: //护甲
+                    changeDecNameType2(text, itemId);
+                    break;
+            }
+
+        }
+
+
         //变更物品名称
         public void changeItemName(Text text, int itemId)
         {
             int typ = this.getItemType(itemId);
             switch (typ)
             {
+                case 1:
+                    changeType1Name(text, itemId);
+                    break;
+                case 3:
+                    changeType3Name(text, itemId);
+                    break;
                 case 4:
                     changeEquipName(text, itemId);
                     break;
@@ -316,12 +480,7 @@ namespace MoreInfo
         }
     }
 
-    //50061-50066 膂力- 定力
-    //51361-51366 膂力%- 悟性% 
-    //51367 - 51372 护体% - 闪避%
-    //50501 - 50516 音律 - 织锦
-    //50601 - 50614 内功 - 杂学
-    //DateFile.instance.actorAttrDate actorAttr_date.txt
+
 
     //将人物包裹中的的宝物耐久度替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
@@ -468,6 +627,8 @@ namespace MoreInfo
             }
         }
     }
+
+
 
 }
 
