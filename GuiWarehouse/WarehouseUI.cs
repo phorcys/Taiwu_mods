@@ -142,20 +142,25 @@ namespace GuiWarehouse
 
         }
 
-        
+        string m_keyWords = "";
+        float keyWordsT;
         public void OnGUI()
         {
 
             int sw = Screen.width;//屏幕宽度
             int sh = Screen.height;//屏幕高度
-            int int1 = (1280/128);//间隔
+            int int1 = (1280/512);//间隔
             int int2 = (1280/24);//宽度
             int int3 = (1280/ 48);//高度
 
             if (!open && Main.settings != null && Warehouse.instance != null && Warehouse.instance.warehouseWindow)
             {
-                if (Main.settings.useWarehouse == 0 && Warehouse.instance.warehouseWindow.activeSelf)
+                if (Main.settings.useClassify!=0 && Main.settings.useWarehouse == 0 && Warehouse.instance.warehouseWindow.activeSelf)
                 {
+                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                    {
+                        return;
+                    }
 
                     int idx = 0;
                     SetSelectButton(Main.MaxLevelClassify(), levelClassify, ref Main.settings.levelClassify, ref idx, int1, int2, int3);
@@ -167,6 +172,16 @@ namespace GuiWarehouse
                     //{
                     //    SetSelectButton(Main.MaxAttrClassify(), attrClassify, ref Main.settings.attrClassify, ref idx, int1, int2, int3);
                     //}
+
+                    GUI.Label(new Rect(int1 * 5 + levelClassify.Length * (int1 + int2), int1, int2, int3), "搜索");
+                    m_keyWords = GUI.TextField(new Rect(int1 + (levelClassify.Length + 1) * (int1 + int2), int1, int2 * 5, int3), m_keyWords);
+
+                    if (m_keyWords != Main.keyWords && (Time.time - keyWordsT) > 0.5f)
+                    {
+                        keyWordsT = Time.time;
+                        Main.keyWords = m_keyWords;
+                        Main.Warehouse_UpdateActorItems_Patch.UpdateData();
+                    }
                 }
             }
 
@@ -344,7 +359,6 @@ namespace GuiWarehouse
 
         void SetSelectButton(int max,string[] nameArray,ref int record,ref int idx,int int1,int int2,int int3)
         {
-            int lineCount = 16;
             int cur = record;
             int left = 0;
             for (int i = 0; i < nameArray.Length; i++)
@@ -362,6 +376,11 @@ namespace GuiWarehouse
                 if (value)
                 {
                     btnName = "<color=#2FA4FF>" + btnName + "</color>";
+                }
+                if (i== 16)
+                {
+                    idx++;
+                    left = -16 * (int1 + int2);
                 }
                 if (GUI.Button(new Rect(int1 + i * (int1 + int2)+ left, int1 + idx * (int1 + int3), int2, int3), btnName))
                 {
@@ -387,16 +406,11 @@ namespace GuiWarehouse
                             cur |= 1 << (i - 1);
                         }
                     }
-                    if (((i+1)% lineCount) == 0)
-                    {
-                        idx++;
-                        left = - (i+1) * (int1 + int2);
-                    }
                 }
             }
             if (cur != record)
             {
-                Main.Logger.Log(record + " ==> " + cur);
+                //Main.Logger.Log(record + " ==> " + cur);
                 record = cur;
                 Main.Warehouse_UpdateActorItems_Patch.UpdateData();
             }
