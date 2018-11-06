@@ -568,9 +568,9 @@ namespace Sth4nothing.VillageHeadOfTaiwu
     public class Settings : UnityModManager.ModSettings
     {
         [XmlIgnore]
-        public int labelSize = 16;
+        public int labelSize = 18;
         [XmlIgnore]
-        public int buttonSize = 12;
+        public int buttonSize = 14;
         /// <summary>
         /// 是否跳过城镇
         /// </summary>
