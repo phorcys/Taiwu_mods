@@ -17,7 +17,6 @@ using LumenWorks.Framework.IO.Csv;
 
 namespace BaseResourceMod
 {
-
     /// <summary>
     ///  dump 读取后的图片文件
     ///  加载自定义图像文件
@@ -48,7 +47,7 @@ namespace BaseResourceMod
                 }
                 Main.Logger.Log(String.Format("[Texture] Ijected  sprite from  {0}  to instance {1} sprite name {2}", ufname, nkey, ftype));
             }
-            else 
+            else if(instance.Length >0)
             {
                 sprite = AddNewSpriteFromTexturePNG(ufname);
                 if (sprite == null)
@@ -62,12 +61,15 @@ namespace BaseResourceMod
                     sprite.name = ftype;
                     if (instance != null && index >=0)
                     {
-                        while(index < instance.Length +1)
+                        int counter = 0;
+                        while(counter < index - instance.Length +1)
                         {
-                            instance.Add(null);
+                            instance.AddToArray(null);
+                            counter++;
                         }
                         instance[index] = sprite;
                     }
+                    Main.Logger.Log(String.Format("[Texture]  Ijected sprite from  {0}  to instance {1} sprite name {2}  sprite: {3}", ufname, nkey, ftype, sprite == null ? "null" : sprite.ToString()));
                 }
             }
         }

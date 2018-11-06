@@ -509,9 +509,41 @@ namespace CharacterFloatInfo
             }
             else if (windowType == WindowType.BuildingWindow)
             {
-                text += DateFile.instance.ActorIsWorking(id) == null ?
-                    "工作岗位:<color=#606060FF>无</color>" :
-                    string.Format("工作岗位:<color=white>{0}</color>\t\t進度:<color=white>{1}</color>", GetWorkPlace(id), GetWorkingData(id));
+                if (HomeSystem.instance == null) return null;
+                if (!HomeSystem.instance.buildingWindowOpend) return null;
+                int partId, placeId, buildingIndex;
+
+                text += "工作岗位:";
+
+                int[] city = DateFile.instance.ActorIsWorking(id);
+                if (city == null)
+                {
+                    text += "<color=#606060FF>无</color>";
+                }
+                else
+                {
+                    partId = city[0];
+                    placeId = city[1];
+                    var aBuilding = DateFile.instance.actorsWorkingDate[partId][placeId].FirstOrDefault(t => t.Value == id);
+                    if (aBuilding.Equals(default(KeyValuePair<int,int>)))
+                    {
+                        text += "<color=red>未知</color>";
+                    }
+                    else
+                    {
+                        buildingIndex = aBuilding.Key;
+                        text += string.Format("<color=white>{0}</color>", GetWorkPlace(partId, placeId, buildingIndex));
+                        text += "\t进度:<color=white>" + GetWorkingProgress(partId, placeId, buildingIndex)+ "</color>";
+                   }
+                }
+                partId = HomeSystem.instance.homeMapPartId;
+                placeId = HomeSystem.instance.homeMapPlaceId;
+                buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
+                // remark: 下面語法在 VS 2017 才支援, 早期版本需先定義 int workeId;
+                int workerId = 0;
+                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out workerId) || workerId != id)
+                    text += string.Format("\n村民派遣，预期效率:<color=white>{0}</color>", GetExpectEfficient(id, partId, placeId, buildingIndex));
+
             }
             else if (windowType == WindowType.DialogChooseActors)
             {
@@ -655,21 +687,21 @@ namespace CharacterFloatInfo
         }
 
         // 根據NPC的門派或職業,配斷能否傳授你這生活藝能
-        public static bool CanTeach(int actorID, int skillID)
+        public static bool CanTeach(int actorID, int skillId)
         {
             int eventID;
             List<int> eventIDs;
 
-            if (skillID >= 0 && skillID <= 5)
-                eventID = 931900001 + skillID;
-            else if (skillID == 6 || skillID == 7)
-                eventID = 932200001 + skillID - 6;
-            else if (skillID == 8 || skillID == 9)
-                eventID = 932900001 + skillID - 8;
-            else if (skillID == 10 || skillID == 11)
-                eventID = 932200003 + skillID - 10;
-            else if (skillID >= 12 && skillID <= 15)
-                eventID = 932300001 + skillID - 12;
+            if (skillId >= 0 && skillId <= 5)
+                eventID = 931900001 + skillId;
+            else if (skillId == 6 || skillId == 7)
+                eventID = 932200001 + skillId - 6;
+            else if (skillId == 8 || skillId == 9)
+                eventID = 932900001 + skillId - 8;
+            else if (skillId == 10 || skillId == 11)
+                eventID = 932200003 + skillId - 10;
+            else if (skillId >= 12 && skillId <= 15)
+                eventID = 932300001 + skillId - 12;
             else
                 return false;
 
@@ -1034,25 +1066,73 @@ namespace CharacterFloatInfo
         }
 
         //村民工作地点
-        public static string GetWorkPlace(int id)
+        public static string GetWorkPlace(int partId, int placeId, int buildingIndex)
         {
             string text = "";
-            if (DateFile.instance.ActorIsWorking(id) != null)
+            int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
+            int buildType = buildingData[0];
+            int buildLv = buildingData[1]; 
+            text += DateFile.instance.basehomePlaceDate[buildType][0];
+            text += " - Lv." + buildLv;
+            return text;
+        }
+
+        //村民工作地点現在收获进度
+        public static string GetWorkingProgress(int partId, int placeId, int buildingIndex)
             {
-                int[] place = DateFile.instance.ActorIsWorking(id);
-                List<int> list = new List<int>(DateFile.instance.actorsWorkingDate[place[0]][place[1]].Keys);
-                for (int i = 0; i < list.Count; i++)
-                {
-                    int key = list[i];
-                    if (DateFile.instance.actorsWorkingDate[place[0]][place[1]][key] == id)
-                    {
-                        int buildid = DateFile.instance.homeBuildingsDate[place[0]][place[1]][key][0];
-                        text = DateFile.instance.basehomePlaceDate[buildid][0];
-                    }
-                }
-            }
+            string text = "";
+            int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
+            int buildingType = buildingData[0];
+            Dictionary<int,string> buildingSetting = DateFile.instance.basehomePlaceDate[buildingType];
+            int currentXp = buildingData[11];
+            int BuildingMaxXp = int.Parse(buildingSetting[91]);
+            int skillId = int.Parse(buildingSetting[33]);
+            int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
+            text += string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100 , (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
 
             return text;
+        }
+
+        //工作效率,null代表无法获得
+        public static string GetExpectEfficient(int workerId, int partId, int placeId, int buildingIndex)
+        {
+            int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
+            int buildingType = buildingData[0];
+            int buildingLv = buildingData[1];
+            Dictionary<int, string> buildingSetting = DateFile.instance.basehomePlaceDate[buildingType];
+
+            int skillId = int.Parse(buildingSetting[33]);
+            int BuildingMaxXp = int.Parse(buildingSetting[91]);
+            if (skillId <= 0 || BuildingMaxXp<=0) return "";
+
+            int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
+            int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
+            int moodBonus = 40 + favorLvl * 10;
+            if (mood <= 0) moodBonus -= 30;
+            else if (mood <= 20) moodBonus -= 20;
+            else if (mood <= 40) moodBonus -= 10;
+            else if (mood >= 100) moodBonus += 30;
+            else if (mood >= 80) moodBonus += 20;
+            else if (mood >= 60) moodBonus += 10;
+
+            int workerSkill = int.Parse(DateFile.instance.GetActorDate(workerId, skillId, true));
+            if (skillId == 18) workerSkill += 100;  //镖局,知客亭,炼神峰: 以名譽+100計算
+
+            int NeighborBonus = 0;
+            foreach (int key in HomeSystem.instance.GetBuildingNeighbor(partId, placeId, buildingIndex, 1))
+            {
+                if (DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(key) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(key) && int.Parse(DateFile.instance.basehomePlaceDate[DateFile.instance.homeBuildingsDate[partId][placeId][key][0]][62]) != 0)
+                {
+                    int skillBonus = int.Parse(DateFile.instance.GetActorDate(DateFile.instance.actorsWorkingDate[partId][placeId][key], skillId, true));
+                    if (skillId == 18) skillBonus += 100;  //镖局,知客亭,炼神峰 : 以名譽+100計算
+                    NeighborBonus += skillBonus;
+                }
+            }
+            int skillRequirement = Mathf.Max(int.Parse(buildingSetting[51]) + buildingLv - 1, 1);
+            workerSkill = (workerSkill + NeighborBonus) * Mathf.Max(moodBonus, 0) ;
+
+            int efficiency = Mathf.Clamp(workerSkill / skillRequirement, 50, 200);
+            return string.Format("+{0:0.#}%{1}", (float)efficiency / BuildingMaxXp * 100, DateFile.instance.massageDate[7006][1]);
         }
 
         //转世次数
@@ -1213,75 +1293,6 @@ namespace CharacterFloatInfo
             return text;
         }
 
-        //工作效率,null代表无法获得
-        public static string GetWorkingData(int workerId)
-        {
-            if (HomeSystem.instance == null) return null;
-            if (!HomeSystem.instance.buildingWindowOpend) return null;
-            int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
-            int partId = HomeSystem.instance.homeMapPartId;
-            int placeId = HomeSystem.instance.homeMapPlaceId;
-            if ((!DateFile.instance.baseHomeDate.ContainsKey(partId))
-                || (!DateFile.instance.baseHomeDate[partId].ContainsKey(placeId))
-                || DateFile.instance.baseHomeDate[partId][placeId] == 0)
-                return null;
-            if (partId < 0 || placeId < 0) return null;
-            int[] array = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
-            int unknown = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][33]);//所需资质的序号
-            int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
-            int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
-            int moodFavorAddup = 40 + favorLvl * 10;
-            if (mood <= 0)
-            {
-                moodFavorAddup -= 30;
-            }
-            else if (mood <= 20)
-            {
-                moodFavorAddup -= 20;
-            }
-            else if (mood <= 40)
-            {
-                moodFavorAddup -= 10;
-            }
-            else if (mood >= 100)
-            {
-                moodFavorAddup += 30;
-            }
-            else if (mood >= 80)
-            {
-                moodFavorAddup += 20;
-            }
-            else if (mood >= 60)
-            {
-                moodFavorAddup += 10;
-            }
-            int num5 = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(workerId, unknown, true));
-            if (unknown == 18)
-            {
-                num5 += 100;
-            }
-            int xiangFangAddup = 0;
-            foreach (int key in HomeSystem.instance.GetBuildingNeighbor(partId, placeId, buildingIndex, 1))
-            {
-                if (DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(key) && DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(key) && int.Parse(DateFile.instance.basehomePlaceDate[DateFile.instance.homeBuildingsDate[partId][placeId][key][0]][62]) != 0)
-                {
-                    int singleAddup = (unknown <= 0) ? 0 : int.Parse(DateFile.instance.GetActorDate(DateFile.instance.actorsWorkingDate[partId][placeId][key], unknown, true));
-                    if (unknown == 18)
-                        singleAddup += 100;
-                    xiangFangAddup += singleAddup;
-                }
-            }
-            int num6 = Mathf.Max(int.Parse(DateFile.instance.basehomePlaceDate[array[0]][51]) + (array[1] - 1), 1);
-            num5 = (num5 + xiangFangAddup) * Mathf.Max(moodFavorAddup, 0) / 100;
-
-            int efficiency = Mathf.Clamp(num5 * 100 / num6, 50, 200);
-            int total = int.Parse(DateFile.instance.basehomePlaceDate[array[0]][91]);
-            if (total > 0)
-                return string.Format("{0}%", efficiency * 100 / total);
-            else
-                return null;
-        }
-
         //人物賦性
         public static string GetResource(int id)
         {
@@ -1401,8 +1412,8 @@ namespace CharacterFloatInfo
                 favourHolder.localPosition = new Vector3(20f, 37f, 0);
                 favourHolder.SetParent(WindowManage.instance.itemMoneyText.transform, false);
                 favourHolder.Find("wariness").GetComponent<RectTransform>().localPosition = new Vector3(-50f, -38f, 0);
-                AddText("FavLabel", favourHolder.Find("ActorFavor1"), "感情:", -48f, -9f, 60f, 30f, Color.yellow);
-                AddText("WariLabel", favourHolder.Find("wariness"), "戒心:", -48f, -9f, 60f, 30f, Color.yellow);
+                AddText("FavLabel", favourHolder.Find("ActorFavor1"), DateFile.instance.massageDate[7][3] + ":", -48f, -9f, 60f, 30f, Color.yellow);
+                AddText("WariLabel", favourHolder.Find("wariness"), DateFile.instance.massageDate[7][4] + ":", -48f, -9f, 60f, 30f, Color.yellow);
             }
             return favourHolder;
         }
