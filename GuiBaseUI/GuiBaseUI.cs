@@ -18,14 +18,13 @@ namespace GuiBaseUI
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+        public float bgR = 0.9490196f;
+        public float bgG = 0.509803951f;
+        public float bgB = 0.503921571f;
 
-        public static float bgR;
-        public static float bgG;
-        public static float bgB;
-
-        public static float handR;
-        public static float handG;
-        public static float handB;
+        public float handR = 0.5882353f;
+        public float handG = 0.807843149f;
+        public float handB = 0.8156863f;
     }
     public static class Main
     {
@@ -72,6 +71,20 @@ namespace GuiBaseUI
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>µ×É«</color>", Convert.ToString((int)(Main.settings.bgR * 255), 16)
+                , Convert.ToString((int)(Main.settings.bgG * 255), 16), Convert.ToString((int)(Main.settings.bgB * 255), 16)));
+            Main.settings.bgR = GUILayout.HorizontalSlider(Main.settings.bgR, 0, 1);
+            Main.settings.bgG= GUILayout.HorizontalSlider(Main.settings.bgG, 0, 1);
+            Main.settings.bgB = GUILayout.HorizontalSlider(Main.settings.bgB, 0, 1);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>Ç°É«</color>", Convert.ToString((int)(Main.settings.handR * 255), 16)
+                , Convert.ToString((int)(Main.settings.handG * 255), 16), Convert.ToString((int)(Main.settings.handB * 255), 16)));
+            Main.settings.handR = GUILayout.HorizontalSlider(Main.settings.handR, 0, 1);
+            Main.settings.handG = GUILayout.HorizontalSlider(Main.settings.handG, 0, 1);
+            Main.settings.handB = GUILayout.HorizontalSlider(Main.settings.handB, 0, 1);
+            GUILayout.EndHorizontal();
         }
 
 

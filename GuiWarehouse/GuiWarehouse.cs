@@ -186,6 +186,13 @@ namespace GuiWarehouse
             GUILayout.BeginHorizontal();
             Main.settings.useClassify = GUILayout.HorizontalSlider(Main.settings.useClassify, 0, 1) <= 0.5f ? 0 : 1;
             GUILayout.Label(string.Format("开启分类搜索：<color=#F63333>（{0}）</color>", Main.settings.useClassify == 0 ? "关" : "开"));
+            if (Main.settings.useClassify == 1)
+            {
+
+                Main.settings.levelClassify = Main.MaxLevelClassify();//等级筛选
+                Main.settings.bookClassify = Main.MaxBookClassify();//书籍筛选
+                                                                    //Main.settings.attrClassify = Main.MaxAttrClassify();//属性
+            }
             GUILayout.EndHorizontal();
             //GUILayout.BeginHorizontal();
             //GUILayout.Label("默认打开仓库标签：");

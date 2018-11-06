@@ -34,37 +34,62 @@ namespace GuiBaseUI
             }
         }
 
-        ScrollRect scrollRect;
-        GameObject gameObject;
-        RectTransform transform;
-        RectTransform content;
-        RectTransform view;
-        RectTransform top;
-        RectTransform btm;
+        public ScrollRect scrollRect;
+        public GameObject gameObject;
+        public RectTransform transform;
+        public RectTransform content;
+        public RectTransform view;
+        public LayoutElement top;
+        public LayoutElement btm;
 
-        public void Init(ScrollRect _scrollRect, ItemCell _itemcell, handleSetData _handleSetData)
+
+        float maxHeight;
+        float windowsHeight;
+        float setWindowHeight;
+        int showCount;
+        int startIndex = -1;
+        int endIndex = -1;
+        bool isInit = false;
+
+        /// <summary>
+        /// 初始化滚动
+        /// </summary>
+        /// <param name="_scrollRect">ScrollRect组件</param>
+        /// <param name="_itemcell">格子预制件的ItemCell组件</param>
+        /// <param name="_handleSetData">委托回调方法 设置格子数据</param>
+        public void Init(ScrollRect _scrollRect, ItemCell _itemcell, handleSetData _handleSetData, float userWindowHeight = -1)
         {
             scrollRect = _scrollRect;
             m_funcSetData = _handleSetData;
+            setWindowHeight = userWindowHeight;
             ItemPool.instance.SetItem(funcSetData, _itemcell.gameObject);
             gameObject = scrollRect.gameObject;
             transform = scrollRect.GetComponent<RectTransform>();
             content = scrollRect.content;
             view = scrollRect.viewport;
             scrollRect.onValueChanged.AddListener(OnValueChanged);
-            top = new GameObject("top", new Type[] { typeof(RectTransform) }).GetComponent<RectTransform>();
-            btm = new GameObject("button", new Type[] { typeof(RectTransform) }).GetComponent<RectTransform>();
-            top.SetParent(content, false);
-            btm.SetParent(content, false);
-            top.sizeDelta = default(Vector2);
-            btm.sizeDelta = default(Vector2);
+            top = new GameObject("top", new Type[] { typeof(RectTransform), typeof(LayoutElement) }).GetComponent<LayoutElement>();
+            btm = new GameObject("button", new Type[] { typeof(RectTransform), typeof(LayoutElement) }).GetComponent<LayoutElement>();
+            top.transform.SetParent(content, false);
+            btm.transform.SetParent(content, false);
+            top.preferredHeight = 1;
+            top.preferredWidth = 1;
+            btm.preferredHeight = 1;
+            btm.preferredWidth = 1;
         }
 
         private void OnValueChanged(Vector2 pos)
         {
             maxHeight = cellHeight * m_cellCount;
             Main.Logger.Log("总高度" + maxHeight.ToString());
-            windowsHeight = transform.sizeDelta.y;
+            if (setWindowHeight == -1)
+            {
+                windowsHeight = transform.sizeDelta.y;
+            }
+            else
+            {
+                windowsHeight = setWindowHeight;
+            }
             Main.Logger.Log("窗口高度" + windowsHeight.ToString() + " 格子高度" + cellHeight.ToString());
             showCount = (int)(windowsHeight / cellHeight);
             Main.Logger.Log("显示数量" + showCount.ToString());
@@ -153,18 +178,15 @@ namespace GuiBaseUI
             startIndex = _startIndex;
             endIndex = _endIndex;
 
-            top.sizeDelta = new Vector2(0, (startIndex - 1) * cellHeight);
-            btm.sizeDelta = new Vector2(0, (cellCount - endIndex) * cellHeight);
+            top.preferredHeight = (startIndex - 1) * cellHeight;
+            btm.preferredHeight = (cellCount - endIndex) * cellHeight;
+
+            top.minHeight = (startIndex - 1) * cellHeight;
+            btm.minHeight = (cellCount - endIndex) * cellHeight;
 
             Main.Logger.Log("end对象池数量" + ItemPool.instance.pool[funcSetData].Count.ToString() + " 使用的数量" + (content.childCount - 2).ToString());
         }
 
-        float maxHeight;
-        float windowsHeight;
-        int showCount;
-        int startIndex = -1;
-        int endIndex = -1;
-        bool isInit = false;
         private void InitData()
         {
             //if (startIndex != -1)
