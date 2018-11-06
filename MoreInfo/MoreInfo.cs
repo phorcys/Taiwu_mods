@@ -19,6 +19,8 @@ namespace MoreInfo
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+             
+
 
         public bool isLoaded = false;//是否为首次Loading
 
@@ -46,6 +48,7 @@ namespace MoreInfo
         public bool showInLevelUpWindow = true;//在突破界面显示
 
         public bool showStroyLevel = true;//显示奇遇等级
+        public bool mergeIcon = true;//合并切换时节时入魔图标
     }
 
     public static class Main
@@ -53,6 +56,7 @@ namespace MoreInfo
         public static bool enabled;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
+       
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -115,6 +119,8 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", new GUILayoutOption[0]);
+            Main.settings.mergeIcon = GUILayout.Toggle(Main.settings.mergeIcon, "合并入魔图标", new GUILayoutOption[0]);
+
 
             GUILayout.EndHorizontal();
         }
@@ -196,6 +202,30 @@ namespace MoreInfo
                     { 11,"布"},
                     { 12,"玉"},
                };
+
+
+
+        public static string placeIds = "";
+        public void addPlaceId(int pid)
+        {
+            placeIds += pid + "|";
+        }
+        public void resetPlaceIds()
+        {
+            placeIds = "";
+        }
+        public string[] getSplitPlaceIds()
+        {
+            return placeIds.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+        public string getPlaceIds()
+        {
+            return placeIds;
+        }
+        public Changer()
+        {
+
+        }
 
         //获取人物名字
         public string getActorName(int actorId)
@@ -478,6 +508,9 @@ namespace MoreInfo
             }
 
         }
+
+
+        public static Changer instance;
     }
 
 
@@ -587,6 +620,7 @@ namespace MoreInfo
             {
                 var GData = item.Value;
                 int lv = int.Parse(GData[2]);
+
                 GData[0] = DateFile.instance.SetColoer(20001 + lv, GData[0]);
             }
             Main.settings.isLoaded = true;
@@ -628,6 +662,115 @@ namespace MoreInfo
         }
     }
 
+    //入魔图标
+    [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
+    public static class UIDate_SetTrunChangeWindow_Patch
+    {
+        static void Prefix(UIDate __instance)
+        {
+            if (!Main.enabled || !Main.settings.mergeIcon)
+                return;
+            if (int.Parse(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][101]) == 0)
+            {
+                __instance.changTrunEvents.Clear();
+            }
+            if (__instance.changTrunEvents.Count <= 0)
+            {
+                __instance.changTrunEvents.Add(new int[1]);
+            }            
+            List<int[]> newEventList = new List<int[]>();
+            bool isAdded = false;
+            Changer changer = new Changer();  
+            changer.resetPlaceIds();
+            for (int i = __instance.changTrunEvents.Count - 1; i > 0; i--)
+            {
+                int num2 = __instance.changTrunEvents[i][0];
+                int num3 = int.Parse(DateFile.instance.trunEventDate[num2][1]);
+                if (num3 > 0 && num2 == 248)
+                {
+                    int placeId = __instance.changTrunEvents[i][1];
+                    string name = string.Format("TrunEventIcon,{0},{1},{2}", num2, placeId, __instance.changTrunEvents[i][2]);
+                    string[] array = name.Split(new char[] { ',' });
+                    if (!isAdded)//仅保留一个图标
+                    {
+                        newEventList.Add(__instance.changTrunEvents[i]);
+                        isAdded = true;                        
+                    }
+                    changer.addPlaceId(placeId);                    
+                }
+                else
+                {
+                    newEventList.Add(__instance.changTrunEvents[i]);
+                } 
+            }
+            __instance.changTrunEvents = newEventList;
+        }
+    }
+
+
+    //处理换季时入魔提示图标
+
+    [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
+    public static class WindowManage_WindowSwitch_Patch
+    {
+        static void Postfix(WindowManage __instance, bool on, GameObject tips)
+        {
+            if (!Main.enabled || !Main.settings.mergeIcon)
+                return;                        
+            bool flag = false;
+
+            if (tips == null)
+            {
+                __instance.anTips = flag;
+            }
+            else
+            {
+                if (on)
+                {
+                    flag = true;
+                    int num = DateFile.instance.MianActorID();
+                    string[] array = tips.name.Split(new char[]
+                    {
+                    ','
+                    });
+                    Changer changer = new Changer();
+ 
+                    int num2 = (array.Length <= 1) ? 0 : int.Parse(array[1]);
+                    if ((num2 == 634 || num2 == 635) && StartBattle.instance.startBattleWindow.activeSelf && StartBattle.instance.enemyTeamId == 4)
+                    {
+                        flag = false;
+                    }
+                    DateFile df = DateFile.instance;
+                    string tag = tips.tag;                    
+                    switch (tag)
+                    {
+                        case "TrunEventIcon":
+                            {
+                                int num27 = int.Parse(DateFile.instance.trunEventDate[num2][1]);
+                                __instance.informationName.text = DateFile.instance.trunEventDate[num2][0];
+                                switch (num27)
+                                {
+                                    case 10:
+                                        string[] placeArray = changer.getPlaceIds().Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                                        string placeNames = "";
+                                        for (int i = 0; i < placeArray.Length; i++)
+                                        {
+                                            string pid = placeArray[i];
+                                            string pName = DateFile.instance.partWorldMapDate[int.Parse(pid)][0];
+                                            placeNames += pName + "、";
+                                        }
+                                        string pre = df.trunEventDate[num2][99].Split(new char[] { '|' })[0];
+                                        string post = df.trunEventDate[num2][99].Split(new char[] { '|' })[1];
+                                        __instance.informationMassage.text = string.Format("{0}{1}{2}\n",pre,df.SetColoer(10002, placeNames),post);
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+    }
 
 
 }
