@@ -7,6 +7,9 @@ using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
 
+/// <summary>
+/// 作弊用的mod
+/// </summary>
 namespace LKX_CheatMaxPeople
 {
     /// <summary>
@@ -15,9 +18,14 @@ namespace LKX_CheatMaxPeople
     public class Settings : UnityModManager.ModSettings
     {
         /// <summary>
-        /// GUI选择的类型
+        /// 人口
         /// </summary>
         public int maxPeople;
+
+        /// <summary>
+        /// 蛐蛐时节开启
+        /// </summary>
+        public bool ququLife;
 
         /// <summary>
         /// 保存设置
@@ -94,6 +102,8 @@ namespace LKX_CheatMaxPeople
                 Main.settings.maxPeople = int.Parse(maxPeople);
             }
 
+            Main.settings.ququLife = GUILayout.Toggle(Main.settings.ququLife, "蛐蛐无限寿命，已死的不复活。");
+
         }
 
         /// <summary>
@@ -112,6 +122,24 @@ namespace LKX_CheatMaxPeople
         static void Postfix(ref int __result)
         {
             if (Main.enabled && Main.settings.maxPeople >= 0) __result += Main.settings.maxPeople;
+        }
+    }
+
+    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
+    public class QuQuLife_For_SaveDateFile_LateUpdate
+    {
+        static void Postfix()
+        {
+            if (Main.enabled && Main.settings.ququLife)
+            {
+                foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
+                {
+                    if (DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) && item.Value[999] == "10000")
+                    {
+                        if (item.Value[901] != "0" && item.Value[2007] != "0") item.Value[2007] = "0";
+                    }
+                }
+            }
         }
     }
 }
