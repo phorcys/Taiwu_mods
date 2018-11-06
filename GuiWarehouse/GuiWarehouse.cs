@@ -22,21 +22,26 @@ namespace GuiWarehouse
         //public int openTitle = 0;//默认打开仓库标签
 
 
-        public int tackNum = 5;//几列物品 配置
-        public int numberOfColumns = 5;//几列物品 配置
+        public int tackNum = 5;//自定义存取物品数量 配置
+        public int numberOfColumns = 8;//几列物品 配置
         public int scrollSpeed = 30;//滚动速度 配置
 
         public bool remoteWarehouse = false;//远程仓库
 
-        public int levelClassify = 0;//等级筛选
-        public int bookClassify = 0;//书籍筛选
-        public int attrClassify = 0;//属性
+        public int useClassify = 1;//使用分类
+
+        public int levelClassify = Main.MaxLevelClassify();//等级筛选
+        public int bookClassify = Main.MaxBookClassify();//书籍筛选
+        //public int attrClassify = Main.MaxAttrClassify();//属性
+
+
 
     }
     public static class Main
     {
         //public static bool onOpenPackage = false;//使用茄子仓库时记录是打开仓库，物品强制显示为设置默认打开 背包
         //public static bool onOpenWarehouse = false;//使用茄子仓库时记录是打开仓库，物品强制显示为设置默认打开 仓库
+        public static string keyWords = "";
         public static bool enabled;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
@@ -97,11 +102,6 @@ namespace GuiWarehouse
 
             GameObject pool = new GameObject();
             MonoBehaviour.DontDestroyOnLoad(pool);
-
-            
-                Main.settings.levelClassify = Main.MaxLevelClassify();
-                Main.settings.bookClassify = Main.MaxBookClassify();
-                //Main.settings.attrClassify = Main.MaxAttrClassify();
             
             return true;
         }
@@ -183,6 +183,10 @@ namespace GuiWarehouse
             GUILayout.EndHorizontal();
 
 
+            GUILayout.BeginHorizontal();
+            Main.settings.useClassify = GUILayout.HorizontalSlider(Main.settings.useClassify, 0, 1) <= 0.5f ? 0 : 1;
+            GUILayout.Label(string.Format("开启分类搜索：<color=#F63333>（{0}）</color>", Main.settings.useClassify == 0 ? "关" : "开"));
+            GUILayout.EndHorizontal();
             //GUILayout.BeginHorizontal();
             //GUILayout.Label("默认打开仓库标签：");
             //if (warehouse != null)
@@ -428,10 +432,12 @@ namespace GuiWarehouse
                 bool needLevel = Main.MaxLevelClassify() != Main.settings.levelClassify;
                 bool needBook = Main.MaxBookClassify() != Main.settings.bookClassify && (warehouse.showBookClassify[typ] == 1);
                 //bool needAttr = Main.MaxAttrClassify() != Main.settings.attrClassify && ((actor && warehouse.showAttrClassify[Warehouse.instance.actorItemTyp] == 1) || (!actor && warehouse.showAttrClassify[Warehouse.instance.warehouseItemTyp] == 1));
+                bool needSearch = (!string.IsNullOrEmpty(Main.keyWords));
                 if (typ == 0
-                    && !needLevel 
-                    && !needBook 
+                    && !needLevel
+                    && !needBook
                     //&& !needAttr
+                    && !needSearch
                     )
                 {
                     return list.ToArray();
@@ -458,6 +464,7 @@ namespace GuiWarehouse
                         }
                         if(needBook
                             //|| needAttr
+                            || needSearch
                             )
                         {
                             int k;
@@ -531,6 +538,39 @@ namespace GuiWarehouse
                         //        continue;
                         //    }
                         //}
+                        if (needSearch)
+                        {
+                            bool v1 = false;
+                            string[] sl = Main.keyWords.Split('|');
+                            for (int j = 0; j < sl.Length; j++)
+                            {
+                                if(sl.Length > 0)
+                                {
+                                    bool v2 = true;
+                                    string[] sl2 = sl[j].Split('&');
+                                    if(sl2.Length > 0)
+                                    {
+                                        for (int k = 0; k < sl2.Length; k++)
+                                        {
+                                            if (!des.Contains((sl2[k])))
+                                            {
+                                                v2 = false;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (!v1 && v2)
+                                    {
+                                        v1 = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!v1)
+                            {
+                                continue;
+                            }
+                        }
                         result.Add(list[i]);
                     }
                 }
