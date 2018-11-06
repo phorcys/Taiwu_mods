@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
+using HC.UI;
 
 namespace IllustratedHandbook
 {
@@ -13,54 +14,55 @@ namespace IllustratedHandbook
     {
         DateFile dataInstance;
 
-        // ÊÇ·ñÏÔÊ¾´°¿Ú
+        // æ˜¯å¦æ˜¾ç¤ºçª—å£
         public static bool mainCavasActive = true;
 
-        GameObject mainCanvas; // Ö÷¿Ø
-        GameObject mainPanel; // Ö÷Ãæ°å
-        GameObject handbookPanel; // ³ÌĞòÃæ°å
-        GameObject loadedPanel; // ¹¦ÄÜÃæ°å
-        GameObject loadingPanel; // ³õÊ¼»¯Ãæ°å
-        GameObject filterPanel; // ¹ıÂËÃæ°å
-        GameObject itemTypePanel; // ¹ıÂËÃæ°å -> ÎïÆ··ÖÀàÃæ°å
-        GameObject itemLevelPanel; // ¹ıÂËÃæ°å -> ÎïÆ·Æ·¼¶Ãæ°å
-        GameObject filterTypeCurrent; // ¹ıÂËÃæ°å -> µ±Ç°·ÖÀàÎÄ×Ö
-        GameObject filterLevelCurrent;// ¹ıÂËÃæ°å -> µ±Ç°Æ·¼¶ÎÄ×Ö
-        GameObject loadingTextPanel; // ³õÊ¼»¯ÎÄ×ÖÃæ°å
-        GameObject itemPanel; // ¹¦ÄÜÃæ°å -> ÎïÆ·Ãæ°å
-        GameObject titlePanel; // ±êÌâ
-        EventTrigger titlePanelOndrag; // ÍÏ¶¯ÊÂ¼ş
-        GameObject titleText; // ±êÌâ -> ±êÌâÎÄ×Ö
-        GameObject tipText; // ³õÊ¼»¯Ãæ°å -> ÌáÊ¾
-        GameObject aboutText; // ³õÊ¼»¯ÎÄ×ÖÃæ°å -> ¹ØÓÚ
-        Text itemPageText;  // ¹¦ÄÜÃæ°å -> µ±Ç°Ò³
+
+        Canvas mainCanvas; // ä¸»æ§
+        Image mainPanel; // ä¸»é¢æ¿
+        Image handbookPanel; // ç¨‹åºé¢æ¿
+        Image loadedPanel; // åŠŸèƒ½é¢æ¿
+        Image loadingPanel; // åˆå§‹åŒ–é¢æ¿
+        Image filterPanel; // è¿‡æ»¤é¢æ¿
+        Image itemTypePanel; // è¿‡æ»¤é¢æ¿ -> ç‰©å“åˆ†ç±»é¢æ¿
+        Image itemLevelPanel; // è¿‡æ»¤é¢æ¿ -> ç‰©å“å“çº§é¢æ¿
+        GameObject filterTypeCurrent; // è¿‡æ»¤é¢æ¿ -> å½“å‰åˆ†ç±»æ–‡å­—
+        GameObject filterLevelCurrent;// è¿‡æ»¤é¢æ¿ -> å½“å‰å“çº§æ–‡å­—
+        Image loadingTextPanel; // åˆå§‹åŒ–æ–‡å­—é¢æ¿
+        Image itemPanel; // åŠŸèƒ½é¢æ¿ -> ç‰©å“é¢æ¿
+        Image titlePanel; // æ ‡é¢˜
+        EventTrigger titlePanelOndrag; // æ‹–åŠ¨äº‹ä»¶
+        GameObject titleText; // æ ‡é¢˜ -> æ ‡é¢˜æ–‡å­—
+        GameObject tipText; // åˆå§‹åŒ–é¢æ¿ -> æç¤º
+        GameObject aboutText; // åˆå§‹åŒ–æ–‡å­—é¢æ¿ -> å…³äº
+        Text itemPageText;  // åŠŸèƒ½é¢æ¿ -> å½“å‰é¡µ
         GameObject NGAButton;
         GameObject GithubButton;
-        GameObject itemGrid; // ÎïÆ·Grid
-        GameObject prePageButton; // ¹¦ÄÜÃæ°å -> ÉÏÒ»Ò³°´¼ü
-        GameObject nextPageButton; // ¹¦ÄÜÃæ°å -> ÏÂÒ»Ò³°´¼ü
-        List<GameObject> itemSlots = new List<GameObject>(); // 54¸öÎïÆ·²Û
+        GameObject itemGrid; // ç‰©å“Grid
+        GameObject prePageButton; // åŠŸèƒ½é¢æ¿ -> ä¸Šä¸€é¡µæŒ‰é”®
+        GameObject nextPageButton; // åŠŸèƒ½é¢æ¿ -> ä¸‹ä¸€é¡µæŒ‰é”®
+        List<GameObject> itemSlots = new List<GameObject>(); // 54ä¸ªç‰©å“æ§½
 
-        Sprite[] itemBack; // ÎïÆ·²Û±³¾°Í¼Æ¬
-        Sprite[] itemIcon; // ÎïÆ·Í¼±ê
+        Sprite[] itemBack; // ç‰©å“æ§½èƒŒæ™¯å›¾ç‰‡
+        Sprite[] itemIcon; // ç‰©å“å›¾æ ‡
 
-        Vector3 offsetPostion; // ÓÃÒÔ¼ÇÂ¼ÍÏ×§ÊÂ¼şÆ«ÒÆ
+        Vector3 offsetPostion; // ç”¨ä»¥è®°å½•æ‹–æ‹½äº‹ä»¶åç§»
         Vector3 offsetPostionLoding;
 
-        int selectedLevel = 0; // Ñ¡ÔñµÄÎïÆ·Æ·¼¶
-        int selectedType = 0;  // Ñ¡ÔñµÄÎïÆ·ÖÖÀà
+        int selectedLevel = 0; // é€‰æ‹©çš„ç‰©å“å“çº§
+        int selectedType = 0;  // é€‰æ‹©çš„ç‰©å“ç§ç±»
 
         int selectedLevelUnsaved = 0;
         int selectedTypeUnsaved = 0;
 
-        string itemType = "ÎŞ";
-        string[] itemLevel = { "È«²¿|#FFF", "¾ÅÆ·|#8E8E8EFF", "°ËÆ·|#FBFBFBFF", "ÆßÆ·|#6DB75FFF", "ÁùÆ·|#8FBAE7FF", "ÎåÆ·|#63CED0FF", "ËÄÆ·|#AE5AC8FF", "ÈıÆ·|#E3C66DFF", "¶şÆ·|#F28234FF", "Ò»Æ·|#E4504DFF" };
+        string itemType = "æ— ";
+        string[] itemLevel = { "å…¨éƒ¨|#FFF", "ä¹å“|#8E8E8EFF", "å…«å“|#FBFBFBFF", "ä¸ƒå“|#6DB75FFF", "å…­å“|#8FBAE7FF", "äº”å“|#63CED0FF", "å››å“|#AE5AC8FF", "ä¸‰å“|#E3C66DFF", "äºŒå“|#F28234FF", "ä¸€å“|#E4504DFF" };
         Dictionary<int, Dictionary<int, string>> itemList = new Dictionary<int, Dictionary<int, string>>();
-        int itemSlotPage = 0; // µ±Ç°Ëù´¦Ò³
+        int itemSlotPage = 0; // å½“å‰æ‰€å¤„é¡µ
 
-        // ÊÇ·ñµ½´ï¹ı×îºóÒ»Ò³ ÓÃÀ´¿ØÖÆitemSlotsµÄ¿ª¹Ø
+        // æ˜¯å¦åˆ°è¾¾è¿‡æœ€åä¸€é¡µ ç”¨æ¥æ§åˆ¶itemSlotsçš„å¼€å…³
         bool finalPageReached = false;
-        // ÅĞ¶ÏÓÎÏ·ÊÇ·ñ¼ÓÔØ
+        // åˆ¤æ–­æ¸¸æˆæ˜¯å¦åŠ è½½
         private bool gameLoaded = false;
         private bool gameExited = false;
 
@@ -84,11 +86,11 @@ namespace IllustratedHandbook
                 }
             }
 
-            // ¼ÇÂ¼µã»÷Î»ÖÃÆ«ÒÆÖµ
+            // è®°å½•ç‚¹å‡»ä½ç½®åç§»å€¼
             if (Input.GetMouseButtonDown(0))
             {
-                // Èç¹ûÓÎÏ·Î´¼ÓÔØ ÄÇÃ´UIäÖÈ¾Ä£Ê½ÎªScreenSpaceOverlay, ´ËÊ±Ö±½ÓÊ¹ÓÃÆÁÄ»Î»ÖÃ¼´¿É
-                // Èç¹ûÓÎÏ·ÒÑ¼ÓÔØ ÄÇÃ´UI½«Í¨¹ıMainCameraäÖÈ¾, ´ËÊ±ĞèÒª½«ÆÁÄ»Î»ÖÃ»»Ëã³ÉÊÀ½çÎ»ÖÃ
+                // å¦‚æœæ¸¸æˆæœªåŠ è½½ é‚£ä¹ˆUIæ¸²æŸ“æ¨¡å¼ä¸ºScreenSpaceOverlay, æ­¤æ—¶ç›´æ¥ä½¿ç”¨å±å¹•ä½ç½®å³å¯
+                // å¦‚æœæ¸¸æˆå·²åŠ è½½ é‚£ä¹ˆUIå°†é€šè¿‡MainCameraæ¸²æŸ“, æ­¤æ—¶éœ€è¦å°†å±å¹•ä½ç½®æ¢ç®—æˆä¸–ç•Œä½ç½®
                 if (gameLoaded && !gameExited)
                     offsetPostion = mainPanel.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z));
                 else
@@ -102,18 +104,18 @@ namespace IllustratedHandbook
                     if (mainCavasActive)
                     {
                         mainCavasActive = false;
-                        mainCanvas.SetActive(false);
+                        mainCanvas.gameObject.SetActive(false);
                     }
                     else if (!mainCavasActive)
                     {
                         mainCavasActive = true;
-                        mainCanvas.SetActive(true);
+                        mainCanvas.gameObject.SetActive(true);
                     }
                 }
             }
         }
 
-        // ÓÃÀ´ÅĞ¶ÏÊÇ·ñ·µ»ØÁËÖ÷²Ëµ¥
+        // ç”¨æ¥åˆ¤æ–­æ˜¯å¦è¿”å›äº†ä¸»èœå•
         public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (scene.name == "1_StartMenu")
@@ -122,9 +124,9 @@ namespace IllustratedHandbook
                 {
                     gameExited = true;
                     mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-                    loadedPanel.SetActive(false);
-                    filterPanel.SetActive(false);
-                    loadingPanel.SetActive(true);
+                    loadedPanel.gameObject.SetActive(false);
+                    filterPanel.gameObject.SetActive(false);
+                    loadingPanel.gameObject.SetActive(true);
                 }
             }
             else if (scene.name == "3_WorldMap")
@@ -134,9 +136,9 @@ namespace IllustratedHandbook
                     gameExited = false;
                     mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
                     mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
-                    loadedPanel.SetActive(true);
-                    filterPanel.SetActive(false);
-                    loadingPanel.SetActive(false);
+                    loadedPanel.gameObject.SetActive(true);
+                    filterPanel.gameObject.SetActive(false);
+                    loadingPanel.gameObject.SetActive(false);
                 }
             }
         }
@@ -149,19 +151,19 @@ namespace IllustratedHandbook
 
             itemList = dataInstance.presetitemDate;
 
-            // ÓÎÏ·¼ÓÔØºó½«äÖÈ¾Ä£Ê½¸ÄÎªScreenSpaceCamera²¢¸½¼ÓMainCamera
+            // æ¸¸æˆåŠ è½½åå°†æ¸²æŸ“æ¨¡å¼æ”¹ä¸ºScreenSpaceCameraå¹¶é™„åŠ MainCamera
             mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
             mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
             mainCanvas.GetComponent<Canvas>().sortingLayerName = "GUI";
-            mainCanvas.GetComponent<Canvas>().sortingOrder = 601;  // ShowTips µÄ sortingorder Îª1000
+            mainCanvas.GetComponent<Canvas>().sortingOrder = 601;  // ShowTips çš„ sortingorder ä¸º1000
             mainCanvas.transform.position = new Vector3(0, 0, 10);
-            loadingPanel.SetActive(false);
+            loadingPanel.gameObject.SetActive(false);
 
-            // ÔÚ¹ıÂËÃæ°å´´½¨ÎïÆ·Àà±ğ°´Å¥
+            // åœ¨è¿‡æ»¤é¢æ¿åˆ›å»ºç‰©å“ç±»åˆ«æŒ‰é’®
             string[] itemTypes = itemType.Split('|');
             for (int i = 0; i < itemTypes.Length; i++)
             {
-                var itemTypeButton = CreateButton("ItemTypeButton|" + itemTypes[i], itemTypePanel, itemTypes[i], Color.white, "Graphics/BaseUI/GUI_Base", Color.white, v2(0, 1), v2(0, 1), v2(100, 30), v3(100, -30, 0));
+                var itemTypeButton = CreateButton("ItemTypeButton|" + itemTypes[i], itemTypePanel.gameObject, itemTypes[i], Color.white, "Graphics/BaseUI/GUI_Base", Color.white, v2(0, 1), v2(0, 1), v2(100, 30), v3(100, -30, 0));
 
                 int selectedIndex = i;
 
@@ -174,16 +176,16 @@ namespace IllustratedHandbook
                 );
             }
 
-            // ÉèÖÃÆ·¼¶¹ıÂË°´Å¥
+            // è®¾ç½®å“çº§è¿‡æ»¤æŒ‰é’®
             for (int i = 0; i < itemLevel.Length; i++)
             {
                 string[] levelSplit = itemLevel[i].Split('|');
                 Color textColor = Color.white;
 
-                // ×ª»»HEXÑÕÉ«ÖÁRGBÑÕÉ«
+                // è½¬æ¢HEXé¢œè‰²è‡³RGBé¢œè‰²
                 ColorUtility.TryParseHtmlString(levelSplit[1], out textColor);
 
-                var itemLevelButton = CreateButton("ItemLevelButton|" + i, itemLevelPanel, levelSplit[0], textColor, "Graphics/BaseUI/GUI_Base", Color.white, v2(0, 1), v2(0, 1), v2(100, 30), v3(100, -30, 0));
+                var itemLevelButton = CreateButton("ItemLevelButton|" + i, itemLevelPanel.gameObject, levelSplit[0], textColor, "Graphics/BaseUI/GUI_Base", Color.white, v2(0, 1), v2(0, 1), v2(100, 30), v3(100, -30, 0));
 
                 int selectedIndex = i;
 
@@ -195,10 +197,10 @@ namespace IllustratedHandbook
                     }
                 );
             }
-            // ³õÊ¼»¯ÎïÆ·
+            // åˆå§‹åŒ–ç‰©å“
             DrawItems();
 
-            loadedPanel.SetActive(true);
+            loadedPanel.gameObject.SetActive(true);
 
             Debug.Log("OnLoadedBreakPoint");
         }
@@ -206,63 +208,34 @@ namespace IllustratedHandbook
 
         void InitUI()
         {
-            // Ö÷Canvs ¿ª¹Ø
+            // ä¸»Canvs å¼€å…³
             #region MainCanvas
-            mainCanvas = new GameObject("IllustratedHandbookCanvas", typeof(Canvas), typeof(GraphicRaycaster));
+            mainCanvas = UICreator.CreateCanvas(name: "IllustratedHandbookCanvas");
 #if UNITY_EDITOR
-            mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
-            mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+        mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+        mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
 #else
             mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
 #endif
-            // mainCanvas.GetComponent<Canvas>().sortingLayerID = 1000;
             mainCanvas.GetComponent<Canvas>().sortingLayerName = "GUI";
-            mainCanvas.GetComponent<Canvas>().sortingOrder = 998;  // ShowTips µÄ sortingorder Îª1000
-            mainCanvas.transform.position = new Vector3(0, 0, 0);
+            mainCanvas.GetComponent<Canvas>().sortingOrder = 998;  // ShowTips çš„ sortingorder ä¸º1000
             DontDestroyOnLoad(mainCanvas);
-            mainPanel = new GameObject("MainPanel", typeof(Image));
-
-            Main.Logger.Log("mainPanelsprite");
-            mainPanel.GetComponent<Image>().sprite = Resources.Load("Graphics/BaseUI/GUI_Window_Big_Black_NoColor", typeof(Sprite)) as Sprite;
-            Main.Logger.Log("mainPanelcolor");
-            mainPanel.GetComponent<Image>().color = new Color32(100, 100, 100, 255);
-            mainPanel.transform.SetParent(mainCanvas.transform);
-            var mainPanelTransform = mainPanel.GetComponent<RectTransform>();
-            mainPanelTransform.localScale = v3(1, 1, 1);
-            mainPanelTransform.anchorMin = v2(0.5f);
-            mainPanelTransform.anchorMax = v2(0.5f);
-            mainPanelTransform.sizeDelta = v2(700f, 600f);
-            mainPanelTransform.anchoredPosition3D = v3(0);
+            mainPanel = UICreator.CreatePanel(mainCanvas.gameObject, "MainPanel");
+            mainPanel.sprite = Resources.Load("Graphics/BaseUI/GUI_Window_Big_Black_NoColor", typeof(Sprite)) as Sprite;
+            mainPanel.color = new Color32(100, 100, 100, 255);
+            SetAnchor(mainPanel.gameObject, v3(1), v2(0.5f), v2(0.5f), Vector2.zero, Vector2.zero).sizeDelta = v2(700, 600);
             #endregion
 
-            // Ö÷Ãæ°å
+            // ä¸»é¢æ¿
             #region MainPanel
-            handbookPanel = new GameObject("IllustratedHandbookPanel", typeof(Image));
-            handbookPanel.GetComponent<Image>().sprite = null;
-            handbookPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0);
-            handbookPanel.transform.SetParent(mainPanelTransform);
-            var handbookPanelPanelTransform = handbookPanel.GetComponent<RectTransform>();
-            handbookPanelPanelTransform.localScale = v3(1, 1, 1);
-            handbookPanelPanelTransform.anchorMin = v2(0);
-            handbookPanelPanelTransform.anchorMax = v2(1);
-            handbookPanelPanelTransform.offsetMin = v2(10);
-            handbookPanelPanelTransform.offsetMax = v2(-10, -25);
-            handbookPanelPanelTransform.anchoredPosition3D = v3(0);
+            handbookPanel = UICreator.CreatePanel(mainPanel.gameObject, "IllustratedHandbookPanel");
+            SetAnchor(handbookPanel.gameObject, v3(1), v2(0), v2(1), v2(10), v2(-10, -25));
 
-            titlePanel = new GameObject("TitlePanel", typeof(Image));
-            titlePanel.GetComponent<Image>().sprite = null;
-            titlePanel.GetComponent<Image>().color = new Color(0, 0, 0, 0);
-            titlePanel.transform.SetParent(handbookPanelPanelTransform);
-            var titlePanelTransform = titlePanel.GetComponent<RectTransform>();
-            titlePanelTransform.localScale = v3(1, 1, 1);
-            titlePanelTransform.anchorMin = v2(0.5f, 1);
-            titlePanelTransform.anchorMax = v2(0.5f, 1);
-            titlePanelTransform.offsetMin = v2(0);
-            titlePanelTransform.offsetMax = v2(0);
-            titlePanelTransform.sizeDelta = v2(680, 50);
-            titlePanelTransform.anchoredPosition3D = v3(0, -25, 0);
+            titlePanel = UICreator.CreatePanel(handbookPanel.gameObject, "TitlePanel");
+            SetAnchor(titlePanel.gameObject, v3(1), v2(0.5f, 1), v2(0.5f, 1), v2(0), v2(0)).sizeDelta = v2(680, 50);
+            titlePanel.rectTransform.anchoredPosition3D = v3(0, -25, 0);
 
-            titlePanel.AddComponent(typeof(EventTrigger));
+            titlePanel.gameObject.AddComponent(typeof(EventTrigger));
             titlePanelOndrag = titlePanel.GetComponent<EventTrigger>();
             EventTrigger.Entry eventEntry = new EventTrigger.Entry();
             eventEntry.eventID = EventTriggerType.Drag;
@@ -273,144 +246,106 @@ namespace IllustratedHandbook
             titlePanelOndrag.triggers.Add(eventEntry);
 
 
-            titleText = CreateText("TitleText", titlePanel, "<b>Í¼¼ø/Ìí¼ÓÎïÆ· 1.0.0</b>", Color.white, 27, v2(0.5f, 1), v2(0.5f, 1), v2(680, 30), v2(0, -25));
+            titleText = CreateText("TitleText", titlePanel.gameObject, "<b>å›¾é‰´/æ·»åŠ ç‰©å“ 1.0.2</b>", Color.white, 27, v2(0.5f, 1), v2(0.5f, 1), v2(680, 30), v2(0, -25));
             #endregion
 
 
-            // ¼ÓÔØÖĞÃæ°å
+            // åŠ è½½ä¸­é¢æ¿
             #region LoadingPanel
-            loadingPanel = new GameObject("LoadingPanel", typeof(Image));
-            loadingPanel.GetComponent<Image>().sprite = null;
-            loadingPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0);
-            loadingPanel.transform.SetParent(handbookPanelPanelTransform);
-            var loadingPanelTransform = loadingPanel.GetComponent<RectTransform>();
-            loadingPanelTransform.localScale = v3(1, 1, 1);
-            loadingPanelTransform.anchorMin = v2(0);
-            loadingPanelTransform.anchorMax = v2(1);
-            loadingPanelTransform.offsetMin = v2(0);
-            loadingPanelTransform.offsetMax = v2(0, -50);
+            loadingPanel = UICreator.CreatePanel(handbookPanel.gameObject, "LoadingPanel");
+            SetAnchor(loadingPanel.gameObject, v3(1), v2(0), v2(1), v2(0), v2(0, -50));
 
-            // ¼ÓÔØÖĞÎÄ×ÖÇøÓò
-            loadingTextPanel = new GameObject("LoadingTextPanel", typeof(Image));
-            loadingTextPanel.GetComponent<Image>().sprite = Resources.Load("Graphics/BaseUI/GUI_BarBack", typeof(Sprite)) as Sprite;
-            loadingTextPanel.GetComponent<Image>().color = new Color32(255, 255, 255, 44);
-            loadingTextPanel.transform.SetParent(loadingPanelTransform);
-            var loadingTextPanelTransform = loadingTextPanel.GetComponent<RectTransform>();
-            loadingTextPanelTransform.localScale = v3(1, 1, 1);
-            loadingTextPanelTransform.anchorMin = v2(0);
-            loadingTextPanelTransform.anchorMax = v2(1);
-            loadingTextPanelTransform.offsetMin = v2(20, 130);
-            loadingTextPanelTransform.offsetMax = v2(-20, 0);
-            // loadingTextPanelTransform.anchoredPosition3D = v3(0);
+            // åŠ è½½ä¸­æ–‡å­—åŒºåŸŸ
+            loadingTextPanel = UICreator.CreatePanel(loadingPanel.gameObject, "LoadingTextPanel");
+            loadingTextPanel.sprite = Resources.Load("Graphics/BaseUI/GUI_BarBack", typeof(Sprite)) as Sprite;
+            loadingTextPanel.color = new Color32(255, 255, 255, 44);
+            SetAnchor(loadingTextPanel.gameObject, v3(1), v2(0), v2(1), v2(20, 130), v2(-20, 0));
 
-            tipText = CreateText("TipText", loadingTextPanel,
-             "ÓÎÏ·Î´¿ªÊ¼ ÉĞÎ´¼ÓÔØÊı¾İ\n\nÇëÏÈ¿ªÊ¼ÓÎÏ·~\n\n\n" +
-             "<size=16><color=white><b>Tips:</b>\n Ctrl + F11¿ª¹Ø´°¿Ú\n<b>ÍÏ¶¯±êÌâ</b>¿ÉÒÔÒÆ¶¯´°¿ÚÅ¶\n" +
-             "»ñÈ¡Êé¼®»áËæ»ú²ĞÒ³¡¢ÎŞ·¨²é¿´´ÙÖ¯\n" +
-             "»ñÈ¡ÎïÆ·ºóĞèÖØĞÂ´ò¿ª±³°ü²Å¿´µÄµ½\nÍÆ¼öÅäºÏ¡¶¹¦·¨Êé¼®ÏÔÊ¾¡·MODÊ¹ÓÃ\n<b>¹¤¾ßÎŞ´í</b> Çë<b>×Ô¾õ</b>Æ½ºâÓÎÏ·ÌåÑé</color></size>",
+            tipText = CreateText("TipText", loadingTextPanel.gameObject,
+             "æ¸¸æˆæœªå¼€å§‹ å°šæœªåŠ è½½æ•°æ®\n\nè¯·å…ˆå¼€å§‹æ¸¸æˆ~\n\n\n" +
+             "<size=16><color=white><b>Tips:</b>\n Ctrl + F11å¼€å…³çª—å£\n<b>æ‹–åŠ¨æ ‡é¢˜</b>å¯ä»¥ç§»åŠ¨çª—å£å“¦\n" +
+             "è·å–ä¹¦ç±ä¼šéšæœºæ®‹é¡µã€æ— æ³•æŸ¥çœ‹ä¿ƒç»‡\n" +
+             "è·å–ç‰©å“åéœ€é‡æ–°æ‰“å¼€èƒŒåŒ…æ‰çœ‹çš„åˆ°\næ¨èé…åˆã€ŠåŠŸæ³•ä¹¦ç±æ˜¾ç¤ºã€‹MODä½¿ç”¨\n<b>å·¥å…·æ— é”™</b> è¯·<b>è‡ªè§‰</b>å¹³è¡¡æ¸¸æˆä½“éªŒ</color></size>",
               new Color32(0, 255, 213, 255), 28, v2(0.5f), v2(0.5f), v2(600, 400), v2(0)
             );
 
-            aboutText = CreateText("AboutText", loadingPanel, "By: yyuueexxiinngg", Color.white, 14, v2(0), v2(0), v2(160, 30), v2(128.8f, 13.9f));
+            aboutText = CreateText("AboutText", loadingPanel.gameObject, "By: yyuueexxiinngg", Color.white, 14, v2(0), v2(0), v2(160, 30), v2(128.8f, 13.9f));
             aboutText.GetComponent<Text>().alignment = TextAnchor.UpperLeft;
 
-            NGAButton = CreateButton("NGAButton", loadingPanel, "µã´Ë´ò¿ª±¾MOD NGA·¢²¼µØÖ·", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 100));
+            NGAButton = CreateButton("NGAButton", loadingPanel.gameObject, "ç‚¹æ­¤æ‰“å¼€æœ¬MOD NGAå‘å¸ƒåœ°å€", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 100));
             NGAButton.GetComponent<Button>().onClick.AddListener(() =>
             {
                 Application.OpenURL("https://nga.178.com/read.php?tid=15239374");
             });
 
-            GithubButton = CreateButton("GithubBotton", loadingPanel, "µã´Ë´ò¿ªMOD¿ªÔ´ÏîÄ¿GithubµØÖ·", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 55));
+            GithubButton = CreateButton("GithubBotton", loadingPanel.gameObject, "ç‚¹æ­¤æ‰“å¼€MODå¼€æºé¡¹ç›®Githubåœ°å€", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 55));
             GithubButton.GetComponent<Button>().onClick.AddListener(() =>
             {
                 Application.OpenURL("https://github.com/yyuueexxiinngg/Taiwu_mods");
             });
             #endregion
 
-            // ¹ıÂËÃæ°å
+            // è¿‡æ»¤é¢æ¿
             #region FilterPanel
-            filterPanel = new GameObject("FilterPanel", typeof(Image));
-            filterPanel.GetComponent<Image>().sprite = null;
-            filterPanel.GetComponent<Image>().color = new Color32(255, 255, 255, 0);
-            filterPanel.transform.SetParent(handbookPanelPanelTransform);
-            var filterPanelTransform = filterPanel.GetComponent<RectTransform>();
-            filterPanelTransform.localScale = v3(1, 1, 1);
-            filterPanelTransform.anchorMin = v2(0);
-            filterPanelTransform.anchorMax = v2(1);
-            filterPanelTransform.offsetMin = v2(50, 50);
-            filterPanelTransform.offsetMax = v2(-50, -50);
+            filterPanel = UICreator.CreatePanel(handbookPanel.gameObject, "FilterPanel");
+            SetAnchor(filterPanel.gameObject, v3(1), v2(0), v2(1), v2(50, 50), v2(-50, -50));
 
-            itemTypePanel = new GameObject("ItemTypeGrid", typeof(Image), typeof(GridLayoutGroup));
-            itemTypePanel.GetComponent<Image>().sprite = null;
-            itemTypePanel.GetComponent<Image>().color = new Color32(0, 0, 0, 0);
-            itemTypePanel.transform.SetParent(filterPanelTransform);
-            var itemTypePanelTransform = itemTypePanel.GetComponent<RectTransform>();
-            itemTypePanelTransform.localScale = v3(1, 1, 1);
-            itemTypePanelTransform.anchorMin = v2(0);
-            itemTypePanelTransform.anchorMax = v2(1);
-            itemTypePanelTransform.offsetMin = v2(0, 100);
-            itemTypePanelTransform.offsetMax = v2(0, -50);
+            itemTypePanel = UICreator.CreatePanel(filterPanel.gameObject, "ItemTypeGrid");
+            SetAnchor(itemTypePanel.gameObject, v3(1), v2(0), v2(1), v2(0, 100), v2(0, -50));
 
+            itemTypePanel.gameObject.AddComponent<GridLayoutGroup>();
             itemTypePanel.GetComponent<GridLayoutGroup>().cellSize = v2(110, 30);
             itemTypePanel.GetComponent<GridLayoutGroup>().spacing = v2(6, 3);
 
-            CreateText("FilterTypeLabel", filterPanel, "µ±Ç°Ñ¡ÔñÖÖÀà:", Color.white, 14, v2(0, 1), v2(0, 1), v2(160, 30), v3(50, -30, 0));
-            filterTypeCurrent = CreateText("FilterTypeCurrent", filterPanel, "Î´³õÊ¼»¯", Color.white, 20, v2(0, 1), v2(0, 1), v2(160, 30), v3(120, -30, 0));
+            CreateText("FilterTypeLabel", filterPanel.gameObject, "å½“å‰é€‰æ‹©ç§ç±»:", Color.white, 14, v2(0, 1), v2(0, 1), v2(160, 30), v3(50, -30, 0));
+            filterTypeCurrent = CreateText("FilterTypeCurrent", filterPanel.gameObject, "æœªåˆå§‹åŒ–", Color.white, 20, v2(0, 1), v2(0, 1), v2(160, 30), v3(120, -30, 0));
 
 
-            itemLevelPanel = new GameObject("ItemLevelGrid", typeof(Image), typeof(GridLayoutGroup));
-            itemLevelPanel.GetComponent<Image>().sprite = null;
-            itemLevelPanel.GetComponent<Image>().color = new Color32(0, 0, 0, 0);
-            itemLevelPanel.transform.SetParent(filterPanelTransform);
-            var itemLevelPanelTransform = itemLevelPanel.GetComponent<RectTransform>();
-            itemLevelPanelTransform.localScale = v3(1, 1, 1);
-            itemLevelPanelTransform.anchorMin = v2(0);
-            itemLevelPanelTransform.anchorMax = v2(1);
-            itemLevelPanelTransform.offsetMin = v2(0);
-            itemLevelPanelTransform.offsetMax = v2(0, -370);
+            itemLevelPanel = UICreator.CreatePanel(filterPanel.gameObject, "ItemLevelGrid");
+            SetAnchor(itemLevelPanel.gameObject, v3(1), v2(0), v2(1), v2(0), v2(0, -370));
 
+            itemLevelPanel.gameObject.AddComponent<GridLayoutGroup>();
             itemLevelPanel.GetComponent<GridLayoutGroup>().cellSize = v2(140, 30);
             itemLevelPanel.GetComponent<GridLayoutGroup>().spacing = v2(6, 3);
 
-            CreateText("FilterLevelLabel", filterPanel, "µ±Ç°Ñ¡ÔñÆ·¼¶:", Color.white, 14, v2(0, 1), v2(0, 1), v2(160, 30), v3(300, -30, 0));
-            filterLevelCurrent = CreateText("FilterLevelCurrent", filterPanel, itemLevel[selectedLevel].Split('|')[0], Color.white, 20, v2(0, 1), v2(0, 1), v2(160, 30), v3(380, -30, 0));
+            CreateText("FilterLevelLabel", filterPanel.gameObject, "å½“å‰é€‰æ‹©å“çº§:", Color.white, 14, v2(0, 1), v2(0, 1), v2(160, 30), v3(300, -30, 0));
+            filterLevelCurrent = CreateText("FilterLevelCurrent", filterPanel.gameObject, itemLevel[selectedLevel].Split('|')[0], Color.white, 20, v2(0, 1), v2(0, 1), v2(160, 30), v3(380, -30, 0));
 
-            var filterCancelBtn = CreateButton("FilterCancelBtn", filterPanel, "È¡Ïû", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0), v2(0), v2(200, 30), v2(160, -25));
-            var filterRefreshBtn = CreateButton("FilterRefreshBtn", filterPanel, "Ë¢ĞÂÎïÆ·ÁĞ±í", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(1, 0), v2(1, 0), v2(200, 30), v2(-160, -25));
+            var filterCancelBtn = CreateButton("FilterCancelBtn", filterPanel.gameObject, "å–æ¶ˆ", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0), v2(0), v2(200, 30), v2(160, -25));
+            var filterRefreshBtn = CreateButton("FilterRefreshBtn", filterPanel.gameObject, "åˆ·æ–°ç‰©å“åˆ—è¡¨", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(1, 0), v2(1, 0), v2(200, 30), v2(-160, -25));
 
             filterCancelBtn.GetComponent<Button>().onClick.AddListener(() =>
             {
-                filterPanel.SetActive(false);
-                loadedPanel.SetActive(true);
+                filterPanel.gameObject.SetActive(false);
+                loadedPanel.gameObject.SetActive(true);
             });
 
             filterRefreshBtn.GetComponent<Button>().onClick.AddListener(() =>
             {
                 selectedType = selectedTypeUnsaved;
                 selectedLevel = selectedLevelUnsaved;
-                // Çå¿ÕÎïÆ·ÁĞ±í
+                // æ¸…ç©ºç‰©å“åˆ—è¡¨
                 itemList = new Dictionary<int, Dictionary<int, string>>();
 
-                if (selectedType != 0) // Èç¹ûÑ¡Ôñ²»ÊÇÈ«²¿
+                if (selectedType != 0) // å¦‚æœé€‰æ‹©ä¸æ˜¯å…¨éƒ¨
                 {
                     foreach (var item in dataInstance.presetitemDate)
                     {
-                        // item.Value[5]¼´ÎªÎïÆ·ÖÖÀà item.Value[8]¼´ÎªÎïÆ·Æ·¼¶
+                        // item.Value[5]å³ä¸ºç‰©å“ç§ç±» item.Value[8]å³ä¸ºç‰©å“å“çº§
                         if (int.Parse(item.Value[5]) == selectedType && (selectedLevel == 0 || int.Parse(item.Value[8]) == selectedLevel))
                         {
                             itemList[item.Key] = item.Value;
                         }
                     }
                 }
-                else // Èç¹ûÊÇÈ«²¿
+                else // å¦‚æœæ˜¯å…¨éƒ¨
                 {
-                    if (selectedLevel == 0) //¡¡Èç¹ûÆ·¼¶ÊÇÈ«²¿
+                    if (selectedLevel == 0) //ã€€å¦‚æœå“çº§æ˜¯å…¨éƒ¨
                     {
                         itemList = dataInstance.presetitemDate;
                     }
                     else
                     {
-                        Main.Logger.Log("selectedLevel: " + selectedLevel);
                         foreach (var item in dataInstance.presetitemDate)
                         {
                             if (int.Parse(item.Value[8]) == selectedLevel)
@@ -420,75 +355,48 @@ namespace IllustratedHandbook
                         }
                     }
                 }
-                Main.Logger.Log("¹ıÂËÍê³É");
                 DrawItems();
-                filterPanel.SetActive(false);
-                loadedPanel.SetActive(true);
+                filterPanel.gameObject.SetActive(false);
+                loadedPanel.gameObject.SetActive(true);
             });
 
 
             #endregion
 
 
-            // ¼ÓÔØÍê³ÉºóÃæ°å
+            // åŠ è½½å®Œæˆåé¢æ¿
             #region LoadedPanel
-            loadedPanel = new GameObject("LoadedPanel", typeof(Image));
-            loadedPanel.GetComponent<Image>().sprite = null;
-            loadedPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0);
-            loadedPanel.transform.SetParent(handbookPanel.transform);
-            var loadedPanelTransform = loadedPanel.GetComponent<RectTransform>();
-            loadedPanelTransform.localScale = v3(1);
-            loadedPanelTransform.anchorMin = v2(0);
-            loadedPanelTransform.anchorMax = v2(1);
-            loadedPanelTransform.offsetMin = v2(0, 50);
-            loadedPanelTransform.offsetMax = v2(0, -50);
+            loadedPanel = UICreator.CreatePanel(handbookPanel.gameObject, "LoadedPanel");
+            SetAnchor(loadedPanel.gameObject, v3(1), v2(0), v2(1), v2(0, 50), v2(0, -50));
 
 
-            itemPanel = new GameObject("ItemPanel", typeof(Image));
-            itemPanel.GetComponent<Image>().sprite = Resources.Load("Graphics/BaseUI/GUI_BarBack", typeof(Sprite)) as Sprite;
-            itemPanel.GetComponent<Image>().color = new Color32(255, 255, 255, 44);
-            itemPanel.transform.SetParent(loadedPanelTransform);
-            var itemPanelTransform = itemPanel.GetComponent<RectTransform>();
-            itemPanelTransform.localScale = v3(1);
-            itemPanelTransform.anchorMin = v2(0);
-            itemPanelTransform.anchorMax = v2(1);
-            itemPanelTransform.offsetMin = v2(20, 0);
-            itemPanelTransform.offsetMax = v2(-20, 0);
-            itemPanelTransform.anchoredPosition3D = v2(0);
+            itemPanel = UICreator.CreatePanel(loadedPanel.gameObject, "ItemPanel");
+            itemPanel.sprite = Resources.Load("Graphics/BaseUI/GUI_BarBack", typeof(Sprite)) as Sprite;
+            itemPanel.color = new Color32(255, 255, 255, 44);
+            SetAnchor(itemPanel.gameObject, v3(1), v2(0), v2(1), v2(20, 0), v2(-20, 0));
 
-            var selectionPanel = new GameObject("SelectionPanel", typeof(Image));
-            selectionPanel.GetComponent<Image>().color = new Color32(255, 255, 255, 0);
-            selectionPanel.transform.SetParent(itemPanelTransform);
-            var selectionPanelTransform = selectionPanel.GetComponent<RectTransform>();
-            selectionPanelTransform.localScale = v3(1);
-            selectionPanelTransform.anchorMin = v2(0);
-            selectionPanelTransform.anchorMax = v2(1);
-            selectionPanelTransform.offsetMin = v2(30, 415);
-            selectionPanelTransform.offsetMax = v2(-30, -15);
+            var selectionPanel = UICreator.CreatePanel(itemPanel.gameObject, "SelectionPanel");
+            SetAnchor(selectionPanel.gameObject, v3(1), v2(0), v2(1), v2(30, 415), v2(-30, -15));
 
-            var itemFilterButton = CreateButton("ItemFilterButton", selectionPanel, "¹ıÂË", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0.5f), v2(0.5f), v2(160, 30), v3(0));
+            var itemFilterButton = CreateButton("ItemFilterButton", selectionPanel.gameObject, "è¿‡æ»¤", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0.5f), v2(0.5f), v2(160, 30), v3(0));
             itemFilterButton.GetComponent<Button>().onClick.AddListener(() =>
             {
                 string[] itemTypes = itemType.Split('|');
                 filterTypeCurrent.GetComponent<Text>().text = itemTypes[selectedType];
                 filterLevelCurrent.GetComponent<Text>().text = itemLevel[selectedLevel].Split('|')[0];
-                loadedPanel.SetActive(false);
-                filterPanel.SetActive(true);
+                loadedPanel.gameObject.SetActive(false);
+                filterPanel.gameObject.SetActive(true);
             });
 
-            // ÎïÆ·À¸
+            // ç‰©å“æ 
             itemGrid = new GameObject("ItemGrid", typeof(GridLayoutGroup));
-            itemGrid.transform.SetParent(itemPanelTransform);
+            itemGrid.transform.SetParent(itemPanel.transform);
             var itemGridComponent = itemGrid.GetComponent<GridLayoutGroup>();
             itemGridComponent.cellSize = v2(65, 65);
             itemGridComponent.startCorner = GridLayoutGroup.Corner.UpperLeft;
             itemGridComponent.startAxis = GridLayoutGroup.Axis.Horizontal;
-            var itemGridTransform = itemGrid.GetComponent<RectTransform>();
-            itemGridTransform.localScale = v3(1);
-            itemGridTransform.anchorMin = v2(0);
-            itemGridTransform.anchorMax = v2(1);
-            itemGridTransform.offsetMin = v2(30, 0);
-            itemGridTransform.offsetMax = v2(0, -50);
+
+            SetAnchor(itemGrid.gameObject, v3(1), v2(0), v2(1), v2(30, 0), v2(0, -50));
 
             itemBack = Resources.LoadAll<Sprite>("Graphics/ItemIcon/ItemIconBack");
             itemIcon = Resources.LoadAll<Sprite>("Graphics/ItemIcon/ItemIcon");
@@ -508,11 +416,11 @@ namespace IllustratedHandbook
                 OnMouseExitDelegate((PointerEventData)data);
             });
 
-            // ÎïÆ·²Û
+            // ç‰©å“æ§½
             for (int i = 0; i < 54; i++)
             {
                 var itemSlot = new GameObject("ItemSlot|" + i, typeof(RectTransform));
-                itemSlot.transform.SetParent(itemGridTransform);
+                itemSlot.transform.SetParent(itemGrid.transform);
                 itemSlot.transform.localScale = v3(1);
 
                 itemSlot.AddComponent(typeof(Button));
@@ -527,12 +435,12 @@ namespace IllustratedHandbook
                             }
                             else
                             {
-                                TipsWindow.instance.SetTips(0, new string[] { "ÎŞ·¨Ìí¼Ó´ËÎïÆ·~" }, 100);
+                                TipsWindow.instance.SetTips(0, new string[] { "æ— æ³•æ·»åŠ æ­¤ç‰©å“~" }, 100);
                             }
                         }
                         else
                         {
-                            TipsWindow.instance.SetTips(0, new string[] { "ÎŞ·¨Ìí¼Ó´ÙÖ¯~" }, 100);
+                            TipsWindow.instance.SetTips(0, new string[] { "æ— æ³•æ·»åŠ ä¿ƒç»‡~" }, 100);
                         }
 
                     }
@@ -557,22 +465,25 @@ namespace IllustratedHandbook
                 itemIconObj.transform.localScale = v3(1);
                 itemIconObj.GetComponent<RectTransform>().sizeDelta = v2(40, 40);
 
-                // ÎïÆ·ÏÂ±êÎÄ×Ö i.e. 0/0 ±¾MODÎ´Ê¹ÓÃµ½ËùÒÔÃ»ÓĞ¸³Öµ
+                // ç‰©å“ä¸‹æ ‡æ–‡å­— i.e. 0/0 æœ¬MODæœªä½¿ç”¨åˆ°æ‰€ä»¥æ²¡æœ‰èµ‹å€¼
                 CreateText("ItemText", itemBackObj, "", Color.white, 14, v2(0), v2(1, 0.3f), v2(1), v3(0));
                 itemIconObj.GetComponent<Image>().preserveAspect = true;
 
                 // itemSlot.SetActive(false);
+                Vector3 position = itemSlot.transform.localPosition;
+                position.z = 0;
+                itemSlot.transform.localPosition = position;
 
                 itemSlots.Add(itemSlot);
             }
 
-            prePageButton = CreateButton("PrePageBotton", loadedPanel, "ÉÏÒ»Ò³", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0), v2(0), v2(200, 30), v2(160, -25));
-            nextPageButton = CreateButton("PrePageBotton", loadedPanel, "ÏÂÒ»Ò³", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(1, 0), v2(1, 0), v2(200, 30), v2(-160, -25));
+            prePageButton = CreateButton("PrePageBotton", loadedPanel.gameObject, "ä¸Šä¸€é¡µ", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(0), v2(0), v2(200, 30), v2(160, -25));
+            nextPageButton = CreateButton("PrePageBotton", loadedPanel.gameObject, "ä¸‹ä¸€é¡µ", Color.white, "Graphics/BaseUI/GUI_ValuBack", Color.white, v2(1, 0), v2(1, 0), v2(200, 30), v2(-160, -25));
 
-            var itemPageTextObj = CreateText("ItemPageText", loadedPanel, "0/0", Color.white, 20, v2(0.5f, 0), v2(0.5f, 0), v2(80, 30), v3(0, -25, 0));
+            var itemPageTextObj = CreateText("ItemPageText", loadedPanel.gameObject, "0/0", Color.white, 20, v2(0.5f, 0), v2(0.5f, 0), v2(80, 30), v3(0, -25, 0));
             itemPageText = itemPageTextObj.GetComponent<Text>();
 
-            // ³õÊ¼»¯Ò³±ê
+            // åˆå§‹åŒ–é¡µæ ‡
             itemPageText.text = "1/1";
 
             prePageButton.GetComponent<Button>().onClick.AddListener(
@@ -580,7 +491,7 @@ namespace IllustratedHandbook
                 {
                     if (itemSlotPage > 0)
                     {
-                        // Èç¹ûµ½´ï¹ı×îºóÒ»Ò³ ±éÀúÒ»±éitemSlotsÈ«²¿¼¤»î
+                        // å¦‚æœåˆ°è¾¾è¿‡æœ€åä¸€é¡µ éå†ä¸€éitemSlotså…¨éƒ¨æ¿€æ´»
                         if (finalPageReached)
                         {
                             foreach (var itemSlot in itemSlots)
@@ -591,7 +502,7 @@ namespace IllustratedHandbook
 
                         --itemSlotPage;
 
-                        // ÓÃÒÔ»ñÈ¡µ±Ç°Ñ­»·¶ÔÓ¦µÄitemSlot
+                        // ç”¨ä»¥è·å–å½“å‰å¾ªç¯å¯¹åº”çš„itemSlot
                         int index = 0;
 
                         foreach (var item in itemList.Skip(itemSlotPage * 54).Take(54))
@@ -599,6 +510,7 @@ namespace IllustratedHandbook
                             itemSlots[index].name = "ItemSlot|" + item.Key;
                             itemSlots[index].transform.GetChild(0).GetChild(0).GetComponent<Image>().sprite = itemIcon[int.Parse(item.Value[98])];
                             itemSlots[index].transform.GetChild(0).GetComponent<Image>().sprite = itemBack[int.Parse(item.Value[4])];
+                            itemSlots[index].transform.GetChild(0).GetChild(1).GetComponent<Text>().text = item.Value[0];
                             Color backgroundColor = Color.white;
                             ColorUtility.TryParseHtmlString(itemLevel[int.Parse(item.Value[8])].Split('|')[1], out backgroundColor);
                             itemSlots[index].transform.GetChild(0).GetComponent<Image>().color = backgroundColor;
@@ -630,6 +542,7 @@ namespace IllustratedHandbook
                             itemSlots[index].name = "ItemSlot|" + item.Key;
                             itemSlots[index].transform.GetChild(0).GetChild(0).GetComponent<Image>().sprite = itemIcon[int.Parse(item.Value[98])];
                             itemSlots[index].transform.GetChild(0).GetComponent<Image>().sprite = itemBack[int.Parse(item.Value[4])];
+                            itemSlots[index].transform.GetChild(0).GetChild(1).GetComponent<Text>().text = item.Value[0];
                             Color backgroundColor = Color.white;
                             ColorUtility.TryParseHtmlString(itemLevel[int.Parse(item.Value[8])].Split('|')[1], out backgroundColor);
                             itemSlots[index].transform.GetChild(0).GetComponent<Image>().color = backgroundColor;
@@ -650,18 +563,18 @@ namespace IllustratedHandbook
             );
             #endregion
 
-            loadedPanel.SetActive(false);
-            loadingPanel.SetActive(true);
-            filterPanel.SetActive(false);
+            loadedPanel.gameObject.SetActive(false);
+            loadingPanel.gameObject.SetActive(true);
+            filterPanel.gameObject.SetActive(false);
 
         }
 
         private void DrawItems()
         {
-            // ³õÊ¼»¯Ò³±ê
+            // åˆå§‹åŒ–é¡µæ ‡
             itemPageText.text = string.Format("1/{0}", itemList.Count % 54 == 0 ? itemList.Count / 54 : (itemList.Count / 54) + 1);
 
-            // ÊÇ·ñµ½´ï¹ı×îºóÒ»Ò³ ÓÃÀ´¿ØÖÆitemSlotsµÄ¿ª¹Ø
+            // æ˜¯å¦åˆ°è¾¾è¿‡æœ€åä¸€é¡µ ç”¨æ¥æ§åˆ¶itemSlotsçš„å¼€å…³
             if (itemList.Count <= 54)
             {
                 finalPageReached = true;
@@ -673,7 +586,7 @@ namespace IllustratedHandbook
 
             itemSlotPage = 0;
 
-            // ³õÊ¼»¯itemSlots
+            // åˆå§‹åŒ–itemSlots
             int index = 0;
             foreach (var item in itemList.Skip(itemSlotPage * 54).Take(54))
             {
@@ -686,6 +599,7 @@ namespace IllustratedHandbook
 
                 itemSlots[index].transform.GetChild(0).GetChild(0).GetComponent<Image>().sprite = itemIcon[int.Parse(item.Value[98])];
                 itemSlots[index].transform.GetChild(0).GetComponent<Image>().sprite = itemBack[int.Parse(item.Value[4])];
+                itemSlots[index].transform.GetChild(0).GetChild(1).GetComponent<Text>().text = item.Value[0];
                 Color backgroundColor = Color.white;
                 ColorUtility.TryParseHtmlString(itemLevel[int.Parse(item.Value[8])].Split('|')[1], out backgroundColor);
                 itemSlots[index].transform.GetChild(0).GetComponent<Image>().color = backgroundColor;
@@ -693,7 +607,7 @@ namespace IllustratedHandbook
                 index++;
             }
 
-            // Èç¹ûµ½´ï×îºóÒ»Ò³ ½«¶àÓàµÄitemSlots¹Ø±Õ
+            // å¦‚æœåˆ°è¾¾æœ€åä¸€é¡µ å°†å¤šä½™çš„itemSlotså…³é—­
             if (finalPageReached)
             {
                 for (int i = 53; i >= index; i--)
@@ -712,11 +626,11 @@ namespace IllustratedHandbook
                 OnHover = OnHover.transform.parent.gameObject;
             }
 
-                GameObject tips = new GameObject();
-                // ÁÙÊ±ĞÂ½¨Ò»¸öItem»ñÈ¡IDÒÔÏÔÊ¾ĞÅÏ¢
-                tips.name = "ActorItem," + DateFile.instance.MakeNewItem(int.Parse(OnHover.name.Split('|')[1]), -5713);
-                tips.tag = "ActorItem";
-                WindowManage.instance.WindowSwitch(true, tips);
+            GameObject tips = new GameObject();
+            // ä¸´æ—¶æ–°å»ºä¸€ä¸ªItemè·å–IDä»¥æ˜¾ç¤ºä¿¡æ¯
+            tips.name = "ActorItem," + DateFile.instance.MakeNewItem(int.Parse(OnHover.name.Split('|')[1]), -5713);
+            tips.tag = "ActorItem";
+            WindowManage.instance.WindowSwitch(true, tips);
 
         }
         public void OnMouseExitDelegate(PointerEventData data)
@@ -734,9 +648,9 @@ namespace IllustratedHandbook
         {
             if (gameLoaded && !gameExited)
             {
-                // »ñÈ¡µ±Ç°Êó±êÎ»ÖÃ
+                // è·å–å½“å‰é¼ æ ‡ä½ç½®
                 Vector3 newPosition = new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z);
-                // ×ª»»ÎªÊÀ½ç×ø±ê
+                // è½¬æ¢ä¸ºä¸–ç•Œåæ ‡
                 Vector3 objPosition = Camera.main.ScreenToWorldPoint(newPosition) + offsetPostion;
                 mainPanel.transform.position = objPosition;
             }
@@ -792,6 +706,18 @@ namespace IllustratedHandbook
         }
 
         #region Utils
+        private static RectTransform SetAnchor(GameObject obj, Vector3 localScale, Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            RectTransform transform = obj.GetComponent<RectTransform>();
+            transform.localScale = localScale;
+            transform.anchorMin = anchorMin;
+            transform.anchorMax = anchorMax;
+            transform.offsetMin = offsetMin;
+            transform.offsetMax = offsetMax;
+            transform.anchoredPosition3D = new Vector3(transform.anchoredPosition3D.x, transform.anchoredPosition3D.y, 0);
+            return transform;
+        }
+
         private static Vector2 v2(float var)
         {
             return new Vector2(var, var);
