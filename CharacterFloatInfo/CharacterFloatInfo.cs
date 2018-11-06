@@ -540,7 +540,8 @@ namespace CharacterFloatInfo
                 placeId = HomeSystem.instance.homeMapPlaceId;
                 buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
                 // remark: 下面語法在 VS 2017 才支援, 早期版本需先定義 int workeId;
-                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out int workerId) || workerId != id)
+                int workerId = 0;
+                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out workerId) || workerId != id)
                     text += string.Format("\n村民派遣，预期效率:<color=white>{0}</color>", GetExpectEfficient(id, partId, placeId, buildingIndex));
 
             }
