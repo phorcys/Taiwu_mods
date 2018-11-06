@@ -51,23 +51,19 @@ namespace Rejuvenation
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
-
             enabled = value;
-
             return true;
         }
 
-        public static void DoRemoveChooseGongFa()
-        {
-            int key = DateFile.instance.MianActorID();
-            DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] = 0;
-            DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1] = 0;
-            DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2] = 0;
-            DateFile.instance.gongFaBookPages.Remove(150369);
-            DateFile.instance.RemoveMainActorEquipGongFa(150369);
-        }
+        //public static void DoRemoveChooseGongFa()
+        //{
+        //    int key = DateFile.instance.MianActorID();
+        //    DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] = 0;
+        //    DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][1] = 0;
+        //    DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][2] = 0;
+        //    DateFile.instance.gongFaBookPages.Remove(150369);
+        //    DateFile.instance.RemoveMainActorEquipGongFa(150369);
+        //}
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
@@ -80,6 +76,19 @@ namespace Rejuvenation
             if (!DateFile.instance.gongFaDate.ContainsKey(150369))
             {
                 GUILayout.Label("增量数据未正常加载！");
+                return;
+            }
+
+            if (!enabled)
+            {
+                if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
+                {
+                    GUILayout.Label("结束当前时节后MOD将被卸载。");
+                }
+                else
+                {
+                    GUILayout.Label("MOD当前未生效，可放心移除。");
+                }
                 return;
             }
 
@@ -202,6 +211,33 @@ namespace Rejuvenation
         {
             if (!Main.enabled)
             {
+                if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
+                {
+                    DateFile.instance.RemoveMainActorEquipGongFa(150369);
+
+                    foreach (var key in DateFile.instance.actorEquipGongFas.Keys)
+                    {
+                        if (DateFile.instance.actorEquipGongFas[key][0][0] == 150369 || DateFile.instance.actorEquipGongFas[key][0][1] == 150369)
+                        {
+                            if (DateFile.instance.actorGongFas[key].ContainsKey(150369))
+                            {
+                                DateFile.instance.actorGongFas[key].Remove(150369);
+                            }
+                            DateFile.instance.SetActorEquipGongFa(key,true,true);
+                        }
+                    }
+                    foreach (var key in DateFile.instance.actorGongFas.Keys)
+                    {
+                        if (DateFile.instance.actorGongFas[key].ContainsKey(150369))
+                        {
+                            DateFile.instance.actorGongFas[key].Remove(150369);
+                        }
+                    }
+                    if (DateFile.instance.gongFaBookPages.ContainsKey(150369))
+                    {
+                        DateFile.instance.gongFaBookPages.Remove(150369);
+                    }
+                }
                 return;
             }
 
