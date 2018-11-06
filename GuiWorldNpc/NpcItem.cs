@@ -8,16 +8,16 @@ namespace GuiWorldNpc
     public class NpcItem : ItemCell
     {
 
-        public ChildData childData;//public ChildData[] childDatas;
+        public ChildData[] childDatas;
         public override void Awake()
         {
             base.Awake();
-            childData = new ChildData(transform);//childDatas = new ChildData[Main.settings.numberOfColumns];
-            //for (int i = 0; i < Main.settings.numberOfColumns; i++)
-            //{
-            //    Transform child = transform.GetChild(i);
-            //    childDatas[i] = new ChildData(child);
-            //}
+            childDatas = new ChildData[Main.settings.numberOfColumns];
+            for (int i = 0; i < Main.settings.numberOfColumns; i++)
+            {
+                Transform child = transform.GetChild(i);
+                childDatas[i] = new ChildData(child);
+            }
             //Main.Logger.Log("WarehouseItem Awake " + childDatas.Length);
         }
     }
