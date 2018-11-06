@@ -1,7 +1,5 @@
 ﻿using Harmony12;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityModManagerNet;
@@ -11,6 +9,7 @@ namespace TrainingRoom
     public class Settings : UnityModManager.ModSettings
     {
         public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
+        public bool moreEvents = false; // 其他門派弟子是否開放任務
     }
     public static class Main
     {
@@ -46,6 +45,7 @@ namespace TrainingRoom
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            Main.settings.moreEvents = GUILayout.Toggle(Main.settings.moreEvents, "开启更多任务", new GUILayoutOption[0]);
         }
 
     }
@@ -99,19 +99,26 @@ namespace TrainingRoom
             {
                 EventSeries.Series1(GangGroupID); // 添加 相枢幻身
             }
+            else
             if (chooseId == 1000000002 && GangGroupID == 1) //"太吾村民"
             {
                 EventSeries.Series2(GangGroupID); // 添加 剑冢再临
             }
+            else
             if (chooseId == 1000000002 && GangGroupValue.TryGetValue(812, out string eventId) && eventId == "901300001")    //城主,村长,镇长,大当家
             {
                 EventSeries.Series3(GangGroupID);// 添加 清理宵小&剿灭邪道
             }
+            else
             if (chooseId == 1000000002 && GangID == 15) // "血犼教"
             {
-                EventSeries.Series2(GangGroupID);  // 添加 剑冢再临
+//                EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
             }
-
+            else
+            if (Main.settings.moreEvents && chooseId == 1000000002 && GangID >= 1 && GangID < 15) //其他門派弟子互動
+            {
+//                EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
+            }
         }
 
 

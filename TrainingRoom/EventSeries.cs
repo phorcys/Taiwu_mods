@@ -1,18 +1,17 @@
-﻿using Harmony12;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System;
 
 namespace TrainingRoom
 {
     public static class EventSeries
     {
 
-        public static void Series1(int GangId)
+        public static void Series1(int gangId)
         {
+            GameCore.Reset();
+
             int offset = 90000000;
-            DateFile.instance.presetGangGroupDateValue[GangId][812] = DateFile.instance.presetGangGroupDateValue[GangId][812] == "0" ? offset.ToString() : DateFile.instance.presetGangGroupDateValue[GangId][812] + "|" + offset.ToString();
+
+            GameCore.SetGangGroupDate812(gangId, offset.ToString());
 
             GameCore.AddNewEvent(offset, "假扮相枢……", variables: "0", requirement: "FA&6|TIME&5|ATTMIN&406&1000|ATTMIN&407&1000", nextEvent: offset + 1);
 
@@ -37,11 +36,14 @@ namespace TrainingRoom
         }
 
 
-        public static void Series2(int GangId)
+        public static void Series2(int gangId)
         {
+
+            GameCore.Reset();
+
             int offset = 90000000;
 
-            DateFile.instance.presetGangGroupDateValue[GangId][812] = DateFile.instance.presetGangGroupDateValue[GangId][812] == "0" ? offset.ToString() : DateFile.instance.presetGangGroupDateValue[GangId][812] + "|" + offset.ToString();
+            GameCore.SetGangGroupDate812(gangId, offset.ToString());
 
             GameCore.AddNewEvent(offset, "  剑冢再临……", requirement: "FA&6|TIME&20|ATTMAX&406&4000|ATTMAX&407&4000", nextEvent: offset + 1);
 
@@ -61,13 +63,15 @@ namespace TrainingRoom
         }
 
 
-        public static void Series3(int GangId)
+        public static void Series3(int gangId)
         {
+            GameCore.Reset();
+
             int offset = 90000000;
             string newEvents = string.Format("{0}|{1}", offset, offset + 100);// 添加 清理宵小&剿灭邪道
-            DateFile.instance.presetGangGroupDateValue[GangId][812] = DateFile.instance.presetGangGroupDateValue[GangId][812] == "0" ? newEvents : DateFile.instance.presetGangGroupDateValue[GangId][812] + "|" + newEvents;
+            GameCore.SetGangGroupDate812(gangId, newEvents);
 
-            GameCore.AddNewEvent(offset, "清理宵小……", requirement: "FA&4|TIME&15|ATTMAX&406&100|ATTMAX&407&100", nextEvent: offset );
+            GameCore.AddNewEvent(offset, "清理宵小……", requirement: "FA&4|TIME&15|ATTMAX&406&100|ATTMAX&407&100", nextEvent: offset +1);
             GameCore.AddNewEvent(offset+1, "最近乡里又有宵小横行霸道，还请大侠代为清扫。", choices: string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}", offset + 2 , offset + 3 , offset + 4 , offset + 5 , offset + 6 , offset + 7, 900700001));
             GameCore.AddNewEvent(offset+2, "还请为我指点道路！（清扫·恶丐窝点……）\n<color=#4B4B4BFF>（副本消耗银钱：100；消耗威望：100；消耗时间：15）</color>", process: "TIME&15|RES&5&-100|RES&6&-100", nextEvent:2001);
             GameCore.AddNewEvent(offset+3, "还请为我指点道路！（清扫·贼人营寨……）\n<color=#4B4B4BFF>（副本消耗银钱：200；消耗威望：200；消耗时间：15）</color>", process: "TIME&15|RES&5&-200|RES&6&-200", nextEvent:2002);
@@ -77,7 +81,7 @@ namespace TrainingRoom
             GameCore.AddNewEvent(offset+7, "还请为我指点道路！（清扫·迷香幻阵……）\n<color=#4B4B4BFF>（副本消耗银钱：800；消耗威望：800；消耗时间：15）</color>", process: "TIME&15|RES&5&-800|RES&6&-800", nextEvent:2006);
 
             offset = 90000100;
-            GameCore.AddNewEvent(offset, "剿灭邪道……", requirement: "FA&4|TIME&15|ATTMAX&406&1000|ATTMAX&407&1000", nextEvent: offset);
+            GameCore.AddNewEvent(offset, "剿灭邪道……", requirement: "FA&4|TIME&15|ATTMAX&406&1000|ATTMAX&407&1000", nextEvent: offset+1);
             GameCore.AddNewEvent(offset + 1, "最近总有邪魔外道蠢蠢欲动，还请大侠代为清扫。", choices: string.Format("{0}|{1}|{2}|{3}|{4}|{5}|{6}", offset + 2, offset + 3, offset + 4, offset + 5, offset + 6, offset + 7, 900700001));
             GameCore.AddNewEvent(offset + 2, "还请为我指点道路！（清扫·乱葬坟岗……）\n<color=#4B4B4BFF>（副本消耗银钱：1000；消耗威望：1000；消耗时间：15）</color>", process: "TIME&15|RES&5&-1000|RES&6&-1000", nextEvent: 2007);
             GameCore.AddNewEvent(offset + 3, "还请为我指点道路！（清扫·异士居所……）\n<color=#4B4B4BFF>（副本消耗银钱：1200；消耗威望：1200；消耗时间：15）</color>", process: "TIME&15|RES&5&-1200|RES&6&-1200", nextEvent: 2008);

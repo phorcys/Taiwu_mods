@@ -1,15 +1,20 @@
-﻿using Harmony12;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace TrainingRoom
 {
     class GameCore
     {
-        public static int[] registerEvent = { };
-        public static int[] registerEnemyTeam = { };
+        private static List<int> registerEvent = new List<int>();
+        private static List<int> registerEnemyTeam = new List<int>();
+        private static int storeGangId = 0;
+        private static string data812Backup = "";
+
+        internal static void SetGangGroupDate812(int gangId, string eventId)
+        {
+            storeGangId = gangId;
+            data812Backup = DateFile.instance.presetGangGroupDateValue[gangId][812];
+            DateFile.instance.presetGangGroupDateValue[gangId][812] = data812Backup == "0" ? eventId : data812Backup + "|" + eventId;
+        }
 
         public static void AddNewEvent(
             int key,
@@ -104,20 +109,22 @@ namespace TrainingRoom
             //Main.Logger.Log("registerEnemyTeam Added:" + key.ToString());
         }
 
-        public static void ClearRegisterEvent()
+        public static void Reset()
         {
-            if (registerEvent.Length == 0) return;
-            for (int i = 0; i < registerEvent.Length; i++)
+            //Main.Logger.Log("eventDate tobe removed:" + registerEvent.Join());
+            for (int i = 0; i < registerEvent.Count; i++)
                 DateFile.instance.eventDate.Remove(registerEvent[i]);
-            registerEvent = new int[0];
-        }
+            registerEvent.Clear();
+            //Main.Logger.Log("eventDate after removing:" + DateFile.instance.eventDate.Keys.ToList().Join());
 
-        public static void ClearRegisterEnemyTeam()
-        {
-            if (registerEnemyTeam.Length == 0) return;
-            for (int i = 0; i < registerEnemyTeam.Length; i++)
+            //Main.Logger.Log("registerEnemyTeam tobe removed:" + registerEvent.Join());
+            for (int i = 0; i < registerEnemyTeam.Count; i++)
                 DateFile.instance.enemyTeamDate.Remove(registerEnemyTeam[i]);
-            registerEnemyTeam = new int[0];
+            registerEnemyTeam.Clear();
+            //Main.Logger.Log("registerEnemyTeam after removing:" + DateFile.instance.eventDate.Keys.Join());
+
+            DateFile.instance.presetGangGroupDateValue[storeGangId][812] = data812Backup;
+
         }
 
     }
