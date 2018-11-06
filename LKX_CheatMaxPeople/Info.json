@@ -1,0 +1,8 @@
+﻿{
+    "Id": "LKX_CheatMaxPeople",
+    "DisplayName": "人口上限作弊",
+    "Author": "小枫泡泡",
+    "Version": "1.0.0",
+    "AssemblyName": "LKX_CheatMaxPeople.dll",
+    "EntryMethod": "LKX_CheatMaxPeople.Main.Load"
+}
