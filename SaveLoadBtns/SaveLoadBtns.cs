@@ -7,21 +7,78 @@ using UnityModManagerNet;
 
 namespace SaveLoadBtns
 {
+    public class Settings : UnityModManager.ModSettings
+    {
+        public bool saveOnTurn = true;
+
+        public override void Save(UnityModManager.ModEntry modEntry)
+        {
+            Save(this, modEntry);
+        }
+    }
     public static class Main
     {
         public static bool enabled;
+        public static bool manualSave;
+        public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
+            manualSave = false;
             Logger = modEntry.Logger;
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+            settings = Settings.Load<Settings>(modEntry);
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
             modEntry.OnToggle = OnToggle;
+            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
         }
+
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        {
+            GUILayout.BeginHorizontal();
+            settings.saveOnTurn = GUILayout.Toggle(settings.saveOnTurn, "是否在时节切换时储存");
+            GUILayout.EndHorizontal();
+        }
+
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            Main.settings.Save(modEntry);
+        }
+
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
             return true;
+        }
+    }
+
+    //[HarmonyPatch(typeof(WorldMapSystem), "ShowChoosePlaceMenu")]
+    //public static class WorldMapSystem_ShowChoosePlaceMenu_Patch
+    //{
+    //    public static void Postfix(int worldId, int partId, int placeId, Transform placeImage)
+    //    { // todo: 只有大地图上,才可以SAVE.  这好像有点难,求助中
+    //        if (Main.enabled && !DateFile.instance.playerMoveing)
+    //            GameObject.Find("SaveButton").GetComponent<Selectable>().interactable = WorldMapSystem.instance.inToPlaceHomeButton.interactable;
+    //        GameObject.Find("SaveButton").SetActive(false);
+    //    }
+    //}
+
+    public class myPointerClick : MonoBehaviour, IPointerClickHandler
+    {
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (!Main.enabled) return;
+            if (gameObject.name == "LoadButton")
+            {
+                Main.Logger.Log("Loading data: " + SaveDateFile.instance.dateId.ToString());
+                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入", DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度").Replace("返回到游戏的主菜单…\n", ""), false, true);
+            }
+            else if (gameObject.name == "SaveButton")
+            {
+                Main.manualSave = true;
+                SaveDateFile.instance.SaveGameDate();
+            }
         }
     }
 
@@ -55,31 +112,42 @@ namespace SaveLoadBtns
         }
     }
 
-    //[HarmonyPatch(typeof(WorldMapSystem), "ShowChoosePlaceMenu")]
-    //public static class WorldMapSystem_ShowChoosePlaceMenu_Patch
-    //{
-    //    public static void Postfix(int worldId, int partId, int placeId, Transform placeImage)
-    //    { // todo: 只有大地图上,才可以SAVE.  这好像有点难,求助中
-    //        if (Main.enabled && !DateFile.instance.playerMoveing)
-    //            GameObject.Find("SaveButton").GetComponent<Selectable>().interactable = WorldMapSystem.instance.inToPlaceHomeButton.interactable;
-    //        GameObject.Find("SaveButton").SetActive(false);
-    //    }
-    //}
-
-    public class myPointerClick : MonoBehaviour, IPointerClickHandler
+    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
+    public class SaveDateFile_LateUpdate_Patch
     {
-        public void OnPointerClick(PointerEventData eventData)
+        static void Prefix(SaveDateFile __instance)
         {
-            if (!Main.enabled) return;
-            if (gameObject.name == "LoadButton")
+            if (__instance.saveSaveDate)
             {
-                Main.Logger.Log("Loading data: " + SaveDateFile.instance.dateId.ToString());
-                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入", DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度").Replace("返回到游戏的主菜单…\n", ""), false, true);
+                Main.Logger.Log($"enabled: {Main.enabled}; manualSave: {Main.manualSave}");
+                if (Main.enabled)
+                {
+                    if (Main.manualSave)
+                    {
+                        Main.manualSave = false;
+                    }
+                    else
+                    {
+                        __instance.saveSaveDate = false;
+                    }
+                }
             }
-            else if (gameObject.name == "SaveButton")
-            {
-                SaveDateFile.instance.SaveGameDate();
-            }
+        }
+    }
+    [HarmonyPatch(typeof(SaveDateFile), "UpdateSave1")]
+    public class SaveDateFile_UpdateSave1_Patch
+    {
+        static void Prefix(SaveDateFile __instance)
+        {
+            Main.Logger.Log("save 1");
+        }
+    }
+    [HarmonyPatch(typeof(SaveDateFile), "UpdateSave2")]
+    public class SaveDateFile_UpdateSave2_Patch
+    {
+        static void Prefix(SaveDateFile __instance)
+        {
+            Main.Logger.Log("save 2");
         }
     }
 
