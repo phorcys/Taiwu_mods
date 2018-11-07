@@ -39,9 +39,23 @@ namespace MoreInfo
         public bool showInBank = true;//仓库中物品显示
         public bool showInShop = true;//商店中物品显示
         public bool showInStory = true;//奇遇使用物品界面显示
+        public bool showInBooty = true;//战利品界面显示
+        public bool showInBuild = true;//建筑界面显示
+        public bool showInMake = true;//制造界面显示
+        public bool showInBookChange = true;//交换藏书界面
+        public bool showInGift = true;//赠送礼物界面
+        public bool showInReadBook = true;//读书界面
+
+
+
+
+
+
+        public bool showInOthers = true;//在其他界面显示
+
 
         public bool showExtraValue = false;//显示特殊词条加成值
-
+        
 
         public bool showGongFaLevel = true;//显示功法等级颜色
         public bool showGongFaGang = true;//显示功法所属门派
@@ -92,7 +106,9 @@ namespace MoreInfo
             Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "显示图纸名称", new GUILayoutOption[0]);
             Main.settings.showOtherBookAbility = GUILayout.Toggle(Main.settings.showOtherBookAbility, "显示技艺书技艺", new GUILayoutOption[0]);
             Main.settings.showMagerialName = GUILayout.Toggle(Main.settings.showMagerialName, "显示材料类别", new GUILayoutOption[0]);
+           
 
+            
 
 
             GUILayout.EndHorizontal();
@@ -105,6 +121,21 @@ namespace MoreInfo
             Main.settings.showInBank = GUILayout.Toggle(Main.settings.showInBank, "仓库中显示", new GUILayoutOption[0]);
             Main.settings.showInShop = GUILayout.Toggle(Main.settings.showInShop, "商店中显示", new GUILayoutOption[0]);
             Main.settings.showInStory = GUILayout.Toggle(Main.settings.showInStory, "奇遇物品栏显示", new GUILayoutOption[0]);
+            Main.settings.showInBooty = GUILayout.Toggle(Main.settings.showInBooty, "战利品界面", new GUILayoutOption[0]);
+            Main.settings.showInBuild = GUILayout.Toggle(Main.settings.showInBuild, "修建界面", new GUILayoutOption[0]);
+            Main.settings.showInMake = GUILayout.Toggle(Main.settings.showInMake, "制造界面", new GUILayoutOption[0]);
+            Main.settings.showInBookChange = GUILayout.Toggle(Main.settings.showInBookChange, "交换藏书界面", new GUILayoutOption[0]);
+            Main.settings.showInGift = GUILayout.Toggle(Main.settings.showInGift, "赠送礼物界面", new GUILayoutOption[0]);
+            Main.settings.showInReadBook = GUILayout.Toggle(Main.settings.showInReadBook, "读书界面", new GUILayoutOption[0]);
+
+
+
+
+
+
+
+
+            //Main.settings.showInOthers = GUILayout.Toggle(Main.settings.showInOthers, "其他界面显示", new GUILayoutOption[0]);
 
             //Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", new GUILayoutOption[0]);
 
@@ -491,16 +522,22 @@ namespace MoreInfo
         }
 
         //变更Holder中所有object名称
-        public void changeObjectsName(Transform __Holder)
+        public void changeObjectsName(Transform __Holder,string textName)
         {
             int childCount = __Holder.childCount;
+            Main.Logger.Log("changeObjectsName.step0:"+childCount);
             for (int i = 0; i < childCount; i++)
             {
+                Main.Logger.Log("changeObjectsName.step1:"+i);
                 GameObject gameObject;
                 gameObject = __Holder.GetChild(i).gameObject;
-                var gameText = gameObject.transform.Find("ItemNumberText").GetComponent<Text>();
+                Main.Logger.Log("changeObjectsName.step2:" + i);
+                var gameText = gameObject.transform.Find(textName).GetComponent<Text>();
+                Main.Logger.Log("changeObjectsName.step3:" + i);
                 string[] tmpArray = gameObject.name.Split(new char[] { ',' });
+                Main.Logger.Log("changeObjectsName.step4:" + i);
                 this.changeItemName(gameText, int.Parse(tmpArray[1]));
+                Main.Logger.Log("changeObjectsName.step5:" + i);
             }
         }
 
@@ -526,11 +563,11 @@ namespace MoreInfo
 
         }
 
-
-        public static Changer instance;
     }
 
-
+    /// <summary>
+    /// 物品显示名称
+    /// </summary>
 
     //将人物包裹中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
@@ -586,6 +623,20 @@ namespace MoreInfo
         }
     }
 
+    //将书店中的的物品替换为特殊词条显示
+    [HarmonyPatch(typeof(SetItem), "SetBookShopItemIcon")]
+    public static class SetItem_SetBookShopItemIcon_Patch
+    {
+        static void Postfix(SetItem __instance, int itemId, int itemSize, int desIndex, int changeTyp, int itemMoney, Image dragDes, bool canSell, bool needFavor)
+        {
+            if (!Main.enabled || !Main.settings.showInBookChange)
+                return;
+            Changer changer = new Changer();
+            changer.changeItemName(__instance.itemNumber, itemId);
+        }
+    }
+
+
     //奇遇选择物品界面设置物品名称
     [HarmonyPatch(typeof(StorySystem), "GetItem")]
     public static class StorySystem_GetItem_Patch
@@ -595,12 +646,112 @@ namespace MoreInfo
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
             Changer changer = new Changer();
-            changer.changeObjectsName(__instance.itemHolder);
+            changer.changeObjectsName(__instance.itemHolder, "ItemNumberText");
+        }
+
+    }
+    //修习图书界面设置物品名称
+    [HarmonyPatch(typeof(HomeSystem), "SetBook")]
+    public static class HomeSystem_SetBook_Patch
+    {
+        static void Postfix(HomeSystem __instance)
+        {
+            if (!Main.enabled || !Main.settings.showInReadBook)
+                return;
+            Changer changer = new Changer();
+            changer.changeObjectsName(__instance.bookHolder, "ItemHpText");
+        }
+
+    }
+    //修建界面显示
+    [HarmonyPatch(typeof(HomeSystem), "GetItem")]
+    public static class HomeSystem_GetItem_Patch
+    {
+        static void Postfix(HomeSystem __instance)
+        {
+            if (!Main.enabled || !Main.settings.showInStory)
+                return;
+            Changer changer = new Changer();
+            changer.changeObjectsName(__instance.itemHolder, "ItemNumberText");
+        }
+
+    }
+    
+    //战利品界面
+    [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
+    public static class BattleSystem_ShowBattleBooty_Patch
+    {
+        static void Postfix(BattleSystem __instance)
+        {
+            if (!Main.enabled || !Main.settings.showInStory)
+                return;
+            Changer changer = new Changer();
+            changer.changeObjectsName(__instance.battleBootyHolder, "ItemNumberText");
         }
 
     }
 
+    //赠送礼物界面
+    [HarmonyPatch(typeof(MassageWindow), "GetItem")]
+    public static class MassageWindow_GetItem_Patch
+    {
+        static void Postfix(MassageWindow __instance)
+        {
+            if (!Main.enabled || !Main.settings.showInGift)
+                return;
+            Changer changer = new Changer();
+            changer.changeObjectsName(__instance.itemHolder, "ItemNumberText");
+        }
 
+    }
+
+    //将人物装备界面的人物已装备物品-TODO
+    [HarmonyPatch(typeof(ActorMenu), "UpdateEquips")]
+    public static class ActorMenu_UpdateEquips_Patch
+    {
+        static void Postfix(ActorMenu __instance, int key, int typ)
+        {
+            if (!Main.enabled || !Main.settings.showInEquuipBag)
+                return;
+            Changer changer = new Changer();
+            //changer.changeObjectsName(__instance.equipHolders[typ], "equipHpText");
+        }
+    }
+
+    //将获取物品界面设置物品名称??具体是哪个界面未知
+    [HarmonyPatch(typeof(GetItemWindow), "SetGetItem")]
+    public static class GetItemWindow_SetGetItem_Patch
+    {
+        static void Postfix(GetItemWindow __instance, int index, int itemId, int getTyp, int getSize)
+        {
+            if (!Main.enabled || !Main.settings.showInOthers)
+                return;
+
+            Changer changer = new Changer();
+            changer.changeItemName(__instance.itemHpText[index], itemId);
+        }
+    }
+
+    //制造界面右侧物品栏
+    [HarmonyPatch(typeof(MakeSystem), "SetMianToolItem")]
+    public static class MakeSystem_SetMianToolItem_Patch
+    {
+        static void Postfix(MakeSystem __instance, int id, GameObject item, Transform holder, Image dragDes, bool showSize)
+        {
+            if (!Main.enabled || !Main.settings.showInMake)
+                return;
+            Changer changer = new Changer();
+            Text numberText = holder.transform.Find("Item," + id).Find("ItemNumberText").GetComponent<Text>();
+            changer.changeItemName(numberText, id);
+        }
+    }
+
+
+
+
+    /// <summary>
+    /// 功法
+    /// </summary>
 
     //人物功法界面根据功法品级显示颜色
     [HarmonyPatch(typeof(SetGongFaIcon), "SetGongFa")]
@@ -657,6 +808,10 @@ namespace MoreInfo
             Main.settings.isLoaded = true;
         }
     }
+
+    /// <summary>
+    /// 其他
+    /// </summary>
 
     //奇遇显示等级
     [HarmonyPatch(typeof(WorldMapPlace), "UpdatePlaceStory")]
