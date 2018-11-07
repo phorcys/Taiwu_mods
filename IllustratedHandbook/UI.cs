@@ -265,7 +265,8 @@ namespace IllustratedHandbook
              "游戏未开始 尚未加载数据\n\n请先开始游戏~\n\n\n" +
              "<size=16><color=white><b>Tips:</b>\n Ctrl + F11开关窗口\n<b>拖动标题</b>可以移动窗口哦\n" +
              "获取书籍会随机残页、无法查看促织\n" +
-             "获取物品后需重新打开背包才看的到\n推荐配合《功法书籍显示》MOD使用\n<b>工具无错</b> 请<b>自觉</b>平衡游戏体验</color></size>",
+             "获取物品后需重新打开背包才看的到\n推荐配合《功法书籍显示》MOD使用\n<color=red>NEW</color> 在人物菜单切换到同道可以将物品直接添加到同道背包(不会影响亲密)\n" +
+             "<b>工具无错</b> 请<b>自觉</b>平衡游戏体验</color></size>",
               new Color32(0, 255, 213, 255), 28, v2(0.5f), v2(0.5f), v2(600, 400), v2(0)
             );
 
@@ -429,9 +430,9 @@ namespace IllustratedHandbook
                     {
                         if (itemSlot.name.Split('|')[1] != "10000")
                         {
-                            if (DateFile.instance.GetItem(ActorMenu.instance.acotrId, int.Parse(itemSlot.name.Split('|')[1]), 1, true) > 0)
+                            if (DateFile.instance.GetItem(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.acotrId : DateFile.instance.MianActorID(), int.Parse(itemSlot.name.Split('|')[1]), 1, true) > 0)
                             {
-                                TipsWindow.instance.SetTips(5007, new string[] { dataInstance.GetActorName(ActorMenu.instance.acotrId), itemList[int.Parse(itemSlot.name.Split('|')[1])][0], "" }, 100);
+                                TipsWindow.instance.SetTips(5007, new string[] { dataInstance.GetActorName(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.acotrId : DateFile.instance.MianActorID()), itemList[int.Parse(itemSlot.name.Split('|')[1])][0], "" }, 100);
                             }
                             else
                             {
