@@ -126,7 +126,7 @@ namespace SaveLoadBtns
                     {
                         Main.manualSave = false;
                     }
-                    else
+                    else if (!Main.settings.saveOnTurn)
                     {
                         __instance.saveSaveDate = false;
                     }
