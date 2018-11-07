@@ -104,6 +104,10 @@ namespace LKX_CheatMaxPeople
 
             Main.settings.ququLife = GUILayout.Toggle(Main.settings.ququLife, "蛐蛐无限寿命，已死的不复活。");
 
+            if (GUILayout.Button("测试"))
+            {
+                Main.TestModValue();
+            }
         }
 
         /// <summary>
@@ -113,6 +117,28 @@ namespace LKX_CheatMaxPeople
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             Main.settings.Save(modEntry);
+        }
+
+        static void TestModValue()
+        {
+            DateFile df = DateFile.instance;
+            int i = 0;
+            List<int> list = new List<int> {
+                1099693, 1099686, 1100595, 1100618, 1100583, 1100614, 1100615, 1100607, 1100608, 1170349
+            };
+            foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
+            {
+                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key)) && item.Value[999] == "10000")
+                {
+                    i++;
+                }
+            }
+
+            foreach (KeyValuePair<int, int[]> aaa in df.cricketBoxDate)
+            {
+                Main.logger.Log(aaa.Value[0].ToString());
+            }
+            Main.logger.Log(i.ToString() + "个");
         }
     }
 
@@ -132,9 +158,16 @@ namespace LKX_CheatMaxPeople
         {
             if (Main.enabled && Main.settings.ququLife)
             {
-                foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
+                DateFile df = DateFile.instance;
+                List<int> boxQuQu = new List<int>();
+                foreach (int[] box in df.cricketBoxDate.Values)
                 {
-                    if (DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) && item.Value[999] == "10000")
+                    if (box[0] != -97) boxQuQu.Add(box[0]);
+                }
+                
+                foreach (KeyValuePair<int, Dictionary<int, string>> item in df.itemsDate)
+                {
+                    if ((df.actorItemsDate[10001].ContainsKey(item.Key) || df.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
                     {
                         if (item.Value[901] != "0" && item.Value[2007] != "0") item.Value[2007] = "0";
                     }
