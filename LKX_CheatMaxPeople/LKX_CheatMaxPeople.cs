@@ -131,7 +131,7 @@ namespace LKX_CheatMaxPeople
 
             foreach (int actorId in df.acotrTeamDate)
             {
-                if (int.Parse(df.GetActorDate(actorId, 302)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 302)));
+                if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
             }
 
             foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
@@ -175,7 +175,7 @@ namespace LKX_CheatMaxPeople
 
                 foreach (int actorId in df.acotrTeamDate)
                 {
-                    if (int.Parse(df.GetActorDate(actorId, 302)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 302)));
+                    if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
                 }
 
                 foreach (KeyValuePair<int, Dictionary<int, string>> item in df.itemsDate)
