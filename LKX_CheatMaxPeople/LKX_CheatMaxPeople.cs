@@ -123,20 +123,28 @@ namespace LKX_CheatMaxPeople
         {
             DateFile df = DateFile.instance;
             int i = 0;
-            List<int> list = new List<int> {
-                1099693, 1099686, 1100595, 1100618, 1100583, 1100614, 1100615, 1100607, 1100608, 1170349
-            };
+            List<int> boxQuQu = new List<int>();
+            foreach (int[] box in df.cricketBoxDate.Values)
+            {
+                if (box[0] != -97) boxQuQu.Add(box[0]);
+            }
+
+            foreach (int actorId in df.acotrTeamDate)
+            {
+                if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
+            }
+
             foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
             {
-                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key)) && item.Value[999] == "10000")
+                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
                 {
                     i++;
                 }
             }
 
-            foreach (KeyValuePair<int, int[]> aaa in df.cricketBoxDate)
+            foreach (int aaa in df.acotrTeamDate)
             {
-                Main.logger.Log(aaa.Value[0].ToString());
+                Main.logger.Log(aaa.ToString());
             }
             Main.logger.Log(i.ToString() + "个");
         }
@@ -154,9 +162,9 @@ namespace LKX_CheatMaxPeople
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
     public class QuQuLife_For_SaveDateFile_LateUpdate
     {
-        static void Postfix()
+        static void Prefix(SaveDateFile __instance)
         {
-            if (Main.enabled && Main.settings.ququLife)
+            if (Main.enabled && Main.settings.ququLife && __instance.saveSaveDate)
             {
                 DateFile df = DateFile.instance;
                 List<int> boxQuQu = new List<int>();
@@ -164,7 +172,12 @@ namespace LKX_CheatMaxPeople
                 {
                     if (box[0] != -97) boxQuQu.Add(box[0]);
                 }
-                
+
+                foreach (int actorId in df.acotrTeamDate)
+                {
+                    if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
+                }
+
                 foreach (KeyValuePair<int, Dictionary<int, string>> item in df.itemsDate)
                 {
                     if ((df.actorItemsDate[10001].ContainsKey(item.Key) || df.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
