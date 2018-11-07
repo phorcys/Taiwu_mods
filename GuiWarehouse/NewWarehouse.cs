@@ -55,7 +55,7 @@ namespace GuiWarehouse
             rScrollView.SetParent(gameObject.transform, false);
             rScrollView.anchoredPosition = leftPos;
 
-            scrollView.GetComponentInChildren<Mask>().enabled = false;
+            //scrollView.GetComponentInChildren<Mask>().enabled = false;
 
             GameObject image = new GameObject("line", new System.Type[] { typeof(RectTransform) });
             RectTransform rItemCell = image.GetComponent<RectTransform>();
