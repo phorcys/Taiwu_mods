@@ -154,9 +154,9 @@ namespace LKX_CheatMaxPeople
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
     public class QuQuLife_For_SaveDateFile_LateUpdate
     {
-        static void Postfix()
+        static void Prefix(SaveDateFile __instance)
         {
-            if (Main.enabled && Main.settings.ququLife)
+            if (Main.enabled && Main.settings.ququLife && __instance.saveSaveDate)
             {
                 DateFile df = DateFile.instance;
                 List<int> boxQuQu = new List<int>();
