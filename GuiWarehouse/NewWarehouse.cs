@@ -170,7 +170,7 @@ namespace GuiWarehouse
                 ChildData[] childDatas = item.childDatas;
                 for (int i = 0; i < Main.settings.numberOfColumns; i++)
                 {
-                    int idx = (index - 1) * Main.settings.numberOfColumns + index - 1 + i;
+                    int idx = (index - 1) * Main.settings.numberOfColumns + i;
                     if (i < childDatas.Length)
                     {
                         ChildData childData = childDatas[i];

@@ -72,15 +72,15 @@ namespace GuiBaseUI
         {
             GUILayout.Label(title, GUILayout.Width(300));
             GUILayout.BeginHorizontal();
-            GUILayout.Label(string.Format("<color=#{0}{1}{2}>底色</color>", Convert.ToString((int)(Main.settings.bgR * 255), 16)
-                , Convert.ToString((int)(Main.settings.bgG * 255), 16), Convert.ToString((int)(Main.settings.bgB * 255), 16)));
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>■■■■底色 {3} {4} {5}■■■■</color>", Convert.ToString((int)(Main.settings.bgR * 255), 16)
+                , Convert.ToString((int)(Main.settings.bgG * 255), 16), Convert.ToString((int)(Main.settings.bgB * 255), 16), Main.settings.bgR * 255, Main.settings.bgG * 255, Main.settings.bgB * 255));
             Main.settings.bgR = GUILayout.HorizontalSlider(Main.settings.bgR, 0, 1);
             Main.settings.bgG= GUILayout.HorizontalSlider(Main.settings.bgG, 0, 1);
             Main.settings.bgB = GUILayout.HorizontalSlider(Main.settings.bgB, 0, 1);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label(string.Format("<color=#{0}{1}{2}>前色</color>", Convert.ToString((int)(Main.settings.handR * 255), 16)
-                , Convert.ToString((int)(Main.settings.handG * 255), 16), Convert.ToString((int)(Main.settings.handB * 255), 16)));
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>■■■■前色 {3} {4} {5}■■■■</color>", Convert.ToString((int)(Main.settings.handR * 255), 16)
+                , Convert.ToString((int)(Main.settings.handG * 255), 16), Convert.ToString((int)(Main.settings.handB * 255), 16), Main.settings.bgR * 255, Main.settings.bgG * 255, Main.settings.bgB * 255));
             Main.settings.handR = GUILayout.HorizontalSlider(Main.settings.handR, 0, 1);
             Main.settings.handG = GUILayout.HorizontalSlider(Main.settings.handG, 0, 1);
             Main.settings.handB = GUILayout.HorizontalSlider(Main.settings.handB, 0, 1);

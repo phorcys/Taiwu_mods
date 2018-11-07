@@ -20,11 +20,9 @@ namespace GuiWorldNpc
         }
         public float scrollSpeed = 15;//滑动速度
         public bool open = true; //使用鬼的世界NPC
-        //public int numberOfColumns = 1;//一行显示几个
+        public int numberOfColumns = 1;//一行显示几个
 
-        public float a = 10;
-        public float b = 10;
-        public float c = 20;
+
     }
     public static class Main
     {
@@ -75,24 +73,24 @@ namespace GuiWorldNpc
         }
 
 
-        //[HarmonyPatch(typeof(SetPlaceActor), "ShowEventMassage")]
-        //public static class SetPlaceActor_ShowEventMassage_Patch
-        //{
-        //    public static bool Prefix()
-        //    {
-        //        //Main.Logger.Log("点击了NPC");
-        //        var t = WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.transform;
-        //        GuiBaseUI.Main.LogAllChild(t, true);
-        //        return true;
-        //    }
-        //}
+        [HarmonyPatch(typeof(SetPlaceActor), "ShowEventMassage")]
+        public static class SetPlaceActor_ShowEventMassage_Patch
+        {
+            public static bool Prefix()
+            {
+                Main.Logger.Log("点击了NPC");
+                //var t = WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.transform;
+                //GuiBaseUI.Main.LogAllChild(t, true);
+                return true;
+            }
+        }
 
         [HarmonyPatch(typeof(WorldMapSystem), "RemoveActor")]
         public static class WorldMapSystem_RemoveActor_Patch1
         {
             public static bool Prefix()
             {
-                //Main.Logger.Log("移除NPC");
+                Main.Logger.Log("移除NPC");
                 WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.data = new int[0];
                 return false;
             }
@@ -103,19 +101,19 @@ namespace GuiWorldNpc
         {
             public static bool Prefix(int key)
             {
-                //Main.Logger.Log("更新NPC");
+                Main.Logger.Log("更新NPC");
                 bool show = DateFile.instance.mianPlaceId == WorldMapSystem.instance.choosePlaceId || WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId);
                 if (UIMove.instance.movePlaceActorIn)
                 {
                     for (int i = 1; i < WorldMapSystem.instance.actorHolder.childCount-1; i++)
                     {
                         GameObject gameObject = WorldMapSystem.instance.actorHolder.GetChild(i).gameObject;
-                        var array = gameObject.name.Split(new char[]{','});
+                        var array = gameObject.name.Split(new char[] { ',' });
                         if (array.Length > 1)
                         {
                             if (int.Parse(array[1]) == key)
                             {
-                                gameObject.GetComponent<SetPlaceActor>().SetActor(key, show);
+                                gameObject.GetComponentInChildren<SetPlaceActor>().SetActor(key, show);
                                 break;
                             }
                         }
