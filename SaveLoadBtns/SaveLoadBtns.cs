@@ -125,10 +125,13 @@ namespace SaveLoadBtns
                     if (Main.manualSave)
                     {
                         Main.manualSave = false;
+                        Main.Logger.Log("手动保存");
                     }
                     else if (!Main.settings.saveOnTurn)
                     {
                         __instance.saveSaveDate = false;
+                        UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
+                        Main.Logger.Log("跳过自动存档");
                     }
                 }
             }
