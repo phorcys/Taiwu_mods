@@ -3,7 +3,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeModules")
 
 if (WIN32)
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 project("Taiwu_Mods" CSharp)
 set(CMAKE_CSharp_FLAGS "/langversion:6")
 include(CSharpUtilities)
