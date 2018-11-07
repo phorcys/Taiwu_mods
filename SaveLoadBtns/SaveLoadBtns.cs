@@ -134,22 +134,6 @@ namespace SaveLoadBtns
             }
         }
     }
-    [HarmonyPatch(typeof(SaveDateFile), "UpdateSave1")]
-    public class SaveDateFile_UpdateSave1_Patch
-    {
-        static void Prefix(SaveDateFile __instance)
-        {
-            Main.Logger.Log("save 1");
-        }
-    }
-    [HarmonyPatch(typeof(SaveDateFile), "UpdateSave2")]
-    public class SaveDateFile_UpdateSave2_Patch
-    {
-        static void Prefix(SaveDateFile __instance)
-        {
-            Main.Logger.Log("save 2");
-        }
-    }
 
     [HarmonyPatch(typeof(OnClick), "Index")]
     public static class OnClick_Index_Patch
