@@ -19,7 +19,7 @@ namespace GuiWorkActor
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
         public bool open = true; //使用鬼的仓库
-        public int numberOfColumns = 5;
+        public int numberOfColumns = 4;
         public float scrollSpeed = 10;
     }
     public static class Main
