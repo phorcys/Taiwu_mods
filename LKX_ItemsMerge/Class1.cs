@@ -271,8 +271,10 @@ namespace LKX_ItemsMerge
                     Main.logger.Log("拆分成功。");
                 }
             }
-
-            Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            else
+            {
+                Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            }
         }
 
         /// <summary>
