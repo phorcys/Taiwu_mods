@@ -295,18 +295,18 @@ namespace GuiWarehouse
 
             public static void SetNewWarehouse(bool active)
             {
-                if (isInit)
+                if (actorItemHolder!=null)
                 {
                     for (int i = 0; i < actorItemHolder.Length; i++)
                     {
-                        if (actorItemHolder[i].scrollRect != null)
+                        if (actorItemHolder[i]!=null&&actorItemHolder[i].scrollRect != null)
                         {
                             actorItemHolder[i].scrollRect.gameObject.SetActive(active);
                         }
                     }
                     for (int i = 0; i < warehouseItemHolder.Length; i++)
                     {
-                        if (warehouseItemHolder[i].scrollRect != null)
+                        if (warehouseItemHolder[i]!=null&&warehouseItemHolder[i].scrollRect != null)
                         {
                             warehouseItemHolder[i].scrollRect.gameObject.SetActive(active);
                         }
@@ -356,8 +356,18 @@ namespace GuiWarehouse
                         warehouseItemHolder[i] = Warehouse.instance.warehouseItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
                     }
                 }
+
                 if (actor)
                 {
+                    for (int i = 0; i < actorItemHolder.Length; i++)
+                    {
+                        if (actorItemHolder[i] == null)
+                        {
+                            actorItemHolder[i] = Warehouse.instance.actorItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
+                        }
+                    }
+
+
                     if (Warehouse.instance.actorItemTyp != 0 && Warehouse.instance.actorItemTyp != typ)
                     {
                         Warehouse.instance.actorItemToggle[typ].isOn = true;
@@ -389,6 +399,14 @@ namespace GuiWarehouse
                 }
                 else
                 {
+                    for (int i = 0; i < warehouseItemHolder.Length; i++)
+                    {
+                        if (warehouseItemHolder[i] == null)
+                        {
+                            warehouseItemHolder[i] = Warehouse.instance.warehouseItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
+                        }
+                    }
+
                     if (Warehouse.instance.warehouseItemTyp != 0 && Warehouse.instance.warehouseItemTyp != typ)
                     {
                         Warehouse.instance.warehouseItemToggle[typ].isOn = true;

@@ -134,11 +134,8 @@ namespace GuiBaseUI
                 {
                     // Main.Logger.Log("add top" + i.ToString());
                     GameObject item = ItemPool.instance.GetItem(funcSetData, content);
-                    // Main.Logger.Log("add top 0" + i.ToString());
                     item.transform.SetSiblingIndex((i - _startIndex + 1));
-                    // Main.Logger.Log("add top 1" + i.ToString());
                     Flush(item, i);
-                    // Main.Logger.Log("add top 2" + i.ToString());
                 }
                 else if (i > endIndex)
                 {
