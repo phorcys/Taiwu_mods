@@ -71,8 +71,7 @@ namespace GuiWorkActor
             public static GameObject listActorsHolder;
             public static bool Prefix(int _skillTyp, bool favorChange = false)
             {
-
-                Main.Logger.Log("获取行动者" + _skillTyp.ToString() + " " + favorChange.ToString());
+                // Main.Logger.Log("获取行动者" + _skillTyp.ToString() + " " + favorChange.ToString());
                 if (workActor == null)
                 {
                     listActorsHolder = HomeSystem.instance.listActorsHolder.gameObject;
@@ -80,7 +79,6 @@ namespace GuiWorkActor
                     workActor = HomeSystem.instance.listActorsHolder.parent.parent.gameObject.AddComponent<NewWorkActor>();
                     workActor.Init(_skillTyp, favorChange);
                 }
-
                 List<int> newActorList = new List<int>();
                 Dictionary<int, int> dictionary = new Dictionary<int, int>();
                 List<int> list = new List<int>(DateFile.instance.GetGangActor(16, 9));
@@ -94,9 +92,7 @@ namespace GuiWorkActor
                 {
                     newActorList.Add(keyValuePair.Key);
                 }
-
                 workActor.data = newActorList.ToArray();
-
                 // 这段循环设置数据，应该挪到SetItemCell
                 //for (int i = 0; i < newActorList.Count; i++)
                 //{

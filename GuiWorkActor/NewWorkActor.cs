@@ -34,7 +34,7 @@ namespace GuiWorkActor
         //将这个脚本挂在原本的ScrollRect的gameObject上，然后Init()
         public void Init(int _skillTyp, bool _favorChange)
         {
-            Main.Logger.Log("NewWarehouse 初始化 " + _skillTyp.ToString());
+            // Main.Logger.Log("NewWarehouse 初始化 " + _skillTyp.ToString());
 
             // 设置参数
             this.skillTyp = _skillTyp;
@@ -110,7 +110,7 @@ namespace GuiWorkActor
             myHand.sprite = otherHand.sprite;
             myHand.type = Image.Type.Sliced;
 
-            Main.Logger.Log("UI改造完毕");
+            // Main.Logger.Log("UI改造完毕");
             //GuiBaseUI.Main.LogAllChild(transform.parent, true);
 
             isInit = true;
@@ -122,11 +122,11 @@ namespace GuiWorkActor
             if (bigDataScroll != null && m_data != null && isInit)
             {
                 int count = m_data.Length / Main.settings.numberOfColumns + 1;
-                Main.Logger.Log("数据长度" + m_data.Length + " 行数" + count.ToString());
+                // Main.Logger.Log("数据长度" + m_data.Length + " 行数" + count.ToString());
 
                 for (int i = 0; i < m_data.Length; i++)
                 {
-                    Main.Logger.Log("数据 " + i + ":" + m_data[i]);
+                    // Main.Logger.Log("数据 " + i + ":" + m_data[i]);
                 }
 
                 bigDataScroll.cellCount = count;
@@ -142,7 +142,7 @@ namespace GuiWorkActor
             ActorItem item = itemCell as ActorItem;
             if (item == null)
             {
-                Main.Logger.Log("ItemCell 出错。。。");
+                // Main.Logger.Log("ItemCell 出错。。。");
                 return;
             }
             item.name = "Actor,10000";
@@ -179,16 +179,16 @@ namespace GuiWorkActor
                         {
                             go.SetActive(false);
                         }
-                        Main.Logger.Log("多余的隐藏 第" + index + "行 第" + i + "个  索引=" + idx);
+                        // Main.Logger.Log("多余的隐藏 第" + index + "行 第" + i + "个  索引=" + idx);
                     }
                 }
                 else
                 {
-                    Main.Logger.Log("行数量出错。。。");
+                    // Main.Logger.Log("行数量出错。。。");
                 }
             }
 
-            Main.Logger.Log(string.Format("创建第{0}行NPC {1} {2} {3} {4}", index, names[0], names[1], names[2], names[3]));
+            // Main.Logger.Log(string.Format("创建第{0}行NPC {1} {2} {3} {4}", index, names[0], names[1], names[2], names[3]));
         }
 
         private void Update()
@@ -208,13 +208,13 @@ namespace GuiWorkActor
             }
         }
 
-        void OnGUI()
-        {
-            if (GUILayout.Button("xxxxxxx"))
-            {
-                GuiBaseUI.Main.LogAllChild(transform.parent.parent, true);
-            }
-        }
+        // void OnGUI()
+        // {
+        //     if (GUILayout.Button("xxxxxxx"))
+        //     {
+        //         GuiBaseUI.Main.LogAllChild(transform.parent.parent, true);
+        //     }
+        // }
     }
 
 }
