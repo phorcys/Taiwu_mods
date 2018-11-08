@@ -205,7 +205,7 @@ namespace LKX_CheatMaxPeople
     {
         static List<int> foodType = new List<int> { 84, 85 };
 
-        static void Prefix(SaveDateFile __instance)
+        static void Prefix()
         {
             if (Main.enabled)
             {
