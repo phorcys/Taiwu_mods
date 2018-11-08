@@ -350,8 +350,8 @@ namespace LKX_ItemsMerge
     /// <summary>
     /// 判断是否时节结束时执行
     /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
-    public static class MergeItems_For_SaveDateFile_SaveSaveDate
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public static class MergeItems_For_SaveDateFile_LateUpdate
     {
         static void Prefix(SaveDateFile __instance)
         {
