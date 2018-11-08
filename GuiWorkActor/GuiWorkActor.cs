@@ -92,21 +92,24 @@ namespace GuiWorkActor
                 {
                     newActorList.Add(keyValuePair.Key);
                 }
-                workActor.data = newActorList.ToArray();
-                // 这段循环设置数据，应该挪到SetItemCell
-                //for (int i = 0; i < newActorList.Count; i++)
-                //{
-                //    int num2 = newActorList[i];
-                //    if (!DateFile.instance.GetFamily(true, true).Contains(num2) && int.Parse(DateFile.instance.GetActorDate(num2, 11, false)) > 14)
-                //    {
-                //        GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(HomeSystem.instance.listActor, Vector3.zero, Quaternion.identity);
-                //        gameObject.name = "Actor," + num2;
-                //        gameObject.transform.SetParent(HomeSystem.instance.listActorsHolder, false);
-                //        gameObject.GetComponent<Toggle>().group = HomeSystem.instance.listActorsHolder.GetComponent<ToggleGroup>();
-                //        gameObject.GetComponent<SetWorkActorIcon>().SetActor(num2, _skillTyp, favorChange);
-                //    }
-                //}
 
+                List<int> data = new List<int>();
+                //这段循环设置数据，应该挪到SetItemCell
+                for (int i = 0; i < newActorList.Count; i++)
+                {
+                    int num2 = newActorList[i];
+                    if (!DateFile.instance.GetFamily(true, true).Contains(num2) && int.Parse(DateFile.instance.GetActorDate(num2, 11, false)) > 14)
+                    {
+                        //GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(HomeSystem.instance.listActor, Vector3.zero, Quaternion.identity);
+                        //gameObject.name = "Actor," + num2;
+                        //gameObject.transform.SetParent(HomeSystem.instance.listActorsHolder, false);
+                        //gameObject.GetComponent<Toggle>().group = HomeSystem.instance.listActorsHolder.GetComponent<ToggleGroup>();
+                        //gameObject.GetComponent<SetWorkActorIcon>().SetActor(num2, _skillTyp, favorChange);
+                        data.Add(num2);
+                    }
+                }
+
+                workActor.data = data.ToArray();
 
                 return false;
             }
