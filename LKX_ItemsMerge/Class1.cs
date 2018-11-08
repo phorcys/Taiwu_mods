@@ -271,8 +271,10 @@ namespace LKX_ItemsMerge
                     Main.logger.Log("拆分成功。");
                 }
             }
-
-            Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            else
+            {
+                Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            }
         }
 
         /// <summary>
@@ -350,12 +352,12 @@ namespace LKX_ItemsMerge
     /// <summary>
     /// 判断是否时节结束时执行
     /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
-    public static class MergeItems_For_SaveDateFile_SaveSaveDate
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public static class MergeItems_For_UIDate_DoChangeTrun
     {
-        static void Prefix(SaveDateFile __instance)
+        static void Prefix()
         {
-            if (Main.enabled && Main.settings.autoMerge && __instance.saveSaveDate) Main.RunningMergeItems();
+            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems();
         }
     }
 }
