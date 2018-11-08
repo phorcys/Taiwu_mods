@@ -66,7 +66,7 @@ namespace GuiWorldNpc
             rScrollView.SetParent(gameObject.transform, false);
             rScrollView.anchoredPosition = pos;
 
-            scrollView.GetComponentInChildren<Mask>().enabled = false;
+            //scrollView.GetComponentInChildren<Mask>().enabled = false;
             // Main.Logger.Log("完0");
 
             GameObject gItemCell = new GameObject("line", new System.Type[] { typeof(RectTransform) });
@@ -179,7 +179,7 @@ namespace GuiWorldNpc
 
         private void SetCell(ItemCell itemCell, int index)
         {
-            Main.Logger.Log(index.ToString() + "设置 itemCell。。。" + itemCell.ToString() + " pos=" + scrollRect.verticalNormalizedPosition.ToString());
+            // Main.Logger.Log(index.ToString() + "设置 itemCell。。。" + itemCell.ToString() + " pos=" + scrollRect.verticalNormalizedPosition.ToString());
             NpcItem item = itemCell as NpcItem;
             if (item == null)
             {
@@ -190,7 +190,7 @@ namespace GuiWorldNpc
             for (int i = 0; i < Main.settings.numberOfColumns; i++)
             {
                 int idx = (index - 1) * Main.settings.numberOfColumns + i;
-                Main.Logger.Log("获取第几个元素的数据" + idx.ToString());
+                // Main.Logger.Log("获取第几个元素的数据" + idx.ToString());
                 if (i < childDatas.Length)
                 {
                     ChildData childData = childDatas[i];
@@ -242,14 +242,6 @@ namespace GuiWorldNpc
                     float count = m_data.Length / Main.settings.numberOfColumns + 1;
                     scrollRect.verticalNormalizedPosition += v / count * Main.settings.scrollSpeed;
                 }
-            }
-        }
-
-        void OnGUI()
-        {
-            if(GUILayout.Button("XXXXXXXXXXXXXXXXXXXXXXX"))
-            {
-                GuiBaseUI.Main.LogAllChild(transform,true);
             }
         }
     }

@@ -45,6 +45,8 @@ namespace GuiWorldNpc
             HarmonyInstance harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             #endregion
+
+            Main.settings.open = true;
             return true;
         }
 
@@ -61,8 +63,8 @@ namespace GuiWorldNpc
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
-            Main.settings.open = GUILayout.Toggle(Main.settings.open, "鬼的世界NPC");
-            Main.settings.open = !GUILayout.Toggle(!Main.settings.open, "原版世界NPC");
+            // Main.settings.open = GUILayout.Toggle(Main.settings.open, "鬼的世界NPC");
+            // Main.settings.open = !GUILayout.Toggle(!Main.settings.open, "原版世界NPC");
             GUILayout.Label("滑动速度↓↓↓↓↓");
             int speed;
             if(int.TryParse(GUILayout.TextField(settings.scrollSpeed.ToString()), out speed))
@@ -78,7 +80,9 @@ namespace GuiWorldNpc
         {
             public static bool Prefix()
             {
-                Main.Logger.Log("点击了NPC");
+                if (!Main.enabled)
+                    return true;
+                //Main.Logger.Log("点击了NPC");
                 //var t = WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.transform;
                 //GuiBaseUI.Main.LogAllChild(t, true);
                 return true;
@@ -90,7 +94,9 @@ namespace GuiWorldNpc
         {
             public static bool Prefix()
             {
-                Main.Logger.Log("移除NPC");
+                if (!Main.enabled)
+                    return true;
+                //Main.Logger.Log("移除NPC");
                 WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.data = new int[0];
                 return false;
             }
@@ -101,7 +107,9 @@ namespace GuiWorldNpc
         {
             public static bool Prefix(int key)
             {
-                Main.Logger.Log("更新NPC");
+                if (!Main.enabled)
+                    return true;
+                //Main.Logger.Log("更新NPC");
                 bool show = DateFile.instance.mianPlaceId == WorldMapSystem.instance.choosePlaceId || WorldMapSystem.instance.playerNeighbor.Contains(WorldMapSystem.instance.choosePlaceId);
                 if (UIMove.instance.movePlaceActorIn)
                 {
@@ -215,6 +223,8 @@ namespace GuiWorldNpc
 
             public static bool Prefix(int partId, int placeId)
             {
+                if (!Main.enabled)
+                    return true;
                 //Main.Logger.Log("刷新npc行动者");
                 //if (!Main.settings.open)
                 //{

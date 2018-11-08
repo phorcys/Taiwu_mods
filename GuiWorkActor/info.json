@@ -3,5 +3,6 @@
   "DisplayName": "鬼的工作间",
   "Version": "1.0.0",
   "AssemblyName": "GuiWorkActor.dll",
-  "EntryMethod": "GuiWorkActor.Main.Load"
+  "EntryMethod": "GuiWorkActor.Main.Load",
+  "Requirements":["GuiBaseUI"]
 }
