@@ -23,6 +23,11 @@ namespace LKX_BookMerge
         public List<int> bookLevel = new List<int>();
 
         /// <summary>
+        /// 自动合并
+        /// </summary>
+        public bool autoMerge;
+
+        /// <summary>
         /// 保存设置
         /// </summary>
         /// <param name="modEntry"></param>
@@ -109,8 +114,9 @@ namespace LKX_BookMerge
             {
                 Main.RunningMergeItems();
             }
+            Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启更换时节自动合并");
 
-            GUILayout.Label("请选择允许合并的书籍类型，不选就不合并");
+            GUILayout.Label("请选择允许合并的书籍类型，必选", redLabelStyle);
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
             GUILayout.Label("技艺书籍");
@@ -156,7 +162,7 @@ namespace LKX_BookMerge
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("选择允许合并的品级。不选就不合并");
+            GUILayout.Label("选择允许合并的品级。必选", redLabelStyle);
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             Main.SetGUIToToggle(1, "九品", ref Main.settings.bookLevel);
             Main.SetGUIToToggle(2, "八品", ref Main.settings.bookLevel);
@@ -277,6 +283,18 @@ namespace LKX_BookMerge
             }
             
             return string.Join("|", res.ToArray());
+        }
+    }
+
+    /// <summary>
+    /// 时节更换
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public class AutoMergeBook_For_UIDate_DoChangeTrun
+    {
+        static void Prefix()
+        {
+            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems();
         }
     }
 }
