@@ -28,7 +28,7 @@ namespace MoreInfo
         public bool showBookGang = true;//显示书籍门派
         public bool showBlueprintName = true;//显示图纸名称
         public bool showOtherBookAbility = true;//显示技艺书对应技艺名称
-        public bool showMagerialName = true;//显示材料名称
+        public bool showMagerialName = false;//显示材料名称
         public bool showFoodExtraName = true;//显示食物特殊词条
 
 
@@ -38,30 +38,27 @@ namespace MoreInfo
         public bool showInEquuipBag = true;//装备界面包裹中物品显示
         public bool showInBank = true;//仓库中物品显示
         public bool showInShop = true;//商店中物品显示
-        public bool showInStory = true;//奇遇使用物品界面显示
-        public bool showInBooty = true;//战利品界面显示
+        public bool showInStory = false;//奇遇使用物品界面显示
+        public bool showInBooty = false;//战利品界面显示
         public bool showInBuild = true;//建筑界面显示
-        public bool showInMake = true;//制造界面显示
-        public bool showInBookChange = true;//交换藏书界面
-        public bool showInGift = true;//赠送礼物界面
-        public bool showInReadBook = true;//读书界面
+        public bool showInMake = false;//制造界面显示
+        public bool showInBookChange = false;//交换藏书界面
+        public bool showInGift = false;//赠送礼物界面
+        public bool showInReadBook = false;//读书界面
 
-
-
-
-
-
-        public bool showInOthers = true;//在其他界面显示
-
-
+        public bool showInOthers = true;//在其他界面显示        
         public bool showExtraValue = false;//显示特殊词条加成值
-        
+
 
         public bool showGongFaLevel = true;//显示功法等级颜色
         public bool showGongFaGang = true;//显示功法所属门派
         public bool showGongFaProgress = true;//强化显示功法进度
-        public bool showInStudyWindow = true;//在修习界面显示
-        public bool showInLevelUpWindow = true;//在突破界面显示
+
+        //经历筛选
+        public bool showMassageFilter = true;
+
+        public bool[] showMassageType = { true, true, true, true, true, true, true ,true};
+
 
         public bool showStroyLevel = true;//显示奇遇等级
         public bool mergeIcon = true;//合并切换时节时入魔图标
@@ -95,66 +92,89 @@ namespace MoreInfo
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
 
-
             GUILayout.BeginHorizontal();
-            GUILayout.Label("显示功能");
+            GUILayout.Label("<color=#FFA500>信息增强MOD,作者ignaz_chou,橙色内容为强烈推荐</color>");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.showExtraName = GUILayout.Toggle(Main.settings.showExtraName, "显示宝物特殊词条", new GUILayoutOption[0]);
-            Main.settings.showFoodExtraName = GUILayout.Toggle(Main.settings.showFoodExtraName, "显示食物特殊词条", new GUILayoutOption[0]);
-            Main.settings.showBookGang = GUILayout.Toggle(Main.settings.showBookGang, "显示书籍门派", new GUILayoutOption[0]);
-            Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "显示图纸名称", new GUILayoutOption[0]);
-            Main.settings.showOtherBookAbility = GUILayout.Toggle(Main.settings.showOtherBookAbility, "显示技艺书技艺", new GUILayoutOption[0]);
-            Main.settings.showMagerialName = GUILayout.Toggle(Main.settings.showMagerialName, "显示材料类别", new GUILayoutOption[0]);
+            GUILayout.Label("<color=#87CEEB>显示功能</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showExtraName = GUILayout.Toggle(Main.settings.showExtraName, "显示宝物特殊词条", GUILayout.Width(120));
+            Main.settings.showFoodExtraName = GUILayout.Toggle(Main.settings.showFoodExtraName, "显示食物特殊词条", GUILayout.Width(120));
+            Main.settings.showOtherBookAbility = GUILayout.Toggle(Main.settings.showOtherBookAbility, "显示技艺书技艺", GUILayout.Width(120));
+            Main.settings.showBookGang = GUILayout.Toggle(Main.settings.showBookGang, "显示书籍门派", GUILayout.Width(120));
+            Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "<color=#FFA500>显示图纸名称</color>", GUILayout.Width(120));            
+            Main.settings.showMagerialName = GUILayout.Toggle(Main.settings.showMagerialName, "显示材料类别", GUILayout.Width(120));
+
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("\n<color=#87CEEB>显示区域-主要界面</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showInEquuipBag = GUILayout.Toggle(Main.settings.showInEquuipBag, "装备界面包裹显示", GUILayout.Width(120));
+            Main.settings.showInBag = GUILayout.Toggle(Main.settings.showInBag, "包裹中显示", GUILayout.Width(120));            
+            Main.settings.showInBank = GUILayout.Toggle(Main.settings.showInBank, "仓库中显示", GUILayout.Width(120));
+            Main.settings.showInShop = GUILayout.Toggle(Main.settings.showInShop, "商店中显示<", GUILayout.Width(120));
            
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("\n <color=#87CEEB>显示区域-次要界面(注：部分次要界面开启后会明显变卡)</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showInBookChange = GUILayout.Toggle(Main.settings.showInBookChange, "交换藏书界面显示", GUILayout.Width(120));
+            Main.settings.showInGift = GUILayout.Toggle(Main.settings.showInGift, "赠送礼物界面显示", GUILayout.Width(120));
+            Main.settings.showInStory = GUILayout.Toggle(Main.settings.showInStory, "奇遇物品栏显示", GUILayout.Width(120));
+            Main.settings.showInBooty = GUILayout.Toggle(Main.settings.showInBooty, "战利品界面显示", GUILayout.Width(120));
+            Main.settings.showInBuild = GUILayout.Toggle(Main.settings.showInBuild, "修建界面显示", GUILayout.Width(120));
+            Main.settings.showInMake = GUILayout.Toggle(Main.settings.showInMake, "制造界面显示", GUILayout.Width(120));
+            Main.settings.showInReadBook = GUILayout.Toggle(Main.settings.showInReadBook, "读书界面显示", GUILayout.Width(120));
+
+
+
+
+            //Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", GUILayout.Width(120));
+
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("\n<color=#87CEEB>功法增强(注:门派与心得增强只限人物功法界面)</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.showGongFaLevel = GUILayout.Toggle(Main.settings.showGongFaLevel, "显示功法等级颜色", GUILayout.Width(120));
+            Main.settings.showGongFaGang = GUILayout.Toggle(Main.settings.showGongFaGang, "显示功法所属门派", GUILayout.Width(120));
+            Main.settings.showGongFaProgress = GUILayout.Toggle(Main.settings.showGongFaProgress, "进度心得显示增强", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("\n<color=#87CEEB>经历筛选</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
 
             
+            Main.settings.showMassageFilter = GUILayout.Toggle(Main.settings.showMassageFilter, "开启经历筛选", GUILayout.Width(120));
+            Main.settings.showMassageType[0] = GUILayout.Toggle(Main.settings.showMassageType[0], "仇怨", GUILayout.Width(60));
+            Main.settings.showMassageType[1] = GUILayout.Toggle(Main.settings.showMassageType[1], "子女", GUILayout.Width(60));
+            Main.settings.showMassageType[2] = GUILayout.Toggle(Main.settings.showMassageType[2], "修习", GUILayout.Width(60));
+            Main.settings.showMassageType[3] = GUILayout.Toggle(Main.settings.showMassageType[3], "物品", GUILayout.Width(60));
+            Main.settings.showMassageType[4] = GUILayout.Toggle(Main.settings.showMassageType[4], "身份", GUILayout.Width(60));
+            Main.settings.showMassageType[5] = GUILayout.Toggle(Main.settings.showMassageType[5], "情爱", GUILayout.Width(60));
+            Main.settings.showMassageType[6] = GUILayout.Toggle(Main.settings.showMassageType[6], "战斗", GUILayout.Width(60));
+            Main.settings.showMassageType[7] = GUILayout.Toggle(Main.settings.showMassageType[8], "伤病", GUILayout.Width(60));
+
+
+
 
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("显示区域");
+
+
+            GUILayout.Label("\n<color=#87CEEB>其他</color>");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            Main.settings.showInBag = GUILayout.Toggle(Main.settings.showInBag, "包裹中显示", new GUILayoutOption[0]);
-            Main.settings.showInEquuipBag = GUILayout.Toggle(Main.settings.showInEquuipBag, "装备界面包裹显示", new GUILayoutOption[0]);
-            Main.settings.showInBank = GUILayout.Toggle(Main.settings.showInBank, "仓库中显示", new GUILayoutOption[0]);
-            Main.settings.showInShop = GUILayout.Toggle(Main.settings.showInShop, "商店中显示", new GUILayoutOption[0]);
-            Main.settings.showInStory = GUILayout.Toggle(Main.settings.showInStory, "奇遇物品栏显示", new GUILayoutOption[0]);
-            Main.settings.showInBooty = GUILayout.Toggle(Main.settings.showInBooty, "战利品界面", new GUILayoutOption[0]);
-            Main.settings.showInBuild = GUILayout.Toggle(Main.settings.showInBuild, "修建界面", new GUILayoutOption[0]);
-            Main.settings.showInMake = GUILayout.Toggle(Main.settings.showInMake, "制造界面", new GUILayoutOption[0]);
-            Main.settings.showInBookChange = GUILayout.Toggle(Main.settings.showInBookChange, "交换藏书界面", new GUILayoutOption[0]);
-            Main.settings.showInGift = GUILayout.Toggle(Main.settings.showInGift, "赠送礼物界面", new GUILayoutOption[0]);
-            Main.settings.showInReadBook = GUILayout.Toggle(Main.settings.showInReadBook, "读书界面", new GUILayoutOption[0]);
-
-
-
-
-
-
-
-
-            //Main.settings.showInOthers = GUILayout.Toggle(Main.settings.showInOthers, "其他界面显示", new GUILayoutOption[0]);
-
-            //Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", new GUILayoutOption[0]);
-
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("功法增强");
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            Main.settings.showGongFaLevel = GUILayout.Toggle(Main.settings.showGongFaLevel, "显示功法等级颜色", new GUILayoutOption[0]);
-            Main.settings.showGongFaGang = GUILayout.Toggle(Main.settings.showGongFaGang, "显示功法所属门派", new GUILayoutOption[0]);
-            Main.settings.showGongFaProgress = GUILayout.Toggle(Main.settings.showGongFaProgress, "进度心得显示增强", new GUILayoutOption[0]);
-            Main.settings.showInStudyWindow = GUILayout.Toggle(Main.settings.showInStudyWindow, "在修习界面显示", new GUILayoutOption[0]);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("其他");
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", new GUILayoutOption[0]);
-            Main.settings.mergeIcon = GUILayout.Toggle(Main.settings.mergeIcon, "合并入魔图标", new GUILayoutOption[0]);
+            Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", GUILayout.Width(120));
+            Main.settings.mergeIcon = GUILayout.Toggle(Main.settings.mergeIcon, "<color=#FFA500>合并入魔图标</Color>", GUILayout.Width(120));
 
 
             GUILayout.EndHorizontal();
@@ -168,11 +188,82 @@ namespace MoreInfo
     }
 
 
-
+    //定义变更器
     public class Changer
     {
+        /// <summary>
+        /// 入魔图标，储存相关地点ID
+        /// </summary>
+        public static string placeIds = "";
+        public void addPlaceId(int pid)
+        {
+            placeIds += pid + "|";
+        }
+        public void resetPlaceIds()
+        {
+            placeIds = "";
+        }
+        public string[] getSplitPlaceIds()
+        {
+            return placeIds.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+        public string getPlaceIds()
+        {
+            return placeIds;
+        }
+        public Changer()
+        {
+
+        }
 
 
+
+        /// <summary>
+        /// 经历筛选
+        /// </summary>
+        public List<int[]> massageBackup = new List<int[]> { };
+        List<int[]> massageFilter = new List<int[]>() {
+            new int[]{30,38,39,48,49,52,53,77,78,82,115,116,117,118,119,120,121,122,123,124,125},//仇怨
+            new int[]{43,44,101,102,103,104},//子女
+            new int[]{72,73,74,75,110,113},//修习
+            new int[]{},//物品
+            new int[]{112},//身份
+            new int[]{},//情爱
+            new int[]{},//战斗
+            new int[]{},//伤病
+        };
+
+        //存储数据
+        public void backupMassage(int id)
+        {
+            massageBackup = DateFile.instance.actorLifeMassage[id];
+        }
+        public List<int[]> getBackupMassage(int id)
+        {
+            return massageBackup;
+        }
+
+        //获取需要显示的经历id列表
+        public List<int> getTypeList()
+        {
+            List<int> tlist = new List<int>();
+            for (int i = 0;i<Main.settings.showMassageType.Length;i++)
+            {
+                bool show = Main.settings.showMassageType[i];
+                if (show)
+                {
+                    for (int j=0;j< massageFilter[i].Length;j++)
+                    {
+                        tlist.Add(massageFilter[i][j]);
+                    }
+                }
+            }
+            return tlist.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// 显示特殊词条
+        /// </summary>
 
         //50061-50066 膂力- 定力
         //51361-51366 膂力%- 悟性% 
@@ -181,6 +272,7 @@ namespace MoreInfo
         //50601 - 50614 内功 - 杂学
         //DateFile.instance.actorAttrDate actorAttr_date.txt
 
+        //特殊词条类型1字典
         public static Dictionary<int, string> itemExtraAttrType1 = new Dictionary<int, string>()
                {
                     { 50501,"音律"},
@@ -215,7 +307,7 @@ namespace MoreInfo
                     { 50613,"御射"},
                     { 50614,"乐器"},
                };
-
+        //特殊词条类型2字典
         public static Dictionary<int, string> itemExtraAttrType2 = new Dictionary<int, string>()
                {
                 {51361,"膂力%"},
@@ -225,7 +317,6 @@ namespace MoreInfo
                 {51365,"悟性%"},
                 {51366,"定力%"},
                };
-
         //材料分类
         public static Dictionary<int, string> materialType = new Dictionary<int, string>()
                {
@@ -238,29 +329,6 @@ namespace MoreInfo
                     { 12,"玉"},
                };
 
-
-
-        public static string placeIds = "";
-        public void addPlaceId(int pid)
-        {
-            placeIds += pid + "|";
-        }
-        public void resetPlaceIds()
-        {
-            placeIds = "";
-        }
-        public string[] getSplitPlaceIds()
-        {
-            return placeIds.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-        }
-        public string getPlaceIds()
-        {
-            return placeIds;
-        }
-        public Changer()
-        {
-
-        }
 
         //获取人物名字
         public string getActorName(int actorId)
@@ -522,13 +590,13 @@ namespace MoreInfo
         }
 
         //变更Holder中所有object名称
-        public void changeObjectsName(Transform __Holder,string textName)
+        public void changeObjectsName(Transform __Holder, string textName)
         {
             int childCount = __Holder.childCount;
-            Main.Logger.Log("changeObjectsName.step0:"+childCount);
+            Main.Logger.Log("changeObjectsName.step0:" + childCount);
             for (int i = 0; i < childCount; i++)
             {
-                Main.Logger.Log("changeObjectsName.step1:"+i);
+                Main.Logger.Log("changeObjectsName.step1:" + i);
                 GameObject gameObject;
                 gameObject = __Holder.GetChild(i).gameObject;
                 Main.Logger.Log("changeObjectsName.step2:" + i);
@@ -663,6 +731,7 @@ namespace MoreInfo
         }
 
     }
+    
     //修建界面显示
     [HarmonyPatch(typeof(HomeSystem), "GetItem")]
     public static class HomeSystem_GetItem_Patch
@@ -676,7 +745,7 @@ namespace MoreInfo
         }
 
     }
-    
+
     //战利品界面
     [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
     public static class BattleSystem_ShowBattleBooty_Patch
@@ -848,6 +917,53 @@ namespace MoreInfo
         }
     }
 
+    //经历筛选
+    [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
+    public static class ActorMenu_ShowActorMassage_Patch
+    {
+        static void Prefix(ActorMenu __instance, int key)
+        {
+            if (!Main.enabled || !Main.settings.showMassageFilter)
+                return;
+            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
+
+            // DateFile.instance.actorLifeMassage
+
+            List<int[]> newLifeMassage = new List<int[]> {};
+            Changer changer = new Changer();
+            changer.backupMassage(key);
+            //changer.massageBackup = DateFile.instance.actorLifeMassage[key];//备份
+
+            List<int> tlist = changer.getTypeList();
+            //TODO根据tlist筛选key2
+            for (int i =1;i< DateFile.instance.actorLifeMassage[key].Count; i++ )
+            {
+                int[] array = DateFile.instance.actorLifeMassage[key][i];
+                int key2 = array[0];//根据经历类型ID进行筛选
+                //tlist
+                if (key2 >= 100)
+                {
+                    newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
+                }
+            }
+            DateFile.instance.actorLifeMassage[key] = newLifeMassage;
+        }
+    }
+    //恢复备份的经历
+    [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
+    public static class ActorMenu_ShowActorMassage_Patch2
+    {
+        static void Postfix(ActorMenu __instance, int key)
+        {
+            if (!Main.enabled)
+                return;
+            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
+            Changer changer = new Changer();
+            DateFile.instance.actorLifeMassage[key] = changer.getBackupMassage(key);
+        }
+    }
+
+
     //入魔图标
     [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
     public static class UIDate_SetTrunChangeWindow_Patch
@@ -943,7 +1059,7 @@ namespace MoreInfo
                                         {
                                             string pid = placeArray[i];
                                             string pName = DateFile.instance.partWorldMapDate[int.Parse(pid)][0];
-                                            placeNames += pName + "、";
+                                            placeNames = (placeNames == "") ? pName : placeNames + "、" + pName;
                                         }
                                         string pre = df.trunEventDate[num2][99].Split(new char[] { '|' })[0];
                                         string post = df.trunEventDate[num2][99].Split(new char[] { '|' })[1];
