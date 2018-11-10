@@ -88,6 +88,7 @@ namespace GameSpeeder
                 lastTimeScale = Time.timeScale = realTimeScale;
         }
 
+        static bool _keyCurrentlyHeldDown = false;
         public static void CheckPerFrame()
         {
             if (lastTimeScale != Time.timeScale) // may be changed in game logic
@@ -96,7 +97,20 @@ namespace GameSpeeder
                 _isHotKeyHangUp = false;
             else if (Input.GetKeyDown(settings.hotKeyEnable))
                 ApplyTimeScale(!_enable, true);
-            
+
+            if (!_keyCurrentlyHeldDown)
+            {
+                if (Input.anyKey) // 任何键盘按键按下期间停止变速
+                {
+                    _keyCurrentlyHeldDown = true;
+                    lastTimeScale = Time.timeScale = realTimeScale;
+                }
+            }
+            else if (!Input.anyKey)
+            {
+                _keyCurrentlyHeldDown = false;
+                ApplyTimeScale(_enable); // 恢复变速
+            }
         }        
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
