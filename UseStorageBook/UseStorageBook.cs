@@ -86,15 +86,14 @@ namespace Sth4nothing.UseStorageBook
         {
             var df = DateFile.instance;
             int itemType = int.Parse(df.GetItemDate(itemId, 999));
-            Main.Logger.Log($"类型: {itemType}");
+            // Main.Logger.Log($"类型: {itemType}");
             // 技艺书籍
             if (itemType < 500000)
                 return true;
             int bookId = int.Parse(df.GetItemDate(itemId, 32));
-            
             // 品级
             int pinji = int.Parse(df.gongFaDate[bookId][2]) - 1;
-            Main.Logger.Log($"品级: {pinji}");
+            // Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
             // 真传 or 手抄
@@ -104,12 +103,12 @@ namespace Sth4nothing.UseStorageBook
                 return false;
             // 功法类型
             int gongfa = int.Parse(df.gongFaDate[bookId][1]);
-            Main.Logger.Log($"功法: {gongfa}");
+            // Main.Logger.Log($"功法: {gongfa}");
             if (!Main.Setting.gongfa[gongfa])
                 return false;
             // 帮派
             int gang = int.Parse(df.gongFaDate[bookId][3]);
-            Main.Logger.Log($"帮派: {gang}");
+            // Main.Logger.Log($"帮派: {gang}");
             if (!Main.Setting.gang[gang])
                 return false;
             return true;
@@ -236,22 +235,21 @@ namespace Sth4nothing.UseStorageBook
             while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
             {
                 Debug.Assert(reader.Name == "Pair");
-                reader.MoveToAttribute("key");
-                var key = int.Parse(reader.Value);
-                reader.MoveToContent();
-                var val = bool.Parse(reader.Value);
+                var key = int.Parse(reader.GetAttribute("key"));
+                reader.ReadStartElement("Pair");
+                var val = reader.ReadContentAsBoolean();
+                reader.ReadEndElement();
                 this[key] = val;
-                reader.Read();
             }
         }
 
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            foreach (int key in this.Keys)
+            foreach (var pair in this)
             {
                 writer.WriteStartElement("Pair");
-                writer.WriteAttributeString("key", key.ToString());
-                writer.WriteString(this[key].ToString());
+                writer.WriteAttributeString("key", pair.Key.ToString());
+                writer.WriteValue(pair.Value);
                 writer.WriteEndElement();
             }
         }

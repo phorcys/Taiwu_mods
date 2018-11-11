@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 using Harmony12;
@@ -21,6 +22,21 @@ namespace LKX_BookMerge
         /// 合并书籍品级
         /// </summary>
         public List<int> bookLevel = new List<int>();
+
+        /// <summary>
+        /// 自动合并
+        /// </summary>
+        public bool autoMerge;
+
+        /// <summary>
+        /// 是否使用系统难度计算成功率
+        /// </summary>
+        public bool noSystemObbs;
+
+        /// <summary>
+        /// 手动难度成功率类型
+        /// </summary>
+        public uint bookMergeObbsType;
 
         /// <summary>
         /// 保存设置
@@ -63,8 +79,11 @@ namespace LKX_BookMerge
             { 200, 606 }, { 201, 607 }, { 202, 608 }, { 203, 609 }, { 204, 610 },
             { 205, 611 }, { 206, 612 }, { 207, 613 }, { 208, 614 },
         };
-
-        //public static List<int> itemsKey = new List<int>();
+        
+        /// <summary>
+        /// enemyBorn战斗等级，xxLevel相怄入侵速度，enemySize外道数量，worldResource世界资源等级，randomHeir是否随机继承人
+        /// </summary>
+        public static List<int> LevelSon = new List<int>();
 
         /// <summary>
         /// 载入mod。
@@ -103,14 +122,28 @@ namespace LKX_BookMerge
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUIStyle redLabelStyle = new GUIStyle();
-            redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
+            redLabelStyle.normal.textColor = new Color(204f / 256f, 0f / 256f, 1f / 256f);
             GUILayout.Label("如果status亮红灯代表mod失效！", redLabelStyle);
+
+            GUILayout.Label("选择书籍合并的成功的难度");
+            int systemObbsNum = GUILayout.SelectionGrid(Convert.ToUInt16(Main.settings.noSystemObbs), new string[] { "系统难度", "手动设置" }, 2);
+            if (GUI.changed) Main.settings.noSystemObbs = Convert.ToBoolean(systemObbsNum);
+            
+            if (Main.settings.noSystemObbs)
+            {
+                Main.settings.bookMergeObbsType = (uint) Mathf.Clamp(int.Parse(Main.settings.bookMergeObbsType.ToString()), 0, 3);
+                Main.settings.bookMergeObbsType = (uint) GUILayout.SelectionGrid((int) Main.settings.bookMergeObbsType, new string[] { "偏向作弊", "简单", "普通", "困难"}, 4);
+                List<string> obbsLabels = new List<string> { "只要2本对应页码都不是残页就能成功合成", "有一点的失败几率一品成功率最高为", "可以接受的失败几率一品成功率最高为", "几乎都是失败的几率一品成功率最高为" };
+                GUILayout.Label(obbsLabels[(int) Main.settings.bookMergeObbsType]);
+            }
+
             if (GUILayout.Button("点击合并"))
             {
                 Main.RunningMergeItems();
             }
+            Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启更换时节自动合并");
 
-            GUILayout.Label("请选择允许合并的书籍类型，不选就不合并");
+            GUILayout.Label("请选择允许合并的书籍类型，必选");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
             GUILayout.Label("技艺书籍");
@@ -156,7 +189,7 @@ namespace LKX_BookMerge
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("选择允许合并的品级。不选就不合并");
+            GUILayout.Label("选择允许合并的品级。必选");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             Main.SetGUIToToggle(1, "九品", ref Main.settings.bookLevel);
             Main.SetGUIToToggle(2, "八品", ref Main.settings.bookLevel);
@@ -212,6 +245,10 @@ namespace LKX_BookMerge
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
             if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
             {
+                Main.LevelSon = new List<int> {
+                    DateFile.instance.enemyBorn, DateFile.instance.xxLevel, DateFile.instance.enemySize,
+                    DateFile.instance.worldResource, DateFile.instance.randomHeir
+                };
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
                 {
@@ -257,18 +294,22 @@ namespace LKX_BookMerge
         {
             List<string> res = new List<string>();
             string[] isNew = newData.Split('|'), isOld = oldData.Split('|');
+            int baseObbs, offsetObbs, obbsSum;
 
+            baseObbs = GetBaseObbs(group, level);
+            offsetObbs = GetOffsetObbs(level);
+            obbsSum = baseObbs + offsetObbs;
             for (int i = 0; i < isOld.Length; i++)
             {
                 if (isOld[i] == "0" && isNew[i] != "0")
                 {
-                    int ziZhi = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][Main.booksToActorMap[group]]),
-                        wuXing = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][65]);
-                    int baseCount = (ziZhi + wuXing) / level;
-                    int offsetCount = (100 / level);
+                    if (Main.settings.bookMergeObbsType == 0 && Main.settings.noSystemObbs)
+                    {
+                        res.Add("1");
+                        continue;
+                    }
                     int randomCount = UnityEngine.Random.Range(1, 100);
-                    int obbs = baseCount + offsetCount;
-                    res.Add(obbs >= randomCount ? "1" : "0");
+                    res.Add(obbsSum >= randomCount ? "1" : "0");
                 }
                 else
                 {
@@ -277,6 +318,95 @@ namespace LKX_BookMerge
             }
             
             return string.Join("|", res.ToArray());
+        }
+
+        /// <summary>
+        /// 获得合并难度减免的倍数
+        /// </summary>
+        /// <returns>返回减免的倍数</returns>
+        public static int SwitchObbsType()
+        {
+            int obbsType, selectNum;
+            if (Main.settings.noSystemObbs)
+            {
+                selectNum = (int)Main.settings.bookMergeObbsType;
+            }
+            else
+            {
+                selectNum = (int)Main.LevelSon.Average();
+            }
+
+            switch (selectNum)
+            {
+                case 0:
+                case 1:
+                    obbsType = 3;
+                    break;
+                case 2:
+                    obbsType = 2;
+                    break;
+                case 3:
+                default:
+                    obbsType = 1;
+                    break;
+            }
+
+            return obbsType;
+        }
+
+        /// <summary>
+        /// 获得补偿的成功率
+        /// </summary>
+        /// <param name="level">书籍品级</param>
+        /// <returns>计算好的值</returns>
+        public static int GetOffsetObbs(int level)
+        {
+            int multipleCount = SwitchObbsType();
+            double x = level, y = multipleCount;
+            
+            return (int)(100 / (x / y));
+        }
+
+        /// <summary>
+        /// 获得基础成功率
+        /// </summary>
+        /// <param name="group">书籍类型</param>
+        /// <param name="level">书籍品级</param>
+        /// <returns>计算好的成功率</returns>
+        public static int GetBaseObbs(int group, int level)
+        {
+            int zhiZhi, wuXing, multipleCount;
+            zhiZhi = wuXing = multipleCount = 0;
+
+            multipleCount = SwitchObbsType();
+            if (multipleCount <= 2)
+            {
+                //后天属性
+                zhiZhi = int.Parse(DateFile.instance.GetActorDate(DateFile.instance.mianActorId, Main.booksToActorMap[group], true));
+                wuXing = DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0);
+            }
+            else
+            {
+                //先天属性
+                zhiZhi = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][Main.booksToActorMap[group]]);
+                wuXing = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][65]);
+            }
+
+            double x = level, y = multipleCount;
+
+            return (int) ((zhiZhi + wuXing) / (x / y));
+        }
+    }
+
+    /// <summary>
+    /// 时节更换
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public class AutoMergeBook_For_UIDate_DoChangeTrun
+    {
+        static void Prefix()
+        {
+            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems();
         }
     }
 }

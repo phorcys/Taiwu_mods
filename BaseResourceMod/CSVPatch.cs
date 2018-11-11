@@ -327,6 +327,10 @@ namespace BaseResourceMod
                 if (Directory.Exists(kv.Value))
                 {
                     processDir(kv.Value);
+                    foreach (string path in Directory.GetDirectories(kv.Value))
+                    {
+                        processDir(path);
+                    }
                 }
                 else
                 {
