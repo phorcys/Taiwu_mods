@@ -55,9 +55,10 @@ namespace MoreInfo
         public bool showGongFaProgress = true;//强化显示功法进度
 
         //经历筛选
-        public bool showMassageFilter = true;
+        public bool showAllMassage = false;
 
-        public bool[] showMassageType = { true, true, true, true, true, true, true ,true};
+        public bool[] showMassageType = new bool[] { true, true, true, true, true, true, true, true, true };
+        //
 
 
         public bool showStroyLevel = true;//显示奇遇等级
@@ -103,7 +104,7 @@ namespace MoreInfo
             Main.settings.showFoodExtraName = GUILayout.Toggle(Main.settings.showFoodExtraName, "显示食物特殊词条", GUILayout.Width(120));
             Main.settings.showOtherBookAbility = GUILayout.Toggle(Main.settings.showOtherBookAbility, "显示技艺书技艺", GUILayout.Width(120));
             Main.settings.showBookGang = GUILayout.Toggle(Main.settings.showBookGang, "显示书籍门派", GUILayout.Width(120));
-            Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "<color=#FFA500>显示图纸名称</color>", GUILayout.Width(120));            
+            Main.settings.showBlueprintName = GUILayout.Toggle(Main.settings.showBlueprintName, "<color=#FFA500>显示图纸名称</color>", GUILayout.Width(120));
             Main.settings.showMagerialName = GUILayout.Toggle(Main.settings.showMagerialName, "显示材料类别", GUILayout.Width(120));
 
             GUILayout.EndHorizontal();
@@ -112,10 +113,10 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showInEquuipBag = GUILayout.Toggle(Main.settings.showInEquuipBag, "装备界面包裹显示", GUILayout.Width(120));
-            Main.settings.showInBag = GUILayout.Toggle(Main.settings.showInBag, "包裹中显示", GUILayout.Width(120));            
+            Main.settings.showInBag = GUILayout.Toggle(Main.settings.showInBag, "包裹中显示", GUILayout.Width(120));
             Main.settings.showInBank = GUILayout.Toggle(Main.settings.showInBank, "仓库中显示", GUILayout.Width(120));
             Main.settings.showInShop = GUILayout.Toggle(Main.settings.showInShop, "商店中显示<", GUILayout.Width(120));
-           
+
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("\n <color=#87CEEB>显示区域-次要界面(注：部分次要界面开启后会明显变卡)</color>");
@@ -128,9 +129,6 @@ namespace MoreInfo
             Main.settings.showInBuild = GUILayout.Toggle(Main.settings.showInBuild, "修建界面显示", GUILayout.Width(120));
             Main.settings.showInMake = GUILayout.Toggle(Main.settings.showInMake, "制造界面显示", GUILayout.Width(120));
             Main.settings.showInReadBook = GUILayout.Toggle(Main.settings.showInReadBook, "读书界面显示", GUILayout.Width(120));
-
-
-
 
             //Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", GUILayout.Width(120));
 
@@ -151,31 +149,25 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
 
-            
-            Main.settings.showMassageFilter = GUILayout.Toggle(Main.settings.showMassageFilter, "开启经历筛选", GUILayout.Width(120));
-            Main.settings.showMassageType[0] = GUILayout.Toggle(Main.settings.showMassageType[0], "仇怨", GUILayout.Width(60));
-            Main.settings.showMassageType[1] = GUILayout.Toggle(Main.settings.showMassageType[1], "子女", GUILayout.Width(60));
-            Main.settings.showMassageType[2] = GUILayout.Toggle(Main.settings.showMassageType[2], "修习", GUILayout.Width(60));
-            Main.settings.showMassageType[3] = GUILayout.Toggle(Main.settings.showMassageType[3], "物品", GUILayout.Width(60));
-            Main.settings.showMassageType[4] = GUILayout.Toggle(Main.settings.showMassageType[4], "身份", GUILayout.Width(60));
-            Main.settings.showMassageType[5] = GUILayout.Toggle(Main.settings.showMassageType[5], "情爱", GUILayout.Width(60));
-            Main.settings.showMassageType[6] = GUILayout.Toggle(Main.settings.showMassageType[6], "战斗", GUILayout.Width(60));
-            Main.settings.showMassageType[7] = GUILayout.Toggle(Main.settings.showMassageType[8], "伤病", GUILayout.Width(60));
-
-
-
+            Main.settings.showAllMassage = GUILayout.Toggle(Main.settings.showAllMassage, "显示所有", GUILayout.Width(120));
+            Main.settings.showMassageType[0] = GUILayout.Toggle(Main.settings.showMassageType[0], "结怨寻仇", GUILayout.Width(80));
+            Main.settings.showMassageType[1] = GUILayout.Toggle(Main.settings.showMassageType[1], "师徒亲子", GUILayout.Width(80));
+            Main.settings.showMassageType[2] = GUILayout.Toggle(Main.settings.showMassageType[2], "修习功法", GUILayout.Width(80));
+            Main.settings.showMassageType[3] = GUILayout.Toggle(Main.settings.showMassageType[3], "资源物品", GUILayout.Width(80));
+            Main.settings.showMassageType[4] = GUILayout.Toggle(Main.settings.showMassageType[4], "身份变更", GUILayout.Width(80));
+            Main.settings.showMassageType[5] = GUILayout.Toggle(Main.settings.showMassageType[5], "友情爱情", GUILayout.Width(80));
+            Main.settings.showMassageType[6] = GUILayout.Toggle(Main.settings.showMassageType[6], "战斗切磋", GUILayout.Width(80));
+            Main.settings.showMassageType[7] = GUILayout.Toggle(Main.settings.showMassageType[7], "伤病毒医", GUILayout.Width(80));
+            Main.settings.showMassageType[8] = GUILayout.Toggle(Main.settings.showMassageType[8], "寻访追随", GUILayout.Width(80));
 
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-
-
             GUILayout.Label("\n<color=#87CEEB>其他</color>");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", GUILayout.Width(120));
             Main.settings.mergeIcon = GUILayout.Toggle(Main.settings.mergeIcon, "<color=#FFA500>合并入魔图标</Color>", GUILayout.Width(120));
-
 
             GUILayout.EndHorizontal();
         }
@@ -221,38 +213,55 @@ namespace MoreInfo
         /// <summary>
         /// 经历筛选
         /// </summary>
-        public List<int[]> massageBackup = new List<int[]> { };
+        public static List<int[]> massageBackup = new List<int[]> { };
         List<int[]> massageFilter = new List<int[]>() {
-            new int[]{30,38,39,48,49,52,53,77,78,82,115,116,117,118,119,120,121,122,123,124,125},//仇怨
-            new int[]{43,44,101,102,103,104},//子女
-            new int[]{72,73,74,75,110,113},//修习
-            new int[]{},//物品
-            new int[]{112},//身份
-            new int[]{},//情爱
-            new int[]{},//战斗
-            new int[]{},//伤病
+            new int[]{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
+                77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125},
+            new int[]{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
+            new int[]{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
+            new int[]{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107},//物品
+            new int[]{84,112,114},//身份
+            new int[]{40,41,42,45,46,50,51,52,54,56,57,66,69,72,73,76,90,91,92,96,97,98,99,100,109,125},//情爱
+            new int[]{31,32,33,34,35,36,37},//战斗
+            new int[]{5,6,7,18,19,20,61,62,63,108,109,110,111,122},//伤病
+            new int[]{53,54,55,56,57,58},//跟随
+
         };
 
+
+        public static int backupId = 0;
         //存储数据
         public void backupMassage(int id)
         {
+            backupId = id;
             massageBackup = DateFile.instance.actorLifeMassage[id];
         }
         public List<int[]> getBackupMassage(int id)
         {
             return massageBackup;
         }
+        public void resetBackup()
+        {
+            backupId = 0;
+        }
+        public int getBackupId()
+        {
+            return backupId;
+        }
 
         //获取需要显示的经历id列表
         public List<int> getTypeList()
         {
+            //Main.Logger.Log("getTypeList");
             List<int> tlist = new List<int>();
-            for (int i = 0;i<Main.settings.showMassageType.Length;i++)
+            for (int i = 0; i < Main.settings.showMassageType.Length; i++)
             {
                 bool show = Main.settings.showMassageType[i];
-                if (show)
+                //Main.Logger.Log("getTypeList.step2" + "show:" + show + "index:" + i + "count:" + massageFilter.Count);
+
+                if (show && i < massageFilter.Count)
                 {
-                    for (int j=0;j< massageFilter[i].Length;j++)
+                    for (int j = 0; j < massageFilter[i].Length; j++)
                     {
                         tlist.Add(massageFilter[i][j]);
                     }
@@ -593,19 +602,13 @@ namespace MoreInfo
         public void changeObjectsName(Transform __Holder, string textName)
         {
             int childCount = __Holder.childCount;
-            Main.Logger.Log("changeObjectsName.step0:" + childCount);
             for (int i = 0; i < childCount; i++)
             {
-                Main.Logger.Log("changeObjectsName.step1:" + i);
                 GameObject gameObject;
                 gameObject = __Holder.GetChild(i).gameObject;
-                Main.Logger.Log("changeObjectsName.step2:" + i);
                 var gameText = gameObject.transform.Find(textName).GetComponent<Text>();
-                Main.Logger.Log("changeObjectsName.step3:" + i);
                 string[] tmpArray = gameObject.name.Split(new char[] { ',' });
-                Main.Logger.Log("changeObjectsName.step4:" + i);
                 this.changeItemName(gameText, int.Parse(tmpArray[1]));
-                Main.Logger.Log("changeObjectsName.step5:" + i);
             }
         }
 
@@ -731,7 +734,7 @@ namespace MoreInfo
         }
 
     }
-    
+
     //修建界面显示
     [HarmonyPatch(typeof(HomeSystem), "GetItem")]
     public static class HomeSystem_GetItem_Patch
@@ -923,27 +926,47 @@ namespace MoreInfo
     {
         static void Prefix(ActorMenu __instance, int key)
         {
-            if (!Main.enabled || !Main.settings.showMassageFilter)
+            if (!Main.enabled || Main.settings.showAllMassage)
                 return;
             if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
-
-            // DateFile.instance.actorLifeMassage
-
-            List<int[]> newLifeMassage = new List<int[]> {};
             Changer changer = new Changer();
-            changer.backupMassage(key);
-            //changer.massageBackup = DateFile.instance.actorLifeMassage[key];//备份
-
-            List<int> tlist = changer.getTypeList();
-            //TODO根据tlist筛选key2
-            for (int i =1;i< DateFile.instance.actorLifeMassage[key].Count; i++ )
+            int backupId = changer.getBackupId();
+            //Main.Logger.Log("Pre-----" + changer.getActorName(key));
+            if (backupId == key) return;
+            if (backupId != 0)
             {
+                //Main.Logger.Log("reset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
+
+                DateFile.instance.actorLifeMassage[backupId] = changer.getBackupMassage(backupId);
+                changer.resetBackup();
+            }
+            List<int[]> newLifeMassage = new List<int[]> { };
+
+            changer.backupMassage(key);
+           
+            //Main.Logger.Log("setp1" + changer.getActorName(key));
+            List<int> tlist = changer.getTypeList();
+
+          
+
+            int count = DateFile.instance.actorLifeMassage[key].Count;
+            //Main.Logger.Log("setp2:MaxCount:" + count);
+            //Main.Logger.Log("setp3:showCount:" + tlist.Count);
+
+
+            for (int i = 0; i < count; i++)
+            {
+                //Main.Logger.Log("setp4:" + i);
                 int[] array = DateFile.instance.actorLifeMassage[key][i];
                 int key2 = array[0];//根据经历类型ID进行筛选
-                //tlist
-                if (key2 >= 100)
+                for (int j = 0; j < tlist.Count; j++)
                 {
-                    newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
+                    if (tlist[j] == key2)
+                    {
+                        newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
+                        //Main.Logger.Log("setp6:" + tlist[j]);
+                        break;
+                    }
                 }
             }
             DateFile.instance.actorLifeMassage[key] = newLifeMassage;
@@ -959,7 +982,14 @@ namespace MoreInfo
                 return;
             if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
             Changer changer = new Changer();
-            DateFile.instance.actorLifeMassage[key] = changer.getBackupMassage(key);
+            if (changer.getBackupId() == key)
+            {
+                //Main.Logger.Log("Exit-----" + "ID:" + key + "Count:" + changer.getBackupMassage(key).Count);
+                DateFile.instance.actorLifeMassage[key] = changer.getBackupMassage(key);
+                //Main.Logger.Log("ExitReset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
+                changer.resetBackup();
+            }
+
         }
     }
 
