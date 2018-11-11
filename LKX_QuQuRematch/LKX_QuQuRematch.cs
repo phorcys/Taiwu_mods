@@ -10,7 +10,7 @@ using UnityModManagerNet;
 using UnityEngine;
 
 /// <summary>
-/// 作弊用的mod
+/// 促织探测器助手
 /// </summary>
 namespace LKX_QuQuRematch
 {
