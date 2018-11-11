@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection.Emit;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
@@ -26,6 +27,13 @@ namespace LKX_CheatMaxPeople
         /// 蛐蛐时节开启
         /// </summary>
         public bool ququLife;
+
+        /// <summary>
+        /// 食物合并作弊
+        /// </summary>
+        public bool foodMerge;
+
+        public List<int> foodLevel = new List<int>();
 
         /// <summary>
         /// 保存设置
@@ -63,13 +71,14 @@ namespace LKX_CheatMaxPeople
         {
             Main.logger = modEntry.Logger;
             Main.settings = Settings.Load<Settings>(modEntry);
-
+            
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
 
             modEntry.OnToggle = Main.OnToggle;
             modEntry.OnGUI = Main.OnGUI;
             modEntry.OnSaveGUI = Main.OnSaveGUI;
 
+            
             return true;
         }
 
@@ -103,11 +112,25 @@ namespace LKX_CheatMaxPeople
             }
 
             Main.settings.ququLife = GUILayout.Toggle(Main.settings.ququLife, "蛐蛐无限寿命，已死的不复活。");
+            Main.settings.foodMerge = GUILayout.Toggle(Main.settings.foodMerge, "开启合并食物。");
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            Main.SetGUIToToggle(1, "九品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(2, "八品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(3, "七品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(4, "六品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(5, "五品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(6, "四品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(7, "三品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(8, "二品", ref Main.settings.foodLevel);
+            Main.SetGUIToToggle(9, "一品", ref Main.settings.foodLevel);
+            GUILayout.EndHorizontal();
 
+            
             if (GUILayout.Button("测试"))
             {
-                Main.TestModValue();
+                QuQuLifeAndFood_For_UIDate_DoChangeTrun.FoodMergeCheat();
             }
+            
         }
 
         /// <summary>
@@ -119,27 +142,53 @@ namespace LKX_CheatMaxPeople
             Main.settings.Save(modEntry);
         }
 
+        static void SetGUIToToggle(int index, string name, ref List<int> field)
+        {
+            bool status = GUILayout.Toggle(field.Contains(index), name);
+            if (GUI.changed)
+            {
+                if (status)
+                {
+                    if (!field.Contains(index)) field.Add(index);
+                }
+                else
+                {
+                    if (field.Contains(index)) field.Remove(index);
+                }
+            }
+        }
+
+        /*
         static void TestModValue()
         {
             DateFile df = DateFile.instance;
             int i = 0;
-            List<int> list = new List<int> {
-                1099693, 1099686, 1100595, 1100618, 1100583, 1100614, 1100615, 1100607, 1100608, 1170349
-            };
+            List<int> boxQuQu = new List<int>();
+            foreach (int[] box in df.cricketBoxDate.Values)
+            {
+                if (box[0] != -97) boxQuQu.Add(box[0]);
+            }
+
+            foreach (int actorId in df.acotrTeamDate)
+            {
+                if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
+            }
+
             foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
             {
-                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key)) && item.Value[999] == "10000")
+                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
                 {
                     i++;
                 }
             }
 
-            foreach (KeyValuePair<int, int[]> aaa in df.cricketBoxDate)
+            foreach (int aaa in df.acotrTeamDate)
             {
-                Main.logger.Log(aaa.Value[0].ToString());
+                Main.logger.Log(aaa.ToString());
             }
             Main.logger.Log(i.ToString() + "个");
         }
+        */
     }
 
     [HarmonyPatch(typeof(UIDate), "GetMaxManpower")]
@@ -151,26 +200,125 @@ namespace LKX_CheatMaxPeople
         }
     }
 
-    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
-    public class QuQuLife_For_SaveDateFile_LateUpdate
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public class QuQuLifeAndFood_For_UIDate_DoChangeTrun
     {
-        static void Postfix()
+        static List<int> foodType = new List<int> { 84, 85 };
+
+        static void Prefix()
         {
-            if (Main.enabled && Main.settings.ququLife)
+            if (Main.enabled)
             {
-                DateFile df = DateFile.instance;
-                List<int> boxQuQu = new List<int>();
-                foreach (int[] box in df.cricketBoxDate.Values)
+                if (Main.settings.ququLife) QuQuCheat();
+                if (Main.settings.foodMerge) FoodMergeCheat();
+            }
+        }
+
+        /// <summary>
+        /// 处理蛐蛐年龄始终是0
+        /// </summary>
+        public static void QuQuCheat()
+        {
+            DateFile df = DateFile.instance;
+            List<int> boxQuQu = new List<int>();
+            foreach (int[] box in df.cricketBoxDate.Values)
+            {
+                if (box[0] != -97) boxQuQu.Add(box[0]);
+            }
+
+            foreach (int actorId in df.acotrTeamDate)
+            {
+                if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
+            }
+
+            foreach (KeyValuePair<int, Dictionary<int, string>> item in df.itemsDate)
+            {
+                if ((df.actorItemsDate[10001].ContainsKey(item.Key) || df.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
                 {
-                    if (box[0] != -97) boxQuQu.Add(box[0]);
+                    if (item.Value[901] != "0" && item.Value[2007] != "0") item.Value[2007] = "0";
+                }
+            }
+        }
+
+        /// <summary>
+        /// 作弊的合并食物
+        /// </summary>
+        public static void FoodMergeCheat()
+        {
+            DateFile df = DateFile.instance;
+            Dictionary<int, Dictionary<int, string>> foods = new Dictionary<int, Dictionary<int, string>>();
+            Dictionary<int, int> itemsId = new Dictionary<int, int>();
+            if (!df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
+            {
+                Main.logger.Log("失败itemsId");
+                return;
+            }
+
+            List<int> buffer = itemsId.Keys.ToList();
+            foreach (int itemId in buffer)
+            {
+                string id = df.GetItemDate(itemId, 999), level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 98);
+
+                if (!Main.settings.foodLevel.Contains(int.Parse(level))) continue;
+                if (!foodType.Contains(int.Parse(type))) continue;
+                
+                Dictionary<int, string> foodData = new Dictionary<int, string>();
+                if (!df.itemsDate.TryGetValue(itemId, out foodData))
+                {
+                    Main.logger.Log("失败itemId");
+                    continue;
                 }
                 
-                foreach (KeyValuePair<int, Dictionary<int, string>> item in df.itemsDate)
+                CompareFoodsParams(id, foodData, ref foods);
+
+                //删掉这个item
+                df.LoseItem(df.mianActorId, itemId, itemsId[itemId], true);
+            }
+            Main.logger.Log("合并了" + foods.Count.ToString());
+            if (foods.Count > 0) MakeFoods(foods);
+        }
+
+        /// <summary>
+        /// 根据id对比食物并合并参数
+        /// </summary>
+        /// <param name="id">食物item的id</param>
+        /// <param name="foodData">对比的当前食物参数</param>
+        /// <param name="foods">需要合并的食物字典</param>
+        static void CompareFoodsParams(string id, Dictionary<int, string> foodData, ref Dictionary<int, Dictionary<int, string>> foods)
+        {
+            if (foods.ContainsKey(int.Parse(id)))
+            {
+                foreach (KeyValuePair<int, string> pair in foodData)
                 {
-                    if ((df.actorItemsDate[10001].ContainsKey(item.Key) || df.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
+                    if (!foods[int.Parse(id)].ContainsKey(pair.Key)) foods[int.Parse(id)].Add(pair.Key, pair.Value);
+
+                    if (pair.Key == 901 || pair.Key == 902)
                     {
-                        if (item.Value[901] != "0" && item.Value[2007] != "0") item.Value[2007] = "0";
+                        foods[int.Parse(id)][pair.Key] = (int.Parse(foods[int.Parse(id)][pair.Key]) + int.Parse(pair.Value)).ToString();
                     }
+                }
+            }
+            else
+            {
+                foods.Add(int.Parse(id), new Dictionary<int, string>());
+                foods[int.Parse(id)] = foodData;
+            }
+        }
+
+        /// <summary>
+        /// 创建食物
+        /// </summary>
+        /// <param name="foods">合并好的食物字典</param>
+        static void MakeFoods(Dictionary<int, Dictionary<int, string>> foods)
+        {
+            DateFile df = DateFile.instance;
+            foreach (KeyValuePair<int, Dictionary<int, string>> food in foods)
+            {
+                int makeItemId = df.MakeNewItem(food.Key);
+                df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                foreach (KeyValuePair<int, string> pair in food.Value)
+                {
+                    df.itemsDate[makeItemId][pair.Key] = pair.Value;
                 }
             }
         }

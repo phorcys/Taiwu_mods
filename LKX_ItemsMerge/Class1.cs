@@ -35,7 +35,7 @@ namespace LKX_ItemsMerge
         /// <summary>
         /// 药品拆分大小
         /// </summary>
-        public int drugsSize;
+        public uint drugsSize;
 
         /// <summary>
         /// 药品拆分品级
@@ -167,7 +167,7 @@ namespace LKX_ItemsMerge
             }
 
             GUILayout.Label("选择拆分的大小。");
-            Main.settings.drugsSize = GUILayout.SelectionGrid(Main.settings.drugsSize, new string[] { "不拆", "最大2", "最大3", "最大4", "最大5" }, 5);
+            Main.settings.drugsSize = (uint) GUILayout.SelectionGrid(int.Parse(Main.settings.drugsSize.ToString()), new string[] { "不拆", "最大2", "最大3", "最大4", "最大5" }, 5);
             GUILayout.Label("选择允许拆分的品级。");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             Main.SetGUIToToggle(1, "九品", ref Main.settings.drugsLevel);
@@ -252,7 +252,7 @@ namespace LKX_ItemsMerge
                     foreach (KeyValuePair<int, int> item in items)
                     {
                         Dictionary<int, string> baseItem = df.itemsDate[item.Value];
-                        int size = Main.settings.drugsSize + 1;
+                        int size = int.Parse(Main.settings.drugsSize.ToString()) + 1;
                         if (Main.settings.drugsSize <= 1) size = 2;
                         if (Main.settings.drugsSize > 5) size = 5;
 
@@ -271,8 +271,10 @@ namespace LKX_ItemsMerge
                     Main.logger.Log("拆分成功。");
                 }
             }
-
-            Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            else
+            {
+                Main.logger.Log("拆分失败：没有进入游戏存档，无法读取数据。");
+            }
         }
 
         /// <summary>
@@ -350,12 +352,12 @@ namespace LKX_ItemsMerge
     /// <summary>
     /// 判断是否时节结束时执行
     /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
-    public static class MergeItems_For_SaveDateFile_SaveSaveDate
+    [HarmonyPatch(typeof(UIDate), "DoChangeTrun")]
+    public static class MergeItems_For_UIDate_DoChangeTrun
     {
-        static void Prefix(SaveDateFile __instance)
+        static void Prefix()
         {
-            if (Main.enabled && Main.settings.autoMerge && __instance.saveSaveDate) Main.RunningMergeItems();
+            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems();
         }
     }
 }

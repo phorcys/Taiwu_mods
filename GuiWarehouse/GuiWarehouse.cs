@@ -186,6 +186,13 @@ namespace GuiWarehouse
             GUILayout.BeginHorizontal();
             Main.settings.useClassify = GUILayout.HorizontalSlider(Main.settings.useClassify, 0, 1) <= 0.5f ? 0 : 1;
             GUILayout.Label(string.Format("开启分类搜索：<color=#F63333>（{0}）</color>", Main.settings.useClassify == 0 ? "关" : "开"));
+            if (Main.settings.useClassify == 1)
+            {
+
+                Main.settings.levelClassify = Main.MaxLevelClassify();//等级筛选
+                Main.settings.bookClassify = Main.MaxBookClassify();//书籍筛选
+                                                                    //Main.settings.attrClassify = Main.MaxAttrClassify();//属性
+            }
             GUILayout.EndHorizontal();
             //GUILayout.BeginHorizontal();
             //GUILayout.Label("默认打开仓库标签：");
@@ -288,18 +295,18 @@ namespace GuiWarehouse
 
             public static void SetNewWarehouse(bool active)
             {
-                if (isInit)
+                if (actorItemHolder!=null)
                 {
                     for (int i = 0; i < actorItemHolder.Length; i++)
                     {
-                        if (actorItemHolder[i].scrollRect != null)
+                        if (actorItemHolder[i]!=null&&actorItemHolder[i].scrollRect != null)
                         {
                             actorItemHolder[i].scrollRect.gameObject.SetActive(active);
                         }
                     }
                     for (int i = 0; i < warehouseItemHolder.Length; i++)
                     {
-                        if (warehouseItemHolder[i].scrollRect != null)
+                        if (warehouseItemHolder[i]!=null&&warehouseItemHolder[i].scrollRect != null)
                         {
                             warehouseItemHolder[i].scrollRect.gameObject.SetActive(active);
                         }
@@ -349,8 +356,18 @@ namespace GuiWarehouse
                         warehouseItemHolder[i] = Warehouse.instance.warehouseItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
                     }
                 }
+
                 if (actor)
                 {
+                    for (int i = 0; i < actorItemHolder.Length; i++)
+                    {
+                        if (actorItemHolder[i] == null)
+                        {
+                            actorItemHolder[i] = Warehouse.instance.actorItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
+                        }
+                    }
+
+
                     if (Warehouse.instance.actorItemTyp != 0 && Warehouse.instance.actorItemTyp != typ)
                     {
                         Warehouse.instance.actorItemToggle[typ].isOn = true;
@@ -382,6 +399,14 @@ namespace GuiWarehouse
                 }
                 else
                 {
+                    for (int i = 0; i < warehouseItemHolder.Length; i++)
+                    {
+                        if (warehouseItemHolder[i] == null)
+                        {
+                            warehouseItemHolder[i] = Warehouse.instance.warehouseItemHolder[i].parent.gameObject.AddComponent<NewWarehouse>();
+                        }
+                    }
+
                     if (Warehouse.instance.warehouseItemTyp != 0 && Warehouse.instance.warehouseItemTyp != typ)
                     {
                         Warehouse.instance.warehouseItemToggle[typ].isOn = true;
