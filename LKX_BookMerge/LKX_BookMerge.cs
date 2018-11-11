@@ -122,7 +122,7 @@ namespace LKX_BookMerge
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUIStyle redLabelStyle = new GUIStyle();
-            redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
+            redLabelStyle.normal.textColor = new Color(204f / 256f, 0f / 256f, 1f / 256f);
             GUILayout.Label("如果status亮红灯代表mod失效！", redLabelStyle);
 
             GUILayout.Label("选择书籍合并的成功的难度");
@@ -134,7 +134,7 @@ namespace LKX_BookMerge
                 Main.settings.bookMergeObbsType = (uint) Mathf.Clamp(int.Parse(Main.settings.bookMergeObbsType.ToString()), 0, 3);
                 Main.settings.bookMergeObbsType = (uint) GUILayout.SelectionGrid((int) Main.settings.bookMergeObbsType, new string[] { "偏向作弊", "简单", "普通", "困难"}, 4);
                 List<string> obbsLabels = new List<string> { "只要2本对应页码都不是残页就能成功合成", "有一点的失败几率一品成功率最高为", "可以接受的失败几率一品成功率最高为", "几乎都是失败的几率一品成功率最高为" };
-                GUILayout.Label(obbsLabels[(int) Main.settings.bookMergeObbsType], redLabelStyle);
+                GUILayout.Label(obbsLabels[(int) Main.settings.bookMergeObbsType]);
             }
 
             if (GUILayout.Button("点击合并"))
@@ -143,7 +143,7 @@ namespace LKX_BookMerge
             }
             Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启更换时节自动合并");
 
-            GUILayout.Label("请选择允许合并的书籍类型，必选", redLabelStyle);
+            GUILayout.Label("请选择允许合并的书籍类型，必选");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
             GUILayout.Label("技艺书籍");
@@ -189,7 +189,7 @@ namespace LKX_BookMerge
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("选择允许合并的品级。必选", redLabelStyle);
+            GUILayout.Label("选择允许合并的品级。必选");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             Main.SetGUIToToggle(1, "九品", ref Main.settings.bookLevel);
             Main.SetGUIToToggle(2, "八品", ref Main.settings.bookLevel);
@@ -346,8 +346,6 @@ namespace LKX_BookMerge
                     obbsType = 2;
                     break;
                 case 3:
-                    obbsType = 1;
-                    break;
                 default:
                     obbsType = 1;
                     break;
@@ -363,10 +361,10 @@ namespace LKX_BookMerge
         /// <returns>计算好的值</returns>
         public static int GetOffsetObbs(int level)
         {
-            int multipleCount = 0;
-            multipleCount = SwitchObbsType();
-
-            return 100 / (level / multipleCount);
+            int multipleCount = SwitchObbsType();
+            double x = level, y = multipleCount;
+            
+            return (int)(100 / (x / y));
         }
 
         /// <summary>
@@ -377,7 +375,8 @@ namespace LKX_BookMerge
         /// <returns>计算好的成功率</returns>
         public static int GetBaseObbs(int group, int level)
         {
-            int zhiZhi, wuXing, multipleCount = 0;
+            int zhiZhi, wuXing, multipleCount;
+            zhiZhi = wuXing = multipleCount = 0;
 
             multipleCount = SwitchObbsType();
             if (multipleCount <= 2)
@@ -393,7 +392,9 @@ namespace LKX_BookMerge
                 wuXing = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][65]);
             }
 
-            return (zhiZhi + wuXing) / (level / multipleCount);
+            double x = level, y = multipleCount;
+
+            return (int) ((zhiZhi + wuXing) / (x / y));
         }
     }
 
