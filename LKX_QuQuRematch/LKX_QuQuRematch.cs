@@ -193,10 +193,9 @@ namespace LKX_QuQuRematch
     {
         static void Prefix()
         {
-            Main.logger.Log("经过:" + OnClick.instance.ID.ToString());
-            if (OnClick.instance.ID == 8099)
+            if (Main.enabled && OnClick.instance.ID == 8099)
             {
-                LKX_QuQuRematch_GetQuquWindow.activeLateUpdate = true;
+                LKX_QuQuRematch_GetQuquWindow.stopQuQuWindow = true;
             }
         }
     }
@@ -206,8 +205,9 @@ namespace LKX_QuQuRematch
     /// </summary>
     public class LKX_QuQuRematch_GetQuquWindow
     {
-        public static bool active = false;
-        public static bool activeLateUpdate = false;
+        public static bool active = true;
+        public static bool stopQuQuWindow = false;
+        public static bool closeQuQuWindow = false;
 
         /// <summary>
         /// 蛐蛐窗口遍历蛐蛐看看id是否存在于选择列表，并弹出对话框。
@@ -217,8 +217,10 @@ namespace LKX_QuQuRematch
         {
             static void Postfix()
             {
+                if (!Main.enabled) return;
+
+                active = true;
                 int i = 0;
-                
                 foreach (KeyValuePair<int, int[]> item in GetQuquWindow.instance.cricketDate)
                 {
                     if (Main.settings.ququList.Contains(item.Value[1])) i++;
@@ -228,7 +230,7 @@ namespace LKX_QuQuRematch
                 {
                     if (Main.settings.skipMessageBox && Main.settings.isYes)
                     {
-                        activeLateUpdate = true;
+                        stopQuQuWindow = true;
                     }
                     else
                     {
@@ -253,10 +255,12 @@ namespace LKX_QuQuRematch
         {
             static void Prefix(ref bool ___getQuquEnd, ref bool ___startFirstTime, ref bool ___startGetQuqu, ref int ___startTime, ref int ___getQuquTime)
             {
-                if (activeLateUpdate)
+                if (!Main.enabled) return;
+
+                if (stopQuQuWindow)
                 {
-                    activeLateUpdate = false;
-                    active = true;
+                    stopQuQuWindow = false;
+                    closeQuQuWindow = true;
                     ___getQuquEnd = true;
                     ___startFirstTime = false;
                     ___startGetQuqu = false;
@@ -278,10 +282,26 @@ namespace LKX_QuQuRematch
             /// <returns>true是执行原方法，false是跳过执行原方法</returns>
             static bool Prefix()
             {
-                //奇怪的bug
+                if (!Main.enabled) return true;
+
+                if (closeQuQuWindow)
+                {
+                    active = false;
+                    closeQuQuWindow = false;
+                    //奇怪的bug暂时这样解决。
+                    GetQuquWindow ququwin = GetQuquWindow.instance;
+                    ququwin.getQuquWindow.SetActive(false);
+                    ququwin.endGetQuquImage[0].gameObject.SetActive(false);
+
+                    YesOrNoWindow.instance.ShwoWindowMask(ququwin.getQuquWindow.transform, false, 0.75f, 0.2f, false);
+
+                    int ququNum = int.Parse(DateFile.instance.baseStoryDate[10006][302]);
+                    DateFile.instance.SetEvent(new int[] { 0, -1, ququNum }, true, true);
+                }
+
                 return active;
             }
-
+            /*
             /// <summary>
             /// 如果选择yes，再次触发抓蛐蛐事件来弹出抓蛐蛐窗口。
             /// </summary>
@@ -289,12 +309,13 @@ namespace LKX_QuQuRematch
             {
                 if (active)
                 {
-                    //还有奇怪的BUG
+                    //奇怪的bug
                     active = false;
                     int ququNum = int.Parse(DateFile.instance.baseStoryDate[10006][302]);
                     DateFile.instance.SetEvent(new int[] { 0, -1, ququNum }, true, true);
                 }
             }
+            */
         }
     }
 }
