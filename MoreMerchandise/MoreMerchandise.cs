@@ -14,7 +14,6 @@ using System.Runtime.Serialization;
 
 namespace MoreMerchandise
 {
-
     public class Settings : UnityModManager.ModSettings
     {
         // 是否隐藏低品级商品
@@ -38,6 +37,7 @@ namespace MoreMerchandise
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
+
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
@@ -53,6 +53,7 @@ namespace MoreMerchandise
             return true;
         }
 
+
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             if (!value)
@@ -62,6 +63,7 @@ namespace MoreMerchandise
 
             return true;
         }
+
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
@@ -82,6 +84,7 @@ namespace MoreMerchandise
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
         }
+
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
@@ -187,9 +190,12 @@ namespace MoreMerchandise
             foreach (var pair in shopItems)
             {
                 int itemQuality = 10 - int.Parse(DateFile.instance.GetItemDate(pair.Key, 8));
-                int itemType = int.Parse(DateFile.instance.GetItemDate(pair.Key, 98));
-                // 物品品级小于等于阈值，或物品类型为资源包，则保留
-                if (itemQuality <= Main.settings.lowQualityThreshold || itemType == 82)
+                // 类型组 82 为资源包
+                int itemTypeGroup = int.Parse(DateFile.instance.GetItemDate(pair.Key, 98));
+                // 小类 23 为食材
+                int itemSubType = int.Parse(DateFile.instance.GetItemDate(pair.Key, 5));
+                // 物品品级小于等于阈值，或物品类型为资源包、食材，则保留
+                if (itemQuality <= Main.settings.lowQualityThreshold || itemTypeGroup == 82 || itemSubType == 23)
                 {
                     filtered[pair.Key] = pair.Value;
                 }
@@ -229,7 +235,9 @@ namespace MoreMerchandise
                 Dictionary<int, int> currShopItems = GenerateMerchandise(shopTyp, isTaiWu, list2, num3);
                 foreach (var pair in currShopItems)
                 {
-                    shopItems[pair.Key] = pair.Value;
+                    int oriValue;
+                    shopItems.TryGetValue(pair.Key, out oriValue);
+                    shopItems[pair.Key] = oriValue + pair.Value;
                 }
             }
 
@@ -395,5 +403,13 @@ namespace MoreMerchandise
 
             return shopItems;
         }
+
+
+        //static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        //{
+        //    var codes = new List<CodeInstruction>(instructions);
+
+        //    return codes.AsEnumerable();
+        //}
     }
 }
