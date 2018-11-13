@@ -7,16 +7,38 @@ using UnityModManagerNet;
 
 namespace SaveLoadBtns
 {
+    public class Settings : UnityModManager.ModSettings
+    {
+        public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
+        public bool blockAutoSave = false;
+    }
     public static class Main
     {
         public static bool enabled;
+        public static bool forceSave = false;
+        public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
+            settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
             return true;
+        }
+        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            settings.Save(modEntry);
+        }
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        {
+			GUILayout.BeginHorizontal("Box");
+			GUILayout.Label("阻止游戏自动储存", GUILayout.Width(200));
+            settings.blockAutoSave = GUILayout.SelectionGrid(settings.blockAutoSave?1:0, new string[] { "关闭", "启用" }, 2, GUILayout.Width(150)) ==1;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -41,7 +63,7 @@ namespace SaveLoadBtns
                 loadBtn.transform.localPosition = new Vector3(1620f, -30f, 0);
                 Selectable loadButton = loadBtn.GetComponent<Selectable>();
                 ((Image)loadButton.targetGraphic).sprite = Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn.AddComponent<myPointerClick>();
+                loadBtn.AddComponent<MyPointerClick>();
 
                 GameObject saveBtn = Object.Instantiate(GameObject.Find("EncyclopediaButton,609"), new Vector3(1570f, -30f, 0), Quaternion.identity);
                 saveBtn.name = "SaveButton";
@@ -50,34 +72,24 @@ namespace SaveLoadBtns
                 saveBtn.transform.localPosition = new Vector3(1570f, -30f, 0);
                 Selectable saveButton = saveBtn.GetComponent<Selectable>();
                 ((Image)saveButton.targetGraphic).sprite = Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
-                saveBtn.AddComponent<myPointerClick>();
+                saveBtn.AddComponent<MyPointerClick>();
             }
         }
     }
 
-    //[HarmonyPatch(typeof(WorldMapSystem), "ShowChoosePlaceMenu")]
-    //public static class WorldMapSystem_ShowChoosePlaceMenu_Patch
-    //{
-    //    public static void Postfix(int worldId, int partId, int placeId, Transform placeImage)
-    //    { // todo: 只有大地图上,才可以SAVE.  这好像有点难,求助中
-    //        if (Main.enabled && !DateFile.instance.playerMoveing)
-    //            GameObject.Find("SaveButton").GetComponent<Selectable>().interactable = WorldMapSystem.instance.inToPlaceHomeButton.interactable;
-    //        GameObject.Find("SaveButton").SetActive(false);
-    //    }
-    //}
 
-    public class myPointerClick : MonoBehaviour, IPointerClickHandler
+    public class MyPointerClick : MonoBehaviour, IPointerClickHandler
     {
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!Main.enabled) return;
             if (gameObject.name == "LoadButton")
             {
-                Main.Logger.Log("Loading data: " + SaveDateFile.instance.dateId.ToString());
                 YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入", DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度").Replace("返回到游戏的主菜单…\n", ""), false, true);
             }
             else if (gameObject.name == "SaveButton")
             {
+                Main.forceSave = true;
                 SaveDateFile.instance.SaveGameDate();
             }
         }
@@ -91,10 +103,8 @@ namespace SaveLoadBtns
             if (!Main.enabled) return;
             if (OnClick.instance.ID == 4646)
             {
-                int saveID = SaveDateFile.instance.dateId;
-                DateFile.instance.NewDate();
-                DateFile.instance.LoadHomeBuildingDate(SaveDateFile.instance.LoadHomeBuildingDate(saveID));  // 此句乃游戏现版本的漏洞 才补上的. 
-                Loading.instance.LoadingScene(3, saveID);
+                DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
+                DateFile.instance.Initialize(SaveDateFile.instance.dateId);
                 YesOrNoWindow.instance.CloseYesOrNoWindow();
                 YesOrNoWindow.instance.yesOrNoWindow.sizeDelta = new Vector2(720f, 280f);
                 OnClick.instance.Over = true;
@@ -126,4 +136,18 @@ namespace SaveLoadBtns
             }
         }
     }
+
+    [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
+    public class SaveDateFile_LateUpdate_Patch
+    {
+        [HarmonyBefore(new string[] { "SaveBackup" })]
+        static void Prefix()
+        {
+            if (!Main.enabled || !Main.settings.blockAutoSave || UIDate.instance == null) return;
+            SaveDateFile.instance.saveSaveDate = Main.forceSave;
+			UIDate.instance.trunSaveText.text = "";
+            Main.forceSave = false;
+        }
+    }
+
 }
