@@ -11,5 +11,5 @@
 
 
 ## 更新日志
-* [v1.0.0](releases/download/release10232/SaveLoadBtns-1.0.0.zip) 初始发表
-* [v1.1.0](releases/download/release1113/SaveLoadBtns-1.1.0.zip) 修正载入时不能展开任务对话; 加设选项:可取消游戏自动存档 *(呜谢 sth4nothing 协作开发)*
+* [v1.0.0](../../../releases/download/release10232/SaveLoadBtns-1.0.0.zip) 初始发表
+* [v1.1.0](../../../releases/download/release1113/SaveLoadBtns-1.1.0.zip) 修正载入时不能展开任务对话; 加设选项:可取消游戏自动存档 *(呜谢 sth4nothing 协作开发)*
