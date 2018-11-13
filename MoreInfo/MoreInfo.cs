@@ -20,6 +20,8 @@ namespace MoreInfo
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
 
+
+
         public bool isLoaded = false;//是否为首次Loading
 
         public bool showExtraName = true;//显示特殊词条
@@ -32,10 +34,12 @@ namespace MoreInfo
 
 
 
-        public bool showInBag = true;//显示包裹中物品特殊词条
-        public bool showInEquuipBag = true;//显示装备界面包裹中物品特殊词条
-        public bool showInBank = true;//显示仓库中物品特殊词条
-        public bool showInShop = true;//显示商店中物品特殊词条
+        public bool showInBag = true;//包裹中物品显示
+        public bool showInEquuipBag = true;//装备界面包裹中物品显示
+        public bool showInBank = true;//仓库中物品显示
+        public bool showInShop = true;//商店中物品显示
+        public bool showInStory = true;//奇遇使用物品界面显示
+
         public bool showExtraValue = false;//显示特殊词条加成值
 
 
@@ -46,6 +50,7 @@ namespace MoreInfo
         public bool showInLevelUpWindow = true;//在突破界面显示
 
         public bool showStroyLevel = true;//显示奇遇等级
+        public bool mergeIcon = true;//合并切换时节时入魔图标
     }
 
     public static class Main
@@ -53,6 +58,7 @@ namespace MoreInfo
         public static bool enabled;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
+
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -98,6 +104,8 @@ namespace MoreInfo
             Main.settings.showInEquuipBag = GUILayout.Toggle(Main.settings.showInEquuipBag, "装备界面包裹显示", new GUILayoutOption[0]);
             Main.settings.showInBank = GUILayout.Toggle(Main.settings.showInBank, "仓库中显示", new GUILayoutOption[0]);
             Main.settings.showInShop = GUILayout.Toggle(Main.settings.showInShop, "商店中显示", new GUILayoutOption[0]);
+            Main.settings.showInStory = GUILayout.Toggle(Main.settings.showInStory, "奇遇物品栏显示", new GUILayoutOption[0]);
+
             //Main.settings.showExtraValue = GUILayout.Toggle(Main.settings.showExtraValue, "显示加成数值", new GUILayoutOption[0]);
 
             GUILayout.EndHorizontal();
@@ -115,6 +123,8 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             Main.settings.showStroyLevel = GUILayout.Toggle(Main.settings.showStroyLevel, "显示奇遇等级", new GUILayoutOption[0]);
+            Main.settings.mergeIcon = GUILayout.Toggle(Main.settings.mergeIcon, "合并入魔图标", new GUILayoutOption[0]);
+
 
             GUILayout.EndHorizontal();
         }
@@ -196,6 +206,30 @@ namespace MoreInfo
                     { 11,"布"},
                     { 12,"玉"},
                };
+
+
+
+        public static string placeIds = "";
+        public void addPlaceId(int pid)
+        {
+            placeIds += pid + "|";
+        }
+        public void resetPlaceIds()
+        {
+            placeIds = "";
+        }
+        public string[] getSplitPlaceIds()
+        {
+            return placeIds.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+        public string getPlaceIds()
+        {
+            return placeIds;
+        }
+        public Changer()
+        {
+
+        }
 
         //获取人物名字
         public string getActorName(int actorId)
@@ -297,7 +331,7 @@ namespace MoreInfo
             {
                 int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
                 if (val > 0)
-                {                    
+                {
                     value = item.Value;
                     break;
                 }
@@ -314,7 +348,7 @@ namespace MoreInfo
         }
 
         //按照特殊词条类型1显示名称（功法技艺加成等）add决定了是否同时显示耐久。耐久度大于10的显示不下
-        public void changeDecNameType1(Text text, int itemId,bool add = false)
+        public void changeDecNameType1(Text text, int itemId, bool add = false)
         {
             string extraName = getItemExtraNameType1(itemId);
             if (extraName != "")
@@ -376,7 +410,7 @@ namespace MoreInfo
             }
         }
 
- 
+
         //变更制造类物品名称
         public void changeType1Name(Text text, int itemId)
         {
@@ -409,12 +443,12 @@ namespace MoreInfo
             }
         }
 
-        
+
         //变更食物名称
         public void changeType3Name(Text text, int itemId)
         {
             if (!Main.settings.showFoodExtraName) return;
-            changeDecNameType1(text, itemId,true);     
+            changeDecNameType1(text, itemId, true);
 
         }
 
@@ -456,6 +490,19 @@ namespace MoreInfo
 
         }
 
+        //变更Holder中所有object名称
+        public void changeObjectsName(Transform __Holder)
+        {
+            int childCount = __Holder.childCount;
+            for (int i = 0; i < childCount; i++)
+            {
+                GameObject gameObject;
+                gameObject = __Holder.GetChild(i).gameObject;
+                var gameText = gameObject.transform.Find("ItemNumberText").GetComponent<Text>();
+                string[] tmpArray = gameObject.name.Split(new char[] { ',' });
+                this.changeItemName(gameText, int.Parse(tmpArray[1]));
+            }
+        }
 
         //变更物品名称
         public void changeItemName(Text text, int itemId)
@@ -478,11 +525,14 @@ namespace MoreInfo
             }
 
         }
+
+
+        public static Changer instance;
     }
 
 
 
-    //将人物包裹中的的宝物耐久度替换为特殊词条显示
+    //将人物包裹中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
     public static class SetItem_SetActorMenuItemIcon_Patch
     {
@@ -495,7 +545,7 @@ namespace MoreInfo
         }
     }
 
-    //将人物装备界面中物品栏的宝物耐久度替换为特殊词条显示
+    //将人物装备界面中物品栏的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorEquipIcon")]
     public static class SetItem_SetActorEquipIcon_Patch
     {
@@ -509,7 +559,7 @@ namespace MoreInfo
     }
 
 
-    //将仓库中的的宝物耐久度替换为特殊词条显示
+    //将仓库中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]
     public static class SetItem_SetWarehouseItemIcon_Patch
     {
@@ -523,7 +573,7 @@ namespace MoreInfo
         }
     }
 
-    //将商店中的的宝物耐久度替换为特殊词条显示
+    //将商店中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetShopItemIcon")]
     public static class SetItem_SetShopItemIcon_Patch
     {
@@ -534,6 +584,20 @@ namespace MoreInfo
             Changer changer = new Changer();
             changer.changeItemName(__instance.itemNumber, itemId);
         }
+    }
+
+    //奇遇选择物品界面设置物品名称
+    [HarmonyPatch(typeof(StorySystem), "GetItem")]
+    public static class StorySystem_GetItem_Patch
+    {
+        static void Postfix(StorySystem __instance, int typ)
+        {
+            if (!Main.enabled || !Main.settings.showInStory)
+                return;
+            Changer changer = new Changer();
+            changer.changeObjectsName(__instance.itemHolder);
+        }
+
     }
 
 
@@ -587,6 +651,7 @@ namespace MoreInfo
             {
                 var GData = item.Value;
                 int lv = int.Parse(GData[2]);
+
                 GData[0] = DateFile.instance.SetColoer(20001 + lv, GData[0]);
             }
             Main.settings.isLoaded = true;
@@ -628,6 +693,115 @@ namespace MoreInfo
         }
     }
 
+    //入魔图标
+    [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
+    public static class UIDate_SetTrunChangeWindow_Patch
+    {
+        static void Prefix(UIDate __instance)
+        {
+            if (!Main.enabled || !Main.settings.mergeIcon)
+                return;
+            if (int.Parse(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][101]) == 0)
+            {
+                __instance.changTrunEvents.Clear();
+            }
+            if (__instance.changTrunEvents.Count <= 0)
+            {
+                __instance.changTrunEvents.Add(new int[1]);
+            }
+            List<int[]> newEventList = new List<int[]>();
+            bool isAdded = false;
+            Changer changer = new Changer();
+            changer.resetPlaceIds();
+            for (int i = __instance.changTrunEvents.Count - 1; i > 0; i--)
+            {
+                int num2 = __instance.changTrunEvents[i][0];
+                int num3 = int.Parse(DateFile.instance.trunEventDate[num2][1]);
+                if (num3 > 0 && num2 == 248)
+                {
+                    int placeId = __instance.changTrunEvents[i][1];
+                    string name = string.Format("TrunEventIcon,{0},{1},{2}", num2, placeId, __instance.changTrunEvents[i][2]);
+                    string[] array = name.Split(new char[] { ',' });
+                    if (!isAdded)//仅保留一个图标
+                    {
+                        newEventList.Add(__instance.changTrunEvents[i]);
+                        isAdded = true;
+                    }
+                    changer.addPlaceId(placeId);
+                }
+                else
+                {
+                    newEventList.Add(__instance.changTrunEvents[i]);
+                }
+            }
+            __instance.changTrunEvents = newEventList;
+        }
+    }
+
+
+    //处理换季时入魔提示图标
+
+    [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
+    public static class WindowManage_WindowSwitch_Patch
+    {
+        static void Postfix(WindowManage __instance, bool on, GameObject tips)
+        {
+            if (!Main.enabled || !Main.settings.mergeIcon)
+                return;
+            bool flag = false;
+
+            if (tips == null)
+            {
+                __instance.anTips = flag;
+            }
+            else
+            {
+                if (on)
+                {
+                    flag = true;
+                    int num = DateFile.instance.MianActorID();
+                    string[] array = tips.name.Split(new char[]
+                    {
+                    ','
+                    });
+                    Changer changer = new Changer();
+
+                    int num2 = (array.Length <= 1) ? 0 : int.Parse(array[1]);
+                    if ((num2 == 634 || num2 == 635) && StartBattle.instance.startBattleWindow.activeSelf && StartBattle.instance.enemyTeamId == 4)
+                    {
+                        flag = false;
+                    }
+                    DateFile df = DateFile.instance;
+                    string tag = tips.tag;
+                    switch (tag)
+                    {
+                        case "TrunEventIcon":
+                            {
+                                int num27 = int.Parse(DateFile.instance.trunEventDate[num2][1]);
+                                __instance.informationName.text = DateFile.instance.trunEventDate[num2][0];
+                                switch (num27)
+                                {
+                                    case 10:
+                                        string[] placeArray = changer.getPlaceIds().Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+                                        string placeNames = "";
+                                        for (int i = 0; i < placeArray.Length; i++)
+                                        {
+                                            string pid = placeArray[i];
+                                            string pName = DateFile.instance.partWorldMapDate[int.Parse(pid)][0];
+                                            placeNames += pName + "、";
+                                        }
+                                        string pre = df.trunEventDate[num2][99].Split(new char[] { '|' })[0];
+                                        string post = df.trunEventDate[num2][99].Split(new char[] { '|' })[1];
+                                        __instance.informationMassage.text = string.Format("{0}{1}{2}\n", pre, df.SetColoer(10002, placeNames), post);
+                                        break;
+                                }
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+    }
 
 
 }

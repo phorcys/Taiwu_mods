@@ -18,6 +18,13 @@ namespace GuiBaseUI
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+        public float bgR = 0.9490196f;
+        public float bgG = 0.509803951f;
+        public float bgB = 0.503921571f;
+
+        public float handR = 0.5882353f;
+        public float handG = 0.807843149f;
+        public float handB = 0.8156863f;
     }
     public static class Main
     {
@@ -64,6 +71,24 @@ namespace GuiBaseUI
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö</color>µ×É«"
+                , (Main.settings.bgR * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgR * 255), 16)
+                , (Main.settings.bgG * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgG * 255), 16)
+                , (Main.settings.bgB * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgB * 255), 16)));
+            Main.settings.bgR = GUILayout.HorizontalSlider(Main.settings.bgR, 0, 1); GUILayout.Label("R:" + (Main.settings.bgR * 255).ToString("000").ToUpper());
+            Main.settings.bgG= GUILayout.HorizontalSlider(Main.settings.bgG, 0, 1); GUILayout.Label("G:" + (Main.settings.bgG * 255).ToString("000").ToUpper());
+            Main.settings.bgB = GUILayout.HorizontalSlider(Main.settings.bgB, 0, 1); GUILayout.Label("B:" + (Main.settings.bgB * 255).ToString("000").ToUpper());
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>¡ö¡ö¡ö¡ö¡ö¡ö¡ö¡ö</color>Ç°É«"
+                , (Main.settings.handR * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handR * 255), 16)
+                , (Main.settings.handG * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handG * 255), 16)
+                , (Main.settings.handB * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handB * 255), 16)));
+            Main.settings.handR = GUILayout.HorizontalSlider(Main.settings.handR, 0, 1); GUILayout.Label("R:" + (Main.settings.handR * 255).ToString("000").ToUpper());
+            Main.settings.handG = GUILayout.HorizontalSlider(Main.settings.handG, 0, 1); GUILayout.Label("G:" + (Main.settings.handG * 255).ToString("000").ToUpper());
+            Main.settings.handB = GUILayout.HorizontalSlider(Main.settings.handB, 0, 1); GUILayout.Label("B:" + (Main.settings.handB * 255).ToString("000").ToUpper());
+            GUILayout.EndHorizontal();
         }
 
 
@@ -88,7 +113,7 @@ namespace GuiBaseUI
                     s += " sizeDelta=" + rect.sizeDelta.ToString();
                 }
             }
-            Main.Logger.Log(s);
+            // Main.Logger.Log(s);
 
             idx++;
             for (int i = 0; i < tf.childCount; i++)

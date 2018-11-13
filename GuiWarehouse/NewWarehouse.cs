@@ -55,7 +55,7 @@ namespace GuiWarehouse
             rScrollView.SetParent(gameObject.transform, false);
             rScrollView.anchoredPosition = leftPos;
 
-            scrollView.GetComponentInChildren<Mask>().enabled = false;
+            //scrollView.GetComponentInChildren<Mask>().enabled = false;
 
             GameObject image = new GameObject("line", new System.Type[] { typeof(RectTransform) });
             RectTransform rItemCell = image.GetComponent<RectTransform>();
@@ -98,7 +98,7 @@ namespace GuiWarehouse
                         RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical");
                         //rect.sizeDelta = new Vector2(10, 0);
                         Image my = rect.GetComponent<Image>();
-                        my.color = new Color(10.9490196f, 0.509803951f, 0.203921571f);
+                        //my.color = new Color(10.9490196f, 0.509803951f, 0.203921571f);
                         my.sprite = other.sprite;
                         my.type = Image.Type.Sliced;
                     }
@@ -115,7 +115,7 @@ namespace GuiWarehouse
                             RectTransform rect = (RectTransform)rScrollView.Find("ScrollbarVertical/SlidingArea/Handle");
                             //rect.sizeDelta = new Vector2(10, 10);
                             Image my = rect.GetComponent<Image>();
-                            my.color = new Color(0.3882353f, 0.807843149f, 0.8156863f);
+                            //my.color = new Color(0.3882353f, 0.807843149f, 0.8156863f);
                             my.sprite = other2.sprite;
                             my.type = Image.Type.Sliced;
                         }
@@ -170,7 +170,7 @@ namespace GuiWarehouse
                 ChildData[] childDatas = item.childDatas;
                 for (int i = 0; i < Main.settings.numberOfColumns; i++)
                 {
-                    int idx = (index - 1) * Main.settings.numberOfColumns + index - 1 + i;
+                    int idx = (index - 1) * Main.settings.numberOfColumns + i;
                     if (i < childDatas.Length)
                     {
                         ChildData childData = childDatas[i];

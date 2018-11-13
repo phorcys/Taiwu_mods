@@ -18,7 +18,7 @@
 ## 新建 Mod流程
 
 1. 新建目录,将你的mod的 .cs文件放入
-2. 在此目录下放入 Info.json 文件，格式类似：
+2. 在此目录下放入 **Info.json** (注意大小写，编码为*utf8 with bom*)文件，格式类似：
 ```json
 {
     "Id": "HerbRecipes",
