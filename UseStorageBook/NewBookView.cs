@@ -12,8 +12,6 @@ namespace Sth4nothing.UseStorageBook
         public static readonly int columns = 9;
         BigDataScroll bigDataScroll;
         public ScrollRect scrollRect;
-        public ContentSizeFitter contentSizeFitter;
-        public GridLayoutGroup gridLayoutGroup;
 
         public BookCell bookCell;
         private int[] data;
@@ -29,7 +27,6 @@ namespace Sth4nothing.UseStorageBook
                 return data;
             }
         }
-        public bool setClick = false;
         public bool hasInit = false;
 
 
