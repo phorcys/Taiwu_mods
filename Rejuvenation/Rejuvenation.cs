@@ -209,6 +209,11 @@ namespace Rejuvenation
     {
         private static void Prefix()
         {
+            if (!DateFile.instance.gongFaDate.ContainsKey(150369))
+            {
+                return;
+            }
+
             if (!Main.enabled)
             {
                 if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
