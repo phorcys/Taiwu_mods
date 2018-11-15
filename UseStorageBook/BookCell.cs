@@ -48,6 +48,10 @@ namespace Sth4nothing.UseStorageBook
                 {
                     transform.GetChild(j).GetComponent<Image>().color = new Color(100f / 255, 100f / 255, 0f, 1f);
                 }
+                else
+                {
+                    transform.GetChild(j).GetComponent<Image>().color = new Color(1f, 0f, 0f, 25f / 255);
+                }
             }
         }
         static void Travel(Transform obj, int level)

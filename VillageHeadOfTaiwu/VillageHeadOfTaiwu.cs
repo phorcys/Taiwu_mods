@@ -115,7 +115,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             Main.Logger.Log("start");
 
             Open = false;
-            //collapse = false;
+            collapse = false;
 
             scrollPosition = Vector2.zero;
 
