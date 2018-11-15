@@ -97,7 +97,7 @@ namespace Sth4nothing.UseStorageBook
             if (!Main.Setting.gang[gang])
                 return false;
             // 阅读
-            int pages = df.gongFaBookPages[bookId].Sum(); // 阅读总页数
+            int pages = df.gongFaBookPages.ContainsKey(bookId) ? df.gongFaBookPages[bookId].Sum() : 0; // 阅读总页数
             int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
             if (!Main.Setting.read[read])
                 return false;
