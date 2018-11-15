@@ -1,0 +1,8 @@
+﻿{
+    "Id": "LKX_QuQuRematch",
+    "DisplayName": "促织探测器助手",
+    "Author": "小枫泡泡",
+    "Version": "1.0.0",
+    "AssemblyName": "LKX_QuQuRematch.dll",
+    "EntryMethod": "LKX_QuQuRematch.Main.Load"
+}
