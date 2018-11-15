@@ -1,9 +1,8 @@
 using Harmony12;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,74 +16,60 @@ namespace Sth4nothing.UseStorageBook
         /// <summary>
         /// 将HomeSystem.SetBook 修改为 NewSetBook
         /// </summary>
-        /// <returns></returns>
         static bool Prefix()
         {
             if (!Main.Enabled)
                 return true;
-            NewSetBook();
+            if (!BookSetting.Instance.Open)
+                BookSetting.Instance.ToggleWindow();
+            SetBookData();
             return false;
         }
 
         /// <summary>
-        /// 在加载主角背包中的书同时加载仓库中的书
+        /// 加载书籍数据
         /// </summary>
-        public static void NewSetBook()
+        public static void SetBookData()
         {
-            var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
-            RemoveBook.Invoke(HomeSystem.instance, null);
-            List<int> list = new List<int>();
-            if (!Main.Enabled || Main.Setting.repo[0])
-            {
-                list.AddRange(ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys);
-            }
-            if (Main.Enabled && Main.Setting.repo[1])
-            {
-                list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
-            }
-            list = DateFile.instance.GetItemSort(list);
-            for (int i = 0; i < list.Count; i++)
-            {
-                int num = list[i];
-
-                if (int.Parse(DateFile.instance.GetItemDate(num, 31, true)) == HomeSystem.instance.studySkillTyp)
-                {
-                    if (!CheckBook(num))
-                        continue;
-
-                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(HomeSystem.instance.bookIcon, Vector3.zero, Quaternion.identity);
-                    gameObject.name = "Item," + num;
-                    gameObject.transform.SetParent(HomeSystem.instance.bookHolder, false);
-                    gameObject.GetComponent<Toggle>().group = HomeSystem.instance.bookHolder.GetComponent<ToggleGroup>();
-                    Image component = gameObject.transform.Find("ItemBack").GetComponent<Image>();
-                    component.sprite = GetSprites.instance.itemBackSprites[int.Parse(DateFile.instance.GetItemDate(num, 4, true))];
-                    component.color = ActorMenu.instance.LevelColor(int.Parse(DateFile.instance.GetItemDate(num, 8, true)));
-                    GameObject gameObject2 = gameObject.transform.Find("ItemIcon").gameObject;
-                    gameObject2.name = "ItemIcon," + num;
-                    gameObject2.GetComponent<Image>().sprite = GetSprites.instance.itemSprites[int.Parse(DateFile.instance.GetItemDate(num, 98, true))];
-                    int num2 = int.Parse(DateFile.instance.GetItemDate(num, 901, true));
-                    int num3 = int.Parse(DateFile.instance.GetItemDate(num, 902, true));
-                    gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = string.Format("{0}{1}</color>/{2}", ActorMenu.instance.Color3(num2, num3), num2, num3);
-                    int[] bookPage = DateFile.instance.GetBookPage(num);
-                    Transform transform = gameObject.transform.Find("PageBack");
-                    for (int j = 0; j < transform.childCount; j++)
-                    {
-                        if (bookPage[j] == 1)
-                        {
-                            transform.GetChild(j).GetComponent<Image>().color = new Color(0.392156869f, 0.784313738f, 0f, 1f);
-                        }
-                    }
-                }
-            }
+            var list = GetBooks();
+            HomeSystem_SetChooseBookWindow_Patch.bookView.Data = list.Where(CheckBook).ToArray();
         }
+
         /// <summary>
-        /// 检查物品id是否满足条件
+        /// 获取所有可用书籍
+        /// </summary>
+        private static List<int> GetBooks()
+        {
+            var actorItems =
+                from item in ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys
+                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
+                select item;
+            var warehouseItems =
+                from item in ActorMenu.instance.GetActorItems(-999, 0).Keys
+                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
+                select item;
+            var items = actorItems.Concat(warehouseItems);
+            return DateFile.instance.GetItemSort(items.ToList());
+        }
+
+        /// <summary>
+        /// 检查物品id是否满足筛选条件
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
         private static bool CheckBook(int itemId)
         {
             var df = DateFile.instance;
+            // 背包
+            if (!Main.Setting.repo[0] && df.actorItemsDate[df.mianActorId].ContainsKey(itemId))
+            {
+                return false;
+            }
+            // 仓库
+            if (!Main.Setting.repo[1] && df.actorItemsDate[-999].ContainsKey(itemId))
+            {
+                return false;
+            }
             int itemType = int.Parse(df.GetItemDate(itemId, 999));
             // Main.Logger.Log($"类型: {itemType}");
             // 技艺书籍
@@ -111,16 +96,67 @@ namespace Sth4nothing.UseStorageBook
             // Main.Logger.Log($"帮派: {gang}");
             if (!Main.Setting.gang[gang])
                 return false;
+            // 阅读
+            int pages = df.gongFaBookPages[bookId].Sum(); // 阅读总页数
+            int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
+            if (!Main.Setting.read[read])
+                return false;
             return true;
         }
     }
 
+    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
+    public class WorldMapSystem_Start_Patch
+    {
+        static void Postfix()
+        {
+            HomeSystem_SetChooseBookWindow_Patch.hasInit = false;
+
+            if (BookSetting.Instance == null)
+            {
+                BookSetting.Load();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(HomeSystem), "SetChooseBookWindow")]
+    public class HomeSystem_SetChooseBookWindow_Patch
+    {
+        public static bool hasInit;
+        public static NewBookView bookView;
+
+        static void Prefix(HomeSystem __instance)
+        {
+            var bookViewBack = HomeSystem.instance.bookHolder.parent.gameObject;
+            if (bookViewBack.GetComponent<NewBookView>() == null)
+            {
+                bookView = bookViewBack.AddComponent<NewBookView>();
+            }
+            if (!hasInit)
+            {
+                hasInit = true;
+                bookView.Init();
+            }
+            // HomeSystem.instance.bookHolder.parent.parent.gameObject.SetActive(false);
+        }
+    }
+
+    [HarmonyPatch(typeof(HomeSystem), "CloseBookWindow")]
+    public class HomeSystem_CloseBookWindow_Patch
+    {
+        static void Prefix()
+        {
+            if (BookSetting.Instance.Open)
+                BookSetting.Instance.ToggleWindow();
+        }
+    }
+
+    /// <summary>
+    /// 仓库中的书耐久为0时将其移除
+    /// </summary>
     [HarmonyPatch(typeof(ReadBook), "CloseReadBook")]
     public static class ReadBook_CloseReadBook_Patch
     {
-        /// <summary>
-        /// 仓库中的书耐久为0时将其移除
-        /// </summary>
         static void Prefix()
         {
             var df = DateFile.instance;
@@ -185,6 +221,8 @@ namespace Sth4nothing.UseStorageBook
         public MyDict pinji = new MyDict();
         public MyDict tof = new MyDict();
         public MyDict repo = new MyDict();
+        public MyDict read = new MyDict();
+        internal float scrollSpeed = 30;
 
         public void Init()
         {
@@ -213,12 +251,21 @@ namespace Sth4nothing.UseStorageBook
                 if (!repo.ContainsKey(i))
                     repo[i] = true;
             }
+            for (int i = 0; i < Main.read.Length; i++)
+            {
+                if (!read.ContainsKey(i))
+                    read[i] = true;
+            }
         }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
         }
     }
+
+    /// <summary>
+    /// 可序列化的Dictionary[int, bool]
+    /// </summary>
     public class MyDict : Dictionary<int, bool>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()
@@ -271,6 +318,8 @@ namespace Sth4nothing.UseStorageBook
         public static string[] tof = { "真传", "手抄" };
 
         public static string[] repo = { "背包", "仓库" };
+
+        public static string[] read = { "未读", "已读", "读完" };
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -327,6 +376,13 @@ namespace Sth4nothing.UseStorageBook
             for (var i = 0; i < gang.Length; i++)
             {
                 Setting.gang[i] = GUILayout.Toggle(Setting.gang[i], gang[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < read.Length; i++)
+            {
+                Setting.read[i] = GUILayout.Toggle(Setting.read[i], read[i], GUILayout.Width(50));
             }
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
