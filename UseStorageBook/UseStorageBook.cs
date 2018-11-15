@@ -96,6 +96,11 @@ namespace Sth4nothing.UseStorageBook
             // Main.Logger.Log($"帮派: {gang}");
             if (!Main.Setting.gang[gang])
                 return false;
+            // 阅读
+            int pages = df.gongFaBookPages[bookId].Sum(); // 阅读总页数
+            int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
+            if (!Main.Setting.read[read])
+                return false;
             return true;
         }
     }
@@ -216,6 +221,7 @@ namespace Sth4nothing.UseStorageBook
         public MyDict pinji = new MyDict();
         public MyDict tof = new MyDict();
         public MyDict repo = new MyDict();
+        public MyDict read = new MyDict();
         internal float scrollSpeed = 30;
 
         public void Init()
@@ -244,6 +250,11 @@ namespace Sth4nothing.UseStorageBook
             {
                 if (!repo.ContainsKey(i))
                     repo[i] = true;
+            }
+            for (int i = 0; i < Main.read.Length; i++)
+            {
+                if (!read.ContainsKey(i))
+                    read[i] = true;
             }
         }
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -308,6 +319,8 @@ namespace Sth4nothing.UseStorageBook
 
         public static string[] repo = { "背包", "仓库" };
 
+        public static string[] read = { "未读", "已读", "读完" };
+
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             Enabled = value;
@@ -363,6 +376,13 @@ namespace Sth4nothing.UseStorageBook
             for (var i = 0; i < gang.Length; i++)
             {
                 Setting.gang[i] = GUILayout.Toggle(Setting.gang[i], gang[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < read.Length; i++)
+            {
+                Setting.read[i] = GUILayout.Toggle(Setting.read[i], read[i], GUILayout.Width(50));
             }
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();

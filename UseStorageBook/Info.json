@@ -2,7 +2,7 @@
   "Id": "UseStorageBook",
   "DisplayName": "修习仓库中的书",
   "Author": "sth4nothing",
-  "Version": "1.2.0",
+  "Version": "1.2.1",
   "AssemblyName": "UseStorageBook.dll",
   "EntryMethod": "Sth4nothing.UseStorageBook.Main.Load",
   "Requirements": ["GuiBaseUI"]

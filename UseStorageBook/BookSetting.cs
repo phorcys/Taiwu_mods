@@ -122,6 +122,21 @@ namespace Sth4nothing.UseStorageBook
             }
             GUILayout.Space(10);
 
+            for (int i = 0; i < Main.read.Length; i++)
+            {
+                if (i % 5 == 0)
+                    GUILayout.BeginHorizontal();
+                var state = GUILayout.Toggle(Main.Setting.read[i], Main.read[i], GUILayout.Width(60));
+                if (Main.Setting.read[i] != state)
+                {
+                    Main.Setting.read[i] = state;
+                    changed = true;
+                }
+                if (i % 5 == 4 || i == Main.read.Length - 1)
+                    GUILayout.EndHorizontal();
+            }
+            GUILayout.Space(10);
+
             for (int i = 0; i < Main.pinji.Length; i++)
             {
                 if (i % 5 == 0)
