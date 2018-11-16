@@ -21,8 +21,10 @@ namespace GameSpeeder
         }
 
         public bool enabled = true; // 是否生效
-        public float speedScale = 1f;// 速度倍率
-        public bool stopOnDesperateFight = true; // 死斗时暂停变速
+        public float speedScale = 8f;// 速度倍率
+        //public bool stopOnDesperateFight = true; // 死斗时暂停变速
+        public int minJingcunExc = 1; // 最小精纯超出值
+        public bool stopOnHiJingcunEnemy = true; // 面对高精纯敌人时暂停变速
         public bool stopOnReading = true; // 读书时暂停变速
         public bool stopOnCatching = true; // 捉蟋蟀时暂停变速
         public KeyCode hotKeyEnable = KeyCode.N; // 激活变速热键
@@ -45,8 +47,8 @@ namespace GameSpeeder
         private static bool _enable;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
-        private static float lastTimeScale = 1f;
-        private static float realTimeScale = 1f;
+        public static float lastTimeScale = 1f;
+        public static float realTimeScale = 1f;
         private static GameSpeeder_Looper _looper = null;
         private static bool _isHotKeyHangUp = false;
 
@@ -59,7 +61,7 @@ namespace GameSpeeder
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
-            realTimeScale = Time.timeScale;
+            lastTimeScale = realTimeScale = Time.timeScale;
             if (_looper == null)
             {
                 _looper = (new UnityEngine.GameObject()).AddComponent(
@@ -111,8 +113,10 @@ namespace GameSpeeder
                 _keyCurrentlyHeldDown = false;
                 ApplyTimeScale(_enable); // 恢复变速
             }
-        }        
+        }
 
+        static private string _jcExcTxt;
+        static int _jcExcCtrlKb = -1;
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             Color orgContentColor = GUI.contentColor;
@@ -139,13 +143,44 @@ namespace GameSpeeder
 
             GUILayout.Space(0);
             GUILayout.Label("---扩展配置---", new GUILayoutOption[0]);
+
             GUILayout.BeginHorizontal();
-            Main.settings.stopOnDesperateFight = GUILayout.Toggle(
-                Main.settings.stopOnDesperateFight, "死斗开启时自动暂停变速", new GUILayoutOption[0]);
+            //Main.settings.stopOnDesperateFight = GUILayout.Toggle(
+            //    Main.settings.stopOnDesperateFight, "死斗开启时自动暂停变速", new GUILayoutOption[0]);
+            Main.settings.stopOnHiJingcunEnemy = GUILayout.Toggle(
+                Main.settings.stopOnHiJingcunEnemy, "战斗首次有高于主角精纯", new GUILayoutOption[0]);
+
+            GUI.enabled = Main.settings.stopOnHiJingcunEnemy;
+            if (_jcExcTxt == null)
+                _jcExcTxt = Main.settings.minJingcunExc.ToString();
+            _jcExcTxt = GUILayout.TextField(_jcExcTxt, GUILayout.Width(32));
+            if (GUI.changed)
+            {
+                _jcExcCtrlKb = GUIUtility.keyboardControl;
+            }
+            else if (_jcExcCtrlKb != -1 && _jcExcCtrlKb != GUIUtility.keyboardControl)
+            {
+                int newJcExc;
+                if (int.TryParse(_jcExcTxt, out newJcExc))
+                    Main.settings.minJingcunExc = Math.Min(100, Math.Max(-99, newJcExc));
+                _jcExcCtrlKb = -1;
+                _jcExcTxt = null;
+            }
+            GUI.enabled = true;
+
+            GUILayout.Label("点敌人出战时自动暂停变速", new GUILayoutOption[0]);
+
+            GUILayout.FlexibleSpace();
+
             Main.settings.stopOnReading = GUILayout.Toggle(
                 Main.settings.stopOnReading, "读书开启时自动暂停变速", new GUILayoutOption[0]);
+
+            GUILayout.FlexibleSpace();
+
             Main.settings.stopOnCatching = GUILayout.Toggle(
                 Main.settings.stopOnCatching, "捕促织时自动暂停变速", new GUILayoutOption[0]);
+
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.Space(0);
@@ -153,7 +188,7 @@ namespace GameSpeeder
             GUILayout.Label("---配置热键---", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("激活/暂停变速：", new GUILayoutOption[0]);
+            GUILayout.Label("变速开关热键：", new GUILayoutOption[0]);
             
             const string showTip = "<按键...>";
             bool isReadyToSet = ctrlId_hotKeyEnable == GUIUtility.hotControl;
@@ -197,15 +232,39 @@ namespace GameSpeeder
         }
     }
 
-    [HarmonyPatch(typeof(BattleSystem), "ShowBattleWindow")]
-    public static class EnterBattlePatch
+    //[HarmonyPatch(typeof(BattleSystem), "ShowBattleWindow")]
+    //public static class EnterBattlePatch
+    //{
+    //    private static void Postfix(BattleSystem __instance)
+    //    {
+    //        // Main.Logger.Log("start battle " + StartBattle.instance.battleLoseTyp);
+    //        if (Main.settings.stopOnDesperateFight && StartBattle.instance.battleLoseTyp >= 100) // 死斗模式
+    //            Main.ApplyTimeScale(false);
+    //    }
+    //}
+
+    [HarmonyPatch(typeof(BattleSystem), "GetEnemy")]
+    public static class ChangeEnemyPatch
     {
-        private static void Postfix(BattleSystem __instance)
+        static bool _thisBattleAlreadySet = false;
+        private static void Postfix(BattleSystem __instance, bool newBattle)
         {
-            // Main.Logger.Log("start battle " + StartBattle.instance.battleLoseTyp);
-            
-            if (Main.settings.stopOnDesperateFight && StartBattle.instance.battleLoseTyp >= 100)
+            if (newBattle)
+                _thisBattleAlreadySet = false;
+            else if (_thisBattleAlreadySet)
+                return;
+
+            int nEnemyId = __instance.ActorId(false, false);
+            int nPlayerId = __instance.ActorId(true, false);
+            int enemyJingCunPoint = int.Parse(DateFile.instance.GetActorDate(nEnemyId, 901, false));
+            int playerJingCunPoint = int.Parse(DateFile.instance.GetActorDate(nPlayerId, 901, false));
+            // Main.Logger.Log("New Enemy Entered " + nEnemyId + " " + enemyJingCunPoint);
+            if (Main.settings.stopOnHiJingcunEnemy
+                && enemyJingCunPoint - playerJingCunPoint >= Main.settings.minJingcunExc)
+            {
+                _thisBattleAlreadySet = true;
                 Main.ApplyTimeScale(false);
+            }
         }
     }
 
@@ -216,6 +275,17 @@ namespace GameSpeeder
         {
             // Main.Logger.Log("end battle " + StartBattle.instance.battleLoseTyp);
             Main.ApplyTimeScale(Main.settings.enabled);
+        }
+    }
+
+    // 这个函数产生的协程使用了WaitForSecondsRealtime，timescale无法直接变速，故需patch it
+    [HarmonyPatch(typeof(BattleSystem), "TimePause")]
+    public static class TimePausePatch
+    {
+        private static void Prefix(BattleSystem __instance, ref float autoTime)
+        {
+            if (Main.lastTimeScale > 0)
+                autoTime = autoTime / Main.lastTimeScale;
         }
     }
 
@@ -246,7 +316,7 @@ namespace GameSpeeder
         private static void Postfix(GetQuquWindow __instance)
         {
             // Main.Logger.Log("start catching ");
-            if (Main.settings.stopOnReading)
+            if (Main.settings.stopOnCatching)
                 Main.ApplyTimeScale(false);
         }
     }
