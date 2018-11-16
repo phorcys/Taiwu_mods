@@ -259,6 +259,11 @@ namespace Jing_yong_Mod
     {
         private static void Prefix()
         {
+            if (!DateFile.instance.gongFaDate.ContainsKey(150369))
+            {
+                return;
+            }
+
             if (!Main.enabled)
             {
                 if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369))
@@ -432,7 +437,7 @@ namespace Jing_yong_Mod
                         int[] bookPages = (!DateFile.instance.gongFaBookPages.ContainsKey(150002)) ? new int[10] : DateFile.instance.gongFaBookPages[150002];
                         for (int i = 0; i < 10; i++)
                         {
-                            if (bookPages[i] == 0)
+                            if (bookPages[i] != 0)
                             {
                                 readPageNum++;
                             }
