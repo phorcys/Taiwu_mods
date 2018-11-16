@@ -2,7 +2,7 @@
     "Id": "TreasureDetector",
     "DisplayName": "<b><color=#FFFF3FFF>◎ 寻宝神器 Treasure Detector ◎</color></b>",
     "Author": "Eiffel",
-    "Version": "1.0.1",
+    "Version": "1.0.2",
     "AssemblyName": "TreasureDetector.dll",
     "EntryMethod": "TreasureDetector.Main.Load",
     "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/TreasureDetector"
