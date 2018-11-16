@@ -77,6 +77,11 @@ namespace GameSpeeder
             return true;
         }
 
+        public static bool IsTimePatchEnable()
+        {
+            return lastTimeScale != realTimeScale;
+        }
+
         public static void ApplyTimeScale(bool enable, bool updateSetting = false)
         {
             _enable = enable;
@@ -318,6 +323,8 @@ namespace GameSpeeder
             // Main.Logger.Log("start catching ");
             if (Main.settings.stopOnCatching)
                 Main.ApplyTimeScale(false);
+
+            PatchQuquWindowUpdate.Reset();
         }
     }
 
@@ -328,6 +335,47 @@ namespace GameSpeeder
         {
             // Main.Logger.Log("end catching ");
             Main.ApplyTimeScale(Main.settings.enabled);
+        }
+    }
+
+    // 使GetQuquWindow受变速影响
+    [HarmonyPatch(typeof(GetQuquWindow), "LateUpdate")]
+    public static class PatchQuquWindowUpdate
+    {
+        static float _fixDeltaTime = 0;
+        static bool _stopPatching = false;
+
+        private static bool Prefix(GetQuquWindow __instance, MethodBase __originalMethod)
+        {
+            if (_stopPatching)
+                return true;
+
+            // 没有激活变速时不patch避免功能未激活时对原游戏功能可能产生的影响
+            if (!Main.IsTimePatchEnable())
+                return true;
+
+            float realDeltaTime = Time.unscaledDeltaTime;
+            _fixDeltaTime += Time.deltaTime;
+            float fFramePass = _fixDeltaTime / realDeltaTime;
+            int nFramePass = (int)Math.Floor(fFramePass);
+            _fixDeltaTime -= nFramePass * realDeltaTime;
+
+            while (nFramePass-- > 0)
+            {
+                if (!__instance.getQuquWindow.activeSelf)
+                    return false;
+
+                _stopPatching = true;
+                __originalMethod.Invoke(__instance, null);
+                _stopPatching = false;
+            }
+            
+            return false;
+        }
+
+        public static void Reset()
+        {
+            _fixDeltaTime = 0;
         }
     }
 }
