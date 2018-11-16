@@ -324,7 +324,7 @@ namespace Jing_yong_Mod
                             {
                                 if (DateFile.instance.GetGangValueId(int.Parse(DateFile.instance.GetActorDate(key, 19, false)), int.Parse(DateFile.instance.GetActorDate(key, 20, false))) == 1001)
                                 {
-                                    if (DateFile.instance.actorsDate[key][26] == "0" && DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key, false, false) > 30000 * 175 / 100)
+                                    if (DateFile.instance.GetActorDate(key, 26, false) == "0" && DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key, false, false) > 30000 * 175 / 100)
                                     {
                                         DateFile.instance.ChangeActorGongFa(DateFile.instance.mianActorId, 150369, 50, 1, 0, false);
                                         return;
@@ -360,7 +360,7 @@ namespace Jing_yong_Mod
                 if (Main.setting.rejuvenatedAge == 0)
                 {
                     if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] >= 25 && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] < 100
-                        && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25 * 30 < int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]))
+                        && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25 * 30 + 6 < int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]))
                     {
                         DateFile.instance.RemoveMainActorEquipGongFa(150369);
                         DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0]--;
