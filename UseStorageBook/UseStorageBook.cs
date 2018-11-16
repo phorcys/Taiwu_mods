@@ -344,48 +344,34 @@ namespace Sth4nothing.UseStorageBook
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.BeginVertical();
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < repo.Length; i++)
-            {
-                Setting.repo[i] = GUILayout.Toggle(Setting.repo[i], repo[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < tof.Length; i++)
-            {
-                Setting.tof[i] = GUILayout.Toggle(Setting.tof[i], tof[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < pinji.Length; i++)
-            {
-                Setting.pinji[i] = GUILayout.Toggle(Setting.pinji[i], pinji[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < gongfa.Length; i++)
-            {
-                Setting.gongfa[i] = GUILayout.Toggle(Setting.gongfa[i], gongfa[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            for (var i = 0; i < gang.Length; i++)
-            {
-                Setting.gang[i] = GUILayout.Toggle(Setting.gang[i], gang[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            for (var i = 0; i < read.Length; i++)
-            {
-                Setting.read[i] = GUILayout.Toggle(Setting.read[i], read[i], GUILayout.Width(50));
-            }
-            GUILayout.EndHorizontal();
+            ShowSetting("背包/仓库", Setting.repo, repo);
+            ShowSetting("真传/手抄", Setting.tof, tof);
+            ShowSetting("品级", Setting.pinji, pinji);
+            ShowSetting("功法", Setting.gongfa, gongfa);
+            ShowSetting("帮派", Setting.gang, gang);
+            ShowSetting("阅读进度", Setting.read, read);
             GUILayout.EndVertical();
+        }
+
+        public static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(100));
+            if (GUILayout.Button("全部", GUILayout.Width(50)))
+            {
+                var all = dict.All((pair) => pair.Value);
+                for (int i = 0; i < setting.Length; i++)
+                {
+                    dict[i] = !all;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < setting.Length; i++)
+            {
+                dict[i] = GUILayout.Toggle(dict[i], setting[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)

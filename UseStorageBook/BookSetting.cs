@@ -86,101 +86,52 @@ namespace Sth4nothing.UseStorageBook
             }
         }
 
+        private static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting, ref bool changed)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("全部", GUILayout.Width(60)))
+            {
+                var all = dict.All((pair) => pair.Value);
+                for (int i = 0; i < setting.Length; i++)
+                {
+                    dict[i] = !all;
+                }
+                changed = true;
+            }
+            GUILayout.EndHorizontal();
+            for (int i = 0; i < setting.Length; i++)
+            {
+                if (i % 5 == 0)
+                    GUILayout.BeginHorizontal();
+                var state = GUILayout.Toggle(dict[i], setting[i], GUILayout.Width(60));
+                if (dict[i] != state)
+                {
+                    dict[i] = state;
+                    changed = true;
+                }
+                if (i % 5 == 4 || i == setting.Length - 1)
+                    GUILayout.EndHorizontal();
+            }
+            GUILayout.Space(10);
+        }
+
         private void WindowFunc(int windowId)
         {
             var changed = false;
             GUILayout.BeginVertical();
             GUILayout.Space(200);
 
-            for (int i = 0; i < Main.repo.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.repo[i], Main.repo[i], GUILayout.Width(60));
-                if (Main.Setting.repo[i] != state)
-                {
-                    Main.Setting.repo[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.repo.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("背包/仓库", Main.Setting.repo, Main.repo, ref changed);
 
-            for (int i = 0; i < Main.tof.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.tof[i], Main.tof[i], GUILayout.Width(60));
-                if (Main.Setting.tof[i] != state)
-                {
-                    Main.Setting.tof[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.tof.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("真传/手抄", Main.Setting.tof, Main.tof, ref changed);
 
-            for (int i = 0; i < Main.read.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.read[i], Main.read[i], GUILayout.Width(60));
-                if (Main.Setting.read[i] != state)
-                {
-                    Main.Setting.read[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.read.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("阅读进度", Main.Setting.read, Main.read, ref changed);
 
-            for (int i = 0; i < Main.pinji.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.pinji[i], Main.pinji[i], GUILayout.Width(60));
-                if (Main.Setting.pinji[i] != state)
-                {
-                    Main.Setting.pinji[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.pinji.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("品级", Main.Setting.pinji, Main.pinji, ref changed);
 
-            for (int i = 0; i < Main.gongfa.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.gongfa[i], Main.gongfa[i], GUILayout.Width(60));
-                if (Main.Setting.gongfa[i] != state)
-                {
-                    Main.Setting.gongfa[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.gongfa.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("功法", Main.Setting.gongfa, Main.gongfa, ref changed);
 
-            for (var i = 0; i < Main.gang.Length; i++)
-            {
-                if (i % 5 == 0)
-                    GUILayout.BeginHorizontal();
-                var state = GUILayout.Toggle(Main.Setting.gang[i], Main.gang[i], GUILayout.Width(60));
-                if (Main.Setting.gang[i] != state)
-                {
-                    Main.Setting.gang[i] = state;
-                    changed = true;
-                }
-                if (i % 5 == 4 || i == Main.gang.Length - 1)
-                    GUILayout.EndHorizontal();
-            }
-            GUILayout.Space(10);
+            ShowSetting("帮派", Main.Setting.gang, Main.gang, ref changed);
 
             GUILayout.EndVertical();
 
