@@ -39,14 +39,17 @@ namespace Sth4nothing.UseStorageBook
             gameObject2.GetComponent<Image>().sprite = GetSprites.instance.itemSprites[int.Parse(DateFile.instance.GetItemDate(bookId, 98, true))];
             int num2 = int.Parse(DateFile.instance.GetItemDate(bookId, 901, true));
             int num3 = int.Parse(DateFile.instance.GetItemDate(bookId, 902, true));
-            gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
+            var df = DateFile.instance;
+            var gangId = int.Parse(df.gongFaDate[int.Parse(df.GetItemDate(bookId, 32))][3]);
+            var gangName = df.presetGangDate[gangId][0].Substring(0, 2);
+            gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{gangName}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             int[] bookPage = DateFile.instance.GetBookPage(bookId);
             Transform transform = gameObject.transform.Find("PageBack");
             for (int j = 0; j < transform.childCount; j++)
             {
                 if (bookPage[j] == 1)
                 {
-                    transform.GetChild(j).GetComponent<Image>().color = new Color(100f / 255, 100f / 255, 0f, 1f);
+                    transform.GetChild(j).GetComponent<Image>().color = new Color(100f / 255, 200f / 255, 0f, 1f);
                 }
                 else
                 {
