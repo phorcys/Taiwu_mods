@@ -175,8 +175,8 @@ namespace TreasureDetector
 
         private static void GetWorkItemDetail(int worldId, int partId, int placeId, int workTyp, out float 现有资源, out float 最大资源, out int 最高品阶, out int 最低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品)
         {
-            现有资源 = (float) DateFile.instance.GetPlaceResource(partId, placeId)[workTyp];
-            最大资源 = Mathf.Max(int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, workTyp + 1)), 1);
+            现有资源 = Mathf.Max((float)DateFile.instance.GetPlaceResource(partId, placeId)[workTyp],0);
+            最大资源 = Mathf.Max(float.Parse(DateFile.instance.GetNewMapDate(partId, placeId, workTyp + 1)), 1);
             float 库存率 = 100f * 现有资源 / 最大资源;
 
             最高品阶 = 0;
@@ -187,7 +187,7 @@ namespace TreasureDetector
             List<string> 可得物品 = new List<string> { };
             for (int i = 0; i < 可得物品IDs.Length; i++)
             {
-                for (int lv = 0; lv < 提升品阶; lv++)
+                for (int lv = 0; lv <= 提升品阶; lv++)
                 {
                     if (DateFile.instance.presetitemDate.ContainsKey(可得物品IDs[i] + lv))
                     {
