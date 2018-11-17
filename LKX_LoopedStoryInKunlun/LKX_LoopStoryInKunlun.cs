@@ -247,6 +247,7 @@ namespace LKX_LoopedStoryInKunlun
 
     /// <summary>
     /// 创建战斗人物时，反减掉需要增加的数值。
+    /// 后面考虑在这操作算了，翻倍百分比好高。
     /// </summary>
     [HarmonyPatch(typeof(DateFile), "MakeXXEnemy")]
     public class LKX_LoopedStoryInKunlun_For_DateFile_MakeXXEnemy
@@ -267,10 +268,7 @@ namespace LKX_LoopedStoryInKunlun
                 for(int i = 0; i < 7; i++)
                 {
                     int equipId = int.Parse(DateFile.instance.presetActorDate[18628][304 + i]);
-                    if(equipId != 0)
-                    {
-                        DateFile.instance.presetActorDate[18628][304 + i] = (equipId - num / 2).ToString();
-                    }
+                    if(equipId != 0) DateFile.instance.presetActorDate[18628][304 + i] = (equipId - num / 2).ToString();
                 }
             }
         }
@@ -328,7 +326,7 @@ namespace LKX_LoopedStoryInKunlun
             {
                 int num = LKX_LoopedStoryInKunlun_For_DateFile_MakeXXEnemy.MakeXXEnemyNum;
                 int equipId = int.Parse(DateFile.instance.presetActorDate[18628][305]);
-                DateFile.instance.presetActorDate[18628][305] = (equipId + num / 2).ToString();
+                if (equipId != 0) DateFile.instance.presetActorDate[18628][305] = (equipId + num / 2).ToString();
             }
         }
     }
@@ -376,22 +374,71 @@ namespace LKX_LoopedStoryInKunlun
             Dictionary<int, string> mianactor = new Dictionary<int, string>();
             if (DateFile.instance.presetActorDate.TryGetValue(18628, out pactor) && DateFile.instance.actorsDate.TryGetValue(DateFile.instance.mianActorId, out mianactor))
             {
+                List<int> buffer = pactor.Keys.ToList();
                 SortedDictionary<int, int[]> mianGongFa = new SortedDictionary<int, int[]>();
                 if (DateFile.instance.actorGongFas.TryGetValue(id, out mianGongFa))
                 {
                     pactor[906] = GongFaMerge(mianGongFa);
                 }
-                
-                foreach (KeyValuePair<int, string> actor in mianactor)
-                {
-                    List<int> equip = new List<int> { 304, 305, 306, 307, 308, 309, 310, 311 };
-                    if (equip.Contains(actor.Key))
-                    {
-                        pactor[actor.Key] = DateFile.instance.GetItemDate(int.Parse(actor.Value), 999);
-                    }
 
+                //为什么我不写个排除的key得了
+                List<int> equip = new List<int> { 304, 305, 306, 307, 308, 309, 310, 311 };//装备key，301-303是武器栏
+                List<int> exist = new List<int>
+                {
+                    //屏蔽掉那些因为太变态了
+                    5,11,14,15,17,//名字，魅力性别等
+                    //22,23,//守备、疗伤效率
+                    //32,33,//内外伤上限
+                    39,//内息紊乱的值,不知道玩家战斗界面再嗑药回来能不能打过,好麻烦自己测不来了。
+                    41,42,43,44,45,46,//毒抗
+                    61,62,63,64,65,66,//基础六维
+                    //71,72,73,//力道精妙和迅疾
+                    //81,82,83,84,85,86,//防御六维
+                    //92,93,94,95,96,97,98,//各种伤害百分比
+                    101,//特性
+                    501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,//技艺资质
+                    601,602,603,604,605,606,607,608,609,610,611,612,613,614,//功法资质
+                    651,551,//成长类型
+                    995,996,997,//样貌和人物模板
+                    //1101,1102,1103,1104,1105,1106,1107,1108,1109,1110,1111//各种加成百分比
+                };
+                foreach (int key in buffer)
+                {
+                    if (equip.Contains(key))
+                    {
+                        pactor[key] = DateFile.instance.GetItemDate(int.Parse(mianactor[key]), 999);
+                    }
+                    
+                    
+                    if (!exist.Contains(key)) continue;
+
+                    switch (key)
+                    {
+                        case 101:
+                            pactor[key] = "10011|" + DateFile.instance.GetActorDate(id, key);
+                            break;
+                        case 5:
+                            pactor[0] = "昆仑镜·" + DateFile.instance.GetActorDate(id, key);
+                            if (mianactor[0] != "NoSurname" || mianactor[0] != "无名" || mianactor[0] != "") pactor[0] = pactor[0] + DateFile.instance.GetActorDate(id, 0);
+                            break;
+                        case 71:
+                        case 72:
+                        case 73:
+                            pactor[key] = (int.Parse(DateFile.instance.GetActorDate(DateFile.instance.mianActorId, key)) / 2).ToString();
+                            break;
+                        default:
+                            pactor[key] = DateFile.instance.GetActorDate(DateFile.instance.mianActorId, key);
+                            break;
+                    }
+                    
+                    /*
                     if (pactor.ContainsKey(actor.Key))
                     {
+                        List<int> exclude = new List<int> {
+                            1,3,4,6,8,9,12,13,16,18,
+                            41,42,43,44,45,46,
+                            301,302,303,304,305,306,307,308,309,310,311,312
+                        };
 
                         List<int> exist = new List<int> {
                             5,11,14,15,17,
@@ -403,10 +450,10 @@ namespace LKX_LoopedStoryInKunlun
                             501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,
                             601,602,603,604,605,606,607,608,609,610,611,612,613,614,
                             651,551,
-                            995,996
+                            995,996,997
                         };
 
-                        if (!exist.Contains(actor.Key)) continue;
+                        if (exclude.Contains(actor.Key)) continue;
                         
                         if (actor.Key == 101)
                         {
@@ -423,6 +470,7 @@ namespace LKX_LoopedStoryInKunlun
                             pactor[actor.Key] = actor.Value;
                         }
                     }
+                    */
                 }
             }
         }
