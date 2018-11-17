@@ -4,12 +4,15 @@
 
 修习仓库中的书  
 可在选书界面筛选书籍，包括仓库背包、真传手抄、品级、门派等  
-依赖**GuiBaseUI** [https://github.com/phorcys/Taiwu_Mods/GuiBaseUI/]
+依赖**GuiBaseUI** [https://github.com/phorcys/Taiwu_Mods/tree/master/GuiBaseUI/]
 
 ![Example](./example.png)
 
 
 ---
+## 1.2.5
+- 修复技艺书图标处品级显示的错误
+
 ## 1.2.4
 - 修复修习技艺时工作异常的bug
 - 优化修习技艺时筛选的UI

@@ -40,17 +40,17 @@ namespace Sth4nothing.UseStorageBook
             int num2 = int.Parse(DateFile.instance.GetItemDate(bookId, 901, true));
             int num3 = int.Parse(DateFile.instance.GetItemDate(bookId, 902, true));
             var df = DateFile.instance;
-            var pinji = int.Parse(df.GetItemDate(bookId, 8, false));
+            var pinji = int.Parse(df.GetItemDate(bookId, 8, false)) - 1;
             if (HomeSystem.instance.studySkillTyp >= 17)
             {
                 var gongfaId = int.Parse(df.GetItemDate(bookId, 32));
                 var gangId = int.Parse(df.gongFaDate[gongfaId][3]);
                 var gangName = df.presetGangDate[gangId][0].Substring(0, 2);
-                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(20001 + pinji, gangName)}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
+                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(2002 + pinji, gangName)}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             }
             else
             {
-                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(20001 + pinji, Main.pinji[pinji])}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
+                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(2002 + pinji, Main.pinji[pinji])}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             }
             int[] bookPage = DateFile.instance.GetBookPage(bookId);
             Transform transform = gameObject.transform.Find("PageBack");
