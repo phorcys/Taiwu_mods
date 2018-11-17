@@ -274,7 +274,7 @@ namespace Rejuvenation
                 if (Main.setting.rejuvenatedAge == 0)
                 {
                     if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] >= 25 && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] < 100
-                        && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25 * 30 < int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]))
+                        && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25 * 30 + 6 < int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11]))
                     {
                         DateFile.instance.RemoveMainActorEquipGongFa(150369);
                         DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0]--;
