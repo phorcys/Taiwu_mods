@@ -41,7 +41,6 @@ namespace Sth4nothing.UseStorageBook
             int num3 = int.Parse(DateFile.instance.GetItemDate(bookId, 902, true));
             var df = DateFile.instance;
             var pinji = int.Parse(df.GetItemDate(bookId, 8, false));
-            Debug.Log(0);
             if (HomeSystem.instance.studySkillTyp >= 17)
             {
                 var gongfaId = int.Parse(df.GetItemDate(bookId, 32));
@@ -53,13 +52,10 @@ namespace Sth4nothing.UseStorageBook
             {
                 gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(20001 + pinji, Main.pinji[pinji])}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             }
-            Debug.Log(1);
             int[] bookPage = DateFile.instance.GetBookPage(bookId);
             Transform transform = gameObject.transform.Find("PageBack");
-            Debug.Log(2);
             for (int j = 0; j < transform.childCount; j++)
             {
-                Debug.Log(3);
                 if (bookPage[j] == 1)
                 {
                     transform.GetChild(j).GetComponent<Image>().color = new Color(100f / 255, 200f / 255, 0f, 1f);
