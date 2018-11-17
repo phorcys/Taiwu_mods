@@ -70,17 +70,26 @@ namespace Sth4nothing.UseStorageBook
             {
                 return false;
             }
-            int itemType = int.Parse(df.GetItemDate(itemId, 999));
-            // Main.Logger.Log($"类型: {itemType}");
-            // 技艺书籍
-            if (itemType < 500000)
-                return true;
-            int bookId = int.Parse(df.GetItemDate(itemId, 32));
             // 品级
-            int pinji = int.Parse(df.gongFaDate[bookId][2]) - 1;
+            int pinji = int.Parse(df.GetItemDate(itemId, 8, false)) - 1;
             // Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
+            int itemType = int.Parse(df.GetItemDate(itemId, 999));
+            // Main.Logger.Log($"类型: {itemType}");
+            int bookId = int.Parse(df.GetItemDate(itemId, 32));
+            // 阅读
+            int pages = 0;
+            if (HomeSystem.instance.studySkillTyp >= 17)
+                pages = df.gongFaBookPages.ContainsKey(bookId) ? df.gongFaBookPages[bookId].Sum() : 0; // 阅读总页数
+            else
+                pages = df.skillBookPages.ContainsKey(bookId) ? df.skillBookPages[bookId].Sum() : 0;
+            int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
+            if (!Main.Setting.read[read])
+                return false;
+            // 技艺书籍
+            if (itemType < 500000)
+                return true;
             // 真传 or 手抄
             if (itemType < 700000 && !Main.Setting.tof[0])
                 return false;
@@ -95,11 +104,6 @@ namespace Sth4nothing.UseStorageBook
             int gang = int.Parse(df.gongFaDate[bookId][3]);
             // Main.Logger.Log($"帮派: {gang}");
             if (!Main.Setting.gang[gang])
-                return false;
-            // 阅读
-            int pages = df.gongFaBookPages.ContainsKey(bookId) ? df.gongFaBookPages[bookId].Sum() : 0; // 阅读总页数
-            int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
-            if (!Main.Setting.read[read])
                 return false;
             return true;
         }

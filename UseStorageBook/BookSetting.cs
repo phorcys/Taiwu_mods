@@ -89,14 +89,17 @@ namespace Sth4nothing.UseStorageBook
         private static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting, ref bool changed)
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("全部", GUILayout.Width(60)))
+            if (setting.Length >= 5)
             {
-                var all = dict.All((pair) => pair.Value);
-                for (int i = 0; i < setting.Length; i++)
+                if (GUILayout.Button("全部", GUILayout.Width(60)))
                 {
-                    dict[i] = !all;
+                    var all = dict.All((pair) => pair.Value);
+                    for (int i = 0; i < setting.Length; i++)
+                    {
+                        dict[i] = !all;
+                    }
+                    changed = true;
                 }
-                changed = true;
             }
             GUILayout.EndHorizontal();
             for (int i = 0; i < setting.Length; i++)
@@ -123,15 +126,18 @@ namespace Sth4nothing.UseStorageBook
 
             ShowSetting("背包/仓库", Main.Setting.repo, Main.repo, ref changed);
 
-            ShowSetting("真传/手抄", Main.Setting.tof, Main.tof, ref changed);
+            if (HomeSystem.instance.studySkillTyp >= 17)
+                ShowSetting("真传/手抄", Main.Setting.tof, Main.tof, ref changed);
 
             ShowSetting("阅读进度", Main.Setting.read, Main.read, ref changed);
 
             ShowSetting("品级", Main.Setting.pinji, Main.pinji, ref changed);
 
-            ShowSetting("功法", Main.Setting.gongfa, Main.gongfa, ref changed);
+            if (HomeSystem.instance.studySkillTyp >= 17)
+                ShowSetting("功法", Main.Setting.gongfa, Main.gongfa, ref changed);
 
-            ShowSetting("帮派", Main.Setting.gang, Main.gang, ref changed);
+            if (HomeSystem.instance.studySkillTyp >= 17)
+                ShowSetting("帮派", Main.Setting.gang, Main.gang, ref changed);
 
             GUILayout.EndVertical();
 
