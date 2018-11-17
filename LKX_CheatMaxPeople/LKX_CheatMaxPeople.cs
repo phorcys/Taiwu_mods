@@ -35,6 +35,12 @@ namespace LKX_CheatMaxPeople
 
         public List<int> foodLevel = new List<int>();
 
+        public List<int> ququList = new List<int>();
+
+        public bool cheatWarehouseMaxSize;
+
+        public int eventId;
+
         /// <summary>
         /// 保存设置
         /// </summary>
@@ -62,6 +68,14 @@ namespace LKX_CheatMaxPeople
         /// </summary>
         public static bool enabled;
 
+        public static Dictionary<int, string[]> defaultQuQuVoice = new Dictionary<int, string[]>();
+
+        public static Dictionary<int, string> quQuGuiList = new Dictionary<int, string>();
+
+        public static List<int> teamActorId = new List<int>();
+
+        public static int selectActorId;
+
         /// <summary>
         /// 载入mod。
         /// </summary>
@@ -71,14 +85,13 @@ namespace LKX_CheatMaxPeople
         {
             Main.logger = modEntry.Logger;
             Main.settings = Settings.Load<Settings>(modEntry);
-            
+
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
 
             modEntry.OnToggle = Main.OnToggle;
             modEntry.OnGUI = Main.OnGUI;
             modEntry.OnSaveGUI = Main.OnSaveGUI;
 
-            
             return true;
         }
 
@@ -113,6 +126,7 @@ namespace LKX_CheatMaxPeople
 
             Main.settings.ququLife = GUILayout.Toggle(Main.settings.ququLife, "蛐蛐无限寿命，已死的不复活。");
             Main.settings.foodMerge = GUILayout.Toggle(Main.settings.foodMerge, "开启合并食物。");
+            Main.settings.cheatWarehouseMaxSize = GUILayout.Toggle(Main.settings.cheatWarehouseMaxSize, "开启无限仓库容量。");
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
             Main.SetGUIToToggle(1, "九品", ref Main.settings.foodLevel);
             Main.SetGUIToToggle(2, "八品", ref Main.settings.foodLevel);
@@ -126,11 +140,116 @@ namespace LKX_CheatMaxPeople
             GUILayout.EndHorizontal();
 
             
-            if (GUILayout.Button("测试"))
+
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            if (GUILayout.Button("获取蛐蛐列表"))
             {
-                QuQuLifeAndFood_For_UIDate_DoChangeTrun.FoodMergeCheat();
+                if (DateFile.instance == null)
+                {
+                    GUILayout.Label("获取失败：未进入存档");
+                }
+                else
+                {
+                    Main.quQuGuiList = Main.GetQuQuData();
+                }
             }
-            
+            if (GUILayout.Button("修改蛐蛐叫声"))
+            {
+                if (DateFile.instance == null)
+                {
+                    GUILayout.Label("修改失败：未进入存档");
+                }
+                else
+                {
+                    Main.TestModValue();
+                }
+            }
+            if (GUILayout.Button("恢复全部蛐蛐叫声"))
+            {
+                Main.ResetQuQuData();
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+            if (GUILayout.Button("列出蛐蛐叫声"))
+            {
+                foreach (KeyValuePair<int, Dictionary<int, string>> jiaosheng in DateFile.instance.cricketDate)
+                {
+                    Main.logger.Log(jiaosheng.Key.ToString() + ":{" + jiaosheng.Value[0] + ":" + jiaosheng.Value[9] + "}");
+                }
+            }
+            if (GUILayout.Button("蛐蛐buff为1000"))
+            {
+                Main.logger.Log(DateFile.instance.storyBuffs[-7].ToString() + "前");
+                DateFile.instance.storyBuffs[-7] += 1000;
+                Main.logger.Log(DateFile.instance.storyBuffs[-7].ToString() + "后");
+            }
+
+            if (GUILayout.Button("启动奇遇"))
+            {
+                DateFile df = DateFile.instance;
+                df.SetStory(true, df.mianPartId, df.mianPlaceId, Main.settings.eventId);
+            }
+
+            if (GUILayout.Button("传剑选人"))
+            {
+                foreach (int family in DateFile.instance.actorFamilyDate)
+                {
+                    if(!Main.teamActorId.Contains(family)) Main.teamActorId.Add(family);
+                }
+            }
+
+            if (GUILayout.Button("测试传剑"))
+            {
+                ActorMenu.instance.acotrId = Main.selectActorId;
+                ActorMenu.instance.SetNewMianActor();
+            }
+            GUILayout.EndHorizontal();
+
+            if (Main.teamActorId.Count > 0)
+            {
+                string actorId = "";
+                actorId = GUILayout.TextField(Main.selectActorId.ToString());
+                if (GUI.changed)
+                {
+                    if (actorId == "" || actorId == null) actorId = "0";
+                    Main.selectActorId = int.Parse(actorId);
+                }
+
+                foreach (int actor in Main.teamActorId)
+                {
+                    GUILayout.Label(actor.ToString() + ":" + DateFile.instance.GetActorDate(actor, 5) + DateFile.instance.GetActorDate(actor, 0));
+                }
+            }
+
+            string shijianId = GUILayout.TextField(Main.settings.eventId.ToString());
+            if (GUI.changed)
+            {
+                if (shijianId == "" || shijianId == null) shijianId = "0";
+                Main.settings.eventId = int.Parse(shijianId);
+            }
+
+            if (Main.quQuGuiList.Count > 0)
+            {
+                GUILayout.Label("蛐蛐列表");
+                GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
+                int i = 0;
+                foreach (KeyValuePair<int, string> ququ in Main.quQuGuiList)
+                {
+                    if (i % 29 == 0 && i != 0 && i != quQuGuiList.Count)
+                    {
+                        GUILayout.EndVertical();
+                        GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
+                    }
+                    if (i == 0) GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
+
+                    Main.SetGUIToToggle(ququ.Key, ququ.Value, ref Main.settings.ququList);
+
+                    i++;
+                    if (i == quQuGuiList.Count) GUILayout.EndVertical();
+                }
+                GUILayout.EndHorizontal();
+            }
         }
 
         /// <summary>
@@ -158,37 +277,61 @@ namespace LKX_CheatMaxPeople
             }
         }
 
-        /*
         static void TestModValue()
         {
             DateFile df = DateFile.instance;
-            int i = 0;
-            List<int> boxQuQu = new List<int>();
-            foreach (int[] box in df.cricketBoxDate.Values)
+            if (Main.settings.ququList.Count > 0)
             {
-                if (box[0] != -97) boxQuQu.Add(box[0]);
-            }
-
-            foreach (int actorId in df.acotrTeamDate)
-            {
-                if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
-            }
-
-            foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.itemsDate)
-            {
-                if ((DateFile.instance.actorItemsDate[10001].ContainsKey(item.Key) || DateFile.instance.actorItemsDate[-999].ContainsKey(item.Key) || boxQuQu.Contains(item.Key)) && item.Value[999] == "10000")
+                foreach (KeyValuePair<int, Dictionary<int, string>> ququ in DateFile.instance.cricketDate)
                 {
-                    i++;
+                    if (Main.settings.ququList.Contains(ququ.Key))
+                    {
+                        ququ.Value[9] = "-20";
+                        ququ.Value[6] = "100";
+                    }
+                    else
+                    {
+                        ququ.Value[9] = "50";
+                        ququ.Value[6] = "1";
+                    }
                 }
             }
-
-            foreach (int aaa in df.acotrTeamDate)
+            else
             {
-                Main.logger.Log(aaa.ToString());
+                Main.logger.Log("没有选择蛐蛐");
             }
-            Main.logger.Log(i.ToString() + "个");
         }
-        */
+
+        public static Dictionary<int, string> GetQuQuData()
+        {
+            Dictionary<int, string> items = new Dictionary<int, string>();
+            foreach (KeyValuePair<int, Dictionary<int, string>> quQu in DateFile.instance.cricketDate)
+            {
+                if (!Main.defaultQuQuVoice.ContainsKey(quQu.Key)) Main.defaultQuQuVoice.Add(quQu.Key, new string[] { quQu.Value[9], quQu.Value[6] });
+                items.Add(quQu.Key, DateFile.instance.SetColoer(int.Parse(DateFile.instance.cricketDate[quQu.Key][1]) + 20001, quQu.Value[0]));
+            }
+
+            return items;
+        }
+
+        public static void ResetQuQuData()
+        {
+            if (Main.defaultQuQuVoice.Count > 0)
+            {
+                foreach (KeyValuePair<int, string[]> ququData in Main.defaultQuQuVoice)
+                {
+                    if (DateFile.instance.cricketDate.ContainsKey(ququData.Key))
+                    {
+                        DateFile.instance.cricketDate[ququData.Key][9] = ququData.Value[0];
+                        DateFile.instance.cricketDate[ququData.Key][6] = ququData.Value[1];
+                    }
+                }
+            }
+            else
+            {
+                Main.logger.Log("恢复失败，请重新退出游戏。");
+            }
+        }
     }
 
     [HarmonyPatch(typeof(UIDate), "GetMaxManpower")]
@@ -226,7 +369,7 @@ namespace LKX_CheatMaxPeople
                 if (box[0] != -97) boxQuQu.Add(box[0]);
             }
 
-            foreach (int actorId in df.acotrTeamDate)
+            foreach (int actorId in df.actorFamilyDate)
             {
                 if (int.Parse(df.GetActorDate(actorId, 312)) != 0) boxQuQu.Add(int.Parse(df.GetActorDate(actorId, 312)));
             }
@@ -321,6 +464,40 @@ namespace LKX_CheatMaxPeople
                     df.itemsDate[makeItemId][pair.Key] = pair.Value;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// 把选择的蛐蛐加到可以抓的地方。
+    /// </summary>
+    [HarmonyPatch(typeof(GetQuquWindow), "SetGetQuquWindow")]
+    public class LKXTestQUQU_For_GetQuquWindow_SetGetQuquWindow
+    {
+
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+            
+            Dictionary<int, int[]> data = new Dictionary<int, int[]>();
+            data = GetQuquWindow.instance.cricketDate;
+
+            foreach (KeyValuePair<int, int[]> item in data)
+            {
+                int randomNum1 = UnityEngine.Random.Range(0, Main.settings.ququList.Count - 1);
+                int randomNum2 = UnityEngine.Random.Range(0, Main.settings.ququList.Count - 1);
+                item.Value[1] = Main.settings.ququList[randomNum1];
+                item.Value[2] = Main.settings.ququList[randomNum2];//这条是后缀
+                item.Value[3] = 200;//机率？
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Warehouse), "GetWarehouseMaxSize")]
+    public class LKXSetWarehouseMaxSize_For_Warehouse_GetWarehouseMaxSize
+    {
+        static void Postfix(ref int __result)
+        {
+            if (Main.enabled && Main.settings.cheatWarehouseMaxSize) __result = 100000000;
         }
     }
 }
