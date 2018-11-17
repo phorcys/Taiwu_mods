@@ -288,7 +288,6 @@ namespace LKX_LoopedStoryInKunlun
 
             if (eventDate[2] == 16781)
             {
-                Main.logger.Log("进入对话：" + eventDate[2].ToString());
                 LKX_LoopedStoryInKunlun_MassageWindow_EndEvent147_1.RunActorData();
             }
         }
@@ -309,7 +308,6 @@ namespace LKX_LoopedStoryInKunlun
                 Main.logger.Log(MassageWindow.instance.eventValue[0].ToString());
                 if (MassageWindow.instance.eventValue[0] == 16785)
                 {
-                    Main.logger.Log("进入16785");
                     Main.SetStoryForKunLun();
                 }
             }
