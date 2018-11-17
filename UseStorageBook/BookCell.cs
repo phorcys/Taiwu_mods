@@ -46,11 +46,11 @@ namespace Sth4nothing.UseStorageBook
                 var gongfaId = int.Parse(df.GetItemDate(bookId, 32));
                 var gangId = int.Parse(df.gongFaDate[gongfaId][3]);
                 var gangName = df.presetGangDate[gangId][0].Substring(0, 2);
-                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(2002 + pinji, gangName)}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
+                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(20002 + pinji, gangName)}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             }
             else
             {
-                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(2002 + pinji, Main.pinji[pinji])}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
+                gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = $"{df.SetColoer(20002 + pinji, Main.pinji[pinji])}{ActorMenu.instance.Color3(num2, num3)}{num2}</color>/{num3}";
             }
             int[] bookPage = DateFile.instance.GetBookPage(bookId);
             Transform transform = gameObject.transform.Find("PageBack");
