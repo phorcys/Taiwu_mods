@@ -84,9 +84,9 @@ namespace Majordomo
             if (AutoHarvest.harvestedResources.Count == 0 &&
                 AutoHarvest.harvestedItems.Count == 0 &&
                 AutoHarvest.harvestedActors.Count == 0)
-                return "本月尚无任何收获。\n";
+                return "您的管家禀告：本月尚无收获。\n";
 
-            string summary = "您的管家报告了以下收获：\n";
+            string summary = "您的管家禀告了如下收获：\n";
 
             summary += GetHarvestedResourcesSummary();
             summary += GetHarvestedItemsSummary();
@@ -168,7 +168,7 @@ namespace Majordomo
         }
 
 
-        // 获取太吾村所有收获物
+        // 获取所有据点的所有收获物
         public static void GetAllBooties()
         {
             AutoHarvest.InitializeBooties();
@@ -200,6 +200,7 @@ namespace Majordomo
         }
 
 
+        // 拿取收获物（但没有从收获物列表中删除该收获物）
         // @return: gotBooty - true: 拿取了收获物, false: 没有拿取收获物
         private static bool GetBooty(int partId, int placeId, int buildingIndex, int[] booty)
         {
@@ -220,6 +221,8 @@ namespace Majordomo
                 }
                 case BOOTY_TYPE_ITEM: // bootyId: itemId
                 {
+                    if (!Main.settings.autoHarvestItems) return false;
+
                     int itemQuality = int.Parse(DateFile.instance.GetItemDate(bootyId, 8));
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[0]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[0]}{DateFile.instance.SetColoer(20001 + itemQuality, $"{DateFile.instance.GetItemDate(bootyId, 0, otherMassage: false)}×{bootyQuantity}")}</color>";
                     DateFile.instance.GetItem(-999, bootyId, bootyQuantity, newItem: false);
@@ -227,7 +230,7 @@ namespace Majordomo
                 }
                 case BOOTY_TYPE_ACTOR: // bootyId: actorId
                 {
-                    if (!Main.settings.autoAcceptNewVillager) return false;
+                    if (!Main.settings.autoHarvestActors) return false;
 
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[1]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[2]}{DateFile.instance.GetActorName(bootyId)}</color>";
                     DateFile.instance.GetActor(new List<int> { bootyId }, -1);  // 接纳村民时，不显示新人物窗口

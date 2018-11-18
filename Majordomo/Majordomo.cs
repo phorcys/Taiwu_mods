@@ -17,8 +17,9 @@ namespace Majordomo
 {
     public class Settings : UnityModManager.ModSettings
     {
-        // 自动接纳新村民
-        public bool autoAcceptNewVillager = true;
+        
+        public bool autoHarvestItems = true;        // 自动收获物品
+        public bool autoHarvestActors = true;       // 自动接纳新村民
 
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -70,11 +71,13 @@ namespace Majordomo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            GUILayout.BeginVertical("box");
-            GUILayout.BeginHorizontal(GUILayout.Width(400));
-            Main.settings.autoAcceptNewVillager = GUILayout.Toggle(Main.settings.autoAcceptNewVillager, "自动接纳新村民");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("自动收获");
             GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
+            GUILayout.BeginHorizontal();
+            Main.settings.autoHarvestItems = GUILayout.Toggle(Main.settings.autoHarvestItems, "自动收获物品");
+            Main.settings.autoHarvestActors = GUILayout.Toggle(Main.settings.autoHarvestActors, "自动接纳新村民");
+            GUILayout.EndHorizontal();
         }
 
 
