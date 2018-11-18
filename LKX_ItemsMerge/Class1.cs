@@ -126,7 +126,7 @@ namespace LKX_ItemsMerge
             if (Main.settings.enabledSize)
             {
                 string itemSize = GUILayout.TextField(Main.settings.itemsSize.ToString());
-                if (itemSize == "" || itemSize == null) itemSize = "0";
+                if (itemSize == "" || itemSize == null || itemSize == "0" || itemSize == "1") itemSize = "2";
                 if (GUI.changed) Main.settings.itemsSize = uint.Parse(itemSize);
             }
 
@@ -242,8 +242,8 @@ namespace LKX_ItemsMerge
                     if (!items.ContainsKey(int.Parse(id))) items.Add(int.Parse(id), itemId);
                     
                 }
-                Main.logger.Log(items.Count.ToString());
-                if (items.Count <= 0)
+                
+                if (items.Count == 0)
                 {
                     Main.logger.Log("拆分失败：没有找到足够拆分的药品，合并后再试试。");
                 }
@@ -258,7 +258,7 @@ namespace LKX_ItemsMerge
 
                         for (int i = 0; i < Main.settings.drugsCount; i++)
                         {
-                            if (int.Parse(df.itemsDate[item.Value][901]) == size) break;
+                            if (int.Parse(df.itemsDate[item.Value][901]) == size || int.Parse(df.itemsDate[item.Value][901]) < size) break;
 
                             int makeItemId = df.MakeNewItem(item.Key);
                             df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
@@ -285,65 +285,101 @@ namespace LKX_ItemsMerge
             if (!Main.enabled || Main.settings.mergeType.Count <= 0) return;
 
             DateFile df = DateFile.instance;
+
+            //需要合并的道具字典
             Dictionary<int, int[]> items = new Dictionary<int, int[]>();
+            
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
             if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
             {
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
                 {
-                    string id = df.GetItemDate(itemId, 999), surpluses = df.GetItemDate(itemId, 901), limit = df.GetItemDate(itemId, 902),
-                        level = df.GetItemDate(itemId, 8), type = df.GetItemDate(itemId, 5);
+                    int id = int.Parse(df.GetItemDate(itemId, 999)), surpluses = int.Parse(df.GetItemDate(itemId, 901)), limit = int.Parse(df.GetItemDate(itemId, 902)),
+                        level = int.Parse(df.GetItemDate(itemId, 8)), type = int.Parse(df.GetItemDate(itemId, 5));
+                    
+                    //存在合并物品的类型的话
+                    if (Main.settings.mergeType.Contains(type))
+                    {
+                        //如果是酒水药品，就检查等级，不是所需等级跳过本次循环。
+                        if ((type == 37 || type == 41) && !Main.settings.itemLevel.Contains(level)) continue;
 
-                    if (!Main.settings.mergeType.Contains(int.Parse(type))) continue;
-                    if ((type == "37" || type == "41") && !Main.settings.itemLevel.Contains(int.Parse(level))) continue;
-                    if (Main.settings.enabledSize && int.Parse(df.itemsDate[itemId][902]) >= Main.settings.itemsSize) continue;
-                    
-                    if (items.ContainsKey(int.Parse(id)))
-                    {
-                        items[int.Parse(id)][0] += int.Parse(surpluses);
-                        items[int.Parse(id)][1] += int.Parse(limit);
+                        //存在就叠加数值，不存在就新增
+                        if (items.ContainsKey(id))
+                        {
+                            items[id][0] += surpluses;
+                            items[id][1] += limit;
+                        }
+                        else
+                        {
+                            items.Add(id, new int[] { surpluses, limit });
+                        }
+
+                        //删掉这个道具
+                        df.LoseItem(df.mianActorId, itemId, -1, true);
                     }
-                    else
-                    {
-                        items.Add(int.Parse(id), new int[] { int.Parse(surpluses), int.Parse(limit) });
-                    }
-                    
-                    df.LoseItem(df.mianActorId, itemId, itemsId[itemId], true);
                 }
                 
-                foreach (KeyValuePair<int, int[]> item in items)
+                Main.MakeMergeItem(items);
+            }
+        }
+
+        /// <summary>
+        /// 新建道具
+        /// </summary>
+        /// <param name="items">道具字典</param>
+        public static void MakeMergeItem(Dictionary<int, int[]> items)
+        {
+            if (items.Count <= 0) return;
+
+            DateFile df = DateFile.instance;
+
+            foreach (KeyValuePair<int, int[]> item in items)
+            {
+                int id = int.Parse(df.GetItemDate(item.Key, 999)), surpluses = int.Parse(df.GetItemDate(item.Key, 901)), limit = int.Parse(df.GetItemDate(item.Key, 902)),
+                        level = int.Parse(df.GetItemDate(item.Key, 8)), type = int.Parse(df.GetItemDate(item.Key, 5));
+                
+                if (Main.settings.enabledSize && Main.settings.itemsSize > 1)
                 {
-                    if (Main.settings.enabledSize && Main.settings.itemsSize > 0)
-                    {
-                        int sizeCount = (item.Value[1] / int.Parse(Main.settings.itemsSize.ToString()));
-                        int itemNaiJiu = item.Value[0], itemMaxNaiJiu = item.Value[1];
-                        
-                        for (int i = 0; i <= sizeCount; i++)
-                        {
-                            int makeItemId = df.MakeNewItem(item.Key);
-                            df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                            if (itemNaiJiu > Main.settings.itemsSize)
-                            {
-                                df.itemsDate[makeItemId][901] = Main.settings.itemsSize.ToString();
-                                df.itemsDate[makeItemId][902] = Main.settings.itemsSize.ToString();
-                                itemNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
-                                itemMaxNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
-                            }
-                            else
-                            {
-                                df.itemsDate[makeItemId][901] = itemNaiJiu.ToString();
-                                df.itemsDate[makeItemId][902] = itemMaxNaiJiu >= Main.settings.itemsSize ? Main.settings.itemsSize.ToString() : itemMaxNaiJiu.ToString();
-                            }
-                        }
-                    }
-                    else
+                    int sizeCount = item.Value[1] / int.Parse(Main.settings.itemsSize.ToString());
+                    int itemNaiJiu = item.Value[0], itemMaxNaiJiu = item.Value[1];
+                    Main.logger.Log(sizeCount.ToString());
+                    for (int i = 0; i <= sizeCount; i++)
                     {
                         int makeItemId = df.MakeNewItem(item.Key);
                         df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                        df.itemsDate[makeItemId][901] = item.Value[0].ToString();
-                        df.itemsDate[makeItemId][902] = item.Value[1].ToString();
+
+                        //耐久小于或等于0就创建为0的道具吧，然后结束循环。
+                        //耐久大于合并大小才会继续拆，继续循环。
+                        //耐久小于或者等于最大耐久就走最后一个，结束循环。
+                        if (itemNaiJiu <= 0)
+                        {
+                            df.itemsDate[makeItemId][901] = "0";
+                            df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
+                            break;
+                        }
+                        else if(itemNaiJiu > Main.settings.itemsSize)
+                        {
+                            df.itemsDate[makeItemId][901] = Main.settings.itemsSize.ToString();
+                            df.itemsDate[makeItemId][902] = Main.settings.itemsSize.ToString();
+                            itemNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
+                            itemMaxNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
+                        }
+                        else
+                        {
+                            df.itemsDate[makeItemId][901] = itemNaiJiu.ToString();
+                            df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
+                            break;
+                        }
                     }
+                }
+                else
+                {
+                    //不拆直接创建。
+                    int makeItemId = df.MakeNewItem(item.Key);
+                    df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                    df.itemsDate[makeItemId][901] = item.Value[0].ToString();
+                    df.itemsDate[makeItemId][902] = item.Value[1].ToString();
                 }
             }
         }
