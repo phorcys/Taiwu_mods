@@ -204,6 +204,11 @@ namespace LKX_CheatMaxPeople
                 ActorMenu.instance.acotrId = Main.selectActorId;
                 ActorMenu.instance.SetNewMianActor();
             }
+
+            if (GUILayout.Button("测试遗惠"))
+            {
+                ActorScore.instance.ShowActorScoreWindow(DateFile.instance.mianActorId);
+            }
             GUILayout.EndHorizontal();
 
             if (Main.teamActorId.Count > 0)
