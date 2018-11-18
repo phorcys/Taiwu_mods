@@ -366,32 +366,54 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         /// <param name="workType">资源种类</param>
         private void ArrangeWork(WorkType workType)
         {
-            var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]); // size of map
-            var part = df.mianPartId;
+            // var part = df.mianPartId;
 
+            var maxPart = -1;
             var maxPlace = -1;
             var maxRes = 0;
             var manNeed = 0x7fffffff;
             var manPool = UIDate.instance.GetUseManPower();
 
-            for (int place = 0; place < size * size; place++)
+            IEnumerable<int> parts = null;
+            switch (Main.Setting.area)
             {
-                if (df.HaveShow(part, place) > 0 && !df.PlaceIsBad(part, place) && !df.HaveWork(part, place))
+                case 1:
+                    parts = new int[] { int.Parse(df.GetGangDate(16, 3)) };
+                    break;
+                case 2:
+                    parts = df.partWorldMapDate.Keys;
+                    break;
+                case 0:
+                default:
+                    parts = new int[] { df.mianPartId };
+                    break;
+            }
+
+            foreach (int part in parts)
+            {
+                var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]); // size of map
+                for (int place = 0; place < size * size; place++)
                 {
-                    var res = UIDate.instance.GetWorkPower((int)workType, part, place);
-                    var man = int.Parse(df.GetNewMapDate(part, place, 12));
-                    if (res > maxRes && manPool >= man)
+                    if (df.HaveShow(part, place) > 0
+                        && !df.PlaceIsBad(part, place)
+                        && !df.HaveWork(part, place))
                     {
-                        if (man <= 1 || !Main.Setting.skipTown)
+                        var res = UIDate.instance.GetWorkPower((int)workType, part, place);
+                        var man = int.Parse(df.GetNewMapDate(part, place, 12));
+                        if (res > maxRes && manPool >= man)
                         {
-                            maxRes = res;
-                            maxPlace = place;
-                            manNeed = man;
+                            if (man <= 1 || !Main.Setting.skipTown)
+                            {
+                                maxRes = res;
+                                maxPart = part;
+                                maxPlace = place;
+                                manNeed = man;
+                            }
                         }
                     }
                 }
             }
-            if (maxRes > 0 && maxPlace >= 0)
+            if (maxRes > 0 && maxPart >= 0 && maxPlace >= 0)
             {
                 if (manPool >= manNeed)
                 {
@@ -399,7 +421,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                     var choosePlaceId = wms.choosePlaceId;
                     var chooseWorkTyp = wms.chooseWorkTyp;
 
-                    wms.choosePartId = part;
+                    wms.choosePartId = maxPart;
                     wms.choosePlaceId = maxPlace;
                     wms.chooseWorkTyp = (int)workType;
                     wms.DoManpowerWork();
@@ -411,7 +433,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             }
             else
             {
-                TipsWindow.instance.SetTips(0, new string[] { "<color=#AF3737FF>无资源可采集或人力不足</color>" }, 180);
+                TipsWindow.instance.SetTips(0,
+                    new string[] { "<color=#AF3737FF>无资源可采集或人力不足</color>" }, 180);
             }
         }
 
@@ -512,7 +535,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
             }
 
-            var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]);
+            var size = int.Parse(df.partWorldMapDate[partId][98]);
             while (df.backManpowerList[partId].ContainsKey(placeId))
             {
                 // 防止key重复。如果在同一地点人力未恢复完成，再次分配人力然后取消，则会出现。
@@ -583,6 +606,10 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         /// 是否逆序
         /// </summary>
         public bool reverse = false;
+        /// <summary>
+        /// 是否采集所有地图
+        /// </summary>
+        public int area = 0;
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -594,6 +621,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         public static UnityModManager.ModEntry.ModLogger Logger { get; private set; }
         public static Settings Setting { get; private set; }
         public static bool Enabled { get; private set; }
+
+        public static string[] areas = { "当前地图", "太吾村", "所有地图" };
 
         public static bool bindingKey = false;
 
@@ -641,6 +670,10 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
             Setting.skipTown = GUILayout.Toggle(Setting.skipTown, "忽略城镇");
             Setting.reverse = GUILayout.Toggle(Setting.reverse, "降序排列");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("选择采集区域: ", GUILayout.Width(100));
+            Setting.area = GUILayout.SelectionGrid(Setting.area, areas, areas.Length);
             GUILayout.EndHorizontal();
         }
 
