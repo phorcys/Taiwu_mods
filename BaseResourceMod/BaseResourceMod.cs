@@ -404,6 +404,24 @@ namespace BaseResourceMod
             return (T)field.GetValue(obj);
         }
 
+        public static void SetFieldValue<T>(object obj, string fieldName, T value)
+        {
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            var field = obj.GetType().GetField(fieldName, BindingFlags.Public |
+                                                          BindingFlags.NonPublic |
+                                                          BindingFlags.Instance);
+
+            if (field == null)
+                throw new ArgumentException("fieldName", "No such field was found.");
+
+            if (!field.FieldType.IsAssignableFrom(typeof(T)))
+                throw new InvalidOperationException("Field type and requested type are not compatible.");
+
+            field.SetValue(obj, value);
+        }
+
         static public Dictionary<int, Dictionary<int, string>>  getCSVDictRef(string cate)
         {
             if(cate == "ActorFace_Date")
@@ -424,6 +442,14 @@ namespace BaseResourceMod
                 return GetFieldValue<T>(GetSprites.instance, sprite_instance_dict[cate]);
             }
             return default(T);
+        }
+
+        static public void SetSprite<T>(string cate, T value)
+        {
+            if (sprite_instance_dict.ContainsKey(cate))
+            {
+                SetFieldValue(GetSprites.instance, sprite_instance_dict[cate], value);
+            }
         }
     }
 

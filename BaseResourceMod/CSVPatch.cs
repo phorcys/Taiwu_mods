@@ -238,8 +238,8 @@ namespace BaseResourceMod
         public static void processDir(string path)
         {
             Dictionary<string, Dictionary<int, string>> allfiles = new Dictionary<string, Dictionary<int, string>>();
-            //遍历 子目录下所有txt
-            foreach (string fname in Directory.GetFiles(path, "*.txt"))
+            // 遍历该目录及子目录下所有 txt 文件
+            foreach (string fname in Directory.GetFiles(path, "*.txt", SearchOption.AllDirectories))
             {
 
                 string filename = Path.GetFileName(fname);
@@ -327,10 +327,6 @@ namespace BaseResourceMod
                 if (Directory.Exists(kv.Value))
                 {
                     processDir(kv.Value);
-                    foreach (string path in Directory.GetDirectories(kv.Value))
-                    {
-                        processDir(path);
-                    }
                 }
                 else
                 {

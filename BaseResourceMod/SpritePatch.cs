@@ -64,8 +64,13 @@ namespace BaseResourceMod
                         int counter = 0;
                         while(counter < index - instance.Length +1)
                         {
-                            instance.AddToArray(null);
+                            instance = instance.AddToArray(null);
                             counter++;
+                        }
+                        if (counter > 0)
+                        {
+                            Main.SetSprite(nkey, instance);
+                            instance = Main.getSpriteRef<Sprite[]>(nkey);
                         }
                         instance[index] = sprite;
                     }
@@ -204,14 +209,9 @@ namespace BaseResourceMod
             }
         }
 
-        public static void doReplaceSpriteImage(string key, string ftype, string ufname)
+        public static void doReplaceSpriteImage(string nkey, string ftype, string ufname)
         {
-            string nkey = key;
-            if(key[key.Length-1] == '/')
-            {
-                nkey = key.Substring(0, key.Length - 1);
-            }
-            if(Main.sprite_instance_dict.ContainsKey(nkey))
+            if (Main.sprite_instance_dict.ContainsKey(nkey))
             {
                 replaceCommonSpriteImage(nkey, ftype, ufname);
             }
@@ -224,10 +224,11 @@ namespace BaseResourceMod
 
         public static void processDir(string path)
         {
-            //遍历 子目录下所有png
-            foreach (string fname in Directory.GetFiles(path, "*.png", SearchOption.AllDirectories))
-            {
+            string uPath = path.Replace("\\", "/");
 
+            // 遍历该目录及子目录下所有 png 文件
+            foreach (string fname in Directory.GetFiles(uPath, "*.png", SearchOption.AllDirectories))
+            {
                 string filename = Path.GetFileName(fname);
                 string ufname = fname.Replace("\\", "/");
                 Main.Logger.Log(String.Format("[Texture] Found {0} in subdir {1}", ufname, path));
@@ -237,8 +238,12 @@ namespace BaseResourceMod
                     {
                         string ftype = filename.Replace(".png","");
                         string dir = Path.GetDirectoryName(ufname);
-                        string key = Regex.Replace(dir, @"\./Texture/[^/]+/", "");
-                        Main.Logger.Log(String.Format("[Texture] sprite type {0} ftype {1} dir {2}  going to parsing {3}", key, ftype,dir, ufname));
+
+                        string key = dir.Substring(uPath.Length);
+                        if (key[key.Length - 1] == '/') key = key.Substring(0, key.Length - 1);
+                        if (key[0] == '/') key = key.Substring(1);
+
+                        Main.Logger.Log(String.Format("[Texture] sprite type {0} ftype {1} dir {2}  going to parsing {3}", key, ftype, dir, ufname));
 
                         try
                         {
@@ -260,9 +265,9 @@ namespace BaseResourceMod
                     Debug.Log(e.Message);
                     Debug.Log(e.StackTrace);
                 }
-
             }
         }
+
         public static Sprite AddNewSpriteFromTexturePNG(string path)
         {
             if (System.IO.File.Exists(path) == false)
@@ -548,10 +553,6 @@ namespace BaseResourceMod
                     if (Directory.Exists(kv.Value))
                     {
                         processDir(kv.Value);
-                        foreach (string path in Directory.GetDirectories(kv.Value))
-                        {
-                            processDir(path);
-                        }
                     }
                     else
                     {
