@@ -18,7 +18,11 @@ namespace LKX_LoopedStoryInKunlun
     /// </summary>
     public class Settings : UnityModManager.ModSettings
     {
+        /// <summary>
+        /// 是否开启MOD
+        /// </summary>
         public bool activeMod;
+
         /// <summary>
         /// 保存设置
         /// </summary>
@@ -62,6 +66,7 @@ namespace LKX_LoopedStoryInKunlun
             modEntry.OnGUI = Main.OnGUI;
             modEntry.OnSaveGUI = Main.OnSaveGUI;
 
+            //注册MOD下的Data文件夹路径到基础资源mod加载
             string resdir = System.IO.Path.Combine(modEntry.Path, "Data");
             BaseResourceMod.Main.registModResDir(modEntry, resdir);
 
@@ -129,6 +134,7 @@ namespace LKX_LoopedStoryInKunlun
             int placeId = int.Parse(DateFile.instance.GetGangDate(16, 4));
             List<int> list = new List<int>(GetTaiWuHomePlaceList(partId, placeId, false));
 
+            //没有奇遇格子的列表选一个加上昆仑昆仑·镜冢
             if (list.Count > 0)
             {
                 int placeId2 = list[UnityEngine.Random.Range(0, list.Count)];
@@ -151,6 +157,7 @@ namespace LKX_LoopedStoryInKunlun
 
             if (list.Count > 0)
             {
+                //奇遇是昆仑·镜冢的id就false掉
                 int i = 0;
                 foreach(int storyKey in list)
                 {
@@ -181,8 +188,8 @@ namespace LKX_LoopedStoryInKunlun
         public static List<int> GetTaiWuHomePlaceList(int partId, int placeId, bool isStory = true)
         {
             List<int> list = new List<int>();
-            List<int> list2 = new List<int>(DateFile.instance.GetWorldMapNeighbor(partId, placeId, 1));
-            List<int> list3 = new List<int>(DateFile.instance.GetWorldMapNeighbor(partId, placeId, 100));
+            List<int> list2 = new List<int>(DateFile.instance.GetWorldMapNeighbor(partId, placeId, 1));//范围1格
+            List<int> list3 = new List<int>(DateFile.instance.GetWorldMapNeighbor(partId, placeId, 100));//范围100格
             for (int j = 0; j < list3.Count; j++)
             {
                 int num2 = list3[j];
@@ -240,6 +247,7 @@ namespace LKX_LoopedStoryInKunlun
         {
             if (Main.enabled && Main.settings.activeMod)
             {
+                //如果剑冢已打数量大于或等于7，而且昆仑镜冢不存在才执行16785这个事件
                 if (DateFile.instance.GetWorldXXLevel() >= 7 && !Main.KunLunIsExist()) DateFile.instance.SetEvent(new int[] { 0, -1, 16785 }, false);
             }
         }
@@ -265,6 +273,7 @@ namespace LKX_LoopedStoryInKunlun
             {
                 int num = Mathf.Min(index + 1, 10);
                 MakeXXEnemyNum = num;
+                //装备的key
                 for(int i = 0; i < 7; i++)
                 {
                     int equipId = int.Parse(DateFile.instance.presetActorDate[18628][304 + i]);
@@ -303,7 +312,7 @@ namespace LKX_LoopedStoryInKunlun
 
             if (MassageWindow.instance.eventValue.Count > 0 && MassageWindow.instance.eventValue[0] != 0)
             {
-                Main.logger.Log(MassageWindow.instance.eventValue[0].ToString());
+                //判断事件id是不是16785
                 if (MassageWindow.instance.eventValue[0] == 16785)
                 {
                     Main.SetStoryForKunLun();

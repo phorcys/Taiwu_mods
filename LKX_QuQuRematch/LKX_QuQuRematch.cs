@@ -66,6 +66,9 @@ namespace LKX_QuQuRematch
         /// </summary>
         public static Dictionary<int, string> quQuGuiList = new Dictionary<int, string>();
 
+        /// <summary>
+        /// 用于显示在设置里的信息
+        /// </summary>
         public static string messageLabel = "";
 
         /// <summary>
@@ -113,7 +116,7 @@ namespace LKX_QuQuRematch
             GUILayout.EndHorizontal();
             if (GUILayout.Button("获取促织列表"))
             {
-                if (DateFile.instance == null)
+                if (DateFile.instance.mianActorId <= 0)
                 {
                     messageLabel = "获取失败：未进入存档";
                 }
@@ -157,6 +160,12 @@ namespace LKX_QuQuRematch
             Main.settings.Save(modEntry);
         }
 
+        /// <summary>
+        /// 设置GUI
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="name"></param>
+        /// <param name="field"></param>
         static void SetGUIToToggle(int index, string name, ref List<int> field)
         {
             bool status = GUILayout.Toggle(field.Contains(index), name);
@@ -180,7 +189,10 @@ namespace LKX_QuQuRematch
         {
             foreach (KeyValuePair<int, Dictionary<int, string>> quQu in DateFile.instance.cricketDate)
             {
-                if (!Main.quQuGuiList.ContainsKey(quQu.Key)) Main.quQuGuiList.Add(quQu.Key, DateFile.instance.SetColoer(int.Parse(DateFile.instance.cricketDate[quQu.Key][1]) + 20001, quQu.Value[0]));
+                if (!Main.quQuGuiList.ContainsKey(quQu.Key))
+                {
+                    Main.quQuGuiList.Add(quQu.Key, DateFile.instance.SetColoer(int.Parse(DateFile.instance.cricketDate[quQu.Key][1]) + 20001, quQu.Value[0]));
+                }
             }
         }
     }
@@ -205,6 +217,7 @@ namespace LKX_QuQuRematch
     /// </summary>
     public class LKX_QuQuRematch_GetQuquWindow
     {
+        //三个开关控制流程
         public static bool active = true;
         public static bool stopQuQuWindow = false;
         public static bool closeQuQuWindow = false;

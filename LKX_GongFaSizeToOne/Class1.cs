@@ -212,6 +212,9 @@ namespace LKX_GongFaSizeToOne
             }
         }
 
+        /// <summary>
+        /// 检查用户选项，没选的去掉。于是剩下的就是选择的
+        /// </summary>
         public static void ProcessingGongFaType()
         {
             if (Main.settings.gongFaGuiType != 0)
@@ -247,8 +250,7 @@ namespace LKX_GongFaSizeToOne
         static void Prepare()
         {
             if (!Main.enabled) return;
-
-            //不是全功法就根据选择去删除未选择的功法类型
+            
             Main.ProcessingGongFaType();
         }
         

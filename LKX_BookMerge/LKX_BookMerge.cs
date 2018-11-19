@@ -249,6 +249,8 @@ namespace LKX_BookMerge
                     DateFile.instance.enemyBorn, DateFile.instance.xxLevel, DateFile.instance.enemySize,
                     DateFile.instance.worldResource, DateFile.instance.randomHeir
                 };
+
+                //处理人物身上所有书籍
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
                 {
@@ -271,6 +273,7 @@ namespace LKX_BookMerge
                     df.LoseItem(df.mianActorId, itemId, itemsId[itemId], true);
                 }
 
+                //生成合并后的书籍
                 foreach (KeyValuePair<int, string[]> item in items)
                 {
                     int makeItemId = df.MakeNewItem(item.Key);

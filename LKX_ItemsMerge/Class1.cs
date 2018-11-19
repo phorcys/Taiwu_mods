@@ -229,6 +229,7 @@ namespace LKX_ItemsMerge
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
             if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
             {
+                //层层过滤，符合条件的就加入字典。
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
                 {
@@ -243,6 +244,7 @@ namespace LKX_ItemsMerge
                     
                 }
                 
+                //处理拆分
                 if (items.Count == 0)
                 {
                     Main.logger.Log("拆分失败：没有找到足够拆分的药品，合并后再试试。");
