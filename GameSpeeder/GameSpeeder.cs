@@ -90,7 +90,7 @@ namespace GameSpeeder
             if (lastTimeScale != Time.timeScale)
                 realTimeScale = Time.timeScale;
             if (_enable)
-                lastTimeScale = Time.timeScale = realTimeScale * Main.settings.speedScale + 0.00001f;
+                lastTimeScale = Time.timeScale = realTimeScale * Main.settings.speedScale * 1.00001f; // * 1.00001f方便检测之后游戏逻辑是否对Time.timeScale作了更改
             else
                 lastTimeScale = Time.timeScale = realTimeScale;
         }
@@ -99,21 +99,21 @@ namespace GameSpeeder
         public static void CheckPerFrame()
         {
             if (lastTimeScale != Time.timeScale) // may be changed in game logic
+            {
                 ApplyTimeScale(_enable);
+            }
+
             if (_isHotKeyHangUp)
                 _isHotKeyHangUp = false;
             else if (Input.GetKeyDown(settings.hotKeyEnable))
                 ApplyTimeScale(!_enable, true);
 
-            if (!_keyCurrentlyHeldDown)
+            if (Input.anyKey) // 任何键盘按键按下期间停止变速
             {
-                if (Input.anyKey) // 任何键盘按键按下期间停止变速
-                {
-                    _keyCurrentlyHeldDown = true;
-                    lastTimeScale = Time.timeScale = realTimeScale;
-                }
+                _keyCurrentlyHeldDown = true;
+                lastTimeScale = Time.timeScale = realTimeScale;
             }
-            else if (!Input.anyKey)
+            else if (_keyCurrentlyHeldDown)
             {
                 _keyCurrentlyHeldDown = false;
                 ApplyTimeScale(_enable); // 恢复变速
@@ -289,8 +289,9 @@ namespace GameSpeeder
     {
         private static void Prefix(BattleSystem __instance, ref float autoTime)
         {
-            if (Main.lastTimeScale > 0)
-                autoTime = autoTime / Main.lastTimeScale;
+            // 变速配置激活状态且倍速>1才改这个等待时间
+            if (Main.settings.enabled && Main.settings.speedScale > 1)
+                autoTime = autoTime / Main.settings.speedScale;
         }
     }
 

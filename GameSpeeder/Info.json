@@ -2,7 +2,7 @@
   "Id": "GameSpeeder",
   "DisplayName": "游戏变速器",
   "Author": "loboho",
-  "Version": "1.1.1",
+  "Version": "1.1.2",
   "AssemblyName": "GameSpeeder.dll",
   "EntryMethod": "GameSpeeder.Main.Load"
 }
