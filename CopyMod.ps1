@@ -24,7 +24,7 @@ $path = Join-Path $PSScriptRoot $Mod;
 $targetDir = Join-Path $ModsDir $Mod;
 
 if (Test-Path $targetDir) {
-    Remove-Item "$targetDir\*" -Recurse -Force -Exclude *.xml
+    Remove-Item "$targetDir\*" -Recurse -Force -Exclude *.xml, *.dll
     foreach ($file in Get-ChildItem $path) {
         if ($file -is [System.IO.FileInfo]) {
             if ((".dll", ".cs") -notcontains $file.Extension) {
