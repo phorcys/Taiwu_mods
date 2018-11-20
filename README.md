@@ -7,12 +7,12 @@
 ## 编译依赖
 *  Visual Studio 2017 (Community版)
 *  游戏本体
-*  解密的Assembly-CSharp.dll,和本README.md文件放一个目录下里
+*  从QQ群下载解密的Assembly-CSharp.dll,存放在本地仓库的根目录
 *  修改genvsproj.cmd ，将里面的 STEAMDIR 设置为本机 太吾 安装目录
 *  如果没有cmake，安装cmake  3.12或以上版本  ( 编写此说明时，使用 3.12.3 版本测试ok)
-*  将genvsproj.cmd中的STEAMDIR变量设置为你的游戏路径，然后命令行运行 genvsproj.cmd, 会自动生成所需的工程文件到build目录下。
+*  将genvsproj.cmd中的STEAMDIR变量设置为你的游戏路径，然后命令行运行 genvsproj.cmd, 会自动生成Visual Studio的解决方案到build目录下。
 *  mod目录下的.cs会自动加入工程,.dll会自动作为依赖，其他的文件如 .md，.txt等会自动拷贝到游戏的Mod路径
-*  cmake会自动为工程添加post build事件，build成功后，如果游戏mod目录下存在同名mod，则自动复制dll到 游戏mods目录下对应mod目录内
+*  cmake会自动为工程添加post build事件，build成功后，如果游戏mod目录下存在mod同名文件夹，则自动复制dll到 游戏mods目录下对应mod目录内
 
 ****
 ## 新建 Mod流程
@@ -31,7 +31,7 @@
 }
 ```
 3. 除 最后一行 Requirements 外，其他为必填
-4. 在太吾游戏路径下的Mods文件夹中，新建一个文件夹存放你的mod，如：*E:\SteamLibrary\steamapps\common\The Scroll Of Taiwu\Mods\HerbRecipes\*
+4. 在太吾游戏路径下的Mods文件夹中，新建一个文件夹存放你的mod，如：*E:/SteamLibrary/steamapps/common/The Scroll Of Taiwu/Mods/HerbRecipes/*
 5. 运行genvsproj.cmd 生成工程，开始mod开发
 
 ## 注意事项 
