@@ -11,7 +11,7 @@ namespace Rejuvenation
         public int rejuvenatedAge = 0;
         public int rejuvenationAge = 6;
         public int changedGongFaFLevel = 0;
-        public List<int> keepAgeTeammate = new List<int>();
+        public bool[] keepAgeTeammate = { false, false, false, false, false, };
 
         public override void Save(UnityModManager.ModEntry modEntry)
         {
@@ -26,11 +26,12 @@ namespace Rejuvenation
         public static UnityModManager.ModEntry.ModLogger Logger;
 
         public static Settings setting;
-        public static Dictionary<int, int> teammateAge;
+        public static Dictionary<int, string> teammateAge;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             setting = Settings.Load<Settings>(modEntry);
+            teammateAge = new Dictionary<int, string>();
 
             Logger = modEntry.Logger;
 
@@ -218,25 +219,9 @@ namespace Rejuvenation
                 GUILayout.Label("太吾传人可消耗「天长地久不老长春功」修为，使亲近之人停止衰老。");
                 GUILayout.BeginHorizontal("Box");
                 GUILayout.Label("生效对象：");
-                bool[] teammate = { false, false, false, false, false, };
                 for (int i = 1; i != 5; i++) {
-                    if (DateFile.instance.acotrTeamDate[i] != -1 && Main.setting.keepAgeTeammate.Contains(DateFile.instance.acotrTeamDate[i])) {
-                        teammate[i] = true;
-                    }
-                }
-                for (int i = 1; i != 5; i++) {
-                    if (DateFile.instance.acotrTeamDate[i] != -1) {
-                        teammate[i] = GUILayout.Toggle(teammate[i], DateFile.instance.GetActorName(DateFile.instance.acotrTeamDate[i]));
-                    }
-                }
-                for (int i = 1; i != 5; i++) {
-                    if (DateFile.instance.acotrTeamDate[i] != -1) {
-                        if (Main.setting.keepAgeTeammate.Contains(DateFile.instance.acotrTeamDate[i]) && !teammate[i]) {
-                            Main.setting.keepAgeTeammate.Remove(DateFile.instance.acotrTeamDate[i]);
-                        }
-                        if (!Main.setting.keepAgeTeammate.Contains(DateFile.instance.acotrTeamDate[i]) && teammate[i]) {
-                            Main.setting.keepAgeTeammate.Add(DateFile.instance.acotrTeamDate[i]);
-                        }
+                    if(DateFile.instance.acotrTeamDate[i] != -1) {
+                        setting.keepAgeTeammate[i] = GUILayout.Toggle(setting.keepAgeTeammate[i], DateFile.instance.GetActorName(DateFile.instance.acotrTeamDate[i]));
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -339,13 +324,6 @@ namespace Rejuvenation
                 }
             }
             else {
-                Main.teammateAge.Clear();
-                for (int i = 1; i != 5; i++) {
-                    if (DateFile.instance.acotrTeamDate[i] != -1 && Main.setting.keepAgeTeammate.Contains(DateFile.instance.acotrTeamDate[i])) {
-                        Main.teammateAge.Add(DateFile.instance.acotrTeamDate[i], int.Parse(DateFile.instance.GetActorDate(DateFile.instance.acotrTeamDate[i], 11, false)));
-                    }
-                }
-
                 if (Main.setting.rejuvenatedAge == 0) {
                     if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] >= 25 && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] < 100
                         && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] / 25 * 30 + 6 < int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][11])) {
@@ -464,8 +442,12 @@ namespace Rejuvenation
                 }
             }
         }
+    }
 
-        static void Postfix()
+    [HarmonyPatch(typeof(AgeChanage), "AllActorAgeChanage")]
+    public static class AgeChanage_AllActorAgeChanage_Patch
+    {
+        static void Prefix()
         {
             if (!Main.enabled) {
                 return;
@@ -475,10 +457,48 @@ namespace Rejuvenation
                 return;
             }
 
+            Main.Logger.Log("年龄变化开始");
+            string log = "";
+            foreach (var i in Main.setting.keepAgeTeammate) {
+                log += i ? "1" : "0";
+            }
+            Main.Logger.Log(log);
+
+            Main.teammateAge.Clear();
+            for (int i = 1; i != 5; i++) {
+                if (DateFile.instance.actorsDate.ContainsKey(DateFile.instance.acotrTeamDate[i]) && Main.setting.keepAgeTeammate[i]) {
+                    Main.teammateAge.Add(DateFile.instance.acotrTeamDate[i], DateFile.instance.actorsDate[DateFile.instance.acotrTeamDate[i]][11]);
+                }
+            }
+            foreach (var i in Main.teammateAge) {
+                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + DateFile.instance.actorsDate[i.Key][11]);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
+    public static class SaveDateFile_SaveSaveDate_Patch
+    {
+        static void Prefix()
+        {
+            if (!Main.enabled) {
+                return;
+            }
+
+            if (!DateFile.instance.gongFaDate.ContainsKey(150369)) {
+                return;
+            }
+
+            Main.Logger.Log("年龄变化结束");
+
+            foreach (var i in Main.teammateAge) {
+                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + DateFile.instance.actorsDate[i.Key][11]);
+            }
+
             if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369)) {
                 for (int i = 1; i != 5; i++) {
-                    if (DateFile.instance.acotrTeamDate[i] != -1 && Main.teammateAge.ContainsKey(DateFile.instance.acotrTeamDate[i])) {
-                        if (Main.teammateAge[DateFile.instance.acotrTeamDate[i]] != int.Parse(DateFile.instance.GetActorDate(DateFile.instance.acotrTeamDate[i], 11, false))) {
+                    if (DateFile.instance.actorsDate.ContainsKey(DateFile.instance.acotrTeamDate[i]) && Main.teammateAge.ContainsKey(DateFile.instance.acotrTeamDate[i])) {
+                        if (Main.teammateAge[DateFile.instance.acotrTeamDate[i]] != DateFile.instance.actorsDate[DateFile.instance.acotrTeamDate[i]][11]) {
                             if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] >= 4) {
                                 DateFile.instance.RemoveMainActorEquipGongFa(150369);
                                 DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150369][0] -= 4;
