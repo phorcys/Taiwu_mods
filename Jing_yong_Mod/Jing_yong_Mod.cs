@@ -35,7 +35,8 @@ namespace Jing_yong_Mod
 
             modEntry.OnGUI = OnGUI;
 
-            if (enabled) {
+            //if (enabled) 
+            {
                 string resdir = System.IO.Path.Combine(modEntry.Path, "Data");
                 Logger.Log(" resdir :" + resdir);
                 BaseResourceMod.Main.registModResDir(modEntry, resdir);
