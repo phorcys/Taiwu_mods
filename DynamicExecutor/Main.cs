@@ -76,7 +76,7 @@ namespace Sth4nothing.DynamicExecutor
             string convert(UMM.ModEntry mod) =>
                 $"\t<Reference Include=\"{mod.Info.AssemblyName.Replace(".dll", "")}\">\n" +
                 "\t\t<ReferenceOutputAssembly>true</ReferenceOutputAssembly>\n" +
-                "\t\t<Private>true</Private>\n" +
+                "\t\t<Private>false</Private>\n" +
                 $"\t\t<HintPath>{Path.Combine(mod.Path, mod.Info.AssemblyName)}</HintPath>\n" +
                 "\t</Reference>";
             modsReference = string.Join("\n",
