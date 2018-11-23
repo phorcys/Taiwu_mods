@@ -5,7 +5,7 @@ if (WIN32)
 
 cmake_minimum_required(VERSION 3.11)
 project("Taiwu_Mods" CSharp)
-set(CMAKE_CSharp_FLAGS "/langversion:6")
+set(CMAKE_CSharp_FLAGS "/langversion:7")
 include(CSharpUtilities)
 
 SET(DLLPATH "The Scroll Of Taiwu Alpha V1.0_Data/Managed/")
@@ -307,8 +307,9 @@ using System.Runtime.Versioning\;
 	set(ProjectDeps "")
 	set(var "")
 	foreach(var ${Requirements})
+		string(REGEX REPLACE "-.*$" "" req ${modinfo.Requirements_${var}})
 		message(STATUS "	Mod requirements : ${modinfo.Requirements_${var}}")
-		target_link_libraries(${moddir} ${modinfo.Requirements_${var}})
+		target_link_libraries(${moddir} ${req})
 	endforeach()
 
 	#清除json
