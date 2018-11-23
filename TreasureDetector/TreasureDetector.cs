@@ -46,17 +46,17 @@ namespace TreasureDetector
             GUILayout.Label("* 鼠标移到地形,可获得挖掘资讯,包括掉宝等级及机率", new GUIStyle(UI.bold) { fontSize = 16 });
             GUILayout.Label("* 鼠标移到城市,可显示当地最高级物资的座标及最大数值", new GUIStyle(UI.bold) { fontSize = 16 });
             GUILayout.Label("选项设定", UI.h2);
-            GUILayout.BeginHorizo​​​​ntal("Box");
+            GUILayout.BeginHorizontal("Box");
             GUILayout.Label("* 计算最大资源基于", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
             settings.calByDropRate = GUILayout.SelectionGrid(settings.calByDropRate ? 1 : 0, new string[] { "<b>现有资源</b>", "<b>掉极品率</b>" }, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
-            GUILayout.EndHorizo​​ntal();
+            GUILayout.EndHorizontal();
             GUILayout.Label("附加功能 (或会破坏游戏体验, 慎用)", UI.h2);
-            GUILayout.BeginHorizo​​​​ntal("Box");
+            GUILayout.BeginHorizontal("Box");
             GUILayout.Label("* 提高掉极品机率", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
             settings.riseDropRate = GUILayout.SelectionGrid(settings.riseDropRate ? 1 : 0, new string[] { "关闭", "启用" }, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
-            GUILayout.EndHorizo​​ntal();
+            GUILayout.EndHorizontal();
             //以下內容暫未開發
             //            GUILayout.BeginHorizo​​ntal("Box");
             //            GUILayout.Label("进注工人,每月也有机率挖得宝物 (暂未开发)", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
