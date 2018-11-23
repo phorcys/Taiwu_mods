@@ -78,7 +78,7 @@ namespace TrainingRoom
             //Main.Logger.Log("GangID:" + GangID.ToString());
             int GangGroupID = DateFile.instance.GetGangValueId(GangID, int.Parse(DateFile.instance.GetActorDate(任務對象ID, 20, false)));
             //Main.Logger.Log("GangGroupID:" + GangGroupID.ToString());
-            
+
             Dictionary<int, string> GangGroupValue = DateFile.instance.presetGangGroupDateValue[GangGroupID];
             //Main.Logger.Log("GangGroupValue:" + GangGroupValue.Select(x => String.Format("{0}:{1}", x.Key, x.Value)).ToArray().Join());
             //Main.Logger.Log("\n");
@@ -94,30 +94,29 @@ namespace TrainingRoom
             //    Main.Logger.Log("\n");
             //}
 
-
-            if (chooseId == 1000000002 && GangGroupID == 0)  // "无"
+            string eventId;
+            if (chooseId == 1000000002)
             {
-                EventSeries.Series1(GangGroupID); // 添加 相枢幻身
-            }
-            else
-            if (chooseId == 1000000002 && GangGroupID == 1) //"太吾村民"
-            {
-                EventSeries.Series2(GangGroupID); // 添加 剑冢再临
-            }
-            else
-            if (chooseId == 1000000002 && GangGroupValue.TryGetValue(812, out string eventId) && eventId == "901300001")    //城主,村长,镇长,大当家
-            {
-                EventSeries.Series3(GangGroupID);// 添加 清理宵小&剿灭邪道
-            }
-            else
-            if (chooseId == 1000000002 && GangID == 15) // "血犼教"
-            {
-//                EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
-            }
-            else
-            if (Main.settings.moreEvents && chooseId == 1000000002 && GangID >= 1 && GangID < 15) //其他門派弟子互動
-            {
-//                EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
+                if (GangGroupID == 0)  // "无"
+                {
+                    EventSeries.Series1(GangGroupID); // 添加 相枢幻身
+                }
+                else if (GangGroupID == 1) //"太吾村民"
+                {
+                    EventSeries.Series2(GangGroupID); // 添加 剑冢再临
+                }
+                else if (GangGroupValue.TryGetValue(812, out eventId) && eventId == "901300001")    //城主,村长,镇长,大当家
+                {
+                    EventSeries.Series3(GangGroupID);// 添加 清理宵小&剿灭邪道
+                }
+                else if (GangID == 15) // "血犼教"
+                {
+                    // EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
+                }
+                else if (Main.settings.moreEvents && GangID >= 1 && GangID < 15) //其他門派弟子互動
+                {
+                    // EventSeries.Series4(GangGroupID);  // 添加 門派弟子互动
+                }
             }
         }
 

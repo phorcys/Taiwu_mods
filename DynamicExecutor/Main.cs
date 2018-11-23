@@ -73,7 +73,7 @@ namespace Sth4nothing.DynamicExecutor
         {
             rootPath = modEntry.Path;
             Logger = modEntry.Logger;
-            string convert(UMM.ModEntry mod) =>
+            Func<UMM.ModEntry, string> convert = (mod) =>
                 $"\t<Reference Include=\"{mod.Info.AssemblyName.Replace(".dll", "")}\">\n" +
                 "\t\t<ReferenceOutputAssembly>true</ReferenceOutputAssembly>\n" +
                 "\t\t<Private>false</Private>\n" +

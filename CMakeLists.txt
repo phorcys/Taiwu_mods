@@ -5,7 +5,7 @@ if (WIN32)
 
 cmake_minimum_required(VERSION 3.11)
 project("Taiwu_Mods" CSharp)
-set(CMAKE_CSharp_FLAGS "/langversion:7")
+set(CMAKE_CSharp_FLAGS "/langversion:6")
 include(CSharpUtilities)
 
 SET(DLLPATH "The Scroll Of Taiwu Alpha V1.0_Data/Managed/")
