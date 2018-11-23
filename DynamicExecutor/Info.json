@@ -1,8 +1,8 @@
-{
+﻿{
     "Id": "DynamicExecutor",
     "DisplayName": "动态执行代码",
     "Author": "sth4nothing",
-    "Version": "1.0.0",
+    "Version": "1.1.0",
     "AssemblyName": "DynamicExecutor.dll",
     "EntryMethod": "Sth4nothing.DynamicExecutor.Main.Load"
 }

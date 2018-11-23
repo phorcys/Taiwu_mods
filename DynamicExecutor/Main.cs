@@ -1,23 +1,29 @@
-using Harmony12;
+Ôªøusing Harmony12;
 using Microsoft.CSharp;
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityModManagerNet;
+using UMM = UnityModManagerNet.UnityModManager;
 
 namespace Sth4nothing.DynamicExecutor
 {
-    public class Settings : UnityModManager.ModSettings
+    public class Settings : UMM.ModSettings
     {
-        public string msbuildPath = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MsBuild.exe";
-        public override void Save(UnityModManager.ModEntry modEntry)
+        /// <summary>
+        /// MsBuildË∑ØÂæÑ
+        /// </summary>
+        /// <returns></returns>
+        public string msbuildPath =
+            @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MsBuild.exe";
+        public override void Save(UMM.ModEntry modEntry)
         {
             Save(this, modEntry);
         }
@@ -25,11 +31,21 @@ namespace Sth4nothing.DynamicExecutor
 
     public class Main
     {
-        public static UnityModManager.ModEntry.ModLogger Logger { get; private set; }
+        public static UMM.ModEntry.ModLogger Logger { get; private set; }
         public static Settings Setting { get; private set; }
         public static bool Enabled { get; private set; }
+        /// <summary>
+        /// ÊâßË°åÁä∂ÊÄÅ
+        /// </summary>
         private static bool running = false;
+        /// <summary>
+        /// ÊâßË°åÊ¨°Êï∞ÔºåÈò≤Ê≠¢Âä®ÊÄÅÂä†ËΩΩÊó∂ÂÜ≤Á™Å
+        /// </summary>
         private static int count = 0;
+        /// <summary>
+        /// ÂØπÊâÄÊúâmodÁöÑÂºïÁî®
+        /// </summary>
+        private static string modsReference;
 
         private static readonly string[] files =
         {
@@ -39,9 +55,12 @@ namespace Sth4nothing.DynamicExecutor
             "Execute.csproj.user.template",
         };
 
+        /// <summary>
+        /// Êú¨modÊ†πÁõÆÂΩï
+        /// </summary>
         private static string rootPath;
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        public static bool OnToggle(UMM.ModEntry modEntry, bool value)
         {
             if (!value)
             {
@@ -51,10 +70,18 @@ namespace Sth4nothing.DynamicExecutor
             return true;
         }
 
-        public static bool Load(UnityModManager.ModEntry modEntry)
+        public static bool Load(UMM.ModEntry modEntry)
         {
             rootPath = modEntry.Path;
             Logger = modEntry.Logger;
+            string convert(UMM.ModEntry mod) =>
+                $"\t<Reference Include=\"{mod.Info.AssemblyName.Replace(".dll", "")}\">\n" +
+                "\t\t<ReferenceOutputAssembly>true</ReferenceOutputAssembly>\n" +
+                "\t\t<Private>true</Private>\n" +
+                $"\t\t<HintPath>{Path.Combine(mod.Path, mod.Info.AssemblyName)}</HintPath>\n" +
+                "\t</Reference>";
+            modsReference = string.Join("\n",
+                UMM.modEntries.Where((mod) => mod.Enabled).Select(convert).ToArray());
             Setting = Settings.Load<Settings>(modEntry);
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
@@ -63,27 +90,29 @@ namespace Sth4nothing.DynamicExecutor
             return true;
         }
 
-        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        public static void OnGUI(UMM.ModEntry modEntry)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("msbuild¬∑æ∂£∫");
+            GUILayout.Label("msbuildË∑ØÂæÑÔºö");
             Setting.msbuildPath = GUILayout.TextField(Setting.msbuildPath);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("¥Úø™¥˙¬Î¬∑æ∂", GUILayout.Width(100)))
+            if (GUILayout.Button("ÊâìÂºÄ‰ª£Á†ÅË∑ØÂæÑ", GUILayout.Width(100)))
             {
                 var p = new System.Diagnostics.Process();
                 p.StartInfo.FileName = "explorer.exe";
                 p.StartInfo.UseShellExecute = true;
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.WorkingDirectory = rootPath;
-                p.StartInfo.Arguments = "/e,/select,\"" + Path.Combine(rootPath, "Execute.cs.template") + "\"";
+                p.StartInfo.Arguments = "/e,/select,\""
+                    + Path.Combine(rootPath, "Execute.cs.template") + "\"";
                 p.Start();
             }
-            if (!running && DateFile.instance != null && DateFile.instance.actorsDate != null && DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId))
+            if (!running && DateFile.instance != null && DateFile.instance.actorsDate != null
+                && DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId))
             {
-                if (GUILayout.Button("‘À––¥˙¬Î", GUILayout.Width(100)))
+                if (GUILayout.Button("ËøêË°å‰ª£Á†Å", GUILayout.Width(100)))
                 {
                     Execute();
                 }
@@ -91,13 +120,17 @@ namespace Sth4nothing.DynamicExecutor
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// ÊâßË°å‰ª£Á†Å
+        /// </summary>
         public static void Execute()
         {
+            // Ê£ÄÊµãÊñá‰ª∂
             foreach (var file in files)
             {
                 if (!File.Exists(Path.Combine(rootPath, file)))
                 {
-                    Logger.Log($"≤ª¥Ê‘⁄Œƒº˛£∫ " + file);
+                    Logger.Log($"‰∏çÂ≠òÂú®Êñá‰ª∂Ôºö " + file);
                     return;
                 }
             }
@@ -106,44 +139,50 @@ namespace Sth4nothing.DynamicExecutor
 
             try
             {
+                // Execute.cs
+                var reg = new Regex("\bExecute\b", RegexOptions.Compiled);
                 var cs = File.ReadAllText(Path.Combine(rootPath, "Execute.cs.template"));
-                File.WriteAllText(Path.Combine(rootPath, "Execute.cs"), cs.Replace("Execute", "Execute" + count));
-
-                // TODO: ÃÌº”∆‰À˚modµƒ“˝”√
+                File.WriteAllText(Path.Combine(rootPath, "Execute.cs"),
+                    reg.Replace(cs, "Execute" + count));
+                // Execute.csproj
                 var csproj = File.ReadAllText(Path.Combine(rootPath, "Execute.csproj.template"));
                 File.WriteAllText(Path.Combine(rootPath, "Execute.csproj"),
-                    csproj.Replace("<AssemblyName>Execute</AssemblyName>", $"<AssemblyName>Execute{count}</AssemblyName>"));
-
+                    csproj.Replace("<AssemblyName>Execute</AssemblyName>",
+                        $"<AssemblyName>Execute{count}</AssemblyName>")
+                        .Replace("<!-- Mods -->", modsReference)); // ÂºïÁî®mods
+                // AssemblyInfo.cs
                 File.Copy(Path.Combine(rootPath, "AssemblyInfo.cs.template"),
                     Path.Combine(rootPath, "AssemblyInfo.cs"), true);
-
+                // Execute.csproj.user
                 var user = File.ReadAllText(Path.Combine(rootPath, "Execute.csproj.user.template"));
                 File.WriteAllText(Path.Combine(rootPath, "Execute.csproj.user"),
-                    user.Replace("%GAMEPATH%", Directory.GetParent(UnityModManager.modsPath).FullName));
+                    user.Replace("%GAMEPATH%", Directory.GetParent(UMM.modsPath).FullName));
 
+                // ÁºñËØë
                 var p = new System.Diagnostics.Process();
                 p.StartInfo.FileName = Setting.msbuildPath;
                 p.StartInfo.UseShellExecute = true;
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.WorkingDirectory = rootPath;
                 p.StartInfo.Arguments = "/m /p:Configuration=Release Execute.csproj";
-
                 p.Start();
                 p.WaitForExit();
 
                 if (!File.Exists(Path.Combine(rootPath, $"Execute{count}.dll")))
                 {
-                    Logger.Error("±‡“Î ß∞‹");
+                    Logger.Error("ÁºñËØëÂ§±Ë¥•");
                 }
                 else
                 {
+                    // ‰ΩøÁî®ÂèçÂ∞ÑË∞ÉÁî®‰ª£Á†ÅÂÖ•Âè£Sth4nothing.Execute.Main
                     var ass = Assembly.LoadFile(Path.Combine(rootPath, $"Execute{count}.dll"));
                     var execute = ass.CreateInstance("Sth4nothing.Execute" + count);
-                    var method = execute.GetType().GetMethod("Main", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                    var method = execute.GetType().GetMethod("Main",
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
                     var ans = method.Invoke(execute, null);
                     if (ans != null)
                     {
-                        Logger.Log($"∑µªÿ¿‡–Õ: {ans.GetType()}\n∑µªÿΩ·π˚:\n{ans}");
+                        Logger.Log($"ËøîÂõûÁ±ªÂûã: {ans.GetType()}\nËøîÂõûÁªìÊûú: {ans}");
                     }
                     else
                     {
@@ -153,7 +192,7 @@ namespace Sth4nothing.DynamicExecutor
             }
             catch (Exception e)
             {
-                Logger.Log($"{e.Message}\n{e.StackTrace}\n{e.TargetSite}");
+                Logger.Log($"{e.GetType()}: {e.Message}\n{e.StackTrace}\n{e.TargetSite}");
             }
             finally
             {
@@ -162,7 +201,7 @@ namespace Sth4nothing.DynamicExecutor
             }
         }
 
-        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        public static void OnSaveGUI(UMM.ModEntry modEntry)
         {
             Setting.Save(modEntry);
         }
