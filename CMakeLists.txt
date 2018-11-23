@@ -147,8 +147,9 @@ MACRO(CREATEMOD moddir)
 	set(Version ${modinfo.Version})
 	set(Requirements ${modinfo.Requirements})
 	foreach(var ${Requirements})
+		string(REGEX REPLACE "-.*$" "" req ${modinfo.Requirements_${var}})
 		message(STATUS "requirements : ${modinfo.Requirements_${var}}")
-		LIST(APPEND dlldepends  ${CMAKE_LIBRARY_OUTPUT_DIR}/${modinfo.Requirements_${var}}.dll)
+		LIST(APPEND dlldepends  ${CMAKE_LIBRARY_OUTPUT_DIR}/${req}.dll)
 	endforeach()
 	
 	#创建项目
