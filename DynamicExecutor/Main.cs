@@ -134,6 +134,10 @@ namespace Sth4nothing.DynamicExecutor
                     return;
                 }
             }
+            if (File.Exists(Path.Combine(rootPath, $"Execute{count}.dll")))
+            {
+                File.Delete(Path.Combine(rootPath, $"Execute{count}.dll"));
+            }
 
             running = true;
 
