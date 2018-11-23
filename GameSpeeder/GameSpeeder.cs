@@ -139,10 +139,17 @@ namespace GameSpeeder
             GUILayout.Label("倍速", new GUILayoutOption[0]);
             GUILayout.Label(Main.settings.speedScale.ToString() + "x",
                 txtFieldStyle, GUILayout.Width(40));
-            int oldPos = (int)(Main.settings.speedScale < 1 ? Main.settings.speedScale * 10 : Main.settings.speedScale + 9);
-            int newPos = (int)(GUILayout.HorizontalSlider(oldPos, 1, 10 + MAX_SPEED - 1, GUILayout.Width(250)));
+            int oldPos = (int)(Main.settings.speedScale < 1 ? Main.settings.speedScale * 10 : Main.settings.speedScale * 2 + 9);
+            int newPos = (int)(GUILayout.HorizontalSlider(oldPos, 1, 10 + MAX_SPEED * 2 - 1, GUILayout.Width(250)));
             if (oldPos != newPos)
-                Main.settings.speedScale = newPos < 10 ? newPos / 10f : newPos - 9;
+            {
+                float newScale = newPos < 10 ? newPos / 10f : newPos - 9;
+                if (newScale == 3)
+                    newScale = 1.5f;
+                else if (newScale > 1)
+                    newScale = (float)Math.Floor(newScale / 2);
+                Main.settings.speedScale = newScale;
+            }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -272,6 +279,25 @@ namespace GameSpeeder
             }
         }
     }
+
+    [HarmonyPatch(typeof(BattleSystem), "SetChooseAttackPart")]
+    public static class SetChooseAttackPartPatch
+    {
+        private static void Postfix(BattleSystem __instance)
+        {
+            Time.timeScale = 0; // Fix变招的逻辑step 1
+        }
+    }
+
+    [HarmonyPatch(typeof(BattleSystem), "AttackPartChooseEnd")]
+    public static class AttackPartChooseEndPatch
+    {
+        private static void Prefix(BattleSystem __instance, ref float waitTime)
+        {
+            waitTime = 0; // Fix变招的逻辑step 2
+        }
+    }
+
 
     [HarmonyPatch(typeof(BattleSystem), "BattleEnd")]
     public static class ExitBattlePatch
