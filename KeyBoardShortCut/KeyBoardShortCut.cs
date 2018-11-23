@@ -88,6 +88,8 @@ namespace KeyBoardShortCut
         public SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode, string>> hotkeys;
         public MODIFIER_KEY_TYPE qinggong_modifier_key = MODIFIER_KEY_TYPE.MKT_SHIFT;
         public MODIFIER_KEY_TYPE special_modifierkey = MODIFIER_KEY_TYPE.MKT_ALT;
+        public bool escAsLastOption = true;
+        public bool useNumpadKeysInMessageWindow = false;
 
         public bool enable_close = true;
         [XmlIgnore]
@@ -250,7 +252,9 @@ namespace KeyBoardShortCut
             GUILayout.BeginVertical("box");
             settings.enable_close = GUILayout.Toggle(settings.enable_close, "是否使用本Mod的Esc/鼠标右键关闭功能（需要重启游戏生效）");
             settings.close_with_right_mouse_button = GUILayout.Toggle(settings.close_with_right_mouse_button, "是否使用鼠标右键关闭窗口");
-            
+            settings.escAsLastOption = GUILayout.Toggle(settings.escAsLastOption, "是否在对话窗口使用Esc/鼠标右键选择最后一个选项");
+            settings.useNumpadKeysInMessageWindow = GUILayout.Toggle(settings.useNumpadKeysInMessageWindow, "是否在对话窗口增加小键盘选择功能");
+
             GUILayout.Label("战斗中释放轻功技能的装饰键");
             settings.qinggong_modifier_key = (MODIFIER_KEY_TYPE)GUILayout.SelectionGrid((int)settings.qinggong_modifier_key, new string[] { "Shift", "Ctrl", "Alt" }, 3);
             GUILayout.Label("战斗中释放绝技的装饰键");
@@ -569,7 +573,7 @@ namespace KeyBoardShortCut
 
         private static bool Prefix(WorldMapSystem __instance, bool ___moveButtonDown, bool ___isShowPartWorldMap)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key)
             {
                 return true;
             }
@@ -798,7 +802,7 @@ namespace KeyBoardShortCut
 
         private static void Postfix(BattleSystem __instance, bool ___battleEnd)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key)
             {
                 return;
             }
@@ -1196,7 +1200,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(UIDate __instance )
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key)
             {
                 return;
             }
@@ -1239,7 +1243,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(UIDate __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key)
             {
                 return;
             }
@@ -1267,7 +1271,7 @@ namespace KeyBoardShortCut
     {
         private static void Postfix(UIDate __instance)
         {
-            if (!Main.enabled && Main.binding_key)
+            if (!Main.enabled || Main.binding_key)
             {
                 return;
             }
@@ -1331,7 +1335,7 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int typ, int id)
     //    {
-    //if (!Main.enabled && Main.binding_key)
+    //if (!Main.enabled || Main.binding_key)
     //{
     //    return;
     //}
@@ -1373,7 +1377,7 @@ namespace KeyBoardShortCut
     //{
     //    private static void Postfix(BattleSystem __instance, int id)
     //    {
-    //if (!Main.enabled && Main.binding_key)
+    //if (!Main.enabled || Main.binding_key)
     //{
     //    return;
     //}
@@ -1401,4 +1405,103 @@ namespace KeyBoardShortCut
 
     //    }
     //}
+
+
+    /// <summary>
+    /// 对话界面事件
+    /// 按下小键盘数字键时选择对应选项，按下 ESC 时选择最后一个选项
+    /// </summary>
+    [HarmonyPatch(typeof(MassageWindow), "Update")]
+    public static class MassageWindow_Update_Patch
+    {
+        public static KeyCode[] altKeyCodes = new KeyCode[12]
+        {
+        KeyCode.Keypad1,
+        KeyCode.Keypad2,
+        KeyCode.Keypad3,
+        KeyCode.Keypad4,
+        KeyCode.Keypad5,
+        KeyCode.Keypad6,
+        KeyCode.Keypad7,
+        KeyCode.Keypad8,
+        KeyCode.Keypad9,
+        KeyCode.Keypad0,
+        KeyCode.KeypadMinus,
+        KeyCode.KeypadPlus,
+        };
+
+
+        public static int GetAlternativeKeysDown()
+        {
+            for (int i = 0; i < altKeyCodes.Length; ++i)
+            {
+                if (Input.GetKeyDown(altKeyCodes[i])) return i;
+            }
+            return -1;
+        }
+
+
+        public static bool SelectedLastOption()
+        {
+            if (!Main.settings.enable_close || !Main.settings.escAsLastOption) return false;
+
+            if (Main.GetKeyDown(HK_TYPE.HK_CLOSE)) return true;
+            if (Main.settings.close_with_right_mouse_button && Input.GetMouseButtonDown(1)) return true;
+
+            return false;
+        }
+
+
+        private static void Postfix(MassageWindow __instance)
+        {
+            if (!Main.enabled || Main.binding_key) return;
+
+            if (!__instance.massageWindow.activeInHierarchy) return;
+            if (MassageWindow.instance.itemWindowIsShow) return;
+            if (ShopSystem.instance != null && ShopSystem.instance.shopWindow.activeInHierarchy) return;
+            if (BookShopSystem.instance != null && BookShopSystem.instance.shopWindow.activeInHierarchy) return;
+            if (GetItemWindow.instance != null && GetItemWindow.instance.getItemWindow.activeInHierarchy) return;
+            if (GetActorWindow.instance != null && GetActorWindow.instance.getActorWindow.activeInHierarchy) return;
+
+            int chooseIndex = -1;
+            if (Main.settings.useNumpadKeysInMessageWindow) chooseIndex = GetAlternativeKeysDown();
+            if (chooseIndex < 0 && SelectedLastOption()) chooseIndex = __instance.chooseHolder.childCount - 1;
+            if (chooseIndex < 0) return;
+
+            GameObject choose = __instance.chooseHolder.GetChild(chooseIndex).gameObject;
+            if (!choose.GetComponent<Button>().interactable) return;
+
+            int chooseId = int.Parse(choose.name.Split(',')[1]);
+            SetChoose(chooseId);
+        }
+
+
+        // 摘抄自 OnChoose::SetChoose 方法
+        private static void SetChoose(int chooseId)
+        {
+            if (MassageWindow.instance.chooseItemEvents.Contains(chooseId))
+            {
+                MassageWindow.instance.ShowItemsWindow(chooseId);
+            }
+            else if (MassageWindow.instance.chooseActorEvents.Contains(chooseId))
+            {
+                MassageWindow.instance.ShowActorsWindow(chooseId);
+            }
+            else
+            {
+                int actorId = int.Parse(DateFile.instance.eventDate[chooseId][2]);
+                int targetEventId = int.Parse(DateFile.instance.eventDate[chooseId][7]);
+                MassageWindow.instance.GetEventBooty((actorId != -1) ? actorId : DateFile.instance.MianActorID(), chooseId);
+                if (targetEventId > -99)
+                {
+                    MassageWindow.instance.mianEventDate[2] = targetEventId;
+                }
+                else if (targetEventId == -99)
+                {
+                    chooseId = -chooseId;
+                }
+                MassageWindow.instance.ChangeMassageWindow(chooseId);
+            }
+        }
+    }
 }
