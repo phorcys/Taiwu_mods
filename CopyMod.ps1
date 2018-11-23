@@ -29,13 +29,13 @@ if (Test-Path $targetDir) {
         if ($file -is [System.IO.FileInfo]) {
             if ((".dll", ".cs") -notcontains $file.Extension) {
                 Write-Output ("copy file " + $file.Name)
-                Copy-Item $file.FullName (Join-Path $targetDir $file.Name)
+                Copy-Item -Force $file.FullName (Join-Path $targetDir $file.Name)
             }
         }
         else {
             if (CheckDir $file) {
                 Write-Output ("copy folder " + $file.Name)
-                Copy-Item -Recurse $file.FullName $targetDir
+                Copy-Item -Force -Recurse $file.FullName $targetDir
             }
         }
     }
