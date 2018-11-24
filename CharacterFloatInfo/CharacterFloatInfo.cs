@@ -41,6 +41,7 @@ namespace CharacterFloatInfo
         public bool enableAM = false;
         public bool enableRI = false;
         public bool enableMAC = false;
+        public bool enableWNV = false;
         public bool shortMAL = false;
         public bool shortDI = false;
         public bool shortTA = false;
@@ -86,6 +87,7 @@ namespace CharacterFloatInfo
             Main.settings.enableBW = GUILayout.Toggle(Main.settings.enableBW, "村民分配", new GUILayoutOption[0]);
             Main.settings.enableAM = GUILayout.Toggle(Main.settings.enableAM, "同道列表", new GUILayoutOption[0]);
             Main.settings.enableRI = GUILayout.Toggle(Main.settings.enableRI, "人物关系", new GUILayoutOption[0]);
+            Main.settings.enableWNV = GUILayout.Toggle(Main.settings.enableWNV, "新村民", new GUILayoutOption[0]);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("展示內容");
@@ -204,6 +206,33 @@ namespace CharacterFloatInfo
         }
     }
 
+    // 新村民加入
+    [HarmonyPatch(typeof(GetActorWindow), "ShowGetActorWindow")]
+    public static class GetActorWindow_ShowGetActorWindow_Patch
+    {
+        static void Postfix(List<int> actorId, GetActorWindow __instance)
+        {
+            if (!Main.enabled) return;
+            //int num = YesOrNoWindow.instance.onMaskWindow[YesOrNoWindow.instance.onMaskWindow.Count - 1].GetSiblingIndex();
+            //if (num > YesOrNoWindow.instance.windowMask.transform.GetSiblingIndex()) num--;
+            //YesOrNoWindow.instance.windowMask.transform.SetSiblingIndex(num);
+
+            for (int i = 0; i < __instance.actorBack.Length; i++)
+            {
+                if (i < actorId.Count)
+                {
+                    GameObject actor = __instance.getActorLight[i].gameObject;
+                    actor.name = "NewActorFace," + actorId[i].ToString();
+                    if (actor.GetComponents<PointerEnter>().Count() == 0)
+                    {
+                        actor.AddComponent<PointerEnter>();
+                        __instance.getActorLight[i].raycastTarget = true;
+                    }
+                }
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
@@ -222,6 +251,7 @@ namespace CharacterFloatInfo
             ActorMenu,
             Relationship,
             DialogChooseActors,
+            WorkerNewVillager,
         };
 
         public static bool CheckShort()
@@ -251,7 +281,7 @@ namespace CharacterFloatInfo
 
             bool needShow = false;
             string[] array = tips.name.Split(',');
-            int id = array.Length>1 ? int.Parse(array[1]) : 0;
+            int id = array.Length > 1 ? int.Parse(array[1]) : 0;
 
             //大地圖下面的太吾自己的頭像
             if (array[0] == "PlayerFaceButton")
@@ -264,7 +294,7 @@ namespace CharacterFloatInfo
             //大地圖下面的隊友頭像
             if (tips.tag == "TeamActor")
             {
-                id = DateFile.instance.acotrTeamDate[ id ];
+                id = DateFile.instance.acotrTeamDate[id];
                 needShow = id > 0 && Main.settings.enableTA;
                 windowType = WindowType.TeamActor;
             }
@@ -297,7 +327,7 @@ namespace CharacterFloatInfo
                 windowType = WindowType.DialogChooseActors;
             }
             //对话窗口的人物头像
-            else if (array[0] == "FaceHolder" )
+            else if (array[0] == "FaceHolder")
             {
                 id = MassageWindow.instance.eventMianActorId;
                 needShow = Main.settings.enableDI;
@@ -318,6 +348,18 @@ namespace CharacterFloatInfo
                     windowType = WindowType.MapActorList;
                 }
             }
+            else // 工人界面的新村民
+            if (array[0] == "ActorIcon") {
+                needShow = Main.settings.enableWNV;
+                windowType = WindowType.WorkerNewVillager;
+            }
+            else
+            if (array[0] == "NewActorFace")
+            {
+                needShow = Main.settings.enableWNV;
+                windowType = WindowType.WorkerNewVillager;
+            }
+
             isDead = int.Parse(DateFile.instance.GetActorDate(id, 26, false)) > 0;
             if (isDead && !Main.settings.deadActor)
             {
@@ -340,7 +382,7 @@ namespace CharacterFloatInfo
                 ___itemMoneyText.text = SetMoneyText(id);
 
                 ___informationName.text = SetInfoName(id);
-                ___informationMassage.text = SetInfoMessage(id, ref ___tipsW);
+                ___informationMassage.text = SetInfoMessage(id, ref ___tipsW) + (___informationMassage.text.Length > 100 ? "" : "\n" + ___informationMassage.text);
                 ___anTips = true;
             }
             else
@@ -408,7 +450,7 @@ namespace CharacterFloatInfo
             string text = "\n";
             string seperator = "";
 
-            if (windowType == WindowType.Relationship)
+            if (windowType == WindowType.Relationship || windowType == WindowType.Dialog)
             {
                 text += GetActorGang(id); // 所屬地
                 text += GetGangLevelColorText(id); // 地位
@@ -485,6 +527,7 @@ namespace CharacterFloatInfo
             text += "\t\t立场:" + GetGoodness(id);
             text += "\t\t名誉:" + GetFame(id);
             text += "\t\t心情:" + GetMood(id);
+            if (GetGameVersion()>=150) text += "\t\t印象:" + GetLifeFace(id);
             text += "\n\n";
 
             if (!smallerWindow)
@@ -498,10 +541,13 @@ namespace CharacterFloatInfo
                 item = Gethobby(id, 1);
                 text += string.Format("\t\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
 
-                int result1 = GetFertility(id, true);
-                int result2 = GetFertility(id, false);
-                text += string.Format("\t\t生育:<color={1}>{0}%</color>", result1, (result2 > 0?"+":"") + result2, result1 <= 0 ? "red" : "white");
-                if(Main.settings.addonInfo && result2 !=0) text += string.Format("\t<color=#606060FF>{0}%</color>", (result2 > 0?"+":"") + result2);
+                if (Main.settings.showIV)
+                {
+                    int result1 = GetFertility(id, true);
+                    int result2 = GetFertility(id, false);
+                    text += string.Format("\t\t生育:<color={1}>{0}%</color>", result1, (result2 > 0 ? "+" : "") + result2, result1 <= 0 ? "red" : "white");
+                    if (Main.settings.addonInfo && result2 != 0) text += string.Format("\t<color=#606060FF>{0}%</color>", (result2 > 0 ? "+" : "") + result2);
+                }
 
                 if (GetAge(id) > ConstValue.actorMinAge)
                     text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
@@ -525,7 +571,7 @@ namespace CharacterFloatInfo
                     partId = city[0];
                     placeId = city[1];
                     var aBuilding = DateFile.instance.actorsWorkingDate[partId][placeId].FirstOrDefault(t => t.Value == id);
-                    if (aBuilding.Equals(default(KeyValuePair<int,int>)))
+                    if (aBuilding.Equals(default(KeyValuePair<int, int>)))
                     {
                         text += "<color=red>未知</color>";
                     }
@@ -533,21 +579,20 @@ namespace CharacterFloatInfo
                     {
                         buildingIndex = aBuilding.Key;
                         text += string.Format("<color=white>{0}</color>", GetWorkPlace(partId, placeId, buildingIndex));
-                        text += "\t进度:<color=white>" + GetWorkingProgress(partId, placeId, buildingIndex)+ "</color>";
-                   }
+                        text += "\t进度:<color=white>" + GetWorkingProgress(partId, placeId, buildingIndex) + "</color>";
+                    }
                 }
                 partId = HomeSystem.instance.homeMapPartId;
                 placeId = HomeSystem.instance.homeMapPlaceId;
                 buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
                 // remark: 下面語法在 VS 2017 才支援, 早期版本需先定義 int workeId;
-                int workerId = 0;
-                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out workerId) || workerId != id)
+                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out int workerId) || workerId != id)
                     text += string.Format("\n村民派遣，预期效率:<color=white>{0}</color>", GetExpectEfficient(id, partId, placeId, buildingIndex));
 
             }
             else if (windowType == WindowType.DialogChooseActors)
             {
-                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315,9366,9321 };
+                List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315, 9366, 9321 };
                 if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容. 
 
                 int gangId = int.Parse(DateFile.instance.GetActorDate(MassageWindow.instance.eventMianActorId, 19, false));
@@ -555,7 +600,7 @@ namespace CharacterFloatInfo
                 switch (MassageWindow.instance.mianEventDate[2])
                 {
                     case 9301: // 念经忏悔
-                        int num = Math.Min(0, int.Parse(DateFile.instance.GetActorDate(id, 18, false)));
+                        int num = Math.Min(0, GetActorFame(id));
                         text += string.Format("\t\t罪孽:<color={1}>{0}</color>", num, num < 0 ? "red" : "white");
                         break;
                     case 9321: // 治疗伤病
@@ -567,7 +612,7 @@ namespace CharacterFloatInfo
                         text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp == 0 ? "white" : "red", Sp == 0 ? "white" : "red");
                         break;
                     case 9307: // 王禅典籍
-                        text += string.Format("\t\t处世立场:{0}", DateFile.instance.GetActorDate(id, 18, false));
+                        text += string.Format("\t\t处世立场:{0}", GetActorFame(id));
                         break;
                     case 9310: // 秘药延寿
                         int year = ActorMenu.instance.Health(id);
@@ -769,6 +814,19 @@ namespace CharacterFloatInfo
             return ActorMenu.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
         }
 
+        //印象
+        public static string GetLifeFace(int actorId)
+        {
+            string text = "<color=#606060FF>无</color>";
+            if (DateFile.instance.HaveLifeDate(actorId, 1001))
+            {
+                int faceId = DateFile.instance.GetLifeDate(actorId, 1001, 0);
+                int lifeDate = DateFile.instance.GetLifeDate(actorId, 1001, 1);
+                text = String.Format("<color=white>{0}</color><color=lime>{1}%</color>", DateFile.instance.identityDate[faceId][0], lifeDate);
+            }
+            return text;
+        }
+
         //魅力
         public static string GetChame(int id)
         {
@@ -792,7 +850,15 @@ namespace CharacterFloatInfo
         //名誉
         public static string GetFame(int id)
         {
-            return ActorMenu.instance.Color7(int.Parse(DateFile.instance.GetActorDate(id, 18, true)));
+            return ActorMenu.instance.Color7(GetActorFame(id));
+        }
+        public static int GetActorFame(int id)
+		{
+            return GetGameVersion() < 150 ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : tryGetActorFame(id);
+        }
+        public static int tryGetActorFame(int id)
+		{
+            return DateFile.instance.GetActorFame(id);
         }
 
         //立场
@@ -1079,11 +1145,12 @@ namespace CharacterFloatInfo
 
         //村民工作地点現在收获进度
         public static string GetWorkingProgress(int partId, int placeId, int buildingIndex)
-            {
+        {
             string text = "";
             int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int buildingType = buildingData[0];
             Dictionary<int,string> buildingSetting = DateFile.instance.basehomePlaceDate[buildingType];
+
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
             int skillId = int.Parse(buildingSetting[33]);
@@ -1093,7 +1160,7 @@ namespace CharacterFloatInfo
             return text;
         }
 
-        //工作效率,null代表无法获得
+        //工作效率
         public static string GetExpectEfficient(int workerId, int partId, int placeId, int buildingIndex)
         {
             int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
@@ -1107,6 +1174,7 @@ namespace CharacterFloatInfo
 
             int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
             int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
+
             int moodBonus = 40 + favorLvl * 10;
             if (mood <= 0) moodBonus -= 30;
             else if (mood <= 20) moodBonus -= 20;
@@ -1438,6 +1506,15 @@ namespace CharacterFloatInfo
             textTransform.anchorMax = new Vector2(0.5f, 1);
             textTransform.anchorMin = new Vector2(0.5f, 1);
             textTransform.anchoredPosition3D = new Vector2(x, y);
+        }
+
+        // 版本
+        public static int GetGameVersion()
+        {
+            int ver = int.Parse(DateFile.instance.gameVersion.Replace("Beta V", "").Replace(" [Test]", "").Replace(".", "").Replace(" ", ""));
+            if (ver < 100) ver *= 10;
+            // Main.Logger.Log(DateFile.instance.gameVersion + " = " + ver.ToString());
+            return ver;
         }
     }
 }
