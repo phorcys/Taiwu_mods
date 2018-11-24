@@ -8,3 +8,7 @@
 
 ## 1.1.1
 - 不会再拷贝引用的dll到mod路径
+
+## 1.1.2
+- 输出编译的log到mod目录下的compile.log
+- 修复AC.dll不能正确引用的bug

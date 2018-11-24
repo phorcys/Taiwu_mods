@@ -51,7 +51,7 @@ namespace Sth4nothing.DynamicExecutor
             "Execute.cs.template",
             "Execute.csproj.template",
             "AssemblyInfo.cs.template",
-            "Execute.csproj.user.template",
+            // "Execute.csproj.user.template",
         };
 
         /// <summary>
@@ -74,11 +74,11 @@ namespace Sth4nothing.DynamicExecutor
             rootPath = modEntry.Path;
             Logger = modEntry.Logger;
             Func<UMM.ModEntry, string> convert = (mod) =>
-                $"\t<Reference Include=\"{mod.Info.AssemblyName.Replace(".dll", "")}\">\n" +
-                "\t\t<ReferenceOutputAssembly>true</ReferenceOutputAssembly>\n" +
-                "\t\t<Private>false</Private>\n" +
-                $"\t\t<HintPath>{Path.Combine(mod.Path, mod.Info.AssemblyName)}</HintPath>\n" +
-                "\t</Reference>";
+                $"\t\t<Reference Include=\"{mod.Info.AssemblyName.Replace(".dll", "")}\">\n" +
+                "\t\t\t<ReferenceOutputAssembly>true</ReferenceOutputAssembly>\n" +
+                "\t\t\t<Private>false</Private>\n" +
+                $"\t\t\t<HintPath>{Path.Combine(mod.Path, mod.Info.AssemblyName)}</HintPath>\n" +
+                "\t\t</Reference>";
             modsReference = string.Join("\n",
                 UMM.modEntries.Where((mod) => mod.Enabled).Select(convert).ToArray());
             Setting = Settings.Load<Settings>(modEntry);
@@ -133,6 +133,14 @@ namespace Sth4nothing.DynamicExecutor
                     return;
                 }
             }
+            if (File.Exists(Path.Combine(rootPath, "Execute.csproj.user.template")))
+            {
+                File.Delete(Path.Combine(rootPath, "Execute.csproj.user.template"));
+            }
+            if (File.Exists(Path.Combine(rootPath, "Execute.csproj.user")))
+            {
+                File.Delete(Path.Combine(rootPath, "Execute.csproj.user"));
+            }
             if (File.Exists(Path.Combine(rootPath, $"Execute{count}.dll")))
             {
                 File.Delete(Path.Combine(rootPath, $"Execute{count}.dll"));
@@ -152,14 +160,11 @@ namespace Sth4nothing.DynamicExecutor
                 File.WriteAllText(Path.Combine(rootPath, "Execute.csproj"),
                     csproj.Replace("<AssemblyName>Execute</AssemblyName>",
                         $"<AssemblyName>Execute{count}</AssemblyName>")
+                        .Replace("%GAMEPATH%", Directory.GetParent(UMM.modsPath).FullName)
                         .Replace("<!-- Mods -->", modsReference)); // 引用mods
                 // AssemblyInfo.cs
                 File.Copy(Path.Combine(rootPath, "AssemblyInfo.cs.template"),
                     Path.Combine(rootPath, "AssemblyInfo.cs"), true);
-                // Execute.csproj.user
-                var user = File.ReadAllText(Path.Combine(rootPath, "Execute.csproj.user.template"));
-                File.WriteAllText(Path.Combine(rootPath, "Execute.csproj.user"),
-                    user.Replace("%GAMEPATH%", Directory.GetParent(UMM.modsPath).FullName));
 
                 // 编译
                 var p = new System.Diagnostics.Process();
@@ -167,7 +172,9 @@ namespace Sth4nothing.DynamicExecutor
                 p.StartInfo.UseShellExecute = false;
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.WorkingDirectory = rootPath;
-                p.StartInfo.Arguments = "/m /p:Configuration=Release Execute.csproj";
+                p.StartInfo.Arguments = "/p:Configuration=Release /noconlog /fl "
+                    + "/flp:LogFile=compile.log;Encoding=UTF-8;Verbosity=normal "
+                    + "Execute.csproj ";
                 p.Start();
                 p.WaitForExit();
 
@@ -195,7 +202,7 @@ namespace Sth4nothing.DynamicExecutor
             }
             catch (Exception e)
             {
-                Logger.Log($"{e.GetType()}: {e.Message}\n{e.StackTrace}\n{e.TargetSite}");
+                Logger.Log($"{e.GetType().Name}: {e.Message}\n{e.StackTrace}\n{e.TargetSite}");
             }
             finally
             {
