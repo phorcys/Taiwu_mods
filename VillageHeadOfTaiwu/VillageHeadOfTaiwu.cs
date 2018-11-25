@@ -344,7 +344,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 var panel = new GameObject("panel", typeof(Image));
                 panel.transform.SetParent(canvas.transform);
                 panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
-                panel.GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
+                panel.GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / designWidth, 0.95f - 25f / designHeight);
                 panel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.95f);
                 panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
                 panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
