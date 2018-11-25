@@ -2,7 +2,7 @@
     "Id": "VillageHeadOfTaiwu",
     "DisplayName": "太吾村支书",
     "Author": "sth4nothing",
-    "Version": "1.1.7",
+    "Version": "1.1.8",
     "AssemblyName": "VillageHeadOfTaiwu.dll",
     "EntryMethod": "Sth4nothing.VillageHeadOfTaiwu.Main.Load"
 }

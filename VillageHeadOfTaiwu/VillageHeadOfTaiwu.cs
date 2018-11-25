@@ -391,7 +391,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
             foreach (int part in parts)
             {
-                var size = int.Parse(df.partWorldMapDate[df.mianPartId][98]); // size of map
+                var size = int.Parse(df.partWorldMapDate[part][98]); // size of map
                 for (int place = 0; place < size * size; place++)
                 {
                     if (df.HaveShow(part, place) > 0
