@@ -86,16 +86,12 @@ namespace Sth4nothing.SLManager
                 (str1, str2) => GetSaveIndex(str1) > GetSaveIndex(str2) ? 1 : 0);
 
             LoadFile.savedFiles = new List<string>();
-            var fpath = Path.Combine(LoadFile.backPath, $"Date_{LoadFile.dateId}.load.zip");
-            var load = 0;
-            if (File.Exists(fpath))
-            {
-                LoadFile.savedFiles.Add(fpath);
-                load = 1;
-            }
+            if (File.Exists(Path.Combine(LoadFile.dirPath, "TW_Save_Date_0.twV0"))
+                || File.Exists(Path.Combine(LoadFile.dirPath, "TW_Save_Date_0.tw")))
+                LoadFile.savedFiles.Add(LoadFile.dirPath);
             if (Main.settings.maxSave > 0)
             {
-                LoadFile.savedFiles.AddRange(files.Take(Main.settings.maxSave - load));
+                LoadFile.savedFiles.AddRange(files.Take(Main.settings.maxSave - 1));
             }
             else
             {
@@ -192,7 +188,7 @@ namespace Sth4nothing.SLManager
                 }
                 catch (System.Exception e)
                 {
-                    Debug.Log("[ERROR]" + e.Message);
+                    Main.Logger.Log("[ERROR]" + e.Message);
                 }
             }
             var comparer = new StringTimeCompare(dict);
@@ -206,57 +202,94 @@ namespace Sth4nothing.SLManager
         public static SaveData Parse(string path)
         {
             SaveData ans = null;
-            using (var zip = new Ionic.Zip.ZipFile(path))
+            if (!path.EndsWith(".zip"))
             {
-                if (zip.ContainsEntry("date.json"))
+                if (File.Exists(Path.Combine(path, "date.json")))
                 {
-                    using (var stream = new MemoryStream())
-                    {
-                        zip.SelectEntries("date.json").First().Extract(stream);
-                        stream.Seek(0, SeekOrigin.Begin);
-                        using (var reader = new StreamReader(stream))
-                        {
-                            var serializer = JsonSerializer.Create();
-                            ans = serializer.Deserialize(reader,
-                                typeof(SaveData)) as SaveData;
-                        }
-                    }
+                    var content = File.ReadAllText(Path.Combine(path, "date.json"));
+                    ans = JsonConvert.DeserializeObject(content, typeof(SaveData)) as SaveData;
                 }
-                else if (!zip.ContainsEntry("TW_Save_Date_0.twV0")
-                      && !zip.ContainsEntry("TW_Save_Date_0.tw"))
+                else if (!File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0"))
+                          && File.Exists(Path.Combine(path, "TW_Save_Date_0.tw")))
                 {
-                    throw new System.Exception(path); // 错误存档
+                    throw new System.Exception(path);
                 }
-                else // 不含加速文件
+                else
                 {
-                    var tmp = Path.Combine(
-                        System.Environment.GetEnvironmentVariable("TEMP"),
-                        "SaveDate.tw");
-
-                    if (File.Exists(tmp))
-                        File.Delete(tmp);
-
+                    string file = null;
                     bool rijndeal = true;
-                    using (var stream = File.OpenWrite(tmp))
+                    if (File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0")))
                     {
-                        if (zip.ContainsEntry("TW_Save_Date_0.twV0"))
-                        {
-                            zip.SelectEntries("TW_Save_Date_0.twV0").First().Extract(stream);
-                            rijndeal = false;
-                        }
-                        else if (zip.ContainsEntry("TW_Save_Date_0.tw"))
-                        {
-                            zip.SelectEntries("TW_Save_Date_0.tw").First().Extract(stream);
-                            rijndeal = true;
-                        }
+                        file = Path.Combine(path, "TW_Save_Date_0.twV0");
+                        rijndeal = false;
                     }
-                    var date = SaveDateFile.instance.GetData(tmp,
-                        typeof(DateFile.SaveDate), rijndeal) as DateFile.SaveDate;
+                    else
+                    {
+                        file = Path.Combine(path, "TW_Save_Date_0.tw");
+                        rijndeal = true;
+                    }
+                    var date = SaveDateFile.instance.GetData(file,
+                            typeof(DateFile.SaveDate), rijndeal) as DateFile.SaveDate;
                     ans = new SaveData(date._mainActorName, date._year, date._samsara,
                         date._dayTrun, date._playerSeatName, date._playTime);
-                    //  添加加速文件
-                    zip.AddEntry("date.json", JsonConvert.SerializeObject(ans));
-                    zip.Save();
+                    File.WriteAllText(Path.Combine(path, "date.json"),
+                        JsonConvert.SerializeObject(ans));
+                }
+            }
+            else
+            {
+                using (var zip = new Ionic.Zip.ZipFile(path))
+                {
+                    if (zip.ContainsEntry("date.json"))
+                    {
+                        using (var stream = new MemoryStream())
+                        {
+                            zip.SelectEntries("date.json").First().Extract(stream);
+                            stream.Seek(0, SeekOrigin.Begin);
+                            using (var reader = new StreamReader(stream))
+                            {
+                                var serializer = JsonSerializer.Create();
+                                ans = serializer.Deserialize(reader,
+                                    typeof(SaveData)) as SaveData;
+                            }
+                        }
+                    }
+                    else if (!zip.ContainsEntry("TW_Save_Date_0.twV0")
+                          && !zip.ContainsEntry("TW_Save_Date_0.tw"))
+                    {
+                        throw new System.Exception(path); // 错误存档
+                    }
+                    else // 不含加速文件
+                    {
+                        var tmp = Path.Combine(
+                            System.Environment.GetEnvironmentVariable("TEMP"),
+                            "SaveDate.tw");
+
+                        if (File.Exists(tmp))
+                            File.Delete(tmp);
+
+                        bool rijndeal = true;
+                        using (var stream = File.OpenWrite(tmp))
+                        {
+                            if (zip.ContainsEntry("TW_Save_Date_0.twV0"))
+                            {
+                                zip.SelectEntries("TW_Save_Date_0.twV0").First().Extract(stream);
+                                rijndeal = false;
+                            }
+                            else if (zip.ContainsEntry("TW_Save_Date_0.tw"))
+                            {
+                                zip.SelectEntries("TW_Save_Date_0.tw").First().Extract(stream);
+                                rijndeal = true;
+                            }
+                        }
+                        var date = SaveDateFile.instance.GetData(tmp,
+                            typeof(DateFile.SaveDate), rijndeal) as DateFile.SaveDate;
+                        ans = new SaveData(date._mainActorName, date._year, date._samsara,
+                            date._dayTrun, date._playerSeatName, date._playTime);
+                        //  添加加速文件
+                        zip.AddEntry("date.json", JsonConvert.SerializeObject(ans));
+                        zip.Save();
+                    }
                 }
             }
             return ans;
@@ -268,7 +301,8 @@ namespace Sth4nothing.SLManager
         public static IEnumerator<object> Load(string file)
         {
             yield return new WaitForSeconds(0.01f);
-            Unzip(file);
+            if (file.EndsWith(".zip"))
+                Unzip(file);
 
             DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
             DateFile.instance.Initialize(dateId);
@@ -297,14 +331,20 @@ namespace Sth4nothing.SLManager
             Debug.Log("backpath: " + backPath);
 
             Debug.Log("savedFiles: ");
-            foreach (var file in savedFiles)
+            if (savedFiles != null)
             {
-                Debug.Log("\t" + file);
+                foreach (var file in savedFiles)
+                {
+                    Debug.Log("\t" + file);
+                } 
             }
             Debug.Log("savedInfos: ");
-            foreach (var pair in savedInfos)
+            if (savedInfos != null)
             {
-                Debug.Log("\t" + pair.Key + ": " + JsonConvert.SerializeObject(pair.Value));
+                foreach (var pair in savedInfos)
+                {
+                    Debug.Log("\t" + pair.Key + ": " + JsonConvert.SerializeObject(pair.Value));
+                } 
             }
         }
     }
@@ -352,11 +392,7 @@ namespace Sth4nothing.SLManager
                 .Invoke(__instance, new object[] { -1 }) as string;
             var fpath = Path.Combine(dirpath, "date.json");
 
-            using (var writer = new StreamWriter(fpath, false, Encoding.UTF8))
-            {
-                var serializer = JsonSerializer.Create();
-                serializer.Serialize(writer, savedate);
-            }
+            File.WriteAllText(fpath, JsonConvert.SerializeObject(savedate));
             #endregion
 
             SaveDateFile.instance.saveSaveDate = Main.forceSave;

@@ -2,7 +2,7 @@
     "Id": "SLManager",
     "DisplayName": "Save / Load",
     "Author": "Sth4nothing",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "AssemblyName": "SLManager.dll",
     "EntryMethod": "Sth4nothing.SLManager.Main.Load",
     "Requirements": ["SaveBackup"]

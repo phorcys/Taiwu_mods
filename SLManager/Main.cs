@@ -1,14 +1,7 @@
 using Harmony12;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using UnityModManagerNet;
 
 namespace Sth4nothing.SLManager
@@ -23,13 +16,25 @@ namespace Sth4nothing.SLManager
     {
         public static bool enabled;
         public static bool forceSave = false;
+
+        private static string logPath;
+
         public static Settings settings;
+
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             try
             {
                 Assembly.LoadFrom(Path.Combine(modEntry.Path, "DotNetZip.dll"));
+            }
+            catch (System.Exception) { }
+            try
+            {
+                var userprofile = System.Environment.GetEnvironmentVariable("USERPROFILE");
+                logPath = Path.Combine(userprofile,
+                    @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
+                    );
             }
             catch (System.Exception) { }
             Logger = modEntry.Logger;
@@ -54,10 +59,24 @@ namespace Sth4nothing.SLManager
             GUILayout.BeginHorizontal();
             GUILayout.Label("存档列表的最大存档数(0表示不受限制)", GUILayout.Width(300));
             var num = -1;
-            if (int.TryParse(GUILayout.TextField(Main.settings.maxSave.ToString(), GUILayout.Width(60)), out num))
+            if (int.TryParse(GUILayout.TextField(settings.maxSave.ToString(), GUILayout.Width(60)), out num))
             {
                 if (num >= 0)
-                    Main.settings.maxSave = num;
+                    settings.maxSave = num;
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("打印log", GUILayout.Width(100)))
+            {
+                LoadFile.Log();
+            }
+            if (File.Exists(logPath) && GUILayout.Button("显示log路径", GUILayout.Width(100)))
+            {
+                var p = new System.Diagnostics.Process();
+                p.StartInfo.FileName = "explorer.exe";
+                p.StartInfo.UseShellExecute = true;
+                p.StartInfo.Arguments = "/e,/select,\"" + logPath + "\"";
+                p.Start();
             }
             GUILayout.EndHorizontal();
         }
@@ -67,6 +86,4 @@ namespace Sth4nothing.SLManager
             return true;
         }
     }
-
-
 }
