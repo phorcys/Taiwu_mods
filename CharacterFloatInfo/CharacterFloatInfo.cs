@@ -27,7 +27,8 @@ namespace CharacterFloatInfo
 
         public bool showActorStatus = true; // 人物状况
         public bool lifeMessage = false; //人物经历
-        public bool showCharacteristic = true; //人物特性
+        public bool showCharacteristic = true; //人物技艺
+        public bool showFamilySkill = false; //技艺造诣
         public bool showIV = false; //显示被隐藏了的人物特性
         public bool showResources = false; // 七元賦性
         public bool showBest = true; //显示身上品质最高的物品与功法及可学功法
@@ -96,6 +97,7 @@ namespace CharacterFloatInfo
             Main.settings.showActorStatus = GUILayout.Toggle(Main.settings.showActorStatus, "人物状况", new GUILayoutOption[0]);
             Main.settings.showCharacteristic = GUILayout.Toggle(Main.settings.showCharacteristic, "人物特性", new GUILayoutOption[0]);
             Main.settings.showLevel = GUILayout.Toggle(Main.settings.showLevel, "人物属性", new GUILayoutOption[0]);
+            Main.settings.showFamilySkill = GUILayout.Toggle(Main.settings.showFamilySkill, "技艺造诣", new GUILayoutOption[0]);
             Main.settings.showResources = GUILayout.Toggle(Main.settings.showResources, "七元賦性", new GUILayoutOption[0]);
             Main.settings.showBest = GUILayout.Toggle(Main.settings.showBest, "最佳物品、功法", new GUILayoutOption[0]);
             Main.settings.lifeMessage = GUILayout.Toggle(Main.settings.lifeMessage, "人物经历", new GUILayoutOption[0]);
@@ -349,7 +351,8 @@ namespace CharacterFloatInfo
                 }
             }
             else // 工人界面的新村民
-            if (array[0] == "ActorIcon") {
+            if (array[0] == "ActorIcon")
+            {
                 needShow = Main.settings.enableWNV;
                 windowType = WindowType.WorkerNewVillager;
             }
@@ -527,7 +530,7 @@ namespace CharacterFloatInfo
             text += "\t\t立场:" + GetGoodness(id);
             text += "\t\t名誉:" + GetFame(id);
             text += "\t\t心情:" + GetMood(id);
-            if (GetGameVersion()>=150) text += "\t\t印象:" + GetLifeFace(id);
+            if (GetGameVersion() >= 150) text += "\t\t印象:" + GetLifeFace(id);
             text += "\n\n";
 
             if (!smallerWindow)
@@ -725,7 +728,7 @@ namespace CharacterFloatInfo
             {
                 if (!smallerWindow) text += CanTeach(id, i) ? "※" : "　";
                 text += GetLevel(id, i);
-                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : (smallerWindow ? "\t" : "\t\t");
+                text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : "\t";
                 if (i == 15) text += "\n";
             }
             return text + "\n";
@@ -853,11 +856,11 @@ namespace CharacterFloatInfo
             return ActorMenu.instance.Color7(GetActorFame(id));
         }
         public static int GetActorFame(int id)
-		{
+        {
             return GetGameVersion() < 150 ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : tryGetActorFame(id);
         }
         public static int tryGetActorFame(int id)
-		{
+        {
             return DateFile.instance.GetActorFame(id);
         }
 
@@ -896,15 +899,30 @@ namespace CharacterFloatInfo
             int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
             int num = int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, true));
             int num2 = num - int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, false));
+            string num3 = smallerWindow || !Main.settings.showFamilySkill || GetGameVersion() < 150 ? "" : GetFamilySkill(id, index) + ",";
             bool shownoadd = !smallerWindow && Main.settings.addonInfo && num2 != 0;
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8),
-                string.Format("{0}{1,3}{2}<color=#606060ff>{3,4}</color>{4}",
-                    DateFile.instance.baseSkillDate[index][0],
-                    num.ToString(),
-                    (num < 10 ? "\u00A0" : "") + (num < 100 ? "\u00A0\u00A0" : "\u00A0"),
-                    shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : (smallerWindow ? "" : "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"),
-                    shownoadd && Math.Abs(num2) < 10 ? "\u00A0" + (Math.Abs(num2) < 100 ? "\u00A0\u00A0" : "") : (smallerWindow ? "\u00A0" : "\u00A0\u00A0")));
-
+            string.Format("{0}<color=orange>{1,3}{2}</color>{3,3}{4}<color=#606060ff>{5,3}{6}</color>",
+                DateFile.instance.baseSkillDate[index][0],
+                num3,
+                num3.Length>0 && num3.Length <= 3 ? "\u00A0" + (num3.Length <= 2 ? "\u00A0\u00A0" : "") : "",
+                num.ToString(),
+                num < 100 ? "\u00A0" + (num < 10 ? "\u00A0\u00A0" : "") : "",
+                smallerWindow ? "" : (shownoadd ? (num2 < 0 ? "\u00A0" : "+") + num2.ToString() : "\t"),
+                smallerWindow ? "" : (shownoadd && Math.Abs(num2) < 10 ? "\u00A0\u00A0" : "")));
+            return text;
+        }
+        //造詣
+        public static string GetFamilySkill(int key, int index)
+        {
+            int mainActorID = DateFile.instance.MianActorID();
+            string text = (key != mainActorID) ? (DateFile.instance.GetActorValue(key, (index < 100 ? 501 : 500) + index, true) - int.Parse(DateFile.instance.GetActorDate(key, (index < 100 ? 501 : 500) + index, true))).ToString() : DateFile.instance.GetFamilySkillLevel(index, false).ToString();
+            if (!Main.settings.showIV)
+            {
+                int[] closeLevel = { 5, 3, 4, 6, 99 };
+                int goodness = DateFile.instance.GetActorGoodness(key);
+                text = key != mainActorID && DateFile.instance.GetActorFavor(false, mainActorID, key, true, false) < closeLevel[goodness > 4 ? 0 : goodness] ? "???" : "≈" + (int.Parse(text) / 10 * 10).ToString();
+            }
             return text;
         }
 
@@ -1137,7 +1155,7 @@ namespace CharacterFloatInfo
             string text = "";
             int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int buildType = buildingData[0];
-            int buildLv = buildingData[1]; 
+            int buildLv = buildingData[1];
             text += DateFile.instance.basehomePlaceDate[buildType][0];
             text += " - Lv." + buildLv;
             return text;
@@ -1149,13 +1167,13 @@ namespace CharacterFloatInfo
             string text = "";
             int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int buildingType = buildingData[0];
-            Dictionary<int,string> buildingSetting = DateFile.instance.basehomePlaceDate[buildingType];
+            Dictionary<int, string> buildingSetting = DateFile.instance.basehomePlaceDate[buildingType];
 
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
             int skillId = int.Parse(buildingSetting[33]);
             int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
-            text += string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100 , (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
+            text += string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100, (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
 
             return text;
         }
@@ -1170,7 +1188,7 @@ namespace CharacterFloatInfo
 
             int skillId = int.Parse(buildingSetting[33]);
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
-            if (skillId <= 0 || BuildingMaxXp<=0) return "";
+            if (skillId <= 0 || BuildingMaxXp <= 0) return "";
 
             int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
             int favorLvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), workerId, true, false);//[0-6]
@@ -1197,7 +1215,7 @@ namespace CharacterFloatInfo
                 }
             }
             int skillRequirement = Mathf.Max(int.Parse(buildingSetting[51]) + buildingLv - 1, 1);
-            workerSkill = (workerSkill + NeighborBonus) * Mathf.Max(moodBonus, 0) ;
+            workerSkill = (workerSkill + NeighborBonus) * Mathf.Max(moodBonus, 0);
 
             int efficiency = Mathf.Clamp(workerSkill / skillRequirement, 50, 200);
             return string.Format("+{0:0.#}%{1}", (float)efficiency / BuildingMaxXp * 100, DateFile.instance.massageDate[7006][1]);
