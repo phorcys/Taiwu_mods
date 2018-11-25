@@ -2,8 +2,9 @@
     "Id": "SaveLoadBtns",
     "DisplayName": "改变S/L制度的按钮",
     "Author": "Eiffel",
-    "Version": "1.1.0",
+    "Version": "1.2.0",
     "AssemblyName": "SaveLoadBtns.dll",
     "EntryMethod": "SaveLoadBtns.Main.Load",
-    "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/SaveLoadBtns"
+    "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/SaveLoadBtns",
+    "Requirements": ["SaveBackup"]
 }
