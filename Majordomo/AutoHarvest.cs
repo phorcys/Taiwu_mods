@@ -14,11 +14,8 @@ using System.Runtime.Serialization;
 
 namespace Majordomo
 {
-    class AutoHarvest
+    public class AutoHarvest
     {
-        // 自动收获过月事件 ID
-        public const int TURN_EVENT_ID = 1001;
-
         // 收获物类型
         public const int BOOTY_TYPE_RESOURCE = 0;
         public const int BOOTY_TYPE_ITEM = 1;
@@ -81,16 +78,13 @@ namespace Majordomo
 
         public static string GetBootiesSummary()
         {
-            if (AutoHarvest.harvestedResources.Count == 0 &&
-                AutoHarvest.harvestedItems.Count == 0 &&
-                AutoHarvest.harvestedActors.Count == 0)
-                return "您的管家禀告：本月尚无收获。\n";
-
-            string summary = "您的管家禀告了如下收获：\n";
-
+            string summary = "";
             summary += GetHarvestedResourcesSummary();
             summary += GetHarvestedItemsSummary();
             summary += GetHarvestedActorsSummary();
+
+            if (string.IsNullOrEmpty(summary)) summary = "本月尚无收获。\n";
+            else summary = "本月收获" + summary;
 
             return summary;
         }
@@ -237,6 +231,8 @@ namespace Majordomo
                     DateFile.instance.FamilyActorLeave(bootyId, 16);
                     DateFile.instance.MoveToPlace(int.Parse(DateFile.instance.GetGangDate(16, 3)), int.Parse(DateFile.instance.GetGangDate(16, 4)), bootyId, fromPart: false);
                     UIDate.instance.UpdateManpower();
+
+                    AutoHarvest.LogNewVillagerMerchantType(bootyId);
                     break;
                 }
                 default:
@@ -260,30 +256,13 @@ namespace Majordomo
         }
 
 
-        // 注册月初事件
-        // changTrunEvent format: [turnEventId, param1, param2, ...]
-        // current changTrunEvent: [AutoHarvest.TURN_EVENT_ID]
-        // current GameObject.name: "TrunEventIcon,{AutoHarvest.TURN_EVENT_ID}"
-        public static void RegisterEvent(ref UIDate __instance)
+        // 在 log 中输出新村民的潜在商队
+        private static void LogNewVillagerMerchantType(int actorId)
         {
-            __instance.changTrunEvents.Add(new int[] { AutoHarvest.TURN_EVENT_ID });
-        }
-
-
-        // 设置月初事件文字
-        public static void SetEventText(WindowManage __instance, bool on, GameObject tips)
-        {
-            if (tips == null || !on) return;
-            if (tips.tag != "TrunEventIcon") return;
-
-            string[] eventParams = tips.name.Split(',');
-            int eventId = (eventParams.Length > 1) ? int.Parse(eventParams[1]) : 0;
-
-            if (eventId != AutoHarvest.TURN_EVENT_ID) return;
-
-            __instance.informationName.text = DateFile.instance.trunEventDate[eventId][0];
-
-            __instance.informationMassage.text = AutoHarvest.GetBootiesSummary();
+            int gangType = int.Parse(DateFile.instance.GetActorDate(actorId, 9, addValue: false));
+            int merchantType = int.Parse(DateFile.instance.GetGangDate(gangType, 16));
+            string merchantTypeName = DateFile.instance.storyShopDate[merchantType][0];
+            Main.Logger.Log($"新村民：{DateFile.instance.GetActorName(actorId)}，潜在商队：{merchantTypeName}");
         }
     }
 }
