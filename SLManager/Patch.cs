@@ -41,6 +41,12 @@ namespace Sth4nothing.SLManager
                 Selectable saveButton = saveBtn.GetComponent<Selectable>();
                 ((Image)saveButton.targetGraphic).sprite = Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
                 saveBtn.AddComponent<MyPointerClick>();
+
+                GameObject loadBtn2 = GameObject.Find("EncyclopediaButton,609");
+                loadBtn2.name = "LoadButton2";
+                Selectable loadButton2 = loadBtn2.GetComponent<Selectable>();
+                ((Image)loadButton2.targetGraphic).sprite = Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
+                loadBtn2.AddComponent<MyPointerClick>();
             }
         }
     }
@@ -53,6 +59,10 @@ namespace Sth4nothing.SLManager
             if (gameObject.name == "LoadButton")
             {
                 LoadFiles();
+            }
+            else if (gameObject.name == "LoadButton2")
+            {
+                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入", DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度").Replace("返回到游戏的主菜单…\n", ""), false, true);
             }
             else if (gameObject.name == "SaveButton")
             {
@@ -101,6 +111,23 @@ namespace Sth4nothing.SLManager
             LoadFile.ParseFiles();
 
             UI.Instance.ShowData();
+        }
+    }
+
+    [HarmonyPatch(typeof(OnClick), "Index")]
+    public static class OnClick_Index_Patch
+    {
+        public static void Postfix()
+        {
+            if (!Main.enabled) return;
+            if (OnClick.instance.ID == 4646)
+            {
+                DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
+                DateFile.instance.Initialize(SaveDateFile.instance.dateId);
+                YesOrNoWindow.instance.CloseYesOrNoWindow();
+                YesOrNoWindow.instance.yesOrNoWindow.sizeDelta = new Vector2(720f, 280f);
+                OnClick.instance.Over = true;
+            }
         }
     }
 
@@ -336,7 +363,7 @@ namespace Sth4nothing.SLManager
                 foreach (var file in savedFiles)
                 {
                     Debug.Log("\t" + file);
-                } 
+                }
             }
             Debug.Log("savedInfos: ");
             if (savedInfos != null)
@@ -344,7 +371,7 @@ namespace Sth4nothing.SLManager
                 foreach (var pair in savedInfos)
                 {
                     Debug.Log("\t" + pair.Key + ": " + JsonConvert.SerializeObject(pair.Value));
-                } 
+                }
             }
         }
     }
@@ -367,6 +394,13 @@ namespace Sth4nothing.SLManager
             else if (tips.name == "LoadButton")
             {
                 ___informationName.text = "载入";
+                ___informationMassage.text = "显示存档列表，选择存档读取\n";
+                ___tipsW = 260;
+                ___anTips = true;
+            }
+            else if (tips.name == "LoadButton2")
+            {
+                ___informationName.text = "快速载入";
                 ___informationMassage.text = "放弃现行进度, 由上一次记录重新开始\n";
                 ___tipsW = 260;
                 ___anTips = true;
