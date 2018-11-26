@@ -2,7 +2,8 @@
     "Id": "VillageHeadOfTaiwu",
     "DisplayName": "太吾村支书",
     "Author": "sth4nothing",
-    "Version": "1.1.9",
+    "Version": "1.2.0",
     "AssemblyName": "VillageHeadOfTaiwu.dll",
-    "EntryMethod": "Sth4nothing.VillageHeadOfTaiwu.Main.Load"
+    "EntryMethod": "Sth4nothing.VillageHeadOfTaiwu.Main.Load",
+    "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/VillageHeadOfTaiwu"
 }
