@@ -1,5 +1,3 @@
-#define REFLECT
-
 using Harmony12;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -258,29 +256,19 @@ namespace Sth4nothing.SLManager
                     DateFile.SaveDate date = null;
                     if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
                     {
-#if TEST
-                        date = SaveDateFile.instance.GetData(file, typeof(DateFile.SaveDate), rijndeal )
-                            as DateFile.SaveDate;
-#else
                         date = typeof(SaveDateFile)
                             .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
                             .Invoke(SaveDateFile.instance,
                                 new object[] { file, typeof(DateFile.SaveDate), rijndeal })
                             as DateFile.SaveDate;
-#endif
                     }
                     else
                     {
-#if TEST
-                        date = SaveDateFile.instance.GetData(file, typeof(DateFile.SaveDate))
-                            as DateFile.SaveDate;
-#else
                         date = typeof(SaveDateFile)
                             .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
                             .Invoke(SaveDateFile.instance,
                                 new object[] { file, typeof(DateFile.SaveDate) })
                             as DateFile.SaveDate;
-#endif
                     }
                     ans = new SaveData(date._mainActorName, date._year, date._samsara,
                         date._dayTrun, date._playerSeatName, date._playTime);
@@ -337,29 +325,19 @@ namespace Sth4nothing.SLManager
                         DateFile.SaveDate date = null;
                         if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
                         {
-#if REFLECT
-                            date = SaveDateFile.instance.GetData(tmp, typeof(DateFile.SaveDate), rijndeal)
+                            date = typeof(SaveDateFile)
+                                .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                                .Invoke(SaveDateFile.instance,
+                                    new object[] { tmp, typeof(DateFile.SaveDate), rijndeal })
                                 as DateFile.SaveDate;
-#else
-                        date = typeof(SaveDateFile)
-                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
-                            .Invoke(SaveDateFile.instance,
-                                new object[] {tmp, typeof(DateFile.SaveDate), rijndeal })
-                            as DateFile.SaveDate;
-#endif
                         }
                         else
                         {
-#if REFLECT
-                            date = SaveDateFile.instance.GetData(tmp, typeof(DateFile.SaveDate))
+                            date = typeof(SaveDateFile)
+                                .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                                .Invoke(SaveDateFile.instance,
+                                    new object[] { tmp, typeof(DateFile.SaveDate) })
                                 as DateFile.SaveDate;
-#else
-                        date = typeof(SaveDateFile)
-                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
-                            .Invoke(SaveDateFile.instance,
-                                new object[] { tmp, typeof(DateFile.SaveDate) })
-                            as DateFile.SaveDate;
-#endif
                         }
                         ans = new SaveData(date._mainActorName, date._year, date._samsara,
                             date._dayTrun, date._playerSeatName, date._playTime);
