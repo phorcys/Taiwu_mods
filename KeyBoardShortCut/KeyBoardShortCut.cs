@@ -84,7 +84,6 @@ namespace KeyBoardShortCut
     };
     public class Settings : UnityModManager.ModSettings
     {
-        public bool close_with_right_mouse_button = false;
         public SerializableDictionary<HK_TYPE, KeyValuePair<KeyCode, string>> hotkeys;
         public MODIFIER_KEY_TYPE qinggong_modifier_key = MODIFIER_KEY_TYPE.MKT_SHIFT;
         public MODIFIER_KEY_TYPE special_modifierkey = MODIFIER_KEY_TYPE.MKT_ALT;
@@ -251,7 +250,6 @@ namespace KeyBoardShortCut
             processKeyPress();
             GUILayout.BeginVertical("box");
             settings.enable_close = GUILayout.Toggle(settings.enable_close, "是否使用本Mod的Esc/鼠标右键关闭功能（需要重启游戏生效）");
-            settings.close_with_right_mouse_button = GUILayout.Toggle(settings.close_with_right_mouse_button, "是否使用鼠标右键关闭窗口");
             settings.escAsLastOption = GUILayout.Toggle(settings.escAsLastOption, "是否在对话窗口使用Esc/鼠标右键选择最后一个选项");
             settings.useNumpadKeysInMessageWindow = GUILayout.Toggle(settings.useNumpadKeysInMessageWindow, "是否在对话窗口增加小键盘选择功能");
 
@@ -268,7 +266,8 @@ namespace KeyBoardShortCut
             {
                 var key = keys[index];
                 var value = settings.hotkeys[key];
-                renderHK_GUI(key, value);
+                // Do not allow modifying the close key 
+                if (key != HK_TYPE.HK_CLOSE) renderHK_GUI(key, value);
             }
             GUILayout.EndVertical();
         }
@@ -482,12 +481,8 @@ namespace KeyBoardShortCut
                 return;
             }
 
-            if (insobj.gameObject.activeInHierarchy == true 
-                && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
-                    || (Main.settings.close_with_right_mouse_button == true && Input.GetMouseButtonDown(1) == true))
-                    )
+            if (insobj.gameObject.activeInHierarchy == true &&  (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true || Input.GetMouseButtonDown(1) == true))
             {
-
                 if (testret() == true)
                 {
                     Main.Logger.Log(this.GetType().ToString() + " Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
@@ -539,6 +534,21 @@ namespace KeyBoardShortCut
             }
         }
     }
+
+    public class EscCloseNoneSingleton : EscClose
+    {
+        public new void setparam(Type type_ins, string methodname, Func<bool> tester)
+        {
+            Main.Logger.Log(this.GetType().ToString() + " Regist " + type_ins.ToString() + "  method :" + methodname);
+            mname = methodname;
+            ins = type_ins;
+            mi = ins.GetMethod(mname);
+            insobj = gameObject.GetComponent(ins) as MonoBehaviour;
+            testret = tester;
+        }
+    }
+
+
     /// <summary>
     ///  重置配置提醒
     /// </summary>
@@ -585,8 +595,7 @@ namespace KeyBoardShortCut
                 //处理关闭                                                         
                 if (YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled == true)
                 {
-                    if (Main.settings.enable_close && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true
-                           || (Main.settings.close_with_right_mouse_button == true && Input.GetMouseButtonDown(1) == true))
+                    if (Main.settings.enable_close && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true || Input.GetMouseButtonDown(1) == true)
                         && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
                     {
                         YesOrNoWindow.instance.CloseYesOrNoWindow();
@@ -896,73 +905,7 @@ namespace KeyBoardShortCut
         }
 
     }
-    /// <summary>
-    ///  ActorMenu  关闭人物信息界面
-    /// </summary>
-    [HarmonyPatch(typeof(ActorMenu), "Start")]
-    public static class ActorMenu_Update_Patch
-    {
-        private static void Postfix(WorldMapSystem __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(ActorMenu), "CloseActorMenu", () =>
-            {
-                return ActorMenu.instance.actorMenu.activeInHierarchy;
-            });
-        }
-    }
 
-    /// <summary>
-    ///  世界地图  关闭世界地图界面
-    /// </summary>
-    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
-    public static class WorldMapSystem_ColsePartWorldMapWindow_Patch
-    {
-        private static void Postfix(WorldMapSystem __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.partWorldMapWindow.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(WorldMapSystem), "ColsePartWorldMapWindow", () =>
-            {
-                // 如果 剧情/奇遇 窗口开着，就不处理
-                if (StorySystem.instance.toStoryIsShow == true
-                        ||StorySystem.instance.storySystem.activeInHierarchy == true)
-                {
-                    return false;
-                }
-
-                // 如果制造窗口开着，就不处理
-                if (MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy == true)
-                {
-                    return false;
-                }
-                // 如果商店窗口开着，就不处理
-                if (ShopSystem.instance.shopWindow.activeInHierarchy == true
-                || BookShopSystem.instance.shopWindow.activeInHierarchy == true
-                || SystemSetting.instance.SystemSettingWindow.activeInHierarchy == true)
-                {
-                    return false;
-                }
-
-                //功法树窗口开着就不关
-                if(Main._go_gongfatree != null && Main._go_gongfatree.activeInHierarchy == true)
-                {
-                    return false;
-                }
-                //关闭工作窗口
-                //if(WorldMapSystem.instance.choo)
-
-                return WorldMapSystem.instance.partWorldMapWindow.activeInHierarchy;
-            });
-        }
-    }
 
     /// <summary>
     ///  建筑地图  关闭建筑地图界面
@@ -1044,88 +987,6 @@ namespace KeyBoardShortCut
                 }
 
                 return HomeSystem.instance.homeSystem.activeInHierarchy;
-            });
-        }
-    }
-
-    /// <summary>
-    /// 关闭系统设置界面
-    /// </summary>
-    [HarmonyPatch(typeof(SystemSetting), "Start")]
-    public static class SystemSetting_CloseSystemSetting_Patch
-    {
-        private static void Postfix(SystemSetting __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(SystemSetting), "CloseSettingWindow", () =>
-            {
-                return SystemSetting.instance.SystemSettingWindow.activeInHierarchy;
-            });
-        }
-    }
-
-
-    /// <summary>
-    /// 关闭制造界面
-    /// </summary>
-    [HarmonyPatch(typeof(MakeSystem), "Start")]
-    public static class MakeSystem_CloseMakeSystem_Patch
-    {
-        private static void Postfix(MakeSystem __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(MakeSystem), "CloseMakeWindow", () =>
-            {
-                return MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy;
-            });
-        }
-    }
-
-    /// <summary>
-    /// 关闭书店界面
-    /// </summary>
-    [HarmonyPatch(typeof(BookShopSystem), "Start")]
-    public static class BookShopSystem_CloseBookShopSystem_Patch
-    {
-
-        private static void Postfix(BookShopSystem __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(BookShopSystem), "CloseShopWindow", () =>
-            {
-                return BookShopSystem.instance.shopWindow.activeInHierarchy;
-            });
-        }
-    }
-
-    /// <summary>
-    /// 关闭商店界面
-    /// </summary>
-    [HarmonyPatch(typeof(ShopSystem), "Start")]
-    public static class ShopSystem_CloseShopSystem_Patch
-    {
-        private static void Postfix(ShopSystem __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscClose newobj = __instance.gameObject.AddComponent(typeof(EscClose)) as EscClose;
-            newobj.setparam(typeof(ShopSystem), "CloseShopWindow", () =>
-            {
-                return ShopSystem.instance.shopWindow.activeInHierarchy;
             });
         }
     }
@@ -1292,41 +1153,6 @@ namespace KeyBoardShortCut
     }
 
 
-    public class EscCloseNoneSingleton :EscClose
-    {
-        public new void setparam(Type type_ins, string methodname, Func<bool> tester)
-        {
-            Main.Logger.Log(this.GetType().ToString() + " Regist " + type_ins.ToString() + "  method :" + methodname);
-            mname = methodname;
-            ins = type_ins;
-            mi = ins.GetMethod(mname);
-            insobj = gameObject.GetComponent(ins) as MonoBehaviour;
-            testret = tester;
-        }
-    }
-
-    /// <summary>
-    ///  功法树关闭
-    /// </summary>
-    [HarmonyPatch(typeof(GongFaTreeWindow), "Start")]
-    public static class GongFaTreeWindow_EscCloseNonSingleton_Patch
-    {
-        private static void Postfix(GongFaTreeWindow __instance)
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-            EscCloseNoneSingleton newobj = __instance.gameObject.AddComponent(typeof(EscCloseNoneSingleton)) as EscCloseNoneSingleton;
-            Main._go_gongfatree = __instance.gameObject;
-            newobj.setparam(typeof(GongFaTreeWindow), "CloseGongFaTreeWindow", () =>
-            {
-
-                return __instance.gongFaTreeWindow.activeInHierarchy;
-            });
-        }
-    }
-
     ///// <summary>
     /////  BattleSystem 战斗显示快捷键
     ///// </summary>
@@ -1368,6 +1194,7 @@ namespace KeyBoardShortCut
 
     //    }
     //}
+
 
     ///// <summary>
     /////  BattleSystem 战斗显示快捷键
@@ -1441,31 +1268,20 @@ namespace KeyBoardShortCut
         }
 
 
-        public static bool SelectedLastOption()
-        {
-            if (!Main.settings.enable_close || !Main.settings.escAsLastOption) return false;
-
-            if (Main.GetKeyDown(HK_TYPE.HK_CLOSE)) return true;
-            if (Main.settings.close_with_right_mouse_button && Input.GetMouseButtonDown(1)) return true;
-
-            return false;
-        }
-
-
         private static void Postfix(MassageWindow __instance)
         {
             if (!Main.enabled || Main.binding_key) return;
 
             if (!__instance.massageWindow.activeInHierarchy) return;
-            if (MassageWindow.instance.itemWindowIsShow) return;
+            if (__instance.itemWindowIsShow) return;
             if (ShopSystem.instance != null && ShopSystem.instance.shopWindow.activeInHierarchy) return;
             if (BookShopSystem.instance != null && BookShopSystem.instance.shopWindow.activeInHierarchy) return;
             if (GetItemWindow.instance != null && GetItemWindow.instance.getItemWindow.activeInHierarchy) return;
             if (GetActorWindow.instance != null && GetActorWindow.instance.getActorWindow.activeInHierarchy) return;
+            if (ActorMenu.instance != null && ActorMenu.instance.actorMenu.activeInHierarchy) return;
 
             int chooseIndex = -1;
             if (Main.settings.useNumpadKeysInMessageWindow) chooseIndex = GetAlternativeKeysDown();
-            if (chooseIndex < 0 && SelectedLastOption()) chooseIndex = __instance.chooseHolder.childCount - 1;
             if (chooseIndex < 0) return;
 
             GameObject choose = __instance.chooseHolder.GetChild(chooseIndex).gameObject;
@@ -1477,7 +1293,7 @@ namespace KeyBoardShortCut
 
 
         // 摘抄自 OnChoose::SetChoose 方法
-        private static void SetChoose(int chooseId)
+        public static void SetChoose(int chooseId)
         {
             if (MassageWindow.instance.chooseItemEvents.Contains(chooseId))
             {
@@ -1502,6 +1318,89 @@ namespace KeyBoardShortCut
                 }
                 MassageWindow.instance.ChangeMassageWindow(chooseId);
             }
+        }
+    }
+
+
+    /// <summary>
+    /// Esc / 鼠标右键事件处理类
+    /// 除一般条件外，原游戏还需要满足以下两个条件之一，才会处理该事件：1. 对话窗口未打开；2. 当前窗口在对话窗口之上。
+    /// 现在改为就算不满足上述两个条件，也处理该事件。
+    /// </summary>
+    [HarmonyPatch(typeof(EscKeyboardHandler), "Update")]
+    public static class EscKeyboardHandler_Update_Patch
+    {
+        private static bool Prefix(EscKeyboardHandler __instance, bool ___keyState)
+        {
+            if (!EscKeyboardHandler.stopEscKey && 
+                !Loading.instance.LoadingWindow.activeInHierarchy && 
+                !DateFile.instance.doMapMoveing)
+            {
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetMouseButtonDown(1))
+                {
+                    if (!___keyState)
+                    {
+                        ___keyState = true;
+                        EscWinComponent.EscTop();
+                    }
+                }
+                else
+                {
+                    ___keyState = false;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 为对话窗口类加上 Esc / 鼠标右键事件处理组件
+    /// </summary>
+    [HarmonyPatch(typeof(MassageWindow), "Start")]
+    public static class MassageWindow_Start_Patch
+    {
+        private static bool Prefix(MassageWindow __instance)
+        {
+            if (!Main.enabled || Main.binding_key || !Main.settings.escAsLastOption) return true;
+
+            // When adding a component to a GameObject using AddComponent<C>() the component C's OnEnable method is called immediately.
+            var escWinComponent = __instance.massageWindowBack.AddComponent<EscWinComponent>();
+            escWinComponent.escEvent.AddListener(OnEsc);
+
+            return true;
+        }
+
+
+        private static void OnEsc()
+        {
+            var chooseIndex = MassageWindow.instance.chooseHolder.childCount - 1;
+            if (chooseIndex < 0) return;
+
+            GameObject choose = MassageWindow.instance.chooseHolder.GetChild(chooseIndex).gameObject;
+            if (!choose.GetComponent<Button>().interactable) return;
+
+            int chooseId = int.Parse(choose.name.Split(',')[1]);
+            MassageWindow_Update_Patch.SetChoose(chooseId);
+
+            // 让 Esc / 鼠标右键事件处理组件在对话窗口中可以被触发多次
+            var field = typeof(EscWinComponent).GetField("s_clickFlag", BindingFlags.NonPublic | BindingFlags.Static);
+            field.SetValue(null, false);
+        }
+    }
+
+
+    /// <summary>
+    /// 修复原游戏在对话界面开启人物窗口时，依然可以选择对话分支的 bug
+    /// </summary>
+    [HarmonyPatch(typeof(OnChoose), "SetChoose")]
+    public static class OnChoose_SetChoose_Patch
+    {
+        private static bool Prefix()
+        {
+            if (ActorMenu.instance != null && ActorMenu.instance.actorMenu.activeInHierarchy) return false;
+
+            return true;
         }
     }
 }
