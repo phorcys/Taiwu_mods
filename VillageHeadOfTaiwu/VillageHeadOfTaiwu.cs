@@ -76,12 +76,9 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         public bool Open { get; private set; }
         bool cursorLock;
         bool collapse;
+        bool[] showItems;
 
-        GUIStyle windowStyle;
-        GUIStyle collapseStyle;
-        GUIStyle labelStyle;
-        GUIStyle seperatorStyle;
-        GUIStyle buttonStyle;
+        GUIStyle windowStyle, collapseStyle, buttonStyle, seperatorStyle, itemStyle, seperatorStyle2;
 
         DateFile df;
         WorldMapSystem wms;
@@ -117,60 +114,19 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             Open = false;
             collapse = true;
 
+            showItems = new bool[] { true, true, true, true, true, true };
             scrollPosition = Vector2.zero;
-
-            windowStyle = new GUIStyle
-            {
-                name = "window",
-                padding = new RectOffset(5, 5, 5, 5),
-            };
-
-            collapseStyle = new GUIStyle
-            {
-                name = "collapse",
-                fontSize = 12,
-                alignment = TextAnchor.MiddleRight,
-                fixedWidth = 25f,
-            };
-            collapseStyle.normal.textColor = Color.red;
-
-            labelStyle = new GUIStyle
-            {
-                name = "label",
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = Main.Setting.labelSize,
-            };
-            labelStyle.normal.textColor = Color.yellow;
-
-            buttonStyle = new GUIStyle
-            {
-                name = "button",
-                alignment = TextAnchor.MiddleLeft,
-                fontSize = Main.Setting.buttonSize,
-            };
-            buttonStyle.normal.textColor = Color.white;
-            buttonStyle.richText = true;
-
-            seperatorStyle = new GUIStyle
-            {
-                name = "seperator",
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = Main.Setting.buttonSize,
-            };
-            seperatorStyle.normal.textColor = Color.cyan;
+            windowRect = new Rect(designWidth * 0.85f, designHeight * 0.05f, designWidth * 0.145f, 0);
 
             Init();
 
-            CalcWindow();
+            // 设置点击事件
+            var btn = GameObject.Find("ManpowerIcon,7").AddComponent<Button>();
+            btn.targetGraphic = UIDate.instance.manpowerText;
+            btn.interactable = true;
+            btn.onClick.AddListener(ToggleWindow);
 
             ToggleWindow();
-
-            // 设置点击事件
-            // TODO
-            // var btn = UIDate.instance.manpowerText.gameObject.AddComponent<Button>();
-            // btn.GetComponent<Button>().targetGraphic = UIDate.instance.manpowerText;
-            // btn.GetComponent<Button>().interactable = true;
-            // btn.GetComponent<Button>().onClick.AddListener(VillagersList.Instance.ToggleWindow);
         }
 
         public void Init()
@@ -179,15 +135,49 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             wms = WorldMapSystem.instance;
         }
 
-        public void CalcWindow()
-        {
-            windowRect = new Rect(designWidth * 0.85f, designHeight * 0.05f, designWidth * 0.145f, 0);
-            Main.Logger.Log(windowRect.ToString());
-        }
         private void PrepareGUI()
         {
-            buttonStyle.fixedWidth = windowRect.width - 40;
-            seperatorStyle.fixedWidth = windowRect.width - 40;
+            windowStyle = new GUIStyle
+            {
+                name = "window",
+                padding = new RectOffset(5, 5, 5, 5),
+            };
+            collapseStyle = new GUIStyle
+            {
+                name = "collapse",
+                // fontSize = 12,
+                alignment = TextAnchor.MiddleRight,
+                fixedWidth = 25f,
+                fixedHeight = 25f,
+            };
+            collapseStyle.normal.textColor = Color.red;
+
+            buttonStyle = new GUIStyle(GUI.skin.button);
+            buttonStyle.name = "button";
+            buttonStyle.alignment = TextAnchor.MiddleCenter;
+            buttonStyle.fontSize = Main.Setting.buttonSize;
+            buttonStyle.normal.textColor = Color.yellow;
+
+            itemStyle = new GUIStyle
+            {
+                name = "item",
+                alignment = TextAnchor.MiddleLeft,
+                fontSize = Main.Setting.itemSize,
+                richText = true,
+            };
+            itemStyle.normal.textColor = Color.white;
+
+            seperatorStyle = new GUIStyle(GUI.skin.button);
+            seperatorStyle.name = "seperator";
+            seperatorStyle.alignment = TextAnchor.MiddleCenter;
+            seperatorStyle.fontSize = Main.Setting.itemSize - 1;
+            seperatorStyle.normal.textColor = Color.cyan;
+
+            seperatorStyle2 = new GUIStyle(GUI.skin.button);
+            seperatorStyle2.name = "seperator";
+            seperatorStyle2.alignment = TextAnchor.MiddleCenter;
+            seperatorStyle2.fontSize = Main.Setting.itemSize - 1;
+            seperatorStyle2.normal.textColor = Color.green;
         }
 
         public void OnGUI()
@@ -221,6 +211,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             GUILayout.Space(windowRect.width - 35f);
             if (GUILayout.Button((collapse ? "展" : "收"), collapseStyle))
             {
+                Main.Logger.Log(collapse ? "展" : "收");
                 collapse = !collapse;
             }
             GUILayout.EndHorizontal();
@@ -234,15 +225,21 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                     {
                         GUILayout.BeginHorizontal();
                     }
-                    if (GUILayout.Button(workStr[i], labelStyle))
+                    if (GUILayout.Button(workStr[i], buttonStyle))
                     {
                         ArrangeWork((WorkType)i);
                     }
-                    if (i % 3 < 2)
+                    if (GUILayout.Button("-", buttonStyle))
                     {
-                        GUILayout.Label("|");
+                        var workers = GetWorkers((WorkType)i);
+                        if (workers.Count() > 0)
+                        {
+                            var minRes = workers.Min((w) => w.resource);
+                            var worker = workers.First((w) => w.resource == minRes);
+                            CancelWork(worker);
+                        }
                     }
-                    else if (i % 3 == 2)
+                    if (i % 3 == 2)
                     {
                         GUILayout.EndHorizontal();
                     }
@@ -251,19 +248,24 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 canvas.transform.Find("panel").GetComponent<RectTransform>().anchorMin = new Vector2(windowRect.x / designWidth, 0.22f);
 
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false,
-                    GUILayout.Width(windowRect.width - 20),
-                    GUILayout.MaxHeight(designHeight * 0.73f));
+                    GUILayout.Width(windowRect.width - 20), GUILayout.MaxHeight(designHeight * 0.73f));
                 GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
-                    GUILayout.Label($"------------{workStr[i]}-------------     ", seperatorStyle);
-                    GetWorkers((WorkType)i).OrderBy(OrderFunc).Do((worker) =>
+                    if (GUILayout.Button(workStr[i], showItems[i] ? seperatorStyle2 : seperatorStyle))
                     {
-                        if (GUILayout.Button(worker.content, buttonStyle))
+                        showItems[i] = !showItems[i];
+                    }
+                    if (showItems[i])
+                    {
+                        GetWorkers((WorkType)i).OrderBy(OrderFunc).Do((worker) =>
                         {
-                            CancelWork(worker);
-                        }
-                    });
+                            if (GUILayout.Button(worker.content, itemStyle))
+                            {
+                                CancelWork(worker);
+                            }
+                        });
+                    }
                 }
                 GUILayout.EndVertical();
                 GUILayout.EndScrollView();
@@ -343,7 +345,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 DontDestroyOnLoad(canvas);
                 var panel = new GameObject("panel", typeof(Image));
                 panel.transform.SetParent(canvas.transform);
-                panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+                panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.4f);
                 panel.GetComponent<RectTransform>().anchorMin = new Vector2(1f - 25f / designWidth, 0.95f - 25f / designHeight);
                 panel.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.95f);
                 panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
@@ -591,9 +593,9 @@ namespace Sth4nothing.VillageHeadOfTaiwu
     public class Settings : UnityModManager.ModSettings
     {
         [XmlIgnore]
-        public int labelSize = 18;
+        public int buttonSize = 18;
         [XmlIgnore]
-        public int buttonSize = 14;
+        public int itemSize = 14;
         /// <summary>
         /// 是否跳过城镇
         /// </summary>
