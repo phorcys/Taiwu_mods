@@ -14,7 +14,7 @@ namespace Sth4nothing.SLManager
     }
     public static class Main
     {
-        public static bool enabled;
+        public static bool Enabled { get; private set; }
         public static bool forceSave = false;
 
         private static string logPath;
@@ -82,7 +82,7 @@ namespace Sth4nothing.SLManager
         }
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            enabled = value;
+            Enabled = value;
             return true;
         }
     }

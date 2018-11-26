@@ -1,3 +1,5 @@
+#define REFLECT
+
 using Harmony12;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -11,6 +13,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
+
 namespace Sth4nothing.SLManager
 {
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
@@ -18,14 +21,14 @@ namespace Sth4nothing.SLManager
     {
         public static void Postfix()
         {
-            if (Main.enabled)
+            if (Main.Enabled)
             {
                 UI.Load();
 
                 Transform parent = GameObject.Find("ResourceBack").transform;
 
                 GameObject loadBtn = Object.Instantiate(GameObject.Find("EncyclopediaButton,609"), new Vector3(1620f, -30f, 0), Quaternion.identity);
-                loadBtn.name = "LoadButton";
+                loadBtn.name = "LoadButton2";
                 loadBtn.tag = "SystemIcon";
                 loadBtn.transform.SetParent(parent, false);
                 loadBtn.transform.localPosition = new Vector3(1620f, -30f, 0);
@@ -43,7 +46,7 @@ namespace Sth4nothing.SLManager
                 saveBtn.AddComponent<MyPointerClick>();
 
                 GameObject loadBtn2 = GameObject.Find("EncyclopediaButton,609");
-                loadBtn2.name = "LoadButton2";
+                loadBtn2.name = "LoadButton";
                 Selectable loadButton2 = loadBtn2.GetComponent<Selectable>();
                 ((Image)loadButton2.targetGraphic).sprite = Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
                 loadBtn2.AddComponent<MyPointerClick>();
@@ -55,14 +58,16 @@ namespace Sth4nothing.SLManager
     {
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!Main.enabled) return;
+            if (!Main.Enabled) return;
             if (gameObject.name == "LoadButton")
             {
                 LoadFiles();
             }
             else if (gameObject.name == "LoadButton2")
             {
-                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入", DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度").Replace("返回到游戏的主菜单…\n", ""), false, true);
+                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入",
+                    DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧进度")
+                    .Replace("返回到游戏的主菜单…\n", ""), false, true);
             }
             else if (gameObject.name == "SaveButton")
             {
@@ -119,7 +124,7 @@ namespace Sth4nothing.SLManager
     {
         public static void Postfix()
         {
-            if (!Main.enabled) return;
+            if (!Main.Enabled) return;
             if (OnClick.instance.ID == 4646)
             {
                 DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
@@ -162,22 +167,6 @@ namespace Sth4nothing.SLManager
         }
     }
 
-    class StringTimeCompare : IComparer<string>
-    {
-        public static readonly string format = "yyyy - MM - dd   [ HH : mm ]";
-        private Dictionary<string, SaveData> dict;
-        public StringTimeCompare(Dictionary<string, SaveData> dict)
-        {
-            this.dict = dict;
-        }
-        public int Compare(string key1, string key2)
-        {
-            var time1 = System.DateTime.ParseExact(dict[key1].playtime, format, null);
-            var time2 = System.DateTime.ParseExact(dict[key2].playtime, format, null);
-            return -time1.CompareTo(time2);
-        }
-    }
-
     public static class LoadFile
     {
         /// <summary>
@@ -199,27 +188,38 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 解析了的存档
         /// </summary>
-        public static SortedDictionary<string, SaveData> savedInfos;
+        public static Dictionary<string, SaveData> savedInfos;
+
+        public static readonly string format = "yyyy - MM - dd   [ HH : mm ]";
+
         /// <summary>
         /// 解析压缩存档列表
         /// </summary>
         public static void ParseFiles()
         {
-            var dict = new Dictionary<string, SaveData>();
+            savedInfos = new Dictionary<string, SaveData>();
             foreach (var file in savedFiles)
             {
                 try
                 {
                     Main.Logger.Log(file);
-                    dict.Add(file, Parse(file));
+                    savedInfos.Add(file, Parse(file));
                 }
                 catch (System.Exception e)
                 {
                     Main.Logger.Log("[ERROR]" + e.Message);
                 }
             }
-            var comparer = new StringTimeCompare(dict);
-            savedInfos = new SortedDictionary<string, SaveData>(dict, comparer);
+            savedFiles.Sort((f1, f2) =>
+            {
+                if (!savedInfos.ContainsKey(f1))
+                    return -1;
+                if (!savedInfos.ContainsKey(f2))
+                    return 1;
+                var t1 = System.DateTime.ParseExact(savedInfos[f1].playtime, format, null);
+                var t2 = System.DateTime.ParseExact(savedInfos[f2].playtime, format, null);
+                return -t1.CompareTo(t2);
+            });
         }
         /// <summary>
         /// 解析指定压缩存档
@@ -237,7 +237,7 @@ namespace Sth4nothing.SLManager
                     ans = JsonConvert.DeserializeObject(content, typeof(SaveData)) as SaveData;
                 }
                 else if (!File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0"))
-                          && File.Exists(Path.Combine(path, "TW_Save_Date_0.tw")))
+                          && !File.Exists(Path.Combine(path, "TW_Save_Date_0.tw")))
                 {
                     throw new System.Exception(path);
                 }
@@ -255,8 +255,33 @@ namespace Sth4nothing.SLManager
                         file = Path.Combine(path, "TW_Save_Date_0.tw");
                         rijndeal = true;
                     }
-                    var date = SaveDateFile.instance.GetData(file,
-                            typeof(DateFile.SaveDate), rijndeal) as DateFile.SaveDate;
+                    DateFile.SaveDate date = null;
+                    if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
+                    {
+#if TEST
+                        date = SaveDateFile.instance.GetData(file, typeof(DateFile.SaveDate), rijndeal )
+                            as DateFile.SaveDate;
+#else
+                        date = typeof(SaveDateFile)
+                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                            .Invoke(SaveDateFile.instance,
+                                new object[] { file, typeof(DateFile.SaveDate), rijndeal })
+                            as DateFile.SaveDate;
+#endif
+                    }
+                    else
+                    {
+#if TEST
+                        date = SaveDateFile.instance.GetData(file, typeof(DateFile.SaveDate))
+                            as DateFile.SaveDate;
+#else
+                        date = typeof(SaveDateFile)
+                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                            .Invoke(SaveDateFile.instance,
+                                new object[] { file, typeof(DateFile.SaveDate) })
+                            as DateFile.SaveDate;
+#endif
+                    }
                     ans = new SaveData(date._mainActorName, date._year, date._samsara,
                         date._dayTrun, date._playerSeatName, date._playTime);
                     File.WriteAllText(Path.Combine(path, "date.json"),
@@ -309,8 +334,33 @@ namespace Sth4nothing.SLManager
                                 rijndeal = true;
                             }
                         }
-                        var date = SaveDateFile.instance.GetData(tmp,
-                            typeof(DateFile.SaveDate), rijndeal) as DateFile.SaveDate;
+                        DateFile.SaveDate date = null;
+                        if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
+                        {
+#if REFLECT
+                            date = SaveDateFile.instance.GetData(tmp, typeof(DateFile.SaveDate), rijndeal)
+                                as DateFile.SaveDate;
+#else
+                        date = typeof(SaveDateFile)
+                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                            .Invoke(SaveDateFile.instance,
+                                new object[] {tmp, typeof(DateFile.SaveDate), rijndeal })
+                            as DateFile.SaveDate;
+#endif
+                        }
+                        else
+                        {
+#if REFLECT
+                            date = SaveDateFile.instance.GetData(tmp, typeof(DateFile.SaveDate))
+                                as DateFile.SaveDate;
+#else
+                        date = typeof(SaveDateFile)
+                            .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
+                            .Invoke(SaveDateFile.instance,
+                                new object[] { tmp, typeof(DateFile.SaveDate) })
+                            as DateFile.SaveDate;
+#endif
+                        }
                         ans = new SaveData(date._mainActorName, date._year, date._samsara,
                             date._dayTrun, date._playerSeatName, date._playTime);
                         //  添加加速文件
@@ -383,7 +433,7 @@ namespace Sth4nothing.SLManager
         public static void Postfix(bool on, GameObject tips, ref Text ___informationMassage, ref Text ___informationName, ref int ___tipsW, ref bool ___anTips)
         {
             if (tips == null) return;
-            if (!Main.enabled) return;
+            if (!Main.Enabled) return;
             if (tips.name == "SaveButton")
             {
                 ___informationName.text = "储存";
@@ -414,9 +464,32 @@ namespace Sth4nothing.SLManager
         [HarmonyBefore(new string[] { "SaveBackup" })]
         static void Prefix(SaveDateFile __instance)
         {
-            if (!Main.enabled || !Main.settings.blockAutoSave || UIDate.instance == null) return;
+            if (!Main.Enabled || UIDate.instance == null) return;
 
-            #region 加速文件解析，添加额外文件date.json
+            if (__instance.saveSaveDate)
+            {
+                if (Main.forceSave)
+                {
+                    Main.forceSave = false;
+                    UIDate.instance.trunSaveText.text = "手动存档";
+                }
+                else if (Main.settings.blockAutoSave)
+                {
+                    UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
+                    __instance.saveSaveDate = false;
+                    return;
+                }
+            }
+        }
+    }
+    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
+    public class SaveDateFile_SaveSaveDate_Patch
+    {
+        static void Prefix(SaveDateFile __instance)
+        {
+            if (!Main.Enabled) return;
+
+#region 加速文件解析，添加额外文件date.json
             var df = DateFile.instance;
             var savedate = new SaveData(df.GetActorName(), df.year, df.samsara, df.dayTrun,
                 df.playerSeatName, System.DateTime.Now);
@@ -427,11 +500,7 @@ namespace Sth4nothing.SLManager
             var fpath = Path.Combine(dirpath, "date.json");
 
             File.WriteAllText(fpath, JsonConvert.SerializeObject(savedate));
-            #endregion
-
-            SaveDateFile.instance.saveSaveDate = Main.forceSave;
-            UIDate.instance.trunSaveText.text = "手动存档";
-            Main.forceSave = false;
+#endregion
         }
     }
 }
