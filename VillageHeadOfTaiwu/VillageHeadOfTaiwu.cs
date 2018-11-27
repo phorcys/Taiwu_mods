@@ -120,12 +120,6 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
             Init();
 
-            // 设置点击事件
-            var btn = GameObject.Find("ManpowerIcon,7").AddComponent<Button>();
-            btn.targetGraphic = UIDate.instance.manpowerText;
-            btn.interactable = true;
-            btn.onClick.AddListener(ToggleWindow);
-
             ToggleWindow();
         }
 
@@ -133,6 +127,11 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         {
             df = DateFile.instance;
             wms = WorldMapSystem.instance;
+            // 设置点击事件
+            var btn = GameObject.Find("ManpowerIcon,7").AddComponent<Button>();
+            btn.targetGraphic = UIDate.instance.manpowerText;
+            btn.interactable = true;
+            btn.onClick.AddListener(ToggleWindow);
         }
 
         private void PrepareGUI()
@@ -142,18 +141,18 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 name = "window",
                 padding = new RectOffset(5, 5, 5, 5),
             };
-            collapseStyle = new GUIStyle
-            {
-                name = "collapse",
-                // fontSize = 12,
-                alignment = TextAnchor.MiddleRight,
-                fixedWidth = 25f,
-                fixedHeight = 25f,
-            };
+            collapseStyle = new GUIStyle(GUI.skin.button);
+            collapseStyle.name = "collapse";
+            // fontSize = 12,
+            collapseStyle.margin = new RectOffset(0, 0, 0, 0);
+            collapseStyle.alignment = TextAnchor.MiddleRight;
+            collapseStyle.fixedWidth = 25f;
+            collapseStyle.fixedHeight = 25f;
             collapseStyle.normal.textColor = Color.red;
 
             buttonStyle = new GUIStyle(GUI.skin.button);
             buttonStyle.name = "button";
+            buttonStyle.margin = new RectOffset(0, 0, 0, 0);
             buttonStyle.alignment = TextAnchor.MiddleCenter;
             buttonStyle.fontSize = Main.Setting.buttonSize;
             buttonStyle.normal.textColor = Color.yellow;
@@ -252,7 +251,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 GUILayout.BeginVertical();
                 for (int i = 0; i < 6; i++)
                 {
-                    if (GUILayout.Button(workStr[i], showItems[i] ? seperatorStyle2 : seperatorStyle))
+                    if (GUILayout.Button(workStr[i], (showItems[i] ? seperatorStyle : seperatorStyle2)))
                     {
                         showItems[i] = !showItems[i];
                     }
