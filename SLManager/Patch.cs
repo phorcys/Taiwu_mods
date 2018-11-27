@@ -381,6 +381,7 @@ namespace Sth4nothing.SLManager
         /// </summary>
         public static void Log()
         {
+            Debug.Log("version: " + MainMenu.instance.gameVersionText.text);
             Debug.Log("dateId: " + dateId);
             Debug.Log("dirpath: " + dirPath);
             Debug.Log("backpath: " + backPath);

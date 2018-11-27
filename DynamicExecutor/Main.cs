@@ -108,8 +108,7 @@ namespace Sth4nothing.DynamicExecutor
                     + Path.Combine(rootPath, "Execute.cs.template") + "\"";
                 p.Start();
             }
-            if (!running && DateFile.instance != null && DateFile.instance.actorsDate != null
-                && DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId))
+            if (!running)
             {
                 if (GUILayout.Button("运行代码", GUILayout.Width(100)))
                 {

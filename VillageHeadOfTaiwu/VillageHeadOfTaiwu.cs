@@ -10,49 +10,49 @@ using UnityModManagerNet;
 
 namespace Sth4nothing.VillageHeadOfTaiwu
 {
-    class VillagersList : MonoBehaviour
+    class Worker
     {
-        class Worker
-        {
-            /// <summary>
-            /// 显示在列表中的任务字符串
-            /// </summary>
-            public string content;
-            /// <summary>
-            /// 坐标part
-            /// </summary>
-            public int part;
-            /// <summary>
-            /// 坐标place
-            /// </summary>
-            public int place;
-            /// <summary>
-            /// 消耗的人力
-            /// </summary>
-            public int manpower;
-            /// <summary>
-            /// 采集的资源类型
-            /// </summary>
-            public int type;
-            /// <summary>
-            /// 每时节采集的资源量
-            /// </summary>
-            internal int resource;
-        }
-
+        /// <summary>
+        /// 显示在列表中的任务字符串
+        /// </summary>
+        public string content;
+        /// <summary>
+        /// 坐标part
+        /// </summary>
+        public int part;
+        /// <summary>
+        /// 坐标place
+        /// </summary>
+        public int place;
+        /// <summary>
+        /// 消耗的人力
+        /// </summary>
+        public int manpower;
         /// <summary>
         /// 采集的资源类型
         /// </summary>
-        enum WorkType
-        {
-            FOOD,
-            WOOD,
-            STONE,
-            SILK,
-            HERBAL,
-            MONEY
-        }
+        public int type;
+        /// <summary>
+        /// 每时节采集的资源量
+        /// </summary>
+        public int resource;
+    }
 
+    /// <summary>
+    /// 采集的资源类型
+    /// </summary>
+    enum WorkType
+    {
+        FOOD,
+        WOOD,
+        STONE,
+        SILK,
+        HERBAL,
+        MONEY
+    }
+
+    class VillagersList : MonoBehaviour
+    {
         readonly string[] workStr = {
             "食材",
             "木材",
