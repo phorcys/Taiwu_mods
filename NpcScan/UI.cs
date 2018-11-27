@@ -27,7 +27,11 @@ namespace NpcScan
         bool desc = true;
         int sortIndex = 0;
         int page = 1;
-
+        bool getreal = true;
+        bool rankmode = false;
+        bool rankcolumnadded = false;
+        bool showlistshrinked = false;
+        bool showlistadded = false;
         //从属gangText
         string gangValue = "";
         //身份gangLevelText
@@ -245,7 +249,7 @@ namespace NpcScan
             public bool skip = false;
         }
 
-        private readonly List<Column> mColumns = new List<Column>
+        private List<Column> mColumns = new List<Column>    //remove readonly as the skip value may change
             {
                 new Column {name = "姓名", width = 60},
                 new Column {name = "年龄", width = 30},
@@ -439,6 +443,12 @@ namespace NpcScan
             GUILayout.Space(5);
             GUILayout.Label("乐器:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[13].ToString(), 10, GUILayout.Width(30)), out gongfa[13]);
+            GUILayout.Space(10);
+            GUILayout.Label("取值:", GUILayout.Width(30));
+	        GUILayout.Space(5);
+	        getreal = GUILayout.Toggle(getreal, "基础值", GUILayout.Width(55));
+            GUILayout.Space(5);
+            rankmode = GUILayout.Toggle(rankmode, "排行模式", GUILayout.Width(65));
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("音律:", GUILayout.Width(30));
@@ -544,8 +554,18 @@ namespace NpcScan
                 }
                 //s = Main.findList.Count.ToString();
                 //Main.Logger.Log("测试查找列表:" + s);
-                ScanNpc();
-
+                if (!rankmode)
+                {
+                    ScanNpc();
+                    showlistshrinked = true;
+                    showlistadded = false;
+                }
+                else
+                {
+                    GetRank();
+                    showlistadded = true;
+                    showlistshrinked = false;
+                }
             }
             GUILayout.EndHorizontal();
 
@@ -555,6 +575,16 @@ namespace NpcScan
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(70), GUILayout.Width(windowWidth + 60f));
                 GUILayout.BeginVertical("Box");
                 GUILayout.BeginHorizontal("box");
+                if (rankmode && !rankcolumnadded && showlistadded)
+                {
+                    mColumns.Insert(0, new Column { name = "综合评分", width = 80 });
+                    rankcolumnadded = true;
+                }
+                if (!rankmode && rankcolumnadded && showlistshrinked)
+                {
+                    mColumns.RemoveAt(0);
+                    rankcolumnadded = false;
+                }
                 var amountWidth = mColumns.Where(x => !x.skip).Sum(x => x.width);
                 var expandWidth = mColumns.Where(x => x.expand && !x.skip).Sum(x => x.width);
                 var mods = actorList;
@@ -597,7 +627,9 @@ namespace NpcScan
                     for (int j = 0; j < mods[i].Count(); j++)
                     {
                         GUILayout.BeginHorizontal(colWidth[j]);
-                        if (j == 56)
+                        int itemsList = 56;
+                        if (rankmode) itemsList++;
+                        if (j == itemsList)
                         {
                             GUILayout.Label(mods[i][j].ToString(), featureStyle);
                         }
@@ -685,18 +717,34 @@ namespace NpcScan
             return new RectOffset(x, x, y, y);
         }
 
-        static string GetLevel(int id, int index, int gongfa)
+        private int GetLevelValue(int id, int index, int gongfa)
+        {
+            int num;
+            if (getreal)
+            {
+                num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false));
+                int age = int.Parse(DateFile.instance.GetActorDate(id, 11, false));
+                if (age < 14 && age > 0)
+                {
+                    num = num * (1400 / age) / 100;
+                }
+            }
+            else
+            {
+                num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
+            }
+            return num;
+        }
+
+        private string GetLevel(int id, int index, int gongfa)
         {
             int colorCorrect = 40;
-            int num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
+            int num = GetLevelValue(id, index, gongfa);
             string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), num.ToString(), false);
             return text;
         }
 
-        static int GetLevelValue(int id, int index, int gongfa)
-        {
-            return int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
-        }
+
         static string GetHealth(int key, int value = 0)
         {
             int num = ActorMenu.instance.Health(key);
@@ -814,15 +862,16 @@ namespace NpcScan
             foreach (int index in actors.Keys)
             {
                 Dictionary<int, string> actor = actors[index];
-                int str = dateFile.BaseAttr(index, 0, 0);
-                int con = dateFile.BaseAttr(index, 1, 0);
-                int agi = dateFile.BaseAttr(index, 2, 0);
-                int bon = dateFile.BaseAttr(index, 3, 0);
-                int inv = dateFile.BaseAttr(index, 4, 0);
-                int pat = dateFile.BaseAttr(index, 5, 0);
+                int str = int.Parse(DateFile.instance.GetActorDate(index, 61, !getreal)); //dateFile.BaseAttr(index, 0, 0);
+                int con = int.Parse(DateFile.instance.GetActorDate(index, 62, !getreal)); //dateFile.BaseAttr(index, 1, 0);
+                int agi = int.Parse(DateFile.instance.GetActorDate(index, 63, !getreal)); //dateFile.BaseAttr(index, 2, 0);
+                int bon = int.Parse(DateFile.instance.GetActorDate(index, 64, !getreal)); //dateFile.BaseAttr(index, 3, 0);
+                int inv = int.Parse(DateFile.instance.GetActorDate(index, 65, !getreal)); //dateFile.BaseAttr(index, 4, 0);
+                int pat = int.Parse(DateFile.instance.GetActorDate(index, 66, !getreal)); //dateFile.BaseAttr(index, 5, 0);
+
                 int age = int.Parse(dateFile.GetActorDate(index, 11, false));
                 int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
-                int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, true));
+                int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
                 int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
                 int health = ActorMenu.instance.Health(index);
                 int cv = charmValue;
@@ -995,6 +1044,152 @@ namespace NpcScan
             }
         }
 
+		void GetRank()
+        {
+            actorList.Clear();
+            DateFile dateFile = DateFile.instance;
+            Dictionary<int, Dictionary<int, string>> actors = dateFile.actorsDate;
+            foreach (int index in actors.Keys)
+            {
+                Dictionary<int, string> actor = actors[index];
+                int age = int.Parse(dateFile.GetActorDate(index, 11, false));
+                int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
+                int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
+                int health = ActorMenu.instance.Health(index);
+                if (age >= minage
+                    && health >= healthValue
+                    && samsara >= samsaraCount
+                    && (maxage == 0 || age <= maxage)
+                    && (genderValue == 0 || gender == genderValue)
+                    )
+                {
+                    int str = int.Parse(DateFile.instance.GetActorDate(index, 61, !getreal)); //dateFile.BaseAttr(index, 0, 0);
+                    int con = int.Parse(DateFile.instance.GetActorDate(index, 62, !getreal)); //dateFile.BaseAttr(index, 1, 0);
+                    int agi = int.Parse(DateFile.instance.GetActorDate(index, 63, !getreal)); //dateFile.BaseAttr(index, 2, 0);
+                    int bon = int.Parse(DateFile.instance.GetActorDate(index, 64, !getreal)); //dateFile.BaseAttr(index, 3, 0);
+                    int inv = int.Parse(DateFile.instance.GetActorDate(index, 65, !getreal)); //dateFile.BaseAttr(index, 4, 0);
+                    int pat = int.Parse(DateFile.instance.GetActorDate(index, 66, !getreal)); //dateFile.BaseAttr(index, 5, 0);
+                    int totalrank = str * strValue + con * conValue + agi * agiValue + bon * bonValue + inv * intValue + pat * patValue;
+                    int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
+                    totalrank += charm * charmValue;
+                    string genderText;
+                    if (gender == 1)
+                    {
+                        genderText = "男";
+                    }
+                    else
+                    {
+                        genderText = "女";
+
+                    }
+                    string place;
+                    if (int.Parse(dateFile.GetActorDate(index, 8, false)) != 1)
+                    {
+                        place = dateFile.massageDate[8010][3].Split(new char[] { '|' })[1];
+                    }
+                    else
+                    {
+                        List<int> list = new List<int>(dateFile.GetActorAtPlace(index));
+                        place = string.Format("{0}{1}", new object[]
+                        {
+                            dateFile.GetNewMapDate(list[0], list[1], 98),
+                            dateFile.GetNewMapDate(list[0], list[1], 0)
+                        });
+                    }
+
+                    string actorName = dateFile.GetActorName(index);
+
+                    string charmText = ((int.Parse(DateFile.instance.GetActorDate(index, 11, false)) > 14) ? ((int.Parse(DateFile.instance.GetActorDate(index, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(index, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(index, 14, false)) - 1].Split(new char[]
+                    {
+                            '|'
+                    })[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(index, 15, true)) / 100, 0, 9)] : DateFile.instance.massageDate[25][5].Split(new char[]
+                    {
+                            '|'
+                    })[1]) : DateFile.instance.massageDate[25][5].Split(new char[]
+                    {
+                            '|'
+                    })[0]);
+
+                    List<int> samsaraList = dateFile.GetLifeDateList(index, 801, false);
+                    string samsaraNames = "";
+                    foreach (int samsaraId in samsaraList)
+                    {
+                        samsaraNames = samsaraNames + " " + dateFile.GetActorName(samsaraId);
+                    }
+
+                    int[] actorResources = ActorMenu.instance.GetActorResources(index);
+                    for (int tmpi = 0; tmpi < 14; tmpi++)
+                        totalrank += GetLevelValue(index, tmpi, 1) * gongfa[tmpi];
+                    for (int tmpi = 0; tmpi < 16; tmpi++)
+                        totalrank += GetLevelValue(index, tmpi, 0) * life[tmpi];
+                    string gn = dateFile.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(index)];
+                    int groupid = int.Parse(DateFile.instance.GetActorDate(index, 19, false));//身份组ID
+                    int gangLevel = int.Parse(DateFile.instance.GetActorDate(index, 20, false));//身份等级
+                    int gangValueId = DateFile.instance.GetGangValueId(groupid, gangLevel);
+                    int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
+                    string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
+
+                    if (ScanFeature(index, Main.findList, tarFeature) || actorFeatureText == "")
+                    {
+                        if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                        {
+                            if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                            {
+                                actorList.Add(new string[] { totalrank.ToString(), actorName ,age.ToString(), genderText, place,
+                                charm + "(" + charmText + ")" ,//魅力
+                                dateFile.GetGangDate(groupid, 0),//从属gangText
+                                gangLevelText,//身份gangLevelText
+                                gn,//立场goodnessText
+                                GetSpouse(index),//
+                                GetSkillDevelopText(index),
+                                GetGongFaDevelopText(index),
+                                GetHealth(index),//健康
+                                str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
+                                GetLevel(index, 0, 1),
+                                GetLevel(index, 1, 1) ,
+                                GetLevel(index, 2, 1),
+                                GetLevel(index, 3, 1) ,
+                                GetLevel(index, 4, 1) ,
+                                GetLevel(index, 5, 1) ,
+                                GetLevel(index, 6, 1) ,
+                                GetLevel(index, 7, 1) ,
+                                GetLevel(index, 8, 1) ,
+                                GetLevel(index, 9, 1) ,
+                                GetLevel(index, 10, 1) ,
+                                GetLevel(index, 11, 1) ,
+                                GetLevel(index, 12, 1) ,
+                                GetLevel(index, 13, 1),
+                                GetLevel(index, 0, 0),
+                                GetLevel(index, 1, 0) ,
+                                GetLevel(index, 2, 0),
+                                GetLevel(index, 3, 0) ,
+                                GetLevel(index, 4, 0) ,
+                                GetLevel(index, 5, 0) ,
+                                GetLevel(index, 6, 0) ,
+                                GetLevel(index, 7, 0) ,
+                                GetLevel(index, 8, 0) ,
+                                GetLevel(index, 9, 0) ,
+                                GetLevel(index, 10, 0) ,
+                                GetLevel(index, 11, 0) ,
+                                GetLevel(index, 12, 0) ,
+                                GetLevel(index, 13, 0),
+                                GetLevel(index, 14, 0),
+                                GetLevel(index, 15, 0),
+                                actorResources[0].ToString(),
+                                actorResources[1].ToString(),
+                                actorResources[2].ToString(),
+                                actorResources[3].ToString(),
+                                actorResources[4].ToString(),
+                                actorResources[5].ToString(),
+                                actorResources[6].ToString(),
+                                samsaraNames,
+                                GetActorFeatureNameText(index) });
+                                }
+                            }
+                        }
+                    }
+                }
+        }
         //婚姻状况
         public static string GetSpouse(int id)
         {
