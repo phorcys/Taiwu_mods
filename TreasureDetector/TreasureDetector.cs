@@ -46,17 +46,17 @@ namespace TreasureDetector
             GUILayout.Label("* 鼠标移到地形,可获得挖掘资讯,包括掉宝等级及机率", new GUIStyle(UI.bold) { fontSize = 16 });
             GUILayout.Label("* 鼠标移到城市,可显示当地最高级物资的座标及最大数值", new GUIStyle(UI.bold) { fontSize = 16 });
             GUILayout.Label("选项设定", UI.h2);
-            GUILayout.BeginHorizontal("Box");
+            GUILayout.BeginHorizo​​​​ntal("Box");
             GUILayout.Label("* 计算最大资源基于", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
             settings.calByDropRate = GUILayout.SelectionGrid(settings.calByDropRate ? 1 : 0, new string[] { "<b>现有资源</b>", "<b>掉极品率</b>" }, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            GUILayout.EndHorizo​​ntal();
             GUILayout.Label("附加功能 (或会破坏游戏体验, 慎用)", UI.h2);
-            GUILayout.BeginHorizontal("Box");
+            GUILayout.BeginHorizo​​​​ntal("Box");
             GUILayout.Label("* 提高掉极品机率", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
             settings.riseDropRate = GUILayout.SelectionGrid(settings.riseDropRate ? 1 : 0, new string[] { "关闭", "启用" }, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            GUILayout.EndHorizo​​ntal();
             //以下內容暫未開發
             //            GUILayout.BeginHorizo​​ntal("Box");
             //            GUILayout.Label("进注工人,每月也有机率挖得宝物 (暂未开发)", new GUIStyle(UI.bold) { fontSize = 16 }, GUILayout.Width(150));
@@ -84,13 +84,13 @@ namespace TreasureDetector
         {
             if (!Main.settings.riseDropRate) return;
             int key = int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 13));
-            DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]=(int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) + 43).ToString();
+            DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]=(int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) + 50).ToString();
         }
         public static void Postfix(int actorId, int partId, int placeId, int workTyp, int showGetTyp, bool getItem = true, bool actorWork = false)
         {
             if (!Main.settings.riseDropRate) return;
             int key = int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 13));
-            DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]= (int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) - 43).ToString();
+            DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]= (int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) - 50).ToString();
         }
     }
 
@@ -113,11 +113,8 @@ namespace TreasureDetector
                     int width = int.Parse(DateFile.instance.partWorldMapDate[partId][98]);
                     for (int workTyp = 0; workTyp < 5; workTyp++)
                     {
-                        float 现有资源, 最大资源, 掉宝率, 掉极品率;
-                        int 最高品阶, 最低品阶;
-                        string 全部可得物品;
-                        GetWorkItemDetail(worldId, partId, placeId, workTyp, out 现有资源, out 最大资源, out 最高品阶, out 最低品阶, out 掉宝率, out 掉极品率, out 全部可得物品);
-                        if (最高品阶 >= 最低品阶 && 现有资源 > 100)
+                        GetWorkItemDetail(worldId, partId, placeId, workTyp, out int 现有资源, out int 最大资源, out int 最高品阶, out int 最低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品);
+                        if (最高品阶 >= 最低品阶 && 最大资源 >= 100)
                         {
                             ___informationMassage.text += String.Format("<color=#FFFF8FFF>{0}</color> {1}/<color=#FFFFFFFF>{2}</color>\t掉宝率{3}\t掉极品率:{4}\n\n可获物品: {5} - {6}\n\n<color=#add8e6ff>包括:</color>{7}\n",
                             DateFile.instance.resourceDate[workTyp][1],
@@ -151,10 +148,7 @@ namespace TreasureDetector
                         List<int> 位置 = new List<int> { };
                         for (placeId = 0; placeId < num2; placeId++)
                         {
-                            float 现有资源, 最大资源, 掉宝率, 掉极品率;
-                            int 高品阶, 低品阶;
-                            string 全部可得物品;
-                            GetWorkItemDetail(worldId, partId, placeId, workTyp, out 现有资源, out 最大资源, out 高品阶, out 低品阶, out 掉宝率, out 掉极品率, out 全部可得物品);
+                            GetWorkItemDetail(worldId, partId, placeId, workTyp, out int 现有资源, out int 最大资源, out int 高品阶, out int 低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品);
                             if (Main.settings.calByDropRate)
                             {
                                 if (掉极品率 > 最大值)
@@ -201,17 +195,17 @@ namespace TreasureDetector
             }
         }
 
-        private static void GetWorkItemDetail(int worldId, int partId, int placeId, int workTyp, out float 现有资源, out float 最大资源, out int 最高品阶, out int 最低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品)
+        private static void GetWorkItemDetail(int worldId, int partId, int placeId, int workTyp, out int 现有资源, out int 最大资源, out int 最高品阶, out int 最低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品)
         {
-            现有资源 = Mathf.Max((float)DateFile.instance.GetPlaceResource(partId, placeId)[workTyp],0);
-            最大资源 = Mathf.Max(float.Parse(DateFile.instance.GetNewMapDate(partId, placeId, workTyp + 1)), 1);
-            float 库存率 = 100f * 现有资源 / 最大资源;
+            现有资源 = Mathf.Max(DateFile.instance.GetPlaceResource(partId, placeId)[workTyp],0);
+            最大资源 = Mathf.Max(int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, workTyp + 1)), 1);
+            int 库存率 = 现有资源 * 100 / 最大资源;
 
             最高品阶 = 0;
             最低品阶 = 10;
             int key = int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 13));
             int[] 可得物品IDs = DateFile.instance.timeWorkBootyDate[key][workTyp + 1].Split('|').Select(int.Parse).ToArray();
-            float 提升品阶 = float.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 101]);
+            int 提升品阶 = int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 101]);
 
             List<string> 可得物品 = new List<string> { };
             for (int i = 0; i < 可得物品IDs.Length; i++)
@@ -228,16 +222,17 @@ namespace TreasureDetector
             }
             全部可得物品 = String.Join(", ", 可得物品.ToArray());
 
-            掉宝率 = 可得物品IDs.Length == 1 && 可得物品IDs[0] == 0 ? 0f : 库存率 - 25f;
+            掉宝率 = 可得物品IDs.Length == 1 && 可得物品IDs[0] == 0 ? 0 : 库存率 - 25;
 
-            float 人力 = 1;
+            int 人力 = 1;
             List<int> worldMapNeighbor = DateFile.instance.GetWorldMapNeighbor(partId, placeId, 0);
             for (int i = 0; i < worldMapNeighbor.Count; i++)
             { // 这里可能是游戏错误, 凡是邻格是相同名稱都加人力, 并非邻格有工人在开采相同物资才加人力, 日后游戏改版或会修正
                 if (int.Parse(DateFile.instance.GetNewMapDate(partId, worldMapNeighbor[i], 83)) == int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 83))) 人力 += 2;
             }
-            float 地区助力 = float.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) + (Main.settings.riseDropRate?43:0);
-            掉极品率 = 掉宝率 * Mathf.Min(1,Mathf.Pow((地区助力 + 人力 * Mathf.Max(最大资源 / 10f - 10, 0)) / 100 * 现有资源 / 最大资源, 提升品阶));
+            int 地区助力 = int.Parse(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) + (Main.settings.riseDropRate?43:0);
+            float 極品門檻 = 0.01f * (地区助力 + Mathf.Max(最大资源 / 10 - 10, 0) * 人力);
+            掉极品率 = 掉宝率 * Mathf.Min(1,極品門檻) * Mathf.Min(1,Mathf.Pow(極品門檻 * 库存率 / 100, 提升品阶));
         }
     }
 
