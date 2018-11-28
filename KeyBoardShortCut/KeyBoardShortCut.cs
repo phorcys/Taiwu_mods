@@ -315,7 +315,14 @@ namespace KeyBoardShortCut
                 var key = keys[index];
                 var value = settings.hotkeys[key];
                 // Do not allow modifying the close key 
-                if (key != HK_TYPE.HK_CLOSE) renderHK_GUI(key, value);
+                if (key == HK_TYPE.HK_CLOSE)
+                {
+                    settings.hotkeys[key] = new KeyValuePair<KeyCode, string>(KeyCode.Escape, value.Value);
+                }
+                else
+                {
+                    renderHK_GUI(key, value);
+                }
             }
             GUILayout.EndVertical();
         }
@@ -474,102 +481,46 @@ namespace KeyBoardShortCut
     }
 
 
-    public class EscClose : UnityEngine.MonoBehaviour
+    public class CloseComponent : MonoBehaviour
     {
-        protected Type ins;
-        protected string mname;
-        protected MethodInfo mi;
-        protected FieldInfo fi;
-        protected MonoBehaviour insobj;
-
-        protected Func<bool> testret = null;
+        private Action OnClose = null;
 
 
-        public void setparam(Type type_ins, string methodname, Func<bool> tester)
+        public void SetActionOnClose(Action OnClose)
         {
-            Main.Logger.Log(this.GetType().ToString() + " Regist " + type_ins.ToString() + "  method :" + methodname);
-            mname = methodname;
-            ins = type_ins;
-            mi = ins.GetMethod(mname);
-            fi = ins.GetField("instance", BindingFlags.Static | BindingFlags.Public);
-            insobj = fi.GetValue(null) as MonoBehaviour;
-
-            testret = tester;
+            this.OnClose = OnClose;
         }
 
 
         public void Update()
         {
+            if (!Main.enabled || Main.binding_key ||!Main.settings.enable_close) return;
+            if (this.OnClose == null) return;
+            if (!Main.GetKeyDown(HK_TYPE.HK_CLOSE) && !Input.GetMouseButtonDown(1)) return;
 
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close)
-            {
-                return;
-            }
-
-            if (insobj.gameObject.activeInHierarchy == true && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true || Input.GetMouseButtonDown(1) == true))
-            {
-                if (testret() == true)
-                {
-                    Main.Logger.Log(this.GetType().ToString() + " Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
-                    if (ins == typeof(ReadBook))
-                    {
-                        // ReadBook.CloseReadbookWindows need null as param
-                        mi.Invoke(insobj, new object[] { null });
-                    }
-                    else
-                    {
-                        mi.Invoke(insobj, null);
-                    }
-                }
-
-
-            }
+            this.OnClose();
         }
     }
 
 
-    public class ConfirmConfirm : EscClose
+    public class ConfirmComponent : MonoBehaviour
     {
-        public new void Update()
-        {
-            if (!Main.enabled || Main.binding_key)
-            {
-                return;
-            }
+        private Action OnConfirm = null;
 
-            if (insobj.gameObject.activeInHierarchy == true
-                && (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) == true
-                    || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2) == true)
-                    )
-            {
-                if (testret() == true)
-                {
-                    Main.Logger.Log(this.GetType().ToString() + " Registed " + ins.ToString() + "  method :" + mname + "triggered , going to call ");
-                    if (ins == typeof(ReadBook))
-                    {
-                        // ReadBook.CloseReadbookWindows need null as param
-                        mi.Invoke(insobj, new object[] { null });
-                    }
-                    else
-                    {
-                        mi.Invoke(insobj, null);
-                    }
-                }
-            }
+
+        public void SetActionOnConfirm(Action OnConfirm)
+        {
+            this.OnConfirm = OnConfirm;
         }
-    }
 
 
-    public class EscCloseNoneSingleton : EscClose
-    {
-        public new void setparam(Type type_ins, string methodname, Func<bool> tester)
+        public void Update()
         {
-            Main.Logger.Log(this.GetType().ToString() + " Regist " + type_ins.ToString() + "  method :" + methodname);
-            mname = methodname;
-            ins = type_ins;
-            mi = ins.GetMethod(mname);
-            insobj = gameObject.GetComponent(ins) as MonoBehaviour;
-            testret = tester;
+            if (!Main.enabled || Main.binding_key) return;
+            if (this.OnConfirm == null) return;
+            if (!Main.GetKeyDown(HK_TYPE.HK_COMFIRM) && !Main.GetKeyDown(HK_TYPE.HK_CONFIRM2)) return;
+
+            this.OnConfirm();
         }
     }
 
@@ -582,14 +533,12 @@ namespace KeyBoardShortCut
     {
         private static void Prefix()
         {
-            if (!Main.enabled || !Main.settings.enable_close)
-            {
-                return;
-            }
-            if (Main.notify_reset_key == true)
+            if (!Main.enabled) return;
+
+            if (Main.notify_reset_key)
             {
                 Main.notify_reset_key = false;
-                Main.Logger.Log("display  keyboard shotcut reset message...");
+                Main.Logger.Log("display keyboard shotcut reset message...");
                 DateFile.instance.massageDate[8013][0] = "键盘快捷键配置更新|由于键盘快捷键升级，配置文件已经重置为默认，如有需要请重新配置快捷键";
             }
         }
