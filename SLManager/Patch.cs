@@ -254,7 +254,7 @@ namespace Sth4nothing.SLManager
                         rijndeal = true;
                     }
                     DateFile.SaveDate date = null;
-                    if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
+                    try
                     {
                         date = typeof(SaveDateFile)
                             .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
@@ -262,7 +262,7 @@ namespace Sth4nothing.SLManager
                                 new object[] { file, typeof(DateFile.SaveDate), rijndeal })
                             as DateFile.SaveDate;
                     }
-                    else
+                    catch (AmbiguousMatchException)
                     {
                         date = typeof(SaveDateFile)
                             .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
@@ -323,7 +323,7 @@ namespace Sth4nothing.SLManager
                             }
                         }
                         DateFile.SaveDate date = null;
-                        if (MainMenu.instance.gameVersionText.text.EndsWith("[Test]"))
+                        try
                         {
                             date = typeof(SaveDateFile)
                                 .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
@@ -331,7 +331,7 @@ namespace Sth4nothing.SLManager
                                     new object[] { tmp, typeof(DateFile.SaveDate), rijndeal })
                                 as DateFile.SaveDate;
                         }
-                        else
+                        catch (AmbiguousMatchException)
                         {
                             date = typeof(SaveDateFile)
                                 .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance)
