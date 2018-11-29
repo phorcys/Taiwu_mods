@@ -34,6 +34,8 @@ namespace MoreMerchandise
             ___showLevelAdd = levelAdd;
             ___newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + levelAdd;
 
+            Main.Logger.Log($"商店基础等级: {DateFile.instance.storyShopLevel[shopTyp]}, 附加等级: {levelAdd}");
+
             if (___actorShopId != 0)
             {
                 // 获得角色对主角的好感，根据好感计算买卖价格
@@ -227,8 +229,9 @@ namespace MoreMerchandise
                 }
             }
 
+            // 当商品数量超过限制时，随机删除部分商品（判断超限有个随机范围）
             // num3 和商店等级正相关，取值范围 [0, 5000]
-            // *** 待分析 ***
+            // num15 为商品超限个数
             int num15 = shopItems.Count - ((15 + Mathf.Max(num3 / 200, 0)) * UnityEngine.Random.Range(50, 101) / 100 + num12 / 2);
             if (num15 > 0)
             {
@@ -241,30 +244,41 @@ namespace MoreMerchandise
                 }
             }
 
-            // *** 待分析 ***
+            // list6 为商店特殊商品（不会被随机删除的商品）列表
             List<string> list6 = new List<string>(DateFile.instance.storyShopDate[shopTyp][99].Split('|'));
             for (int num18 = 0; num18 < list6.Count; num18++)
             {
                 string[] array3 = list6[num18].Split('&');
+                // num19 为物品 ID
                 int num19 = int.Parse(array3[0]);
                 if (num19 > 0)
                 {
+                    // num20: 商品理想品级，在商店等级最高时，商品实际品级和该数值一致
                     int num20 = Mathf.Max(int.Parse(array3[1]) * num3 / 5000, 0);
+                    // num21: 是否为可叠加物品，取值 0/1。为 1 的有：打包资源、促织罐、杂虫、图纸、引子。
                     int num21 = int.Parse(DateFile.instance.GetItemDate(num19, 6));
+                    // num22: 物品的数量。对于不可叠加物品，此值为 1；可叠加的，此值为 [1, 4] 之间的随机值。
                     int num22 = (num21 == 0) ? 1 : Mathf.Max(3 * UnityEngine.Random.Range(50, 151) / 100, 1);
+                    // num23: 物品品级，九品为 1，一品为 9
                     int num23 = int.Parse(DateFile.instance.GetItemDate(num19, 8));
+                    // 低品级物品必然被放入列表，高品级物品有一定概率放入，品级越高概率越小
                     if (num23 <= 3 || UnityEngine.Random.Range(0, 100) < 100 - num23 * 10)
                     {
                         list3.Add(num19);
+                        // 对于不可叠加物品，生成新的实例
                         shopItems.Add((num21 != 0) ? num19 : DateFile.instance.MakeNewItem(num19), num22);
                         if (num20 > 0)
                         {
+                            // 尝试放入高品级物品，品级越高被放入的概率越小
                             for (int num24 = 0; num24 < num20; num24++)
                             {
+                                // 当前待放入的物品原始 ID（属性可变的物品会在之后生成新 ID）
                                 int num25 = num19 + num24 + 1;
                                 if (UnityEngine.Random.Range(0, 100) < 100 - int.Parse(DateFile.instance.GetItemDate(num25, 8)) * 10)
                                 {
+                                    // 是否为可叠加物品
                                     int num26 = int.Parse(DateFile.instance.GetItemDate(num25, 6));
+                                    // 物品的数量
                                     int value2 = (num26 == 0) ? 1 : Mathf.Max(num22 - num22 * (num24 + 1) / num20, 1);
                                     shopItems.Add((num26 != 0) ? num25 : DateFile.instance.MakeNewItem(num25), value2);
                                 }
@@ -274,21 +288,27 @@ namespace MoreMerchandise
                 }
             }
 
-            // *** 待分析 ***
+            // 根据 isTaiWu 参数额外放入所有商会公共的物品
             if (isTaiWu > 0)
             {
+                // 商店类型为 99，列表根据输入参数 isTaiWu 选择
                 List<string> list7 = new List<string>(DateFile.instance.storyShopDate[99][isTaiWu].Split('|'));
                 for (int num27 = 0; num27 < list7.Count; num27++)
                 {
+                    // 固定概率添加物品
                     if (UnityEngine.Random.Range(0, 100) >= 25)
                     {
                         string[] array4 = list7[num27].Split('&');
+                        // num28: 物品 ID
                         int num28 = int.Parse(array4[0]);
                         if (num28 > 0)
                         {
+                            // 是否为可叠加物品，0 为不可叠加
                             int num29 = int.Parse(DateFile.instance.GetItemDate(num28, 6));
+                            // 如果物品不可叠加，或者可叠加但是基础商品列表里没有，则添加该商品
                             if (num29 == 0 || !list3.Contains(num28))
                             {
+                                // 物品的数量
                                 int value3 = (num29 == 0) ? 1 : Mathf.Max(int.Parse(array4[1]) * UnityEngine.Random.Range(50, 151) / 100, 1);
                                 shopItems.Add((num29 != 0) ? num28 : DateFile.instance.MakeNewItem(num28), value3);
                             }

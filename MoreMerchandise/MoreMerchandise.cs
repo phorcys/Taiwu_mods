@@ -121,6 +121,8 @@ namespace MoreMerchandise
         // 应该在 ShopSystem::SetItems 方法的 actor == false 的流程中的 MakeItem 方法调用时过滤，但是太麻烦了，暂时不想改
         private static void Postfix(ref ShopSystem __instance)
         {
+            if (!Main.enabled) return;
+
             if (Main.settings.hideLowQuality)
             {
                 __instance.shopItems = Merchandise.FilterLowQualityItems(__instance.shopItems);

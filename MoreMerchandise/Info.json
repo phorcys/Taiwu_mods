@@ -2,7 +2,7 @@
   "Id": "MoreMerchandise",
   "DisplayName": "提升商人的商品数量",
   "Author": "fenghou",
-  "Version": "1.2.0",
+  "Version": "1.2.1",
   "AssemblyName": "MoreMerchandise.dll",
   "EntryMethod": "MoreMerchandise.Main.Load"
 }
