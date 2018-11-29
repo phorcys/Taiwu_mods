@@ -118,6 +118,28 @@ namespace KeyBoardShortCut
     }
 
 
+    /// <summary>
+    /// 战斗界面：结束确认
+    /// </summary>
+    [HarmonyPatch(typeof(BattleSystem), "Start")]
+    public static class BattleSystem_ConfirmEnd_Patch
+    {
+        private static void Postfix(BattleSystem __instance)
+        {
+            if (!Main.enabled || Main.binding_key) return;
+
+            var comp = __instance.battleEndWindow.AddComponent<ConfirmComponent>();
+            comp.SetActionOnConfirm(() =>
+            {
+                if (!BattleSystem.instance.battleEndWindow.activeInHierarchy) return;
+                if (!BattleSystem.instance.closeBattleEndWindowButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
+                BattleSystem.instance.CloseBattleEndWindow();
+            });
+        }
+    }
+
+
     ///// <summary>
     /////  BattleSystem 战斗显示快捷键
     ///// </summary>

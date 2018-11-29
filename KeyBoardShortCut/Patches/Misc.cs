@@ -14,7 +14,33 @@ using UnityModManagerNet;
 namespace KeyBoardShortCut
 {
     /// <summary>
-    /// 产业地图：快捷键关闭
+    /// 通用选择框：确认
+    /// </summary>
+    [HarmonyPatch(typeof(YesOrNoWindow), "Start")]
+    public static class YesOrNoWindow_Confirm_Patch
+    {
+        private static void Postfix(YesOrNoWindow __instance)
+        {
+            if (!Main.enabled || Main.binding_key) return;
+
+            // 为通用选择框设置正确的初始状态，防止出现 bug
+            OnClick.instance.Over = true;
+
+            var confirmComp = __instance.yesOrNoWindow.gameObject.AddComponent<ConfirmComponent>();
+            confirmComp.SetActionOnConfirm(() =>
+            {
+                if (!YesOrNoWindow.instance.yesOrNoWindow.gameObject.activeInHierarchy) return;
+                if (OnClick.instance.Over) return;
+                DateFile.instance.PlayeSE(2);
+                OnClick.instance.Index();
+                YesOrNoWindow.instance.CloseYesOrNoWindow();
+            });
+        }
+    }
+
+
+    /// <summary>
+    /// 产业地图：关闭
     /// </summary>
     [HarmonyPatch(typeof(HomeSystem), "Start")]
     public static class HomeSystem_CloseHomeSystem_Patch
@@ -52,6 +78,7 @@ namespace KeyBoardShortCut
                 // 建筑界面
                 if (HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy) return;
 
+                DateFile.instance.PlayeSE(3);
                 HomeSystem.instance.CloseHomeSystem();
             });
         }
@@ -59,7 +86,7 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 产业地图 - 派遣列表：快捷键确认
+    /// 产业地图 - 派遣列表：确认
     /// </summary>
     [HarmonyPatch(typeof(HomeSystem), "Start")]
     public static class HomeSystem_ConfirmActorListWindow_Patch
@@ -73,6 +100,7 @@ namespace KeyBoardShortCut
             {
                 if (!HomeSystem.instance.actorListWindow.activeInHierarchy) return;
                 if (!HomeSystem.instance.canChanageActorButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 HomeSystem.instance.ChanageWorkingAcotr();
             });
         }
@@ -80,7 +108,7 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 奇遇进入界面：快捷键确认
+    /// 奇遇进入界面：确认
     /// </summary>
     [HarmonyPatch(typeof(StorySystem), "Start")]
     public static class StorySystem_ConfirmToStoryMenu_Patch
@@ -95,6 +123,7 @@ namespace KeyBoardShortCut
                 if (!StorySystem.instance.toStoryMenu.activeInHierarchy) return;
                 if (!StorySystem.instance.toStoryIsShow) return;
                 if (!StorySystem.instance.openStoryButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 StorySystem.instance.OpenStory();
             });
         }
@@ -102,7 +131,7 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 过月事件窗口：快捷键确认
+    /// 过月事件窗口：确认
     /// </summary>
     [HarmonyPatch(typeof(UIDate), "Start")]
     public static class UIDate_ConfirmTrunChangeWindow_Patch
@@ -115,6 +144,7 @@ namespace KeyBoardShortCut
             comp.SetActionOnConfirm(() =>
             {
                 if (!UIDate.instance.trunChangeWindow.activeInHierarchy) return;
+                DateFile.instance.PlayeSE(2);
                 UIDate.instance.CloseTrunChangeWindow();
             });
         }
@@ -122,10 +152,10 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 建筑新建、增筑、拆除界面：快捷键确认
+    /// 建筑新建、增筑、拆除界面：确认
     /// </summary>
     [HarmonyPatch(typeof(HomeSystem), "Start")]
-    public static class HomeSystem_ConfirmBuild_Patch
+    public static class HomeSystem_ConfirmBuilding_Patch
     {
         private static void Postfix(HomeSystem __instance)
         {
@@ -136,6 +166,7 @@ namespace KeyBoardShortCut
             {
                 if (!HomeSystem.instance.newBuildingWindowBack.activeInHierarchy) return;
                 if (!HomeSystem.instance.canBuildingButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 HomeSystem.instance.StartNewBuilding();
             });
 
@@ -144,6 +175,7 @@ namespace KeyBoardShortCut
             {
                 if (!HomeSystem.instance.buildingUPWindowBack.activeInHierarchy) return;
                 if (!HomeSystem.instance.buildingUpCanBuildingButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 HomeSystem.instance.StartBuildingUp();
             });
 
@@ -152,6 +184,7 @@ namespace KeyBoardShortCut
             {
                 if (!HomeSystem.instance.removeBuildingWindowBack.activeInHierarchy) return;
                 if (!HomeSystem.instance.buildingRemoveCanBuildingButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 HomeSystem.instance.StartBuildingRemove();
             });
         }
@@ -159,7 +192,7 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 商店界面：快捷键确认
+    /// 商店界面：确认
     /// </summary>
     [HarmonyPatch(typeof(ShopSystem), "Start")]
     public static class ShopSystem_ConfirmShopWindow_Patch
@@ -173,6 +206,7 @@ namespace KeyBoardShortCut
             {
                 if (!ShopSystem.instance.shopWindow.activeInHierarchy) return;
                 if (!ShopSystem.instance.shopOkButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 ShopSystem.instance.ShopOK();
             });
         }
@@ -180,10 +214,10 @@ namespace KeyBoardShortCut
 
 
     /// <summary>
-    /// 交换藏书界面：快捷键确认
+    /// 交换藏书界面：确认
     /// </summary>
     [HarmonyPatch(typeof(BookShopSystem), "Start")]
-    public static class BookShopSystem_ConfirmShopWindow_Patch
+    public static class BookShopSystem_ConfirmBookShopWindow_Patch
     {
         private static void Postfix(BookShopSystem __instance)
         {
@@ -194,7 +228,30 @@ namespace KeyBoardShortCut
             {
                 if (!BookShopSystem.instance.shopWindow.activeInHierarchy) return;
                 if (!BookShopSystem.instance.shopOkButton.interactable) return;
+                DateFile.instance.PlayeSE(2);
                 BookShopSystem.instance.ShopOK();
+            });
+        }
+    }
+
+
+    /// <summary>
+    /// 较艺界面：结束确认
+    /// </summary>
+    [HarmonyPatch(typeof(SkillBattleSystem), "Start")]
+    public static class SkillBattleSystem_ConfirmEnd_Patch
+    {
+        private static void Postfix(SkillBattleSystem __instance)
+        {
+            if (!Main.enabled || Main.binding_key) return;
+
+            var comp = __instance.battleEndWindow.AddComponent<ConfirmComponent>();
+            comp.SetActionOnConfirm(() =>
+            {
+                if (!SkillBattleSystem.instance.battleEndWindow.activeInHierarchy) return;
+                if (!SkillBattleSystem.instance.closeBattleButton.activeInHierarchy) return;
+                DateFile.instance.PlayeSE(2);
+                SkillBattleSystem.instance.CloseSkillBattleWindow();
             });
         }
     }

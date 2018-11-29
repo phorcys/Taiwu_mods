@@ -33,24 +33,6 @@ namespace KeyBoardShortCut
                 && UIDate.instance.trunChangeImage[0].gameObject.activeSelf == false //非回合结算
                 && SystemSetting.instance.SystemSettingWindow.activeInHierarchy == false) // 系统设置未开启
             {
-                //处理关闭                                                         
-                if (YesOrNoWindow.instance.yesOrNoIsShow == true && YesOrNoWindow.instance.isActiveAndEnabled == true)
-                {
-                    if (Main.settings.enable_close && (Main.GetKeyDown(HK_TYPE.HK_CLOSE) == true || Input.GetMouseButtonDown(1) == true)
-                        && YesOrNoWindow.instance.no.isActiveAndEnabled == true)
-                    {
-                        YesOrNoWindow.instance.CloseYesOrNoWindow();
-                        return false;
-                    }
-                    if (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) == true || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2) == true)
-                    {
-                        OnClick.instance.Index();
-                        YesOrNoWindow.instance.CloseYesOrNoWindow();
-                        return false;
-                    }
-
-                }
-
                 //界面快捷键  人物/世界地图/村子地图
                 if (YesOrNoWindow.instance.MaskShow() == false)  //无模态对话框
                 {
@@ -202,12 +184,14 @@ namespace KeyBoardShortCut
                 }
             }
 
-            //原有Update代码修改
+            // 打开过月确认窗口
             if (Main.GetKeyDown(HK_TYPE.HK_COMFIRM) || Main.GetKeyDown(HK_TYPE.HK_CONFIRM2))
             {
                 UIDate.instance.ChangeTrunButton();
                 return false;
             }
+
+            // 键盘移动
             if (!___moveButtonDown)
             {
                 if (Main.GetKey(HK_TYPE.HK_UP) || Main.GetKey(HK_TYPE.HK_UP2))
