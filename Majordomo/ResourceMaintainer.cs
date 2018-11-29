@@ -53,36 +53,44 @@ namespace Majordomo
         private readonly Dictionary<int, ItemInfo> resources;      // resourceId -> itemInfo
 
 
-        // 大部分内容摘抄自 ShopSystem::SetShopItems 方法
-        // 以服牛帮行商为模板
+        // 直接调用 ShopSystem::SetShopItems 方法获得物品列表，商队类型和公共商品类型等随机数完全按照原逻辑进行
+        // 如果有其他 mod 对 ShopSystem::SetShopItems 进行了修改，此 mod 会一并体现那些改动
         public TemporaryResourceShop()
         {
             this.resources = new Dictionary<int, ItemInfo>();
 
-            int shopTyp = 0;
+            int shopTyp = UnityEngine.Random.Range(0, 7);
+            int moneyCost = 200;
             int levelAdd = 0;
-            int moneyCost = 0;
-            int newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + levelAdd;
-            int shopSystemCost = 200 - Mathf.Clamp(100 * newShopLevel / 5000, -100, 100);
+            int isTaiWu = int.Parse(DateFile.instance.solarTermsDate[DateFile.instance.GetDayTrun()][4]);
+            ShopSystem.instance.SetShopItems(shopTyp, moneyCost, levelAdd, isTaiWu);
 
-            for (int i = 0; i < RES_PACK_ITEM_IDS.Length; ++i)
+            var field = typeof(ShopSystem).GetField("shopSystemCost", BindingFlags.NonPublic | BindingFlags.Instance);
+            int shopSystemCost = (int) field.GetValue(ShopSystem.instance);
+
+            foreach (var entry in ShopSystem.instance.shopItems)
             {
-                int resPackItemId = RES_PACK_ITEM_IDS[i];
-                int itemPrice = int.Parse(DateFile.instance.GetItemDate(resPackItemId, 905)) * shopSystemCost / 100;
-                int nItemAmount = Mathf.Max(3 * UnityEngine.Random.Range(50, 151) / 100, 1);
-                this.resources[i] = new ItemInfo(resPackItemId, itemPrice, nItemAmount);
+                int itemId = entry.Key;
+                int resourceId = Array.IndexOf(RES_PACK_ITEM_IDS, itemId);
+                if (resourceId < 0) continue;
+
+                int itemPrice = int.Parse(DateFile.instance.GetItemDate(itemId, 905)) * shopSystemCost / 100;
+                int nItemAmount = entry.Value;
+                this.resources[resourceId] = new ItemInfo(itemId, itemPrice, nItemAmount);
             }
 
-            //// TEST ------------------------------------------------------------
-            //Main.Logger.Log("临时商店商品：");
-            //foreach (var entry in resources)
-            //{
-            //    int resourceId = entry.Key;
-            //    var itemInfo = entry.Value;
-            //    string name = DateFile.instance.resourceDate[resourceId][1];
-            //    Main.Logger.Log($"  {name}: 价格 {itemInfo.price}, 数量 {itemInfo.amount}");
-            //}
-            //// -----------------------------------------------------------------
+            ShopSystem.instance.shopItems.Clear();
+
+            // TEST ------------------------------------------------------------
+            Main.Logger.Log("临时商店商品：");
+            foreach (var entry in resources)
+            {
+                int resourceId = entry.Key;
+                var itemInfo = entry.Value;
+                string name = DateFile.instance.resourceDate[resourceId][1];
+                Main.Logger.Log($"  {name}: 价格 {itemInfo.price}, 数量 {itemInfo.amount}");
+            }
+            // -----------------------------------------------------------------
         }
 
 
@@ -90,28 +98,26 @@ namespace Majordomo
         // @return: spentMoney
         public int Buy(int initialMoney, Dictionary<int, int> resPacksNeedToBuy, SortedList<int, int> boughtResources)
         {
-            //// TEST ------------------------------------------------------------
-            //Main.Logger.Log($"可用银钱 {initialMoney}, 待购买商品：");
-            //foreach (var entry in resPacksNeedToBuy)
-            //{
-            //    int resourceId = entry.Key;
-            //    int amount = entry.Value;
-            //    string name = DateFile.instance.resourceDate[resourceId][1];
-            //    Main.Logger.Log($"  {name}: 待购买数量 {amount}");
-            //}
-            //// -----------------------------------------------------------------
+            // TEST ------------------------------------------------------------
+            Main.Logger.Log($"可用银钱 {initialMoney}, 待购买商品：");
+            foreach (var entry in resPacksNeedToBuy)
+            {
+                int resourceId = entry.Key;
+                int amount = entry.Value;
+                string name = DateFile.instance.resourceDate[resourceId][1];
+                Main.Logger.Log($"  {name}: 待购买数量 {amount}");
+            }
+            // -----------------------------------------------------------------
 
             int remainedMoney = initialMoney;
             var rand = new System.Random();
-            List<int> resourceIds;
-            int minPrice = this.GetAvailableResourceIds(resPacksNeedToBuy, out resourceIds);
+            List<int> availableResIds = new List<int>();
+            this.CalcAvailableResourceIds(resPacksNeedToBuy, remainedMoney, availableResIds);
 
-            while (resPacksNeedToBuy.Count > 0 && this.resources.Count > 0 && remainedMoney >= minPrice)
+            while (availableResIds.Count > 0)
             {
-                int resourceId = resourceIds[rand.Next(resourceIds.Count)];
+                int resourceId = availableResIds[rand.Next(availableResIds.Count)];
                 var itemInfo = this.resources[resourceId];
-
-                if (remainedMoney < itemInfo.price) continue;
 
                 int nResources = int.Parse(DateFile.instance.GetItemDate(itemInfo.id, 55)) * UnityEngine.Random.Range(80, 121) / 100;
                 int actorId = DateFile.instance.MianActorID();
@@ -130,36 +136,34 @@ namespace Majordomo
                 --this.resources[resourceId].amount;
                 if (this.resources[resourceId].amount <= 0) this.resources.Remove(resourceId);
 
-                minPrice = this.GetAvailableResourceIds(resPacksNeedToBuy, out resourceIds);
+                this.CalcAvailableResourceIds(resPacksNeedToBuy, remainedMoney, availableResIds);
 
-                //// TEST --------------------------------------------------------
-                //string name = DateFile.instance.resourceDate[resourceId][1];
-                //Main.Logger.Log($"购买 {name}, 价格 {itemInfo.price}");
-                //// -------------------------------------------------------------
+                // TEST --------------------------------------------------------
+                string name = DateFile.instance.resourceDate[resourceId][1];
+                Main.Logger.Log($"购买 {name}, 价格 {itemInfo.price}");
+                // -------------------------------------------------------------
             }
 
             return initialMoney - remainedMoney;
         }
 
 
-        // 获取想买而且也有的商品列表，以及需要购买的物品的最低单价
-        // 没有想买的东西，或商店没有想买的东西时，返回 int.MaxValue
-        private int GetAvailableResourceIds(Dictionary<int, int> resPacksNeedToBuy, out List<int> availableResIds)
+        // 计算自己想买、而且商店也有、而且还买得起的商品列表
+        private void CalcAvailableResourceIds(Dictionary<int, int> resPacksNeedToBuy, int remainedMoney, List<int> availableResIds)
         {
-            availableResIds = new List<int>();
-            int minPrice = int.MaxValue;
+            availableResIds.Clear();
 
             foreach (var entry in resPacksNeedToBuy)
             {
                 int resouceId = entry.Key;
-                if (this.resources.ContainsKey(resouceId))
-                {
-                    availableResIds.Add(resouceId);
-                    minPrice = Math.Min(this.resources[resouceId].price, minPrice);
-                }
-            }
 
-            return minPrice;
+                if (!this.resources.ContainsKey(resouceId)) continue;
+
+                int currPrice = this.resources[resouceId].price;
+                if (remainedMoney < currPrice) continue;
+
+                availableResIds.Add(resouceId);
+            }
         }
     }
 
@@ -232,10 +236,6 @@ namespace Majordomo
         public static void TryBuyingResources()
         {
             ResourceMaintainer.shoppingRecord = "";
-
-            // 过季的时候才能采购
-            int solarTerms = DateFile.instance.GetDayTrun();
-            if (!(solarTerms == 4 || solarTerms == 10 || solarTerms == 16 || solarTerms == 22)) return;
 
             var resourcesInfo = ResourceMaintainer.GetResourcesInfo();
 
@@ -317,8 +317,8 @@ namespace Majordomo
             }
             if (text.Length > 0)
             {
-                text = "以下资源库存不足，需要尽快补充，否则将导致建筑损坏：" +
-                    text.Substring(0, text.Length - 1) + "。\n";
+                text = "以下资源库存不足：" +
+                    text.Substring(0, text.Length - 1) + "。\n需要尽快补充，否则将导致建筑损坏。\n";
                 text = DateFile.instance.SetColoer(20009, text);  // 橙色文字
             }
 
@@ -328,8 +328,6 @@ namespace Majordomo
 
         public static void InitialzeResourcesIdealHolding()
         {
-            //ResourceMaintainer.ShowDebugInfo();
-
             // 初始化资源保有目标
             if (Main.settings.resIdealHolding == null)
             {
@@ -383,48 +381,6 @@ namespace Majordomo
                     case "HerbalUPText":
                         ResourceMaintainer.RegisterResourceIdealHoldingText(RES_ID_HERBAL, text.transform.parent);
                         break;
-                }
-            }
-        }
-
-
-        private static void ShowDebugInfo()
-        {
-            // 查看资源图标及其子控件的各种属性
-            foreach (GameObject resourceIcon in GameObject.FindGameObjectsWithTag("ResourceIcon"))
-            {
-                if (resourceIcon.name != "FoodIcon,0") continue;
-
-                Main.Logger.Log($"resourceIcon.name: {resourceIcon.name}");
-                Main.Logger.Log($"resourceIcon.transform.parent.name: {resourceIcon.transform.parent.name}");
-                Main.Logger.Log($"resourceIcon.transform.localPosition: {resourceIcon.transform.localPosition.ToString()}");
-
-                foreach (var component in resourceIcon.GetComponentsInChildren<Component>())
-                {
-                    if (component == resourceIcon) continue;
-                    Main.Logger.Log($"  {component.name}: {component.GetType().ToString()}, {component.tag}");
-                    if (component is Text)
-                    {
-                        Text text = component as Text;
-                        Main.Logger.Log($"    text.font: {text.font.ToString()}");
-                        Main.Logger.Log($"    text.text: {text.text}");
-                        Main.Logger.Log($"    text.color: {text.color.ToString()}");
-                        Main.Logger.Log($"    text.fontSize: {text.fontSize}");
-                        Main.Logger.Log($"    text.alignment: {text.alignment.ToString()}");
-                    }
-                    if (component is RectTransform)
-                    {
-                        RectTransform rectTransform = component as RectTransform;
-                        Main.Logger.Log($"    rectTransform.localPosition: {rectTransform.localPosition.ToString()}");
-                        Main.Logger.Log($"    rectTransform.sizeDelta: {rectTransform.sizeDelta.ToString()}");
-                    }
-                    if (component is Outline)
-                    {
-                        Outline outline = component as Outline;
-                        Main.Logger.Log($"    outline.effectColor: {outline.effectColor.ToString()}");
-                        Main.Logger.Log($"    outline.effectDistance: {outline.effectDistance.ToString()}");
-                        Main.Logger.Log($"    outline.useGraphicAlpha: {outline.useGraphicAlpha}");
-                    }
                 }
             }
         }

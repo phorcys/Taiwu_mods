@@ -2,7 +2,7 @@
   "Id": "Majordomo",
   "DisplayName": "太吾管家",
   "Author": "fenghou",
-  "Version": "0.5.0",
+  "Version": "0.6.0",
   "AssemblyName": "Majordomo.dll",
   "EntryMethod": "Majordomo.Main.Load",
   "Requirements": ["BaseResourceMod-1.0.7"]
