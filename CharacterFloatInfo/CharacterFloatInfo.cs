@@ -48,6 +48,7 @@ namespace CharacterFloatInfo
         public bool shortTA = false;
         public bool shortAM = false;
         public bool shortRI = false;
+        public int minWidth = 680;
     }
 
     public static class Main
@@ -119,6 +120,11 @@ namespace CharacterFloatInfo
             Main.settings.deadActor = GUILayout.Toggle(Main.settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
             Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示隐藏的人物特性", new GUILayoutOption[0]);
             Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "以请教阈值显示资质", new GUILayoutOption[0]);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("窗口最小宽度", GUILayout.Width(150));
+            Main.settings.minWidth = int.Parse(GUILayout.TextArea(Main.settings.minWidth.ToString(), GUILayout.Width(50)));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -376,7 +382,7 @@ namespace CharacterFloatInfo
                 ___tipsH = 50;
                 if (!smallerWindow)
                 {
-                    ___tipsW = 680;
+                    ___tipsW = Main.settings.minWidth;
                     ___itemLevelText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
                     ___itemMoneyText.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 0);
                 }
@@ -430,10 +436,70 @@ namespace CharacterFloatInfo
             }
             else
             {
-                //todo: 第X代太吾
-                //todo: 遗惠: XXXXX
+                ClearFavourHolder();
+                text += string.Format("{0}{1}{2}", DateFile.instance.massageDate[16][1], DateFile.instance.samsara, DateFile.instance.massageDate[16][2]); // 第X代太吾
+                text += string.Format("\n生平遗惠 <color>{0}</color>", GetActorScore(actorId));
             }
             return text;
+        }
+
+        public static int GetActorScore(int actorId) // 生平遺惠
+        {
+            if (!DateFile.instance.actorGetScore.ContainsKey(actorId)) return 0;
+            List<int> list = new List<int>(DateFile.instance.actorGetScore[actorId].Keys);
+            int[] array = new int[7];
+            for (int i = 0; i < list.Count; i++)
+            {
+                int num2 = list[i];
+                if (num2 != 0)
+                {
+                    Dictionary<int, int> dictionary = new Dictionary<int, int>();
+                    for (int j = 0; j < DateFile.instance.actorGetScore[actorId][num2].Count; j++)
+                    {
+                        int num3 = DateFile.instance.actorGetScore[actorId][num2][j][0];
+                        int num4 = DateFile.instance.actorGetScore[actorId][num2][j][1];
+                        if (dictionary.ContainsKey(num3))
+                        {
+                            Dictionary<int, int> dictionary2;
+                            int key;
+                            (dictionary2 = dictionary)[key = num3] = dictionary2[key] + num4;
+                        }
+                        else
+                        {
+                            dictionary.Add(num3, num4);
+                        }
+                    }
+                    List<int> list2 = new List<int>(dictionary.Keys);
+                    for (int k = 0; k < list2.Count; k++)
+                    {
+                        int key2 = list2[k];
+                        int num5 = int.Parse(DateFile.instance.scoreValueDate[key2][3]);
+                        int num6 = 100;
+                        string[] array3 = DateFile.instance.scoreValueDate[key2][4].Split('|');
+                        for (int l = 0; l < array3.Length; l++)
+                        {
+                            switch (int.Parse(array3[l]))
+                            {
+                                case 1:
+                                    num6 += DateFile.instance.enemyBorn * DateFile.instance.enemyBorn * 40;
+                                    break;
+                                case 2:
+                                    num6 += DateFile.instance.enemySize * DateFile.instance.enemySize * 10;
+                                    break;
+                                case 3:
+                                    num6 += DateFile.instance.xxLevel * DateFile.instance.xxLevel * 30;
+                                    break;
+                                case 4:
+                                    num6 += DateFile.instance.worldResource * DateFile.instance.worldResource * 10;
+                                    break;
+                            }
+                        }
+                        num5 = num5 * num6 / 100;
+                        array[num2 - 1] += Mathf.Min(dictionary[key2], num5);
+                    }
+                }
+            }
+            return array[0] + array[1] + array[2] + array[3] + array[4] + array[5] + array[6];
         }
 
         //标题栏
@@ -555,6 +621,7 @@ namespace CharacterFloatInfo
                 if (GetAge(id) > ConstValue.actorMinAge)
                     text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
 
+                text += string.Format("\t\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));    
             }
             else if (windowType == WindowType.BuildingWindow)
             {
@@ -588,8 +655,7 @@ namespace CharacterFloatInfo
                 partId = HomeSystem.instance.homeMapPartId;
                 placeId = HomeSystem.instance.homeMapPlaceId;
                 buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
-                int workerId;
-                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out workerId) || workerId != id)
+                if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out int workerId) || workerId != id)
                     text += string.Format("\n村民派遣，预期效率:<color=white>{0}</color>", GetExpectEfficient(id, partId, placeId, buildingIndex));
 
             }
@@ -708,13 +774,12 @@ namespace CharacterFloatInfo
                         actorFeature.SetParent(GetActorFeatureHolder(), false);
                         shown++;
                     }
-                // UpdateActorFeatureHolder();
                 Graphic[] componentsInChildren = WindowManage.instance.informationWindow.GetComponentsInChildren<Graphic>();
                 foreach (Graphic component2 in componentsInChildren)
                 {
                     component2.CrossFadeAlpha(1f, 0.2f, true);
                 }
-                if (shown > 7) ___tipsW += (shown - 7) * 90;
+                ___tipsW = Math.Max(Main.settings.minWidth, shown * 95);
             }
             return text;
         }
@@ -1531,7 +1596,6 @@ namespace CharacterFloatInfo
         {
             int ver = int.Parse(DateFile.instance.gameVersion.Replace("Beta V", "").Replace(" [Test]", "").Replace(".", "").Replace(" ", ""));
             if (ver < 100) ver *= 10;
-            // Main.Logger.Log(DateFile.instance.gameVersion + " = " + ver.ToString());
             return ver;
         }
     }

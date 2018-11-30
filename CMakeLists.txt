@@ -5,7 +5,7 @@ if (WIN32)
 
 cmake_minimum_required(VERSION 3.11)
 project("Taiwu_Mods" CSharp)
-set(CMAKE_CSharp_FLAGS "/langversion:6")
+set(CMAKE_CSharp_FLAGS "/langversion:latest")
 include(CSharpUtilities)
 
 SET(DLLPATH "The Scroll Of Taiwu Alpha V1.0_Data/Managed/")
@@ -301,8 +301,6 @@ using System.Runtime.Versioning\;
 	  message(STATUS "	Add dll type ${dllname}  from ${dllfile}   for mod ${moddir}")
 	  set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_${dllname} "${dllfile}")
 	ENDFOREACH()
-	
-
 
 	#设置项目引用
 	set(ProjectDeps "")
