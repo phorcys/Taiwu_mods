@@ -24,6 +24,7 @@ namespace CharacterFloatInfo
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
         public bool useColorOfTeachingSkill = false; //用可以请教的技艺的颜色显示资质(120=红)
+        public bool showSexuality = false; //显示性向
 
         public bool showActorStatus = true; // 人物状况
         public bool lifeMessage = false; //人物经历
@@ -116,6 +117,7 @@ namespace CharacterFloatInfo
             GUILayout.BeginHorizontal();
             GUILayout.Label("其他设定");
             GUILayout.EndHorizontal();
+            Main.settings.showSexuality = GUILayout.Toggle(Main.settings.showSexuality, "显示性向", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "比对原始信息", new GUILayoutOption[0]);
             Main.settings.deadActor = GUILayout.Toggle(Main.settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
             Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示隐藏的人物特性", new GUILayoutOption[0]);
@@ -579,6 +581,11 @@ namespace CharacterFloatInfo
                         break;
                 }
             }
+            if (Main.settings.showSexuality)
+            { // 显示性向 启动！（大概）
+                text += seperator + GetSexuality(id);
+            }
+			
             return text;
         }
 
@@ -1486,7 +1493,11 @@ namespace CharacterFloatInfo
             });
             return text;
         }
-
+        //性向
+        public static string GetSexuality(int id)
+        {
+            return DateFile.instance.GetActorDate(id, 21, false) == "0" ? "直" : "双";
+        }
         public static string GetGenderText(int id)
         {
             return DateFile.instance.massageDate[7][0].Split('|')[int.Parse(DateFile.instance.GetActorDate(id, 14, false))];
