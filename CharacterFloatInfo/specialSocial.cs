@@ -1,4 +1,4 @@
-using Harmony12;
+ï»¿using Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +11,18 @@ namespace CharacterFloatInfo
 {
     public class SpecialSocial
     {
-        public string getStr()
+        public string GetStr()
         {
-            return "²âÊÔ³É¹¦";
+            return "æµ‹è¯•æˆåŠŸ";
         }
         List<string> socialWords = new List<string> { };
 
-        public string getActorName(int id, bool realName = false, bool baseName = false)
+        public string GetActorName(int id, bool realName = false, bool baseName = false)
         {
             return DateFile.instance.GetActorName(id, realName, baseName);
         }
 
-        //ÈËÎïÔÚ×éÖ¯ÖĞµÈ¼¶ID
+        //äººç‰©åœ¨ç»„ç»‡ä¸­ç­‰çº§ID
         public static int GetGangLevelId(int id)
         {
             int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
@@ -31,52 +31,59 @@ namespace CharacterFloatInfo
             return gangValueId;
         }
 
-        //»ñÈ¡¸¸Ä¸ËùÔÚ×éÖ¯µÈ¼¶
-        public string getParentGangLevel(int actorId)
+        //è·å–çˆ¶æ¯æ‰€åœ¨ç»„ç»‡ç­‰çº§
+        public string GetParentGangLevel(int actorId)
         {
-            return "½¡ÔÚ";
+            return "å¥åœ¨";
         }
-        //»ñÈ¡¸¸Ä¸´æ»îÇé¿ö
-        public string getParentAlive(int actorId)
+        //è·å–çˆ¶æ¯å­˜æ´»æƒ…å†µ
+        public string GetParentAlive(int actorId)
         {
-            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));//°üº¬ÒÑ¹ıÊÀ
+            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));//åŒ…å«å·²è¿‡ä¸–
             List<int> list2 = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, false));
             int count = list.Count;
             int count2 = list2.Count;
             switch (count)
             {
                 case 0:
-                    return "ÎŞ¸¸ÎŞÄ¸";
+                    return "æ— çˆ¶æ— æ¯";
+                    //break;
                 case 1:
-                    return "²»ÖªÉú¸¸";
+                    return "ä¸çŸ¥ç”Ÿçˆ¶";
+                    //break;
                 case 2:
                     switch (count2)
                     {
                         case 0:
-                            return "¸¸Ä¸Ë«Íö";
+                            return "çˆ¶æ¯åŒäº¡";
+                            //break;
                         case 1:
-                            return "¹Â¸¸¹ÑÄ¸";
+                            return "å­¤çˆ¶å¯¡æ¯";
+                            //break;
                         case 2:
-                            return "Ë«Ç×½¡ÔÚ";
+                            return "åŒäº²å¥åœ¨";
+                            //break;
                     }
                     break;
                 case 3:
-                    return "¸¸Ä¸ÔÙ»é";
+                    return "çˆ¶æ¯å†å©š";
+                    //break;
             }
             return "";
         }
 
 
-        //TODO.Ìí¼ÓÊıÁĞ£¬½«¹ØÏµÃèÊö·ÅÈë£¬²¢ÉèÖÃ¶ÔÓ¦ÑÕÉ«Æ·¼¶
+        //TODO.æ·»åŠ æ•°åˆ—ï¼Œå°†å…³ç³»æè¿°æ”¾å…¥ï¼Œå¹¶è®¾ç½®å¯¹åº”é¢œè‰²å“çº§
 
-        //·ÖÎö¸¸Ä¸Çé¿ö
-        public string analyzeParent(int actorId)
+        //åˆ†æçˆ¶æ¯æƒ…å†µ
+        public string AnalyzeParent(int actorId)
         {
+            //string text = "";
             List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));
             int count = list.Count;
 
             //text += getParentAlive(actorId);
-            socialWords.Add(getParentAlive(actorId));
+            socialWords.Add(GetParentAlive(actorId));
 
             for (int i = 0; i < count; i++)
             {
@@ -84,7 +91,7 @@ namespace CharacterFloatInfo
                 int gangLv = GetGangLevelId(nid);
                 if (gangLv % 10 <= 3)
                 {
-                    socialWords.Add("¸ß¸É×ÓµÜ"); 
+                    socialWords.Add("é«˜å¹²å­å¼Ÿ"); 
                     break;
                 }
             }            
@@ -92,7 +99,7 @@ namespace CharacterFloatInfo
         }
 
 
-        public void testAll(int actorId)
+        public void TestAll(int actorId)
         {
             DateFile df = DateFile.instance;
             //DateFile.instance.GetActorSocial(id, 310, false).Count
@@ -108,21 +115,21 @@ namespace CharacterFloatInfo
                         for (int j = 0; j < list.Count; j++)
                         {
                             int aId = list[j];
-                            Main.Logger.Log(string.Format("ShowAcotrSocial:Index:{0},Key:{1},Value:{2},Name:{3}", typ, j, aId, this.getActorName(aId)));
+                            Main.Logger.Log(string.Format("ShowAcotrSocial:Index:{0},Key:{1},Value:{2},Name:{3}", typ, j, aId, this.GetActorName(aId)));
                         }
                     }
                 }
             }
         }
 
-        //301ÄªÄæÖ®½» 302ĞÖµÜ½ãÃÃ 303Ç×Éú¸¸Ä¸ 304Òå¸¸ÒåÄ¸ 305ÊÚÒµ¶÷Ê¦ 306Á½ÇéÏàÔÃ
-        //307¶÷ÉîÒâÖØ 308Òå½á½ğÀ¼ 309ÅäÅ¼ 310×ÓËÃ 312ÇãĞÄ°®Ä½ ÉÙ311£¬ÍÆ²âÎªµÕÏµ´«ÈË
-        public string analyzeSocial(int actorId)
+        //301è«é€†ä¹‹äº¤ 302å…„å¼Ÿå§å¦¹ 303äº²ç”Ÿçˆ¶æ¯ 304ä¹‰çˆ¶ä¹‰æ¯ 305æˆä¸šæ©å¸ˆ 306ä¸¤æƒ…ç›¸æ‚¦
+        //307æ©æ·±æ„é‡ 308ä¹‰ç»“é‡‘å…° 309é…å¶ 310å­å—£ 312å€¾å¿ƒçˆ±æ…• å°‘311ï¼Œæ¨æµ‹ä¸ºå«¡ç³»ä¼ äºº
+        public string AnalyzeSocial(int actorId)
         {
-            DateFile df = DateFile.instance;
+            //DateFile df = DateFile.instance;
             //DateFile.instance.GetActorSocial(id, 310, false).Count
             Main.Logger.Log("---------------------------------------------------");
-            return this.analyzeParent(actorId);
+            return this.AnalyzeParent(actorId);
         }
     }
 }
