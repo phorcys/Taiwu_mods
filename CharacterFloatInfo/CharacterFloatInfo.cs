@@ -448,39 +448,30 @@ namespace CharacterFloatInfo
         public static int GetActorScore(int actorId) // 生平遺惠
         {
             if (!DateFile.instance.actorGetScore.ContainsKey(actorId)) return 0;
-            List<int> list = new List<int>(DateFile.instance.actorGetScore[actorId].Keys);
             int[] array = new int[7];
-            for (int i = 0; i < list.Count; i++)
+            foreach (var num2 in DateFile.instance.actorGetScore[actorId].Keys)
             {
-                int num2 = list[i];
                 if (num2 != 0)
                 {
                     Dictionary<int, int> dictionary = new Dictionary<int, int>();
-                    for (int j = 0; j < DateFile.instance.actorGetScore[actorId][num2].Count; j++)
+                    foreach (var array2 in DateFile.instance.actorGetScore[actorId][num2])
                     {
-                        int num3 = DateFile.instance.actorGetScore[actorId][num2][j][0];
-                        int num4 = DateFile.instance.actorGetScore[actorId][num2][j][1];
-                        if (dictionary.ContainsKey(num3))
+                        if (dictionary.ContainsKey(array2[0]))
                         {
-                            Dictionary<int, int> dictionary2;
-                            int key;
-                            (dictionary2 = dictionary)[key = num3] = dictionary2[key] + num4;
+                            dictionary[array2[0]] += array2[1];
                         }
                         else
                         {
-                            dictionary.Add(num3, num4);
+                            dictionary[array2[0]] = array2[1];
                         }
                     }
-                    List<int> list2 = new List<int>(dictionary.Keys);
-                    for (int k = 0; k < list2.Count; k++)
+                    foreach (var key2 in dictionary.Keys)
                     {
-                        int key2 = list2[k];
                         int num5 = int.Parse(DateFile.instance.scoreValueDate[key2][3]);
                         int num6 = 100;
-                        string[] array3 = DateFile.instance.scoreValueDate[key2][4].Split('|');
-                        for (int l = 0; l < array3.Length; l++)
+                        foreach (var str in DateFile.instance.scoreValueDate[key2][4].Split('|'))
                         {
-                            switch (int.Parse(array3[l]))
+                            switch (int.Parse(str))
                             {
                                 case 1:
                                     num6 += DateFile.instance.enemyBorn * DateFile.instance.enemyBorn * 40;
@@ -501,7 +492,7 @@ namespace CharacterFloatInfo
                     }
                 }
             }
-            return array[0] + array[1] + array[2] + array[3] + array[4] + array[5] + array[6];
+            return array.Sum();
         }
 
         //标题栏
