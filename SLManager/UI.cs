@@ -33,7 +33,7 @@ namespace Sth4nothing.SLManager
                     DontDestroyOnLoad(go);
                 }
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 return false;
             }
@@ -129,7 +129,7 @@ namespace Sth4nothing.SLManager
                 var info = LoadFile.savedInfos[key];
                 if (GUILayout.Toggle(state[key],
                     $"{info.name}\n{info.year}年 {info.GetTurn()}时节 {info.samsara}轮回\n{info.playtime}\n{info.position}",
-                    itemStyle))
+                    itemStyle) && GUI.changed)
                 {
                     foreach (var key2 in LoadFile.savedFiles)
                     {
