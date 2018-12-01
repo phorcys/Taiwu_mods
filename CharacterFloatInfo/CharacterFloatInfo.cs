@@ -433,7 +433,6 @@ namespace CharacterFloatInfo
                 int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false);
                 actorFavorBar1.fillAmount = (float)actorFavor / 30000f;
                 actorFavorBar2.fillAmount = (float)(actorFavor - 0x7530) / 60000f;
-                int actorWariness = DateFile.instance.GetActorWariness(actorId);
                 actorWarinessBar1.fillAmount = (float)DateFile.instance.GetActorWariness(actorId) / 400f;
             }
             else
@@ -920,9 +919,9 @@ namespace CharacterFloatInfo
         }
         public static int GetActorFame(int id)
         {
-            return GetGameVersion() < 150 ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : tryGetActorFame(id);
+            return GetGameVersion() < 150 ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : TryGetActorFame(id);
         }
-        public static int tryGetActorFame(int id)
+        public static int TryGetActorFame(int id)
         {
             return DateFile.instance.GetActorFame(id);
         }
@@ -1046,7 +1045,7 @@ namespace CharacterFloatInfo
                     //商队
                     int shopTyp = int.Parse(DateFile.instance.GetGangDate(typ, 0x10));
                     //商品等级Plus
-                    int newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + level;
+                    //int newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + level;
                     //实际花费
                     int num = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), id, true, false);
                     int shopSellCost = 30 + (num * 5);
@@ -1234,7 +1233,6 @@ namespace CharacterFloatInfo
 
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
-            int skillId = int.Parse(buildingSetting[33]);
             int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
             text += string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100, (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
 
@@ -1359,7 +1357,6 @@ namespace CharacterFloatInfo
             if (id != lastActorID)
             {
                 actorMassage.Clear();
-                int num = DateFile.instance.MianActorID();
                 actorMassage.Add(string.Format("{0}{1}{2}{3}{4}", new object[]
                 {
                     DateFile.instance.massageDate[8010][1].Split('|')[0],
