@@ -10,7 +10,7 @@ namespace Sth4nothing.SLManager
     {
         public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
         public bool blockAutoSave = false;
-        public int maxBackupToLoad = 10;
+        public int maxBackupToLoad = 8;
         public uint maxBackupsToKeep = 1000;
     }
     public static class Main

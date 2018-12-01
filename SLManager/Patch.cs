@@ -174,15 +174,15 @@ namespace Sth4nothing.SLManager
 
         public const string format = "yyyy - MM - dd   [ HH : mm ]";
 
-        private static Stack<KeyValuePair<string, SaveData>> stack;
+        private static object lockObj = new object();
 
         /// <summary>
         /// 解析压缩存档列表
         /// </summary>
         public static void ParseFiles()
         {
-            stack = new Stack<KeyValuePair<string, SaveData>>();
-            var tasks = new Queue<System.Threading.Thread>();
+            savedInfos = new Dictionary<string, SaveData>();
+            var threads = new Queue<System.Threading.Thread>();
             foreach (var file in savedFiles)
             {
                 var thread = new System.Threading.Thread(
@@ -190,19 +190,12 @@ namespace Sth4nothing.SLManager
                 {
                     IsBackground = true
                 };
-                tasks.Enqueue(thread);
+                threads.Enqueue(thread);
                 thread.Start(file);
             }
-            while (tasks.Count > 0)
+            while (threads.Count > 0)
             {
-                tasks.Dequeue().Join();
-            }
-
-            savedInfos = new Dictionary<string, SaveData>();
-            while (stack.Count > 0)
-            {
-                var pair = stack.Pop();
-                savedInfos.Add(pair.Key, pair.Value);
+                threads.Dequeue().Join();
             }
 
             savedFiles.Sort((f1, f2) =>
@@ -222,15 +215,19 @@ namespace Sth4nothing.SLManager
             var path = file as string;
             try
             {
+                Debug.Log("Parse: " + file);
                 var data = Parse(path);
                 if (data == null)
                     throw new Exception();
-                stack.Push(new KeyValuePair<string, SaveData>(path, data));
+
+                lock (lockObj)
+                {
+                    savedInfos.Add(path, data);
+                }
             }
             catch (Exception e)
             {
                 Debug.Log("[ERROR]" + e.ToString());
-
             }
         }
 
