@@ -738,7 +738,7 @@ namespace GuiWarehouse
             string s = name + "\n" + des;
 
             int width = 600, height = line * 30;
-            int _x, _y;
+            int _x;
             if (x > Screen.width / 2)
             {
                 _x = x - width;

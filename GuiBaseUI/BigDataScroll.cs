@@ -35,8 +35,8 @@ namespace GuiBaseUI
         }
 
         public ScrollRect scrollRect;
-        public GameObject gameObject;
-        public RectTransform transform;
+        public GameObject go;
+        public RectTransform retTransform;
         public RectTransform content;
         public RectTransform view;
         public RectTransform top;
@@ -57,8 +57,8 @@ namespace GuiBaseUI
             contentSizeFitter = scrollRect.content.GetComponent<ContentSizeFitter>();
             verticalLayoutGroup = scrollRect.content.GetComponent<VerticalLayoutGroup>();
             ItemPool.instance.SetItem(funcSetData, _itemcell.gameObject);
-            gameObject = scrollRect.gameObject;
-            transform = scrollRect.GetComponent<RectTransform>();
+            go = scrollRect.gameObject;
+            retTransform = scrollRect.GetComponent<RectTransform>();
             content = scrollRect.content;
             view = scrollRect.viewport;
             scrollRect.onValueChanged.AddListener(OnValueChanged);
@@ -80,7 +80,7 @@ namespace GuiBaseUI
             }
 
             // Main.Logger.Log("总高度" + maxHeight.ToString());
-            windowsHeight = transform.sizeDelta.y;
+            windowsHeight = retTransform.sizeDelta.y;
             // Main.Logger.Log("窗口高度" + windowsHeight.ToString() + " 格子高度" + cellHeight.ToString());
             showCount = (int)(windowsHeight / cellHeight);
             // Main.Logger.Log("显示数量" + showCount.ToString());

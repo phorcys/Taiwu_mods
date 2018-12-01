@@ -51,7 +51,6 @@ namespace UseStorageMaterial
                 if (itemid != 0 && num3 == itemid)
                 {
                     return true;
-                    break;
                 }
             }
             return false;
