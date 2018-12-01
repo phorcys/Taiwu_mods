@@ -47,27 +47,21 @@ namespace CharacterFloatInfo
             {
                 case 0:
                     return "ÎÞ¸¸ÎÞÄ¸";
-                    break;
                 case 1:
                     return "²»ÖªÉú¸¸";
-                    break;
                 case 2:
                     switch (count2)
                     {
                         case 0:
                             return "¸¸Ä¸Ë«Íö";
-                            break;
                         case 1:
                             return "¹Â¸¸¹ÑÄ¸";
-                            break;
                         case 2:
                             return "Ë«Ç×½¡ÔÚ";
-                            break;
                     }
                     break;
                 case 3:
                     return "¸¸Ä¸ÔÙ»é";
-                    break;
             }
             return "";
         }
@@ -78,7 +72,6 @@ namespace CharacterFloatInfo
         //·ÖÎö¸¸Ä¸Çé¿ö
         public string analyzeParent(int actorId)
         {
-            string text = "";
             List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));
             int count = list.Count;
 
