@@ -787,7 +787,7 @@ namespace CharacterFloatInfo
                 if (!smallerWindow)
                 {
                     int b = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000;
-                    int level = Mathf.Clamp(Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, i + (i < 100 ? 501 : 500)), b), 0, 8);
+                    int level = Mathf.Clamp(Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, i + (i < 100 ? 501 : 500))-1, b), 0, 8);
                     string[] marks = { "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
                     string mark = Main.settings.useColorOfTeachingSkill?DateFile.instance.SetColoer(20002 + level, marks[level]): "※";
                     text += CanTeach(actorId, i) ? mark : "　";
