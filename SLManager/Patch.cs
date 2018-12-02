@@ -316,10 +316,7 @@ namespace Sth4nothing.SLManager
                 {
                     var tmp = Path.Combine(
                         Environment.GetEnvironmentVariable("TEMP"),
-                        "SaveDate.tw");
-
-                    if (File.Exists(tmp))
-                        File.Delete(tmp);
+                        Guid.NewGuid().ToString() + ".tw");
 
                     bool rijndeal = true;
                     using (var stream = File.OpenWrite(tmp))
@@ -336,6 +333,8 @@ namespace Sth4nothing.SLManager
                         }
                     }
                     DateFile.SaveDate date = ReadSaveDate(tmp, rijndeal);
+
+                    File.Delete(tmp);
 
                     data = new SaveData(date._mainActorName, date._year, date._samsara,
                         date._dayTrun, date._playerSeatName, date._playTime);
