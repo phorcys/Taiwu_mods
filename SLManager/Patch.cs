@@ -453,7 +453,7 @@ namespace Sth4nothing.SLManager
         }
 
         /// <summary>
-        /// 执行存档前备份
+        /// 执行存档后备份
         /// </summary>
         private static void BackupBeforeSave()
         {
@@ -461,18 +461,17 @@ namespace Sth4nothing.SLManager
             {
                 return;
             }
+            Main.Logger.Log("开始备份存档");
             // 确保pathToBackup末尾没有"/"或者"\\"
             string pathToBackup = Path.GetDirectoryName(BackPath + '\\');
-
-            string folderName = Path.GetFileName(pathToBackup);
-
-            string backupFilePattern = folderName + ".save.???.zip";
-            string backupFileFormat = folderName + ".save.{0:D3}.zip";
 
             int backupIndex;
 
             // 获取所有当前存档的备份
-            var backupFiles = Directory.GetFiles(BackPath, backupFilePattern, SearchOption.TopDirectoryOnly);
+            var backupFiles = Directory.GetFiles(BackPath, $"Date_{DateId}.save.???.zip",
+                SearchOption.TopDirectoryOnly);
+            Main.Logger.Log("当前存档数:" + backupFiles.Count());
+
             if (backupFiles.Count() < Main.settings.maxBackupsToKeep)
             {
                 // 若数量未超上限，则直接累加计数
@@ -482,18 +481,26 @@ namespace Sth4nothing.SLManager
             {
                 // 若数量超过上限，将最早的一个删掉并且平移所有备份
                 Array.Sort(backupFiles, StringComparer.InvariantCulture);
-                try { File.Delete(backupFiles[0]); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+                try
+                {
+                    File.Delete(backupFiles[0]);
+                }
+                catch (Exception ex) { Console.WriteLine(ex.ToString()); }
 
                 for (int i = 1; i < backupFiles.Count(); i++)
                 {
-                    try { File.Move(backupFiles[i], backupFiles[i - 1]); } catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+                    try
+                    {
+                        File.Move(backupFiles[i], backupFiles[i - 1]);
+                    }
+                    catch (Exception ex) { Console.WriteLine(ex.ToString()); }
                 }
 
-                backupIndex = (int)Main.settings.maxBackupsToKeep - 1;
+                backupIndex = Main.settings.maxBackupsToKeep - 1;
             }
 
             // 保存备份
-            var targetFile = Path.Combine(BackPath, $"Date_{DateId}.{backupIndex: D3}.zip");
+            var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
             BackupFolderToFile(SavePath, targetFile);
         }
 

@@ -11,7 +11,7 @@ namespace Sth4nothing.SLManager
         public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
         public bool blockAutoSave = false;
         public int maxBackupToLoad = 8;
-        public uint maxBackupsToKeep = 1000;
+        public int maxBackupsToKeep = 1000;
     }
     public static class Main
     {
@@ -71,10 +71,10 @@ namespace Sth4nothing.SLManager
             GUILayout.BeginHorizontal();
             GUILayout.Label("每个存档槽最大保留备份数量(0-1000)：");
             
-            if (uint.TryParse(GUILayout.TextField(settings.maxBackupsToKeep.ToString()),
-                    out uint maxBackupsToKeep))
+            if (int.TryParse(GUILayout.TextField(settings.maxBackupsToKeep.ToString()),
+                    out int maxBackupsToKeep))
             {
-                if (maxBackupsToKeep <= 1000)
+                if (maxBackupsToKeep <= 1000 && maxBackupsToKeep >= 0)
                     settings.maxBackupsToKeep = maxBackupsToKeep;
             }
             GUILayout.Label("读档列表的最大存档数(0表示不受限制)");
@@ -144,6 +144,13 @@ namespace Sth4nothing.SLManager
                     Debug.Log("\t" + pair.Key + ": " +
                         Newtonsoft.Json.JsonConvert.SerializeObject(pair.Value));
                 }
+            }
+            using (var stream = new MemoryStream())
+            {
+                var serializer = new System.Xml.Serialization.XmlSerializer(typeof(Settings));
+                serializer.Serialize(stream, Main.settings);
+                stream.Seek(0, System.IO.SeekOrigin.Begin);
+                Debug.Log(System.Text.Encoding.UTF8.GetString(stream.ToArray()));
             }
             Debug.Log(settings);
         }
