@@ -23,7 +23,7 @@ namespace CharacterFloatInfo
         public bool showLevel = true;
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
-        public bool useColorOfTeachingSkill = false; //用可以请教的技艺的颜色显示资质(120=红)
+        public bool useColorOfTeachingSkill = false; // 用颜色及數字 標記 可以请教的技艺最高品階 
         public bool showSexuality = false; //显示性向
 
         public bool showActorStatus = true; // 人物状况
@@ -117,11 +117,11 @@ namespace CharacterFloatInfo
             GUILayout.BeginHorizontal();
             GUILayout.Label("其他设定");
             GUILayout.EndHorizontal();
-            Main.settings.showSexuality = GUILayout.Toggle(Main.settings.showSexuality, "显示性向", new GUILayoutOption[0]);
+            Main.settings.showSexuality = GUILayout.Toggle(Main.settings.showSexuality, "显示性取向", new GUILayoutOption[0]);
             Main.settings.addonInfo = GUILayout.Toggle(Main.settings.addonInfo, "比对原始信息", new GUILayoutOption[0]);
             Main.settings.deadActor = GUILayout.Toggle(Main.settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
             Main.settings.showIV = GUILayout.Toggle(Main.settings.showIV, "显示隐藏的人物特性", new GUILayoutOption[0]);
-            Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "以请教阈值显示资质", new GUILayoutOption[0]);
+            Main.settings.useColorOfTeachingSkill = GUILayout.Toggle(Main.settings.useColorOfTeachingSkill, "标记可学技艺的最高品阶", new GUILayoutOption[0]);
             GUILayout.BeginHorizontal();
             GUILayout.Label("窗口最小宽度", GUILayout.Width(150));
             Main.settings.minWidth = int.Parse(GUILayout.TextArea(Main.settings.minWidth.ToString(), GUILayout.Width(50)));
@@ -571,10 +571,6 @@ namespace CharacterFloatInfo
                         break;
                 }
             }
-            if (Main.settings.showSexuality)
-            { // 显示性向 启动！（大概）
-                text += seperator + GetSexuality(id);
-            }
 			
             return text;
         }
@@ -782,14 +778,21 @@ namespace CharacterFloatInfo
         }
 
         // 人物能力值
-        public static string SetInfoMessage3(int id)
+        public static string SetInfoMessage3(int actorId)
         {
             if (!Main.settings.showLevel) return "";
             string text = "\n";
             foreach (int i in DateFile.instance.baseSkillDate.Keys)
             {
-                if (!smallerWindow) text += CanTeach(id, i) ? "※" : "　";
-                text += GetLevel(id, i);
+                if (!smallerWindow)
+                {
+                    int b = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000;
+                    int level = Mathf.Clamp(Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, i + (i < 100 ? 501 : 500)), b), 0, 8);
+                    string[] marks = { "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
+                    string mark = Main.settings.useColorOfTeachingSkill?DateFile.instance.SetColoer(20002 + level, marks[level]): "※";
+                    text += CanTeach(actorId, i) ? mark : "　";
+                }
+                text += GetLevel(actorId, i);
                 text += i % 4 == (i < 100 ? 3 : 0) ? "\n" : "\t";
                 if (i == 15) text += "\n";
             }
@@ -958,12 +961,11 @@ namespace CharacterFloatInfo
         //资质
         public static string GetLevel(int id, int index)
         {
-            int colorCorrect = Main.settings.useColorOfTeachingSkill ? 40 : 20;
             int num = int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, true));
             int num2 = num - int.Parse(DateFile.instance.GetActorDate(id, (index < 100 ? 501 : 500) + index, false));
             string num3 = smallerWindow || !Main.settings.showFamilySkill || GetGameVersion() < 150 ? "" : GetFamilySkill(id, index) + ",";
             bool shownoadd = !smallerWindow && Main.settings.addonInfo && num2 != 0;
-            string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8),
+            string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - 40) / 10, 0, 8),
             string.Format("{0}<color=orange>{1,3}{2}</color>{3,3}{4}<color=#606060ff>{5,3}{6}</color>",
                 DateFile.instance.baseSkillDate[index][0],
                 num3,
@@ -1234,7 +1236,7 @@ namespace CharacterFloatInfo
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
             int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
-            text += string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100, (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
+            text += buildingType == 1003 ? "此人正在厢房摸鱼……" : string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100, (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
 
             return text;
         }
@@ -1321,7 +1323,7 @@ namespace CharacterFloatInfo
             return text;
         }
 
-        //婚姻状况
+        //婚姻 / 性取向
         public static string GetSpouse(int id)
         {
             List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
@@ -1344,6 +1346,8 @@ namespace CharacterFloatInfo
                     result = DateFile.instance.SetColoer(20010, "已婚", false);
                 }
             }
+
+            if (Main.settings.showSexuality && !isDead) result += " • " + GetSexuality(id);
 
             return result;
         }
