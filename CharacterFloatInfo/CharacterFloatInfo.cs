@@ -572,7 +572,7 @@ namespace CharacterFloatInfo
             text += "\t\t立场:" + GetGoodness(id);
             text += "\t\t名誉:" + GetFame(id);
             text += "\t\t心情:" + GetMood(id);
-            if (GetGameVersion() >= 150) text += "\t\t印象:" + GetLifeFace(id);
+            if (GameVersion >= new Version(0, 1, 5)) text += "\t\t印象:" + GetLifeFace(id);
             text += "\n\n";
 
             if (!smallerWindow)
@@ -788,7 +788,7 @@ namespace CharacterFloatInfo
             int typ = (index < 100 ? 501 : 500) + index;
             int skillValue = GetSkillValue(id, typ);
             int skillDiffer = skillValue - int.Parse(DateFile.instance.GetActorDate(id, typ, false));
-            string familySkill = smallerWindow || !Main.settings.showFamilySkill || GetGameVersion() < 150 ? "" : GetFamilySkill(id, index) + ",";
+            string familySkill = smallerWindow || !Main.settings.showFamilySkill || GameVersion < new Version(0, 1, 5) ? "" : GetFamilySkill(id, index) + ",";
             bool shownoadd = !smallerWindow && Main.settings.addonInfo && skillDiffer != 0;
             string text = DateFile.instance.SetColoer(20001 + Mathf.Clamp(GetMaxSkillLevel(id, typ), 1, 9),
             string.Format("{0}<color=orange>{1,3}{2}</color>{3,3}{4}<color=#606060ff>{5,3}{6}</color>",
@@ -932,7 +932,7 @@ namespace CharacterFloatInfo
 
         //名誉
         public static string GetFame(int id) => ActorMenu.instance.Color7(GetActorFame(id));
-        public static int GetActorFame(int id) => GetGameVersion() < 150 ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : TryGetActorFame(id);
+        public static int GetActorFame(int id) => GameVersion < new Version(0, 1, 5) ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : TryGetActorFame(id);
         public static int TryGetActorFame(int id) => DateFile.instance.GetActorFame(id);
 
         //立场
@@ -1481,11 +1481,14 @@ namespace CharacterFloatInfo
         }
 
         // 版本
-        public static int GetGameVersion()
+        private static Version gameVersion;
+        public static Version GameVersion
         {
-            int ver = int.Parse(DateFile.instance.gameVersion.Replace("Beta V", "").Replace(" [Test]", "").Replace(".", "").Replace(" ", ""));
-            if (ver < 100) ver *= 10;
-            return ver;
+            get
+            {
+                gameVersion = gameVersion ?? new Version(DateFile.instance.gameVersion.Replace("Beta V", "").Replace("[Test]", ""));
+                return gameVersion;
+            }
         }
     }
 }
