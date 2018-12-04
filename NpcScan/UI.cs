@@ -75,6 +75,7 @@ namespace NpcScan
         int[] life = new int[16];
         string actorFeatureText = "";
         bool tarFeature = false;
+        bool tarFeatureOr = false;
 
         float windowWidth = Screen.width * 0.8f;
 
@@ -528,7 +529,8 @@ namespace NpcScan
             }
             GUILayout.Label("人物特性:", GUILayout.Width(60));
             actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
-            tarFeature = GUILayout.Toggle(tarFeature, "精确特性", new GUILayoutOption[0]);//是否精确查找,精确查找的情况下,特性用'|'分隔
+            tarFeature = GUILayout.Toggle(tarFeature, "精确特性", GUILayout.Width(75));//是否精确查找,精确查找的情况下,特性用'|'分隔
+            tarFeatureOr = GUILayout.Toggle(tarFeatureOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
             //Main.Logger.Log(tarFeature.ToString());
             GUILayout.Space(30);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
@@ -981,7 +983,7 @@ namespace NpcScan
                         int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
                         string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
 
-                        if (ScanFeature(index, Main.findList, tarFeature) || actorFeatureText == "")
+                        if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
                         {
                             if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
                             {
@@ -1035,7 +1037,7 @@ namespace NpcScan
                                 actorResources[5].ToString(),
                                 actorResources[6].ToString(),
                                 samsaraNames,
-                                GetActorFeatureNameText(index)});
+                                GetActorFeatureNameText(index, tarFeature)});
                                 }
                             }
                         }
@@ -1129,7 +1131,7 @@ namespace NpcScan
                     int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
                     string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
 
-                    if (ScanFeature(index, Main.findList, tarFeature) || actorFeatureText == "")
+                    if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
                     {
                         if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
                         {
@@ -1183,7 +1185,7 @@ namespace NpcScan
                                 actorResources[5].ToString(),
                                 actorResources[6].ToString(),
                                 samsaraNames,
-                                GetActorFeatureNameText(index) });
+                                GetActorFeatureNameText(index, tarFeature) });
                                 }
                             }
                         }
@@ -1239,7 +1241,7 @@ namespace NpcScan
             })[num2], (num3 <= 0) ? ((num3 != 0) ? DateFile.instance.SetColoer(20010, "-" + Mathf.Abs(num3), false) : DateFile.instance.SetColoer(20002, "+" + num3, false)) : DateFile.instance.SetColoer(20005, "+" + num3, false)));
             return text;
         }
-        private static string GetActorFeatureNameText(int key)
+        private static string GetActorFeatureNameText(int key, bool tarFeature)
         {
             List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
             string text = "";
@@ -1249,7 +1251,14 @@ namespace NpcScan
                 Features f = Main.featuresList[j];
                 if (f.Group == 2001 || f.Group == 3024) continue;
                 string s = f.Level.ToString();
-                text += (Main.findList.Contains(f) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
+                if (tarFeature)
+                {
+                    text += (Main.findList.Contains(f) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
+                }
+                else
+                {
+                    text += (Main.findList.Contains(Main.featuresList[f.Group]) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
+                }             
             }
             //Main.Logger.Log(text);
             return text;
@@ -1274,8 +1283,11 @@ namespace NpcScan
                     {
                         int j = f.Group;
                         list.Add(Main.featuresList[j]);
-                        list.Add(Main.featuresList[j + 1]);
-                        list.Add(Main.featuresList[j + 2]);
+                        //list.Add(Main.featuresList[j + 1]);
+                        //list.Add(Main.featuresList[j + 2]);
+                        //list.Add(Main.featuresList[j + 3]);
+                        //list.Add(Main.featuresList[j + 4]);
+                        //list.Add(Main.featuresList[j + 5]);
                     }
                 }
             }
@@ -1309,7 +1321,7 @@ namespace NpcScan
             //}
             return list;
         }
-        private static bool ScanFeature(int key, List<Features> slist, bool flag)
+        private static bool ScanFeature(int key, List<Features> slist, bool tarFeature, bool tarFeatureOr)
         {
             List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
             bool result = false;
@@ -1320,17 +1332,26 @@ namespace NpcScan
             List<Features> actorFeature = new List<Features>();
             foreach (int i in list)
             {
-                actorFeature.Add(Main.featuresList[i]);
+                if (tarFeature)  //精确查找记录特性
+                {
+                    actorFeature.Add(Main.featuresList[i]);
+                }
+                else            //组查找 记录组ID
+                {
+                    Features f = Main.featuresList[i];
+                    int j = f.Group;
+                    actorFeature.Add(Main.featuresList[j]);
+                }
             }
 
-            if (flag)
-            {
+            if (!tarFeatureOr)   //与查找
+            {              
                 if (slist.All(t => actorFeature.Any(b => b.Key == t.Key)))
                 {
                     result = true;
                 }
             }
-            else
+            else                //或查找
             {
                 foreach (Features f in actorFeature)
                 {
