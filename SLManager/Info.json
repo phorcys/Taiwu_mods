@@ -2,8 +2,8 @@
     "Id": "SLManager",
     "DisplayName": "Save / Load",
     "Author": "Sth4nothing",
-    "Version": "1.2.2",
+    "Version": "1.3.3",
     "AssemblyName": "SLManager.dll",
     "EntryMethod": "Sth4nothing.SLManager.Main.Load",
-    "Requirements": ["SaveBackup"]
+    "HomePage": "https://bbs.nga.cn/read.php?tid=15734945"
 }

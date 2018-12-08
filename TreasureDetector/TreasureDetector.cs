@@ -113,10 +113,7 @@ namespace TreasureDetector
                     int width = int.Parse(DateFile.instance.partWorldMapDate[partId][98]);
                     for (int workTyp = 0; workTyp < 5; workTyp++)
                     {
-                        int 现有资源, 最大资源, 最高品阶, 最低品阶;
-                        float 掉宝率, 掉极品率;
-                        string 全部可得物品;
-                        GetWorkItemDetail(worldId, partId, placeId, workTyp, out 现有资源, out 最大资源, out 最高品阶, out 最低品阶, out 掉宝率, out 掉极品率, out 全部可得物品);
+                        GetWorkItemDetail(worldId, partId, placeId, workTyp, out int 现有资源, out int 最大资源, out int 最高品阶, out int 最低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品);
                         if (最高品阶 >= 最低品阶 && 最大资源 >= 100)
                         {
                             ___informationMassage.text += String.Format("<color=#FFFF8FFF>{0}</color> {1}/<color=#FFFFFFFF>{2}</color>\t掉宝率{3}\t掉极品率:{4}\n\n可获物品: {5} - {6}\n\n<color=#add8e6ff>包括:</color>{7}\n",
@@ -151,10 +148,7 @@ namespace TreasureDetector
                         List<int> 位置 = new List<int> { };
                         for (placeId = 0; placeId < num2; placeId++)
                         {
-                            int 现有资源, 最大资源, 高品阶, 低品阶;
-                            float 掉宝率, 掉极品率;
-                            string 全部可得物品;
-                            GetWorkItemDetail(worldId, partId, placeId, workTyp, out 现有资源, out 最大资源, out 高品阶, out 低品阶, out 掉宝率, out 掉极品率, out 全部可得物品);
+                            GetWorkItemDetail(worldId, partId, placeId, workTyp, out int 现有资源, out int 最大资源, out int 高品阶, out int 低品阶, out float 掉宝率, out float 掉极品率, out string 全部可得物品);
                             if (Main.settings.calByDropRate)
                             {
                                 if (掉极品率 > 最大值)
