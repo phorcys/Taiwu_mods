@@ -110,6 +110,7 @@ namespace Majordomo
             // -----------------------------------------------------------------
 
             int remainedMoney = initialMoney;
+            boughtResources.Clear();
             var rand = new System.Random();
             List<int> availableResIds = new List<int>();
             this.CalcAvailableResourceIds(resPacksNeedToBuy, remainedMoney, availableResIds);
@@ -137,12 +138,16 @@ namespace Majordomo
                 if (this.resources[resourceId].amount <= 0) this.resources.Remove(resourceId);
 
                 this.CalcAvailableResourceIds(resPacksNeedToBuy, remainedMoney, availableResIds);
-
-                // TEST --------------------------------------------------------
-                string name = DateFile.instance.resourceDate[resourceId][1];
-                Main.Logger.Log($"购买 {name}, 价格 {itemInfo.price}");
-                // -------------------------------------------------------------
             }
+
+            // TEST ------------------------------------------------------------
+            Main.Logger.Log($"花费银钱 {initialMoney - remainedMoney}, 购得资源：");
+            foreach (var entry in boughtResources)
+            {
+                string name = DateFile.instance.resourceDate[entry.Key][1];
+                Main.Logger.Log($"  {name} x {entry.Value}");
+            }
+            // -----------------------------------------------------------------
 
             return initialMoney - remainedMoney;
         }

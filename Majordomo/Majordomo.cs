@@ -20,6 +20,7 @@ namespace Majordomo
         // 自动收获
         public bool autoHarvestItems = true;            // 自动收获物品
         public bool autoHarvestActors = true;           // 自动接纳新村民
+        public bool showNewActorWindow = true;          // 接纳新村民时显示人物窗口
 
         // 资源维护
         public int resMinHolding = 3;                   // 资源保有量警戒值（每月消耗量的倍数）
@@ -82,6 +83,7 @@ namespace Majordomo
             GUILayout.BeginHorizontal();
             Main.settings.autoHarvestItems = GUILayout.Toggle(Main.settings.autoHarvestItems, "自动收获物品", GUILayout.Width(120));
             Main.settings.autoHarvestActors = GUILayout.Toggle(Main.settings.autoHarvestActors, "自动接纳新村民", GUILayout.Width(120));
+            Main.settings.showNewActorWindow = GUILayout.Toggle(Main.settings.showNewActorWindow, "接纳新村民时显示人物窗口", GUILayout.Width(120));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 

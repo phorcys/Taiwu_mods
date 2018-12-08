@@ -227,7 +227,8 @@ namespace Majordomo
                     if (!Main.settings.autoHarvestActors) return false;
 
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[1]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[2]}{DateFile.instance.GetActorName(bootyId)}</color>";
-                    DateFile.instance.GetActor(new List<int> { bootyId }, -1);  // 接纳村民时，不显示新人物窗口
+                    int getActorType = Main.settings.showNewActorWindow ? 0 : -1;
+                    DateFile.instance.GetActor(new List<int> { bootyId }, getActorType);
                     DateFile.instance.FamilyActorLeave(bootyId, 16);
                     DateFile.instance.MoveToPlace(int.Parse(DateFile.instance.GetGangDate(16, 3)), int.Parse(DateFile.instance.GetGangDate(16, 4)), bootyId, fromPart: false);
                     UIDate.instance.UpdateManpower();
