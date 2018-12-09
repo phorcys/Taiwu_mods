@@ -15,13 +15,14 @@ namespace NotEnoughHarvest
     }
     public class Settings : UnityModManager.ModSettings
     {
-        public static bool greedy = false;
-        public static List<Coord> coords = new List<Coord>();
-        public static HashSet<int> valid_coords = new HashSet<int>();
-        public static string L = "13";
-        public static int _L = 13;
-        public static int TAIWU = (_L * _L - 1) / 2;
-        public static bool debug = false;
+        public bool greedy = false;
+        public List<Coord> coords = new List<Coord>();
+        public HashSet<int> valid_coords = new HashSet<int>();
+        public string L = "13";
+        public int _L = 13;
+        //public int TAIWU = (_L * _L - 1) / 2;
+        public int TAIWU = -1;
+        public bool debug = false;
 
         public override void Save(UnityModManager.ModEntry modEntry)
         {
@@ -54,11 +55,11 @@ namespace NotEnoughHarvest
         {
             GUILayout.BeginHorizontal();
             string s;
-            if (Settings.greedy)
+            if (settings.greedy)
                 s = "on";
             else
                 s = "off";
-            Settings.greedy = GUILayout.Toggle(Settings.greedy, " 贪婪模式");
+            settings.greedy = GUILayout.Toggle(settings.greedy, " 贪婪模式");
             GUILayout.EndHorizontal();
 
 
@@ -71,16 +72,16 @@ namespace NotEnoughHarvest
 
             GUILayout.BeginHorizontal(GUILayout.Width(200));
             if (GUILayout.Button("add", GUILayout.Width(100)))
-                Settings.coords.Add(new Coord());
+                settings.coords.Add(new Coord());
             if (GUILayout.Button("delete", GUILayout.Width(100)))
             {
-                int len = Settings.coords.Count;
+                int len = settings.coords.Count;
                 if (len > 0)
-                    Settings.coords.RemoveAt(len - 1);
+                    settings.coords.RemoveAt(len - 1);
             }
             GUILayout.EndHorizontal();
 
-            foreach (Coord coord in Settings.coords)
+            foreach (Coord coord in settings.coords)
             {
                 GUILayout.BeginHorizontal(GUILayout.Width(150));
                 GUILayout.Label("x");
@@ -94,7 +95,7 @@ namespace NotEnoughHarvest
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            Settings.debug = GUILayout.Toggle(Settings.debug, " debug");
+            settings.debug = GUILayout.Toggle(settings.debug, " debug");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -106,7 +107,7 @@ namespace NotEnoughHarvest
 
             GUILayout.BeginHorizontal(GUILayout.Width(150));
             GUILayout.Label("太吾村边长");
-            Settings.L = GUILayout.TextField(Settings.L);
+            settings.L = GUILayout.TextField(settings.L);
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -117,13 +118,14 @@ namespace NotEnoughHarvest
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             int L;
-            if (!int.TryParse(Settings.L, out L)) {
-                if (Settings.debug)
+            if (!int.TryParse(settings.L, out L)) {
+                if (settings.debug)
                     Main.logger.Log("OnSaveGUI: invalid taiwu length, setting to 13 (default)...");
-                Settings.L = "13";
+                settings.L = "13";
                 L = 13;
             }
-            Settings._L = L;
+
+            settings._L = L;
             settings.Save(modEntry);
         }
 
@@ -144,7 +146,7 @@ namespace NotEnoughHarvest
             if (DateFile.instance.GetNewMapDate(partId, placeId, 96) != "1") {
                 return;
             }
-            bool pass = Settings.greedy ^ Settings.valid_coords.Contains(buildingIndex);
+            bool pass = Main.settings.greedy ^ Main.settings.valid_coords.Contains(buildingIndex);
             if (pass)
             {
                 int[] infos = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
@@ -152,9 +154,9 @@ namespace NotEnoughHarvest
                 int full = int.Parse(base_infos[91]);
                 if (full > 0)
                 {
-                    int x = (buildingIndex - Settings.TAIWU) % Settings._L;
-                    int y = -(buildingIndex - Settings.TAIWU) / Settings._L;
-                    if (Settings.debug)
+                    int x = (buildingIndex - Main.settings.TAIWU) % Main.settings._L;
+                    int y = -(buildingIndex - Main.settings.TAIWU) / Main.settings._L;
+                    if (Main.settings.debug)
                         Main.logger.Log("boosting " + base_infos[0] +
                             " at coordinate (" + x + ", " + y + ")" +
                             ", buildingIndex " + buildingIndex);
@@ -170,44 +172,44 @@ namespace NotEnoughHarvest
         // prune coordinates
         static void Prefix()
         {
-            if (Settings.debug)
+            if (Main.settings.debug)
                 Main.logger.Log("entering next month, perparing...");
-            Settings.valid_coords.Clear();
+            Main.settings.valid_coords.Clear();
             int L;
-            if (!int.TryParse(Settings.L, out L)) {
-                if (Settings.debug)
+            if (!int.TryParse(Main.settings.L, out L)) {
+                if (Main.settings.debug)
                     Main.logger.Log("invalid taiwu length, setting to 13 (default)...");
-                Settings.L = "13";
+                Main.settings.L = "13";
                 L = 13;
             }
-            if (Settings.debug)
+            if (Main.settings.debug)
                 Main.logger.Log("final taiwu length: " + L);
-            Settings._L = L;
+            Main.settings._L = L;
             int R = (L - 1) / 2;
-            Settings.TAIWU = (L * L - 1) / 2;
-            foreach (Coord coord in Settings.coords)
+            Main.settings.TAIWU = (L * L - 1) / 2;
+            foreach (Coord coord in Main.settings.coords)
             {
                 int x;
                 int y;
                 if (!int.TryParse(coord.x, out x) || !int.TryParse(coord.y, out y))
                 {
-                    if (Settings.debug)
+                    if (Main.settings.debug)
                         Main.logger.Log("skipping invalid input(parse error): (" +
                             coord.x + ", " + coord.y + ")");
                     continue;
                 }
                 if (x > R || x < -R || y > R || y < -R)
                 {
-                    if (Settings.debug)
+                    if (Main.settings.debug)
                         Main.logger.Log("skipping invalid input(range error): (" +
                             coord.x + ", " + coord.y + ")");
                     continue;
                 }
-                int index = Settings.TAIWU - y * L + x;
-                Settings.valid_coords.Add(index);
+                int index = Main.settings.TAIWU - y * L + x;
+                Main.settings.valid_coords.Add(index);
             }
-            if (Settings.debug) {
-                Main.logger.Log("done, got " + Settings.valid_coords.Count + " coordinates, ");
+            if (Main.settings.debug) {
+                Main.logger.Log("done, got " + Main.settings.valid_coords.Count + " coordinates, ");
                 // Main.logger.Log("corresponding buildingIndex: ");
             }
         }
