@@ -118,7 +118,8 @@ namespace NotEnoughHarvest
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
-            if (!int.TryParse(settings.L, out int L)) {
+            int L;
+            if (!int.TryParse(settings.L, out L)) {
                 if (settings.debug)
                     Main.logger.Log("OnSaveGUI: invalid taiwu length, setting to 13 (default)...");
                 settings.L = "13";
@@ -176,7 +177,8 @@ namespace NotEnoughHarvest
             if (Main.settings.debug)
                 Main.logger.Log("entering next month, perparing...");
             Main.settings.valid_coords.Clear();
-            if (!int.TryParse(Main.settings.L, out int L)) {
+            int L;
+            if (!int.TryParse(Main.settings.L, out L)) {
                 if (Main.settings.debug)
                     Main.logger.Log("invalid taiwu length, setting to 13 (default)...");
                 Main.settings.L = "13";
