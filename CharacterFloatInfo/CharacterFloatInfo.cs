@@ -47,6 +47,16 @@ namespace CharacterFloatInfo
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
+        private static Version gameVersion;
+        public static Version GameVersion
+        {
+            get
+            {
+                gameVersion = gameVersion ?? new Version(DateFile.instance.gameVersion.Replace("Beta V", "").Replace("[Test]", ""));
+                return gameVersion;
+            }
+        }
+
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
@@ -67,63 +77,71 @@ namespace CharacterFloatInfo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("浮窗显示区域");
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            settings.enableMAL = GUILayout.Toggle(settings.enableMAL, "地块人物", new GUILayoutOption[0]);
-            settings.enableMAN = GUILayout.Toggle(settings.enableMAN, "地块邻格", new GUILayoutOption[0]);
-            settings.enableTA = GUILayout.Toggle(settings.enableTA, "主画面同道", new GUILayoutOption[0]);
-            settings.enableDI = GUILayout.Toggle(settings.enableDI, "对话对象", new GUILayoutOption[0]);
-            settings.enableMAC = GUILayout.Toggle(settings.enableMAC, "对话选择人物", new GUILayoutOption[0]);
-            settings.enableBW = GUILayout.Toggle(settings.enableBW, "村民分配", new GUILayoutOption[0]);
-            settings.enableAM = GUILayout.Toggle(settings.enableAM, "同道列表", new GUILayoutOption[0]);
-            settings.enableRI = GUILayout.Toggle(settings.enableRI, "人物关系", new GUILayoutOption[0]);
-            settings.enableWNV = GUILayout.Toggle(settings.enableWNV, "新村民", new GUILayoutOption[0]);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("展示內容");
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            settings.showActorStatus = GUILayout.Toggle(settings.showActorStatus, "人物状况", new GUILayoutOption[0]);
-            settings.showCharacteristic = GUILayout.Toggle(settings.showCharacteristic, "人物特性", new GUILayoutOption[0]);
-            settings.showLevel = GUILayout.Toggle(settings.showLevel, "人物属性", new GUILayoutOption[0]);
-            settings.showFamilySkill = GUILayout.Toggle(settings.showFamilySkill, "技艺造诣", new GUILayoutOption[0]);
-            settings.showResources = GUILayout.Toggle(settings.showResources, "七元賦性", new GUILayoutOption[0]);
-            settings.showBest = GUILayout.Toggle(settings.showBest, "最佳物品、功法", new GUILayoutOption[0]);
-            settings.lifeMessage = GUILayout.Toggle(settings.lifeMessage, "人物经历", new GUILayoutOption[0]);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("简约显示");
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            settings.shortMAL = GUILayout.Toggle(settings.shortMAL, "地块人物列表", new GUILayoutOption[0]);
-            settings.shortTA = GUILayout.Toggle(settings.shortTA, "主角及同道头像", new GUILayoutOption[0]);
-            settings.shortDI = GUILayout.Toggle(settings.shortDI, "对话界面", new GUILayoutOption[0]);
-            settings.shortAM = GUILayout.Toggle(settings.shortAM, "人物信息界面", new GUILayoutOption[0]);
-            settings.shortRI = GUILayout.Toggle(settings.shortRI, "人物关系界面", new GUILayoutOption[0]);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("其他设定");
-            GUILayout.EndHorizontal();
-            settings.showSexuality = GUILayout.Toggle(settings.showSexuality, "显示性取向", new GUILayoutOption[0]);
-            settings.addonInfo = GUILayout.Toggle(settings.addonInfo, "比对原始信息", new GUILayoutOption[0]);
-            settings.deadActor = GUILayout.Toggle(settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
-            settings.showIV = GUILayout.Toggle(settings.showIV, "显示隐藏的人物特性", new GUILayoutOption[0]);
+            if (GameVersion < new Version(0, 1, 6, 1))
+            {
+                enabled = false;
+                GUILayout.Label("游戏版本 V" + GameVersion);
+                GUILayout.Label("此MOD要求 V0.1.6.1 (无法载入)");
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("浮窗显示区域");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                settings.enableMAL = GUILayout.Toggle(settings.enableMAL, "地块人物", new GUILayoutOption[0]);
+                settings.enableMAN = GUILayout.Toggle(settings.enableMAN, "地块邻格", new GUILayoutOption[0]);
+                settings.enableTA = GUILayout.Toggle(settings.enableTA, "主画面同道", new GUILayoutOption[0]);
+                settings.enableDI = GUILayout.Toggle(settings.enableDI, "对话对象", new GUILayoutOption[0]);
+                settings.enableMAC = GUILayout.Toggle(settings.enableMAC, "对话选择人物", new GUILayoutOption[0]);
+                settings.enableBW = GUILayout.Toggle(settings.enableBW, "村民分配", new GUILayoutOption[0]);
+                settings.enableAM = GUILayout.Toggle(settings.enableAM, "同道列表", new GUILayoutOption[0]);
+                settings.enableRI = GUILayout.Toggle(settings.enableRI, "人物关系", new GUILayoutOption[0]);
+                settings.enableWNV = GUILayout.Toggle(settings.enableWNV, "新村民", new GUILayoutOption[0]);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("展示內容");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                settings.showActorStatus = GUILayout.Toggle(settings.showActorStatus, "人物状况", new GUILayoutOption[0]);
+                settings.showCharacteristic = GUILayout.Toggle(settings.showCharacteristic, "人物特性", new GUILayoutOption[0]);
+                settings.showLevel = GUILayout.Toggle(settings.showLevel, "人物属性", new GUILayoutOption[0]);
+                settings.showFamilySkill = GUILayout.Toggle(settings.showFamilySkill, "技艺造诣", new GUILayoutOption[0]);
+                settings.showResources = GUILayout.Toggle(settings.showResources, "七元賦性", new GUILayoutOption[0]);
+                settings.showBest = GUILayout.Toggle(settings.showBest, "最佳物品、功法", new GUILayoutOption[0]);
+                settings.lifeMessage = GUILayout.Toggle(settings.lifeMessage, "人物经历", new GUILayoutOption[0]);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("简约显示");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                settings.shortMAL = GUILayout.Toggle(settings.shortMAL, "地块人物列表", new GUILayoutOption[0]);
+                settings.shortTA = GUILayout.Toggle(settings.shortTA, "主角及同道头像", new GUILayoutOption[0]);
+                settings.shortDI = GUILayout.Toggle(settings.shortDI, "对话界面", new GUILayoutOption[0]);
+                settings.shortAM = GUILayout.Toggle(settings.shortAM, "人物信息界面", new GUILayoutOption[0]);
+                settings.shortRI = GUILayout.Toggle(settings.shortRI, "人物关系界面", new GUILayoutOption[0]);
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("其他设定");
+                GUILayout.EndHorizontal();
+                settings.showSexuality = GUILayout.Toggle(settings.showSexuality, "显示性取向", new GUILayoutOption[0]);
+                settings.addonInfo = GUILayout.Toggle(settings.addonInfo, "比对原始信息", new GUILayoutOption[0]);
+                settings.deadActor = GUILayout.Toggle(settings.deadActor, "显示已故人物信息", new GUILayoutOption[0]);
+                settings.showIV = GUILayout.Toggle(settings.showIV, "显示隐藏的人物特性", new GUILayoutOption[0]);
 
-            settings.useColorOfTeachingSkill = GUILayout.Toggle(settings.useColorOfTeachingSkill, "标记可学技艺的最高品阶", new GUILayoutOption[0]);
-            GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("颜色计算基于", GUILayout.Width(150));
-            settings.colorLevelBaseOn = GUILayout.SelectionGrid(settings.colorLevelBaseOn, new string[] { "门派红字", "门派橙字", "门派黄字", "门派紫字", "大城", "村镇关寨" }, 6);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+                settings.useColorOfTeachingSkill = GUILayout.Toggle(settings.useColorOfTeachingSkill, "标记可学技艺的最高品阶", new GUILayoutOption[0]);
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("颜色计算基于", GUILayout.Width(150));
+                settings.colorLevelBaseOn = GUILayout.SelectionGrid(settings.colorLevelBaseOn, new string[] { "门派红字", "门派橙字", "门派黄字", "门派紫字", "大城", "村镇关寨" }, 6);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("窗口最小宽度", GUILayout.Width(150));
-            settings.minWidth = int.Parse(GUILayout.TextArea(settings.minWidth.ToString(), GUILayout.Width(50)));
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("窗口最小宽度", GUILayout.Width(150));
+                settings.minWidth = int.Parse(GUILayout.TextArea(settings.minWidth.ToString(), GUILayout.Width(50)));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -572,7 +590,7 @@ namespace CharacterFloatInfo
             text += "\t\t立场:" + GetGoodness(id);
             text += "\t\t名誉:" + GetFame(id);
             text += "\t\t心情:" + GetMood(id);
-            if (GameVersion >= new Version(0, 1, 5)) text += "\t\t印象:" + GetLifeFace(id);
+            text += "\t\t印象:" + GetLifeFace(id);
             text += "\n\n";
 
             if (!smallerWindow)
@@ -932,8 +950,7 @@ namespace CharacterFloatInfo
 
         //名誉
         public static string GetFame(int id) => ActorMenu.instance.Color7(GetActorFame(id));
-        public static int GetActorFame(int id) => GameVersion < new Version(0, 1, 5) ? int.Parse(DateFile.instance.GetActorDate(id, 18, false)) : TryGetActorFame(id);
-        public static int TryGetActorFame(int id) => DateFile.instance.GetActorFame(id);
+        public static int GetActorFame(int id) => DateFile.instance.GetActorFame(id);
 
         //立场
         public static string GetGoodness(int id) => DateFile.instance.massageDate[9][0].Split('|')[DateFile.instance.GetActorGoodness(id)];
@@ -1230,29 +1247,10 @@ namespace CharacterFloatInfo
         //婚姻 / 性取向
         public static string GetSpouse(int id)
         {
-            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
-            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true);
-            bool flag = actorSocial2.Count == 0;
-            string result;
-            if (flag)
-            {
-                result = DateFile.instance.SetColoer(20004, "未婚", false);
-            }
-            else
-            {
-                bool flag2 = actorSocial.Count == 0;
-                if (flag2)
-                {
-                    result = DateFile.instance.SetColoer(20007, "丧偶", false);
-                }
-                else
-                {
-                    result = DateFile.instance.SetColoer(20010, "已婚", false);
-                }
-            }
-
+            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false, true);
+            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true, true);
+            string result = actorSocial2.Count == 0 ? DateFile.instance.SetColoer(20004, "未婚", false) : (actorSocial.Count == 0 ? DateFile.instance.SetColoer(20007, "丧偶", false) : DateFile.instance.SetColoer(20010, "已婚", false));
             if (Main.settings.showSexuality && !isDead) result += " • " + GetSexuality(id);
-
             return result;
         }
 
@@ -1480,15 +1478,5 @@ namespace CharacterFloatInfo
             textTransform.anchoredPosition3D = new Vector2(x, y);
         }
 
-        // 版本
-        private static Version gameVersion;
-        public static Version GameVersion
-        {
-            get
-            {
-                gameVersion = gameVersion ?? new Version(DateFile.instance.gameVersion.Replace("Beta V", "").Replace("[Test]", ""));
-                return gameVersion;
-            }
-        }
     }
 }
