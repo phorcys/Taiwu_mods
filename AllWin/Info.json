@@ -1,0 +1,9 @@
+﻿{
+  "Id": "neoe.AllWin",
+  "DisplayName": "战斗全赢",
+  "Description":"打还是一样打，最后明明输了，系统判断你赢。是的，我也很无语。",
+  "Author": "neoe",
+  "Version": "1.0.1",
+  "AssemblyName": "AllWin.dll",
+  "EntryMethod": "AllWin.Main.Load"
+}
