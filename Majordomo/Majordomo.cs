@@ -21,6 +21,10 @@ namespace Majordomo
         public bool autoHarvestItems = true;            // 自动收获物品
         public bool autoHarvestActors = true;           // 自动接纳新村民
         public bool showNewActorWindow = true;          // 接纳新村民时显示人物窗口
+        public bool filterNewActorGoodness = false;     // 过滤新村民立场
+        public bool[] newActorGoodnessFilters = new bool[] { true, true, true, true, true };    // 0: 中庸, 1: 仁善, 2: 刚正, 3: 叛逆, 4: 唯我
+        public bool filterNewActorAttr = false;         // 过滤新村民资质
+        public int newActorAttrFilterThreshold = 100;
 
         // 资源维护
         public int resMinHolding = 3;                   // 资源保有量警戒值（每月消耗量的倍数）
@@ -77,19 +81,45 @@ namespace Majordomo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            // 自动收获 --------------------------------------------------------
             GUILayout.BeginHorizontal();
             GUILayout.Label("<color=#87CEEB>自动收获</color>");
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             Main.settings.autoHarvestItems = GUILayout.Toggle(Main.settings.autoHarvestItems, "自动收获物品", GUILayout.Width(120));
             Main.settings.autoHarvestActors = GUILayout.Toggle(Main.settings.autoHarvestActors, "自动接纳新村民", GUILayout.Width(120));
             Main.settings.showNewActorWindow = GUILayout.Toggle(Main.settings.showNewActorWindow, "接纳新村民时显示人物窗口", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            Main.settings.filterNewActorGoodness = GUILayout.Toggle(Main.settings.filterNewActorGoodness, "过滤新村民立场", GUILayout.Width(120));
+            GUILayout.Label("保留：");
+            Main.settings.newActorGoodnessFilters[2] = GUILayout.Toggle(Main.settings.newActorGoodnessFilters[2], "刚正", GUILayout.Width(40));
+            Main.settings.newActorGoodnessFilters[1] = GUILayout.Toggle(Main.settings.newActorGoodnessFilters[1], "仁善", GUILayout.Width(40));
+            Main.settings.newActorGoodnessFilters[0] = GUILayout.Toggle(Main.settings.newActorGoodnessFilters[0], "中庸", GUILayout.Width(40));
+            Main.settings.newActorGoodnessFilters[3] = GUILayout.Toggle(Main.settings.newActorGoodnessFilters[3], "叛逆", GUILayout.Width(40));
+            Main.settings.newActorGoodnessFilters[4] = GUILayout.Toggle(Main.settings.newActorGoodnessFilters[4], "唯我", GUILayout.Width(40));
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            Main.settings.filterNewActorAttr = GUILayout.Toggle(Main.settings.filterNewActorAttr, "过滤新村民资质", GUILayout.Width(120));
+            GUILayout.Label("保留任意原始资质不低于");
+            var newActorAttrFilterThreshold = GUILayout.TextField(Main.settings.newActorAttrFilterThreshold.ToString(), 3, GUILayout.Width(40));
+            if (GUI.changed && !int.TryParse(newActorAttrFilterThreshold, out Main.settings.newActorAttrFilterThreshold))
+            {
+                Main.settings.newActorAttrFilterThreshold = 100;
+            }
+            GUILayout.Label("的新村民");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            // 资源维护 --------------------------------------------------------
+            GUILayout.BeginHorizontal();
             GUILayout.Label("\n<color=#87CEEB>资源维护</color>");
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("资源保有量警戒值：每月消耗量的");
             var resMinHolding = GUILayout.TextField(Main.settings.resMinHolding.ToString(), 4, GUILayout.Width(45));
@@ -100,6 +130,7 @@ namespace Majordomo
             GUILayout.Label("倍，低于此值管家会进行提醒");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("银钱最低保有量：");
             var moneyMinHolding = GUILayout.TextField(Main.settings.moneyMinHolding.ToString(), 9, GUILayout.Width(85));
