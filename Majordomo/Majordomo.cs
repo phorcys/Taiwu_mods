@@ -32,6 +32,9 @@ namespace Majordomo
         public float resInitIdealHoldingRatio = 0.8f;   // 期望资源保有量的初始值（占当前最大值的比例）
         public int moneyMinHolding = 10000;             // 银钱最低保有量（高于此值管家可花费银钱进行采购）
 
+        // 人员指派
+        public bool autoAssignBuildingWorkers = true;   // 自动指派建筑工作人员
+
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -141,6 +144,15 @@ namespace Majordomo
             GUILayout.Label("，高于此值管家可花费银钱进行采购");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            // 人员指派 --------------------------------------------------------
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("\n<color=#87CEEB>人员指派</color>");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            Main.settings.autoAssignBuildingWorkers = GUILayout.Toggle(Main.settings.autoAssignBuildingWorkers, "自动指派建筑工作人员", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
         }
 
 
@@ -210,6 +222,14 @@ namespace Majordomo
             ResourceMaintainer.UpdateResourceWarning();
 
             TurnEvent.RegisterEvent(__instance);
+
+            if (Main.settings.autoAssignBuildingWorkers)
+            {
+                HumanResource hr = new HumanResource();
+                int mainPartId = int.Parse(DateFile.instance.GetGangDate(16, 3));
+                int mainPlaceId = int.Parse(DateFile.instance.GetGangDate(16, 4));
+                hr.AssignBuildingWorkers(mainPartId, mainPlaceId);
+            }
 
             return true;
         }
