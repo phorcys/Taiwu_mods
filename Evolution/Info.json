@@ -1,7 +1,7 @@
 ﻿{
   "Id": "Evolution",
   "DisplayName": "九阴锻骨篇",
-  "Version": "0.0.6",
+  "Version": "0.0.8",
   "AssemblyName": "Evolution.dll",
   "EntryMethod": "Evolution.Main.Load",
   "Requirements": [ "BaseResourceMod" ]

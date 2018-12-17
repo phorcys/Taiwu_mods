@@ -217,6 +217,7 @@ namespace Evolution
                     int grow = DateFile.instance.actorGongFas[actorId][150370][0] / 25;
                     if (DateFile.instance.actorGongFas[actorId][150370][1] == 10)
                     {
+                        Main.Logger.Log("开始加特质");
                         Dictionary<int, string> actor, array = new Dictionary<int, string>();
                         //Main.Logger.Log("获取特性中");
 
@@ -248,7 +249,7 @@ namespace Evolution
                             actor[101] += "|" + keyList[index];
 
                             // 刷新特性缓存，要不然游戏不生效
-                            // DateFile.instance.actorsFeatureCache.Remove(DateFile.instance.mianActorId);
+                            DateFile.instance.actorsFeatureCache.Remove(DateFile.instance.mianActorId);
 
                             if (DateFile.instance.actorGongFas[actorId][150370][0] >
                                 actor[101].Split('|').Length)
@@ -284,11 +285,16 @@ namespace Evolution
                         }
 
 
+                       
+                    }
+                    else
+                    {
                         DateFile.instance.actorGongFas[actorId][150370][1] += grow;
                         if (DateFile.instance.actorGongFas[actorId][150370][1] > 10)
                         {
                             DateFile.instance.actorGongFas[actorId][150370][1] = 10;
                         }
+
                     }
 
                 if (DateFile.instance.actorGongFas[actorId][150370][0] == 100)
