@@ -806,7 +806,7 @@ namespace CharacterFloatInfo
             int typ = (index < 100 ? 501 : 500) + index;
             int skillValue = GetSkillValue(id, typ);
             int skillDiffer = skillValue - int.Parse(DateFile.instance.GetActorDate(id, typ, false));
-            string familySkill = smallerWindow || !Main.settings.showFamilySkill || GameVersion < new Version(0, 1, 5) ? "" : GetFamilySkill(id, index) + ",";
+            string familySkill = smallerWindow || !Main.settings.showFamilySkill || Main.GameVersion < new Version(0, 1, 5) ? "" : GetFamilySkill(id, index) + ",";
             bool shownoadd = !smallerWindow && Main.settings.addonInfo && skillDiffer != 0;
             string text = DateFile.instance.SetColoer(20001 + Mathf.Clamp(GetMaxSkillLevel(id, typ), 1, 9),
             string.Format("{0}<color=orange>{1,3}{2}</color>{3,3}{4}<color=#606060ff>{5,3}{6}</color>",
