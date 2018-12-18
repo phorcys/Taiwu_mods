@@ -522,9 +522,25 @@ namespace Sth4nothing.SLManager
         {
             using (var zip = new ZipFile())
             {
-                zip.AddDirectory(pathToBackup);
+                zip.AddFiles(GetFilesToBackup(pathToBackup));
                 zip.Save(targetFile);
             }
+        }
+
+        /// <summary>
+        /// 获取备份文件列表
+        /// </summary>
+        /// <param name="pathToBackup"></param>
+        /// <returns></returns>
+        internal static List<string> GetFilesToBackup(string pathToBackup)
+        {
+            var files = new List<string>();
+            if (File.Exists(Path.Combine(pathToBackup, "date.json")))
+            {
+                files.Add(Path.Combine(pathToBackup, "date.json"));
+            }
+            files.AddRange(Directory.GetFiles(pathToBackup, "TW_Save_Date_?.tw*"));
+            return files;
         }
 
         /// <summary>
