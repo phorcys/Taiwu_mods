@@ -12,15 +12,9 @@ using UnityEngine.EventSystems;
 namespace CharmMax
 {
 
-    public class Settings : UnityModManager.ModSettings
-    {
-    }
-
-
     public static class Main
     {
         public static bool enabled;
-        public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -28,13 +22,9 @@ namespace CharmMax
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            settings = Settings.Load<Settings>(modEntry);
-
             Logger = modEntry.Logger;
 
             modEntry.OnToggle = OnToggle;
-            modEntry.OnGUI = OnGUI;
-            modEntry.OnSaveGUI = OnSaveGUI;
 
             return true;
         }
@@ -47,15 +37,6 @@ namespace CharmMax
             enabled = value;
 
             return true;
-        }
-
-        static void OnGUI(UnityModManager.ModEntry modEntry)
-        {
-        }
-
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
-        {
-            settings.Save(modEntry);
         }
 
     }

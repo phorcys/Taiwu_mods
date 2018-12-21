@@ -5,7 +5,7 @@ function CheckDir ([System.IO.DirectoryInfo]$dir) {
     $res = $true;
     foreach ($file in Get-ChildItem $dir.FullName) {
         if ($file -is [System.IO.FileInfo]) {
-            if ((".dll", ".cs") -contains $file.Extension) {
+            if ((".dll", ".json", ".png", ".txt") -notcontains $file.Extension) {
                 $res = $false;
                 break;
             }
@@ -27,7 +27,7 @@ if (Test-Path $targetDir) {
     Remove-Item "$targetDir\*" -Recurse -Force -Exclude *.xml, *.dll
     foreach ($file in Get-ChildItem $path) {
         if ($file -is [System.IO.FileInfo]) {
-            if ((".dll", ".cs") -notcontains $file.Extension) {
+            if ((".dll", ".json", ".png", ".txt") -contains $file.Extension) {
                 Write-Output ("copy file " + $file.Name)
                 Copy-Item -Force $file.FullName (Join-Path $targetDir $file.Name)
             }

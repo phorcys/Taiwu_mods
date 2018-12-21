@@ -925,7 +925,7 @@ namespace TaiwuHentai
                                         int num8 = int.Parse(array5[1]);
                                         int num9 = (array5.Length <= 2) ? -99 : int.Parse(array5[2]);
                                         int num10 = (array5.Length <= 3) ? -99 : int.Parse(array5[3]);
-                                        if (num9 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaLevel(actorId, num8)[0] < num9)
+                                        if (num9 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaLevel(actorId, num8, 0) < num9)
                                         {
                                             array4[j] = false;
                                         }
