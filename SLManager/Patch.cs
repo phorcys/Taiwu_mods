@@ -433,10 +433,6 @@ namespace Sth4nothing.SLManager
 
         public static void Backup(int backupType)
         {
-            // 获取当前游戏存档的路径
-            var dirPathMethod = typeof(SaveDateFile).GetMethod("Dirpath", BindingFlags.Instance | BindingFlags.NonPublic);
-            string pathToBackup = (string)dirPathMethod.Invoke(SaveDateFile.instance, new object[1] { -1 });
-
             switch (backupType)
             {
                 case AFTER_SAVE_BACKUP:
@@ -462,8 +458,6 @@ namespace Sth4nothing.SLManager
                 return;
             }
             Main.Logger.Log("开始备份存档");
-            // 确保pathToBackup末尾没有"/"或者"\\"
-            string pathToBackup = Path.GetDirectoryName(BackPath + '\\');
 
             int backupIndex;
 
@@ -522,7 +516,7 @@ namespace Sth4nothing.SLManager
         {
             using (var zip = new ZipFile())
             {
-                zip.AddFiles(GetFilesToBackup(pathToBackup));
+                zip.AddFiles(GetFilesToBackup(pathToBackup), "/");
                 zip.Save(targetFile);
             }
         }
