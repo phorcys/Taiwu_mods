@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
@@ -62,7 +61,7 @@ namespace CharacterFloatInfo
             Logger = modEntry.Logger;
             settings = Settings.Load<Settings>(modEntry);
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+            harmony.PatchAll(System.Reflection.Assembly.GetExecutingAssembly());
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
@@ -77,11 +76,11 @@ namespace CharacterFloatInfo
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            if (GameVersion < new Version(0, 1, 6, 1))
+            if (GameVersion < new Version(0, 1, 6, 3))
             {
                 enabled = false;
                 GUILayout.Label("游戏版本 V" + GameVersion);
-                GUILayout.Label("此MOD要求 V0.1.6.1 (无法载入)");
+                GUILayout.Label("此插件要求 V0.1.6.3 (无法载入)");
             }
             else
             {
@@ -806,7 +805,7 @@ namespace CharacterFloatInfo
             int typ = (index < 100 ? 501 : 500) + index;
             int skillValue = GetSkillValue(id, typ);
             int skillDiffer = skillValue - int.Parse(DateFile.instance.GetActorDate(id, typ, false));
-            string familySkill = smallerWindow || !Main.settings.showFamilySkill || Main.GameVersion < new Version(0, 1, 5) ? "" : GetFamilySkill(id, index) + ",";
+            string familySkill = smallerWindow || !Main.settings.showFamilySkill ? "" : GetFamilySkill(id, index) + ",";
             bool shownoadd = !smallerWindow && Main.settings.addonInfo && skillDiffer != 0;
             string text = DateFile.instance.SetColoer(20001 + Mathf.Clamp(GetMaxSkillLevel(id, typ), 1, 9),
             string.Format("{0}<color=orange>{1,3}{2}</color>{3,3}{4}<color=#606060ff>{5,3}{6}</color>",

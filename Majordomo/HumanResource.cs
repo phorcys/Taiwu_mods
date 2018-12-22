@@ -45,7 +45,7 @@ namespace Majordomo
         // 自动指派工作人员
         public void AssignBuildingWorkers(int partId, int placeId)
         {
-            List<int> workerIds = DateFile.instance.GetGangActor(16, 9);
+            List<int> workerIds = GetWorkerIds();
 
             // workerId -> {attrId -> attrValue}
             Dictionary<int, Dictionary<int, int>> workerAttrs = new Dictionary<int, Dictionary<int, int>>();
@@ -114,6 +114,28 @@ namespace Majordomo
                         $"{attrName} [{info.halfWorkingAttrValue}, {info.fullWorkingAttrValue}] - <无合适人选>");
                 }
             }
+        }
+
+
+        private List<int> GetWorkerIds()
+        {
+            List<int> workerIds = new List<int>();
+
+            List<int> actorIds = DateFile.instance.GetGangActor(16, 9);
+
+            List<int> teammates = DateFile.instance.GetFamily(getPrisoner: true);
+
+            foreach (int actorId in actorIds)
+            {
+                if (teammates.Contains(actorId)) continue;
+
+                int age = int.Parse(DateFile.instance.GetActorDate(actorId, 11, addValue: false));
+                if (age <= 14) continue;
+
+                workerIds.Add(actorId);
+            }
+
+            return workerIds;
         }
 
 
