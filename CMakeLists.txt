@@ -40,7 +40,7 @@ file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIR})
 
 # If no build type is set it should defaults to debug
 if( NOT CMAKE_BUILD_TYPE )
-  set( CMAKE_BUILD_TYPE Debug CACHE STRING "Choose a build type: [Debug Release]" FORCE )
+  set( CMAKE_BUILD_TYPE Release CACHE STRING "Choose a build type: [Debug Release]" FORCE )
 endif()
 
 # Set some default build flags.
@@ -279,7 +279,7 @@ using System.Runtime.Versioning\;
 	
 	#dll 引用
 	#游戏主dll
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Assembly-CSharp "${CMAKE_CURRENT_LIST_DIR}\\Assembly-CSharp.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Assembly-CSharp "${STEAMDIR}${DLLPATH}Assembly-CSharp.dll")
 	# harmonypatch工具
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Harmony12 "${STEAMDIR}${DLLPATH}0harmony12.dll")
 	#其他游戏相关dll
