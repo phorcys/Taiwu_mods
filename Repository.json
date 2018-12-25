@@ -17,8 +17,8 @@
 		},
 		{
 			"Id": "CharacterFloatInfo",
-			"Version": "1.3.9",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/CharacterFloatInfo-1.3.9.zip"
+			"Version": "1.3.10",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/CharacterFloatInfo-1.3.10.zip"
 		},
 		{
 			"Id": "CharmMax",
@@ -52,8 +52,8 @@
 		},
 		{
 			"Id": "GuiWarehouse",
-			"Version": "1.2.4",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiWarehouse-1.2.4.zip"
+			"Version": "1.2.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiWarehouse-1.2.5.zip"
 		},
 		{
 			"Id": "GuiWorkActor",
@@ -67,8 +67,8 @@
 		},
 		{
 			"Id": "HappyLife",
-			"Version": "1.0.7",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/HappyLife-1.0.7.zip"
+			"Version": "1.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/HappyLife-1.0.8.zip"
 		},
 		{
 			"Id": "HerbRecipes",
@@ -157,8 +157,8 @@
 		},
 		{
 			"Id": "MoreInfo",
-			"Version": "1.5.1",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/MoreInfo-1.5.1.zip"
+			"Version": "1.5.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/MoreInfo-1.5.2.zip"
 		},
 		{
 			"Id": "MoreMerchandise",
@@ -182,8 +182,8 @@
 		},
 		{
 			"Id": "NpcScan",
-			"Version": "1.7.0",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/NpcScan-1.7.0.zip"
+			"Version": "1.7.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/NpcScan-1.7.1.zip"
 		},
 		{
 			"Id": "ReadAssistant",
@@ -253,12 +253,12 @@
 		{
 			"Id": "TaiwuEditor",
 			"Version": "1.0.8",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TaiwuEditor-1.0.8.zip"
+			"DownloadUrl": "https://img.nga.178.com/attachments/mon_201812/25/heQ5-2eacK6.zip?filename=TaiwuEditor-1.0.8r.zip"
 		},
 		{
 			"Id": "TaiwuHentai",
-			"Version": "0.0.6",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TaiwuHentai-0.0.6.zip"
+			"Version": "0.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TaiwuHentai-0.0.8.zip"
 		},
 		{
 			"Id": "ToTraditionalChinese",
@@ -277,13 +277,13 @@
 		},
 		{
 			"Id": "UseStorageBook",
-			"Version": "1.2.6",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageBook-1.2.6.zip"
+			"Version": "1.2.7",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageBook-1.2.7.zip"
 		},
 		{
 			"Id": "UseStorageMaterial",
-			"Version": "1.0.3",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageMaterial-1.0.3.zip"
+			"Version": "1.0.4",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageMaterial-1.0.4.zip"
 		},
 		{
 			"Id": "VillageHeadOfTaiwu",
