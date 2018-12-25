@@ -28,12 +28,17 @@
 		{
 			"Id": "DoNotDisTurb",
 			"Version": "1.0.0",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/DoNotDisTurb-1.0.0.zip"
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/DoNotDisturb-1.0.0.zip"
 		},
 		{
 			"Id": "DynamicExecutor",
 			"Version": "1.1.2",
 			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/DynamicExecutor-1.1.2.zip"
+		},
+		{
+			"Id": "Evolution",
+			"Version": "0.1.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/Evolution-0.1.5.zip"
 		},
 		{
 			"Id": "ExchangeStatPoints",
@@ -293,7 +298,7 @@
 		{
 			"Id": "neoe.AllWin",
 			"Version": "1.0.1",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/allWin-1.0.1.zip"
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/AllWin-1.0.1.zip"
 		}
 	]
 }
