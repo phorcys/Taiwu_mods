@@ -1,7 +1,6 @@
 ﻿using Harmony12;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -10,8 +9,11 @@ namespace Evolution
     public class Settings : UnityModManager.ModSettings
     {
         public bool addFeature = true;
-        public bool expCost = true;
+        public bool addAttr = true;
+        public bool expCost = false;
+        public int growCount = 0;
         public int changeAttrSpeed = 1;
+        public bool[] teammateImprove = { false, false, false, false, false, };
 
         public override void Save(UnityModManager.ModEntry modEntry)
         {
@@ -97,20 +99,31 @@ namespace Evolution
             {
                 GUILayout.Label("洗脉伐髓，脱胎换骨");
                 GUILayout.BeginHorizontal("Box");
-                setting.addFeature = GUILayout.Toggle(setting.addFeature, "特质成长模式");
+                setting.addFeature = GUILayout.Toggle(setting.addFeature, "易经");
 
-                GUILayout.Label("说明： 取消勾选,将不再增加特质，只增加属性，并且以下设置有效");
+                GUILayout.Label("说明： 取消勾选,将不再增加特质");
                 GUILayout.EndHorizontal();
 
-                GUILayout.Label("心法等级越高，成长上限越高");
                 GUILayout.BeginHorizontal("Box");
-                GUILayout.Label("研读进度："
-                                + "正" + DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1]);
-                GUILayout.BeginHorizontal("Box", GUILayout.Width(300));
-                GUILayout.FlexibleSpace();
-                setting.expCost = GUILayout.Toggle(setting.expCost, "心法成长消耗熟练度");
-                GUILayout.FlexibleSpace();
-                GUILayout.Label("属性增长速度：");
+                setting.addAttr = GUILayout.Toggle(setting.addAttr, "锻骨");
+
+                GUILayout.Label("说明： 取消勾选,将不再增加属性");
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal("Box");
+                setting.expCost = GUILayout.Toggle(setting.expCost, "锻骨之痛");
+
+                GUILayout.Label("说明： 如果需要增加的资质大于熟练度，会消耗熟练度，取消勾选则不消耗");
+
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("属性实际增加数量为 高于标准值 增加低保数字， 低于标准值3点以上获得额外成长\n");
+                GUILayout.EndHorizontal();
+                GUILayout.Label("标准值; 熟练度 + 心法等级 * 2");
+                GUILayout.BeginHorizontal("Box");
+
+                GUILayout.Label("低保：");
                 GUILayout.FlexibleSpace();
                 if (GUILayout.Button("<", GUILayout.Width(30)) && Main.setting.changeAttrSpeed > 1)
                 {
@@ -118,12 +131,69 @@ namespace Evolution
                 }
 
                 GUILayout.Label("  " + Main.setting.changeAttrSpeed + "  ");
-                if (GUILayout.Button(">", GUILayout.Width(30)) && Main.setting.changeAttrSpeed <DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1])
+                if (GUILayout.Button(">", GUILayout.Width(30)) && Main.setting.changeAttrSpeed < 10)
                 {
                     Main.setting.changeAttrSpeed++;
                 }
 
                 GUILayout.EndHorizontal();
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("消耗历练,强化队友。");
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("队友：");
+                for (int i = 1; i != 5; i++)
+                {
+                    if (DateFile.instance.acotrTeamDate[i] != -1)
+                    {
+                        setting.teammateImprove[i] = GUILayout.Toggle(setting.teammateImprove[i], DateFile.instance.GetActorName(DateFile.instance.acotrTeamDate[i]));
+                    }
+                }
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("灌顶", GUILayout.Width(60)) && DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][0] > 15)
+                {
+                    DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][0] =
+                        DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][0] - 15;
+                    for (int k = 1; k != 5; k++)
+                    {
+
+                        Main.Logger.Log("强化队友属性"+ k);
+                        if (!setting.teammateImprove[k])
+                        {
+                            Main.Logger.Log("跳过强化");
+                            continue;
+                        }
+
+                        var actor_id = DateFile.instance.acotrTeamDate[k];
+                        for (int i = 0; i < 6; i++)
+                        {
+
+                            DateFile.instance.actorsDate[actor_id][61 + i] =
+                                (int.Parse(DateFile.instance.actorsDate[actor_id][61 + i]) + 1)
+                                .ToString();
+
+                        }
+
+                        for (int i = 0; i < 16; i++)
+                        {
+                            DateFile.instance.actorsDate[actor_id][501 + i] =
+                                (int.Parse(DateFile.instance.actorsDate[actor_id][501 + i]) + 1)
+                                .ToString();
+                        }
+
+                        for (int i = 0; i < 14; i++)
+                        {
+                            DateFile.instance.actorsDate[actor_id][601 + i] =
+                                (int.Parse(DateFile.instance.actorsDate[actor_id][601 + i]) + 1)
+                                .ToString();
+                        }
+                    }
+
+                }
+
+                GUILayout.EndHorizontal();
+
                 GUILayout.EndHorizontal();
 
             }
@@ -215,8 +285,9 @@ namespace Evolution
                 if (Main.setting.addFeature)
                 {
                     int grow = DateFile.instance.actorGongFas[actorId][150370][0] / 25;
-                    if (DateFile.instance.actorGongFas[actorId][150370][1] == 10)
+                    if (Main.setting.growCount > 10)
                     {
+                        Main.setting.growCount = Main.setting.growCount - 10;
                         Main.Logger.Log("开始加特质");
                         Dictionary<int, string> actor, array = new Dictionary<int, string>();
                         //Main.Logger.Log("获取特性中");
@@ -242,7 +313,7 @@ namespace Evolution
 
                         if (array.Count > 0)
                         {
-                            DateFile.instance.actorGongFas[actorId][150370][1] = 0;
+
                             // 增加特性
                             List<int> keyList = new List<int>(array.Keys);
                             int index = Random.Range(0, keyList.Count - 1);
@@ -264,117 +335,86 @@ namespace Evolution
                         }
                         else
                         {
-                            if (DateFile.instance.actorGongFas[actorId][150370][0] == 100)
-                            {
-
-                                int num = Random.Range(0, 22);
-
-                                if (num < 6)
-                                {
-                                    DateFile.instance.actorsDate[actorId][61 + num] =
-                                        (int.Parse(DateFile.instance.actorsDate[actorId][61 + num]) + 1).ToString();
-                                }
-                                else
-                                {
-                                    DateFile.instance.actorsDate[actorId][501 + num - 6] =
-                                        (int.Parse(DateFile.instance.actorsDate[actorId][501 + num - 6]) + 1)
-                                        .ToString();
-                                }
-                            }
+                            // 已经获得全部三级特性,自动关闭增加特质
+                            Main.Logger.Log("已经获得全部三级特性，自动关闭易经");
+                            Main.setting.addFeature = false;
 
                         }
 
-
-                       
                     }
                     else
                     {
-                        DateFile.instance.actorGongFas[actorId][150370][1] += grow;
-                        if (DateFile.instance.actorGongFas[actorId][150370][1] > 10)
-                        {
-                            DateFile.instance.actorGongFas[actorId][150370][1] = 10;
-                        }
+                        Main.setting.growCount += grow;
 
-                    }
-
-                if (DateFile.instance.actorGongFas[actorId][150370][0] == 100)
-                {
-
-                    int num = Random.Range(0, 20);
-
-                    if (num < 6)
-                    {
-                        DateFile.instance.actorsDate[actorId][61 + num] =
-                            (int.Parse(DateFile.instance.actorsDate[actorId][61 + num]) + 1).ToString();
-                    }
-                    else
-                    {
-                        int p = int.Parse(DateFile.instance.actorsDate[actorId][601 + num - 6]);
-                        int n = 0;
-                        if (p >= 100)
-                        {
-                            n = p + 1;
-                        }
-                        else
-                        {
-                            n = p + (int) System.Math.Log(119 - p);
-                        }
-
-                        DateFile.instance.actorsDate[actorId][601 + num - 6] = n.ToString();
                     }
                 }
-                }
-                else
+
+                if (Main.setting.addAttr)
                 {
-                    int grow = Main.setting.changeAttrSpeed;
-                    int endnum = DateFile.instance.actorGongFas[actorId][150370][0] / (100 / grow);
+                    int min_grow = Main.setting.changeAttrSpeed;
+
+                    int extra_grow = 0;
+
 
                     int num = Random.Range(0, 36);
 
-                    int attrkey = 61 ;
+                    int attrKey = 61;
                     if (num < 6)
                     {
-                       attrkey = 61 + num;
+                        attrKey = 61 + num;
                     }
                     else if (num < 20)
                     {
-                       attrkey = 601 + num - 6;
+                        attrKey = 601 + num - 6;
+                        min_grow++;
                     }
                     else
                     {
-                       attrkey = 501 + num - 20;
+                        attrKey = 501 + num - 20;
+                        min_grow++;
                     }
 
-                    var tar = DateFile.instance.actorsDate[actorId][attrkey];
-                    Main.Logger.Log("成长前属性值为"+ tar);
+                    var tar = DateFile.instance.actorsDate[actorId][attrKey];
+                    Main.Logger.Log("成长前属性值为" + tar);
                     int p = int.Parse(tar);
-                    int n = p + endnum;
-                    tar = n.ToString();
-                    DateFile.instance.actorsDate[actorId][attrkey] = tar;
+
+                    if (DateFile.instance.actorGongFas[actorId][150370][0] +
+                        2 * DateFile.instance.actorGongFas[actorId][150370][1] > p)
+                    {
+                        int temp = (int)System.Math.Log(DateFile.instance.actorGongFas[actorId][150370][0] +
+                                                         2 * DateFile.instance.actorGongFas[actorId][150370][1] - p);
+                        if (temp > 0)
+                        {
+                            extra_grow = temp;
+                            Main.Logger.Log("标准值大于需要增加的属性，计算得获得额外加成" + extra_grow);
+                        }
+                    }
+
+                    int grow_num = min_grow + extra_grow;
+
+                    if (Main.setting.expCost && DateFile.instance.actorGongFas[actorId][150370][0] > p)
+                    {
+                        DateFile.instance.actorGongFas[actorId][150370][0] =
+                            DateFile.instance.actorGongFas[actorId][150370][0] - grow_num;
+                    }
+
+                    p = p + grow_num;
+                    tar = p.ToString();
+                    DateFile.instance.actorsDate[actorId][attrKey] = tar;
                     Main.Logger.Log("成长后属性值为" + tar);
-
-                    if (DateFile.instance.actorGongFas[actorId][150370][0] == 100 && DateFile.instance.actorGongFas[actorId][150370][1] < 10)
-                    {
-                        DateFile.instance.actorGongFas[actorId][150370][1]++;
-                        if (Main.setting.expCost)
-                        {
-                            DateFile.instance.actorGongFas[actorId][150370][0] = 0;
-                        }
-                    }
-
-                    if (p > DateFile.instance.actorGongFas[actorId][150370][0])
-                    {
-                        if (DateFile.instance.actorGongFas[actorId][150370][0] > endnum)
-                        {
-                          DateFile.instance.actorGongFas[actorId][150370][0] -= endnum;
-                        }
-                        else
-                        {
-                          DateFile.instance.actorGongFas[actorId][150370][0] = 0;
-                        }
-                    }
-                   
                 }
+
+                if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1] < 10)
+                {
+                    int exp = DateFile.instance.GetActorValue(DateFile.instance.mianActorId, 601, true) - int.Parse(DateFile.instance.GetActorDate(DateFile.instance.mianActorId, 601, true));
+                    if (exp > DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1] * (DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1]) * 5)
+                    {
+                        DateFile.instance.actorGongFas[DateFile.instance.mianActorId][150370][1]++;
+                    }
+                }
+
+
+
             }
         }
     }
