@@ -65,55 +65,176 @@ namespace UseStorageMaterial
     [HarmonyPatch(typeof(MakeSystem), "SetItem")]
     public static class MakeSystem_SetItem_Patch
     {
-
-        static IEnumerable<CodeInstruction> Transpiler(MethodBase methodBase, IEnumerable<CodeInstruction> instructions, ILGenerator  generator )
+        static bool Prefix()
         {
-            Main.Logger.Log(" Transpiler init codes ");
-            var codes = new List<CodeInstruction>(instructions);
+            if (!Main.enabled)
+                return true;
 
-            var foundtheforend = false;
-            int startIndex = -1;
+            NewSetItem();
+            return false;
+        }
 
-            //寻找注入点
-            for (int i = 0; i < codes.Count; i++)
+        static T2 GetValue<T1, T2>(T1 instance, string field)
+        {
+            var flags = BindingFlags.Instance
+                | BindingFlags.Static
+                | BindingFlags.NonPublic
+                | BindingFlags.Public;
+            return (T2)typeof(T1).GetField(field, flags).GetValue(instance);
+        }
+
+        static T2 Invoke<T1, T2>(T1 instance, string method, object[] args = null)
+        {
+            var flags = BindingFlags.Instance
+                | BindingFlags.Static
+                | BindingFlags.NonPublic
+                | BindingFlags.Public;
+            return (T2)typeof(T1).GetMethod(method, flags).Invoke(instance, args);
+        }
+        static void Invoke<T1>(T1 instance, string method, object[] args = null)
+        {
+            var flags = BindingFlags.Instance
+                | BindingFlags.Static
+                | BindingFlags.NonPublic
+                | BindingFlags.Public;
+            typeof(T1).GetMethod(method, flags).Invoke(instance, args);
+        }
+
+        static void NewSetItem()
+        {
+            var ins = MakeSystem.instance;
+
+            Invoke(ins, "RemoveMianItem");
+
+            int num = DateFile.instance.MianActorID();
+            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(num, 0, false).Keys);
+            for (int i = 0; i < 12; i++)
             {
-                if (codes[i].opcode == OpCodes.Newobj && codes[i-1].opcode == OpCodes.Callvirt && codes[i + 1].opcode == OpCodes.Stloc_1)
+                int num2 = int.Parse(DateFile.instance.GetActorDate(num, 301 + i, addValue: false));
+                if (num2 > 0)
                 {
-                    startIndex = i+2;
-                    foundtheforend = true;
-                    Main.Logger.Log(" found the end of the new List<int> , at index: " + i);
+                    list.Add(num2);
                 }
-
             }
+            list.AddRange(ActorMenu.instance.GetActorItems(-999, 0, false).Keys);
 
-            if (foundtheforend)
+            list = DateFile.instance.GetItemSort(list);
+
+            var baseMakeTyp = ins.baseMakeTyp;
+            var mianItem = ins.mianItem;
+            var secondItem = ins.secondItem;
+            var secondItemId = ins.secondItemId;
+            var thirdItemId = ins.thirdItemId;
+            var mianItemHolder = ins.mianItemHolder;
+            var secondItemHolder = ins.secondItemHolder;
+            var thirdItemHolder = ins.thirdItemHolder;
+            var mianItemDragDes = ins.mianItemDragDes;
+            var secondItemDragDes = ins.secondItemDragDes;
+            var thirdItemDragDes = ins.thirdItemDragDes;
+            var fixMianItemDragDes = ins.fixMianItemDragDes;
+            var fixSecondItemDragDes = ins.fixSecondItemDragDes;
+            var changeMianItemDragDes = ins.changeMianItemDragDes;
+            var changeSecondItemDragDes = ins.changeSecondItemDragDes;
+            var poisonMianItemDragDes = ins.poisonMianItemDragDes;
+            var poisonSecondItemDragDes = ins.poisonSecondItemDragDes;
+            var poisonThirdItemDragDes = ins.poisonThirdItemDragDes;
+
+            switch (GetValue<MakeSystem, int>(ins, "makeTyp"))
             {
-                var injectedCodes = new List<CodeInstruction>();
-
-                // 注入 IL code  等效代码  list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
-                // 
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldloc_1 ));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldsfld, typeof(ActorMenu).GetField("instance")));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldc_I4, -999));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldc_I4_0));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Callvirt, typeof(ActorMenu).GetMethod("GetActorItems")));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Callvirt, typeof(Dictionary<int, int>).GetMethod("get_Keys")));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Callvirt, typeof(List<int>).GetMethod("AddRange")));
-
-                codes.InsertRange(startIndex, injectedCodes);
+                case 0:
+                    for (int num7 = 0; num7 < list.Count; num7++)
+                    {
+                        int id2 = list[num7];
+                        if ((int.Parse(DateFile.instance.GetItemDate(id2, 41)) == baseMakeTyp
+                            || (baseMakeTyp == 10 && int.Parse(DateFile.instance.GetItemDate(id2, 41)) == 9))
+                            && int.Parse(DateFile.instance.GetItemDate(id2, 42)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { id2, mianItem, mianItemHolder, mianItemDragDes, false });
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(id2, 41)) == baseMakeTyp && int.Parse(DateFile.instance.GetItemDate(id2, 48)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { id2, secondItem, secondItemHolder, secondItemDragDes, true});
+                        }
+                    }
+                    if (DateFile.instance.teachingOpening == 203)
+                    {
+                        ins.StartCoroutine(Invoke<MakeSystem, System.Collections.IEnumerator>(ins, "Teaching2"));
+                    }
+                    break;
+                case 1:
+                    for (int l = 0; l < list.Count; l++)
+                    {
+                        int id = list[l];
+                        if (int.Parse(DateFile.instance.GetItemDate(id, 41)) == baseMakeTyp && int.Parse(DateFile.instance.GetItemDate(id, 42)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { id, mianItem, mianItemHolder, fixMianItemDragDes, false });
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(id, 41)) == baseMakeTyp && int.Parse(DateFile.instance.GetItemDate(id, 49)) > 0 && int.Parse(DateFile.instance.GetItemDate(id, 901)) < int.Parse(DateFile.instance.GetItemDate(id, 902)))
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { id, secondItem, secondItemHolder, fixSecondItemDragDes, false });
+                        }
+                    }
+                    break;
+                case 2:
+                    for (int m = 0; m < list.Count; m++)
+                    {
+                        int num5 = list[m];
+                        if (int.Parse(DateFile.instance.GetItemDate(num5, 41)) == baseMakeTyp && int.Parse(DateFile.instance.GetItemDate(num5, 42)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { num5, mianItem, mianItemHolder, changeMianItemDragDes, false });
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(num5, 41)) == baseMakeTyp && int.Parse(DateFile.instance.GetItemDate(num5, 50)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { num5, secondItem, secondItemHolder, changeSecondItemDragDes, false });
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(num5, 41)) == 10 || int.Parse(DateFile.instance.GetItemDate(num5, 51)) <= 0)
+                        {
+                            continue;
+                        }
+                        int num6 = DateFile.instance.GetItemNumber(num, num5);
+                        for (int n = 0; n < thirdItemId.Length; n++)
+                        {
+                            if (thirdItemId[n] == num5)
+                            {
+                                num6--;
+                            }
+                        }
+                        if (num6 > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetThirdItem", new object[] { num5, thirdItemHolder[0], thirdItemDragDes, num6 });
+                        }
+                    }
+                    break;
+                case 3:
+                    for (int j = 0; j < list.Count; j++)
+                    {
+                        int num3 = list[j];
+                        if (int.Parse(DateFile.instance.GetItemDate(num3, 41)) == 9 && int.Parse(DateFile.instance.GetItemDate(num3, 42)) > 0)
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { num3, mianItem, mianItemHolder, poisonMianItemDragDes, false });
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(num3, 41)) == baseMakeTyp)
+                        {
+                            int num4 = DateFile.instance.GetItemNumber(num, num3);
+                            for (int k = 0; k < thirdItemId.Length; k++)
+                            {
+                                if (thirdItemId[k] == num3)
+                                {
+                                    num4--;
+                                }
+                            }
+                            if (num4 > 0 && num3 != secondItemId)
+                            {
+                                Invoke<MakeSystem>(ins, "SetThirdItem", new object[] { num3, thirdItemHolder[1], poisonThirdItemDragDes, num4 });
+                            }
+                        }
+                        if (int.Parse(DateFile.instance.GetItemDate(num3, 53)) > 0 && num3 != thirdItemId[0] && num3 != thirdItemId[1] && num3 != thirdItemId[2])
+                        {
+                            Invoke<MakeSystem>(ins, "SetMianToolItem", new object[] { num3, secondItem, secondItemHolder, poisonSecondItemDragDes, false });
+                        }
+                    }
+                    break;
             }
-            else
-            {
-                Main.Logger.Log(" game changed ... this mod failed to find code to patch...");
-            }
-
-            //Main.Logger.Log(" dump the patch codes ");
-
-            //for (int i = 0; i < codes.Count ; i++)
-            //{
-            //    Main.Logger.Log(String.Format("{0} : {1}  {2}",i ,codes[i].opcode, codes[i].operand ));
-            //}
-            return codes.AsEnumerable();
         }
     }
 
@@ -154,13 +275,13 @@ namespace UseStorageMaterial
 
             int actorId = DateFile.instance.MianActorID();
 
-            if ( (__state & 1) == 1)
+            if ((__state & 1) == 1)
             {
-                if(0== int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)))
+                if (0 == int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)))
                 {
-                    DateFile.instance.LoseItem(-999, ___mianItemId, -1,true, true);
+                    DateFile.instance.LoseItem(-999, ___mianItemId, -1, true, true);
                 }
-                
+
             }
             if ((__state & 2) == 2)
             {
@@ -239,7 +360,7 @@ namespace UseStorageMaterial
             //被强化物品
             int actorId = DateFile.instance.MianActorID();
             Main.Logger.Log(" poison use warehouse second item : " + __state + " state:" + __state + " move back to warehouse");
-            if (__state >0  && DateFile.instance.actorItemsDate[actorId].ContainsKey(__state))
+            if (__state > 0 && DateFile.instance.actorItemsDate[actorId].ContainsKey(__state))
             {
                 //Main.Logger.Log(" poison use warehouse second item : " + __state + " move back to warehouse");
                 //被强化物品原来在仓库，需要挪回去仓库里
@@ -265,7 +386,7 @@ namespace UseStorageMaterial
             if (!DateFile.instance.actorItemsDate[actorId].ContainsKey(___mianItemId))
             {
                 //仅当hp为1时，移除mianitem, 其余情况不扣hp，否则会扣两次
-                if( int.Parse(DateFile.instance.GetItemDate(___mianItemId,901)) == 1)
+                if (int.Parse(DateFile.instance.GetItemDate(___mianItemId, 901)) == 1)
                 {
                     DateFile.instance.ChangeItemHp(-999, ___mianItemId, -1, 0, true);
                 }

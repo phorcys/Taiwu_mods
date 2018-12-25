@@ -88,7 +88,9 @@ namespace Sth4nothing.UseStorageBook
 
         private static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting, ref bool changed)
         {
+            GUILayout.BeginVertical("Box");
             GUILayout.BeginHorizontal();
+            GUILayout.Label(label, GUILayout.Width(60));
             if (setting.Length >= 5)
             {
                 if (GUILayout.Button("全部", GUILayout.Width(60)))
@@ -116,6 +118,7 @@ namespace Sth4nothing.UseStorageBook
                     GUILayout.EndHorizontal();
             }
             GUILayout.Space(10);
+            GUILayout.EndVertical();
         }
 
         private void WindowFunc(int windowId)

@@ -684,7 +684,7 @@ namespace GuiWarehouse
                     pack2 = 1;
                 }
                 title2 = index;
-                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(actorId, 0).Keys)));
+                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(actorId, 0, false).Keys)));
                 data2 = GetData(list, index);
             }
             else
@@ -694,7 +694,7 @@ namespace GuiWarehouse
                     pack = 1;
                 }
                 title = index;
-                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(warehouseId, 0).Keys)));
+                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(warehouseId, 0, false).Keys)));
                 data = GetData(list, index);
             }
         }

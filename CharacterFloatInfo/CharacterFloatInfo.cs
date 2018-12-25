@@ -22,7 +22,7 @@ namespace CharacterFloatInfo
         public bool showLevel = true;
         public bool hideShopInfo = true; //不显示商店的详细信息
         public bool hideChameOfChildren = true; //不显示儿童的魅力
-        public bool useColorOfTeachingSkill = false; // 用颜色及數字 標記 可以请教的技艺最高品階 
+        public bool useColorOfTeachingSkill = false; // 用颜色及數字 標記 可以请教的技艺最高品階
         public bool showSexuality = false; //显示性向
 
         public bool showActorStatus = true; // 人物状况
@@ -288,7 +288,7 @@ namespace CharacterFloatInfo
                 case WindowType.ActorMenu: return Main.settings.shortAM;
                 case WindowType.TeamActor: return Main.settings.shortTA;
                 case WindowType.Relationship: return Main.settings.shortRI;
-                case WindowType.DialogChooseActors: 
+                case WindowType.DialogChooseActors:
                 case WindowType.BuildingWindow: return true;
             }
             return false;
@@ -574,7 +574,7 @@ namespace CharacterFloatInfo
                         break;
                 }
             }
-			
+
             return text;
         }
 
@@ -612,9 +612,9 @@ namespace CharacterFloatInfo
                 }
 
                 if (GetAge(id) > ConstValue.actorMinAge)
-                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false).Count);    // todo: 改為顯示所有孩子名
+                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false, false).Count);    // todo: 改為顯示所有孩子名
 
-                text += string.Format("\t\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));    
+                text += string.Format("\t\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));
             }
             else if (windowType == WindowType.BuildingWindow)
             {
@@ -655,7 +655,7 @@ namespace CharacterFloatInfo
             else if (windowType == WindowType.DialogChooseActors)
             {
                 List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315, 9366, 9321 };
-                if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容. 
+                if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容.
 
                 int gangId = int.Parse(DateFile.instance.GetActorDate(MassageWindow.instance.eventMianActorId, 19, false));
                 text += string.Format("地区恩义:<color=white>{0}%</color>", DateFile.instance.GetBasePartValue(int.Parse(DateFile.instance.GetGangDate(gangId, 11)), int.Parse(DateFile.instance.GetGangDate(gangId, 3))) / 10);
@@ -788,9 +788,9 @@ namespace CharacterFloatInfo
                 {
                     int typ = (i < 100 ? 501 : 500) + i;
                     int b = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000;
-                    int level = Mathf.Clamp(Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, typ)-1, b), 0, 8);
+                    int level = Mathf.Clamp(Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, typ) - 1, b), 0, 8);
                     string[] marks = { "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
-                    string mark = Main.settings.useColorOfTeachingSkill?DateFile.instance.SetColoer(20002 + level, marks[level]): "※";
+                    string mark = Main.settings.useColorOfTeachingSkill ? DateFile.instance.SetColoer(20002 + level, marks[level]) : "※";
                     text += CanTeach(actorId, i) ? mark : "　";
                 }
                 text += GetLevel(actorId, i);
@@ -909,7 +909,7 @@ namespace CharacterFloatInfo
         }
 
         // 近期事件
-        public static string SetInfoMessage5(int id) => Main.settings.lifeMessage && !smallerWindow? "\n" + GetLifeMessage(id, 3) : "";
+        public static string SetInfoMessage5(int id) => Main.settings.lifeMessage && !smallerWindow ? "\n" + GetLifeMessage(id, 3) : "";
 
         //心情
         public static string GetMood(int id) => ActorMenu.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
@@ -1109,7 +1109,7 @@ namespace CharacterFloatInfo
             List<string> bestItems = new List<string> { };
             int bestGrade = 0;
 
-            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 0).Keys);
+            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 0, false).Keys);
             foreach (int itemID in list)
             {
                 string itemName = GetItemColorName(itemID);
@@ -1386,7 +1386,7 @@ namespace CharacterFloatInfo
             });
             return text;
         }
-        
+
         public static string GetSexuality(int id) => DateFile.instance.GetActorDate(id, 21, false) == "0" ? "直" : "双";
         public static string GetGenderText(int id) => DateFile.instance.massageDate[7][0].Split('|')[int.Parse(DateFile.instance.GetActorDate(id, 14, false))];
         public static string GetGenderTA(int id) => DateFile.instance.GetActorDate(id, 14, false) == "2" ? "她" : "他";

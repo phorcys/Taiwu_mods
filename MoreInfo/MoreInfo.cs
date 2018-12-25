@@ -849,7 +849,7 @@ namespace MoreInfo
                 int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId, 0);
                 int colorFix = level / 10;
                 __instance.gongFaLevelText.text = DateFile.instance.SetColoer(20001 + colorFix, __instance.gongFaLevelText.text);
-                int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId);
+                int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId, false);
                 __instance.gongFaBookLevelText.text = DateFile.instance.SetColoer(20001 + bookLevel, __instance.gongFaBookLevelText.text);
             }
         }

@@ -612,8 +612,8 @@ namespace TaiwuHentai
                     //太污年龄
                     int num18 = int.Parse(DateFile.instance.GetActorDate(num3, 11, false));
                     list2.Clear();
-                    bool flage_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 309, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false).Contains(num4));
-                    bool should_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false).Contains(num4));
+                    bool flage_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 309, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false, false).Contains(num4));
+                    bool should_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false, false).Contains(num4));
 
                     if (!flage_TONGDAO && should_TONGDAO && Main.settings.unrestrainedPartner)
                     {
@@ -626,7 +626,7 @@ namespace TaiwuHentai
 
                     if (flage_QINGMI)
                     {
-                        bool flage_QINGSUAIYI = !DateFile.instance.GetActorSocial(num3, 304, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 309, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 311, false).Contains(num4);
+                        bool flage_QINGSUAIYI = !DateFile.instance.GetActorSocial(num3, 304, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 309, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 311, false, false).Contains(num4);
 
                         if (!(num18 > 14 && num14 > 14 && flage_QINGSUAIYI))
                         {
@@ -635,10 +635,10 @@ namespace TaiwuHentai
                                 list2.Add("900600003");
                             }
                         }
-                        bool flage_GONGJIELIANLI = (DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && DateFile.instance.GetActorSocial(num3, 309, false).Count <= 0 && DateFile.instance.GetActorSocial(num4, 309, false).Count <= 0 && int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0 && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0);
-                        bool should_GONGJIELIANLI = DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0 && DateFile.instance.GetActorSocial(num4, 309, false).Count <= 0;
+                        bool flage_GONGJIELIANLI = (DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && DateFile.instance.GetActorSocial(num3, 309, false, false).Count <= 0 && DateFile.instance.GetActorSocial(num4, 309, false, false).Count <= 0 && int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0 && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0);
+                        bool should_GONGJIELIANLI = DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0 && DateFile.instance.GetActorSocial(num4, 309, false, false).Count <= 0;
                         bool flage_MENPAIJIANCHA = int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0;
-                        bool flage_DUOFUDUOQI = DateFile.instance.GetActorSocial(num3, 309, false).Count <= 0;
+                        bool flage_DUOFUDUOQI = DateFile.instance.GetActorSocial(num3, 309, false, false).Count <= 0;
 
                         if (!(num18 > 14 && num14 > 14 && flage_GONGJIELIANLI))
                         {
@@ -929,7 +929,7 @@ namespace TaiwuHentai
                                         {
                                             array4[j] = false;
                                         }
-                                        if (num10 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaFLevel(actorId, num8) < num10)
+                                        if (num10 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaFLevel(actorId, num8, false) < num10)
                                         {
                                             array4[j] = false;
                                         }
@@ -1015,7 +1015,7 @@ namespace TaiwuHentai
                                     }
                                     break;
                                 case "BHS":
-                                    if (DateFile.instance.GetActorSocial(actorId, 308, false).Count >= 9)
+                                    if (DateFile.instance.GetActorSocial(actorId, 308, false, false).Count >= 9)
                                     {
                                         array4[j] = false;
                                     }

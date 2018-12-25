@@ -1195,8 +1195,8 @@ namespace NpcScan
         //婚姻状况
         public static string GetSpouse(int id)
         {
-            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
-            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true);
+            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false, false);
+            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true, false);
             bool flag = actorSocial2.Count == 0;
             string result;
             if (flag)

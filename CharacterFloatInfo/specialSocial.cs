@@ -39,8 +39,8 @@ namespace CharacterFloatInfo
         //获取父母存活情况
         public string GetParentAlive(int actorId)
         {
-            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));//包含已过世
-            List<int> list2 = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, false));
+            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true, false));//包含已过世
+            List<int> list2 = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, false, false));
             int count = list.Count;
             int count2 = list2.Count;
             switch (count)
@@ -79,7 +79,7 @@ namespace CharacterFloatInfo
         public string AnalyzeParent(int actorId)
         {
             //string text = "";
-            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true));
+            List<int> list = new List<int>(DateFile.instance.GetActorSocial(actorId, 303, true, false));
             int count = list.Count;
 
             //text += getParentAlive(actorId);
@@ -102,7 +102,7 @@ namespace CharacterFloatInfo
         public void TestAll(int actorId)
         {
             DateFile df = DateFile.instance;
-            //DateFile.instance.GetActorSocial(id, 310, false).Count
+            //DateFile.instance.GetActorSocial(id, 310, false, false).Count
             Main.Logger.Log("---------------------------------------------------");
             for (int i = 0; i < 12; i++)
             {
@@ -111,7 +111,7 @@ namespace CharacterFloatInfo
                 {
                     if (df.HaveLifeDate(actorId, typ))
                     {
-                        List<int> list = new List<int>(df.GetActorSocial(actorId, typ, true));
+                        List<int> list = new List<int>(df.GetActorSocial(actorId, typ, true, false));
                         for (int j = 0; j < list.Count; j++)
                         {
                             int aId = list[j];
@@ -127,7 +127,7 @@ namespace CharacterFloatInfo
         public string AnalyzeSocial(int actorId)
         {
             //DateFile df = DateFile.instance;
-            //DateFile.instance.GetActorSocial(id, 310, false).Count
+            //DateFile.instance.GetActorSocial(id, 310, false, false).Count
             Main.Logger.Log("---------------------------------------------------");
             return this.AnalyzeParent(actorId);
         }

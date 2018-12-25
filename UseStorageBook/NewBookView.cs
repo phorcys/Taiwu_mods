@@ -183,7 +183,6 @@ namespace Sth4nothing.UseStorageBook
                 return;
             }
             var mousePosition = Input.mousePosition;
-            var mouseOnPackage = mousePosition.x > Screen.width / 2;
 
             var v = Input.GetAxis("Mouse ScrollWheel");
             if (v != 0)
