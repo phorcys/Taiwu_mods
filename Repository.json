@@ -227,8 +227,8 @@
 		},
 		{
 			"Id": "ShowBiographyOfTheDead",
-			"Version": "1.0.2",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ShowBiographyOfTheDead-1.0.2.zip"
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ShowBiographyOfTheDead-1.0.3.zip"
 		},
 		{
 			"Id": "ShowMap",
@@ -293,7 +293,7 @@
 		{
 			"Id": "neoe.AllWin",
 			"Version": "1.0.1",
-			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/neoe.AllWin-1.0.1.zip"
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/allWin-1.0.1.zip"
 		}
 	]
 }
