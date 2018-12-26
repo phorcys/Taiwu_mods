@@ -344,6 +344,7 @@ namespace Majordomo
                 }
             }
 
+            // 从当前数据来看，工作难度取值范围 [1, 119]
             int baseWorkDifficulty = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][51]);
             int buildingLevel = building[1];
             int workDifficulty = Mathf.Max(baseWorkDifficulty + (buildingLevel - 1), 1);

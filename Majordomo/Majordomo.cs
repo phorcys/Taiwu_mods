@@ -1,17 +1,16 @@
-﻿using System;
+﻿using Harmony12;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Harmony12;
-using UnityModManagerNet;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
-using BaseResourceMod;
-
+using System.Text;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityModManagerNet;
 
 namespace Majordomo
 {
@@ -35,6 +34,7 @@ namespace Majordomo
         // 人员指派
         public bool autoAssignBuildingWorkers = true;   // 自动指派建筑工作人员
 
+
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -47,10 +47,7 @@ namespace Majordomo
         public static bool enabled;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
-
-        public const string RES_PATH_BASE = "resources";
-        public const string RES_PATH_TXT = "txt";
-        public const string RES_PATH_SPRITE = "Texture";
+        public static string resBasePath;
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -60,12 +57,9 @@ namespace Majordomo
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            var resBasePath = System.IO.Path.Combine(modEntry.Path, RES_PATH_BASE);
-            var resTxtPath = System.IO.Path.Combine(resBasePath, RES_PATH_TXT);
-            var resSpritePath = System.IO.Path.Combine(resBasePath, RES_PATH_SPRITE);
-            BaseResourceMod.Main.registModResourceDir(modEntry, resTxtPath, resSpritePath);
-
             Main.settings = Settings.Load<Settings>(modEntry);
+
+            resBasePath = System.IO.Path.Combine(modEntry.Path, "resources");
 
             modEntry.OnToggle = Main.OnToggle;
             modEntry.OnGUI = Main.OnGUI;
@@ -166,16 +160,55 @@ namespace Majordomo
     public class TurnEvent
     {
         // 太吾管家过月事件 ID
-        public const int EVENT_ID = 1001;
+        public static int eventId = -1;
 
 
-        // 注册过月事件
+        // 检查太吾管家事件相关资源是否已注入
+        public static bool IsResourcesInjected()
+        {
+            if (TurnEvent.eventId < 0) return false;
+
+            if (!DateFile.instance.trunEventDate.ContainsKey(TurnEvent.eventId)) return false;
+
+            var data = DateFile.instance.trunEventDate[TurnEvent.eventId];
+            int spriteId = int.Parse(data[98]);
+
+            if (GetSprites.instance.trunEventImage.Length <= spriteId) return false;
+
+            var sprite = GetSprites.instance.trunEventImage[spriteId];
+            if (sprite.name != "TrunEventImage_majordomo") return false;
+
+            return true;
+        }
+
+
+        // 注入太吾管家事件相关资源
+        public static bool InjectResources()
+        {
+            string eventImagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), "TrunEventImage_majordomo.png");
+            bool isSuccess = ResourceDynamicallyLoader.AppendTurnEventImage(eventImagePath);
+            if (!isSuccess) return false;
+
+            TurnEvent.eventId = ResourceDynamicallyLoader.AppendTurnEvent(new Dictionary<int, string>
+            {
+                [0] = "太吾管家",
+                [1] = "0",
+                [2] = "0",
+                [98] = "${TrunEventImage_majordomo}",
+                [99] = "您的管家禀告了如下收获：",
+            });
+
+            return true;
+        }
+
+
+        // 往当前过月事件列表中添加太吾管家过月事件
         // changTrunEvent format: [turnEventId, param1, param2, ...]
         // current changTrunEvent: [TurnEvent.EVENT_ID]
         // current GameObject.name: "TrunEventIcon,{TurnEvent.EVENT_ID}"
-        public static void RegisterEvent(UIDate __instance)
+        public static void AddEvent(UIDate __instance)
         {
-            __instance.changTrunEvents.Add(new int[] { TurnEvent.EVENT_ID });
+            __instance.changTrunEvents.Add(new int[] { TurnEvent.eventId });
         }
 
 
@@ -188,7 +221,7 @@ namespace Majordomo
             string[] eventParams = tips.name.Split(',');
             int eventId = (eventParams.Length > 1) ? int.Parse(eventParams[1]) : 0;
 
-            if (eventId != TurnEvent.EVENT_ID) return;
+            if (eventId != TurnEvent.eventId) return;
 
             __instance.informationName.text = DateFile.instance.trunEventDate[eventId][0];
 
@@ -207,9 +240,27 @@ namespace Majordomo
     }
 
 
+    // Patch: 动态注入资源（在其他 mod 之后注入）
+    [HarmonyPatch(typeof(Loading), "LoadScene")]
+    [HarmonyPriority(Priority.Last)]
+    public static class Loading_LoadScene_DynamicallyLoadResources
+    {
+        static void Postfix()
+        {
+            if (!TurnEvent.IsResourcesInjected())
+            {
+                bool isSuccess = TurnEvent.InjectResources();
+                Main.Logger.Log(isSuccess ?
+                    "Loaded resources of TurnEvent." :
+                    "Failed to load resources of TurnEvent.");
+            }
+        }
+    }
+
+
     // Patch: 展示过月事件
     [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
-    public static class UIDate_SetTrunChangeWindow_Patch
+    public static class UIDate_SetTrunChangeWindow_OnChangeTurn
     {
         private static bool Prefix(UIDate __instance)
         {
@@ -221,7 +272,7 @@ namespace Majordomo
 
             ResourceMaintainer.UpdateResourceWarning();
 
-            TurnEvent.RegisterEvent(__instance);
+            TurnEvent.AddEvent(__instance);
 
             if (Main.settings.autoAssignBuildingWorkers)
             {
@@ -238,7 +289,7 @@ namespace Majordomo
 
     // Patch: 设置浮窗文字
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
-    public static class WindowManage_WindowSwitch_Patch
+    public static class WindowManage_WindowSwitch_SetFloatWindowText
     {
         static void Postfix(WindowManage __instance, bool on, GameObject tips)
         {
@@ -251,7 +302,7 @@ namespace Majordomo
 
     // Patch: 创建 UI
     [HarmonyPatch(typeof(UIDate), "Start")]
-    public static class UIDate_Start_Patch
+    public static class UIDate_Start_InitialzeResources
     {
         static void Postfix()
         {
@@ -264,7 +315,7 @@ namespace Majordomo
 
     // Patch: 更新 UI
     [HarmonyPatch(typeof(UIDate), "Update")]
-    public static class UIDate_Update_Patch
+    public static class UIDate_Update_ShowOrHideText
     {
         static void Postfix()
         {
@@ -277,7 +328,7 @@ namespace Majordomo
 
     // Patch: 显示浮窗
     [HarmonyPatch(typeof(WindowManage), "LateUpdate")]
-    public static class WindowManage_LateUpdate_Patch
+    public static class WindowManage_LateUpdate_ShowOrHideFloatWindow
     {
         static bool Prefix(WindowManage __instance)
         {
