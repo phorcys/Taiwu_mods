@@ -356,16 +356,8 @@ namespace BaseResourceMod
                 "villageNameDate"
             },
             {
-                "actorfame_date",
-                "actorFameDate"
-            },
-            {
-                "fame_date",                // fame_date.txt ->  actorFameDate   文件名小写化
-                "actorFameDate"
-            },
-            {
-                "villagename_date",                // 在主菜单教学 或 newgame时读入, 可能hook的时机需要变动
-                "villageNameDate"
+                "fame_date",
+                "FameDate"
             }
         };
 
