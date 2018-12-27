@@ -357,7 +357,7 @@ namespace BaseResourceMod
             },
             {
                 "fame_date",
-                "FameDate"
+                "actorFameDate"
             }
         };
 
