@@ -2,7 +2,7 @@
   "Id": "BaseResourceMod",
   "DisplayName": "基础资源框架",
   "Author": "phorcys",
-  "Version": "1.0.9",
+  "Version": "1.0.10",
   "AssemblyName": "BaseResourceMod.dll",
   "EntryMethod": "BaseResourceMod.Main.Load"
 }

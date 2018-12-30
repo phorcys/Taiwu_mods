@@ -204,7 +204,7 @@ set(DLLPACK_VERSION "181226")
 set(DLLPACK_NAME "dlls")
 set(DLLPACK_DIR "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}")
 set(DLLPACK_URL "https://github.com/phorcys/Taiwu_mods/releases/download/dll${DLLPACK_VERSION}/dlls-${DLLPACK_VERSION}.zip")
-set(DLLPACKFILE "${DLLPACK_DIR}\\${DLLPACK_NAME}-${DLLPACK_VERSION}.zip")
+set(DLLPACKFILE "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}-${DLLPACK_VERSION}.zip")
 set(timeout_args TIMEOUT 600)
 set(timeout_msg "600 秒")
 
@@ -241,7 +241,7 @@ endif()
 endif()
 
 
-if (EXISTS "${DLLPACKFILE}" AND NOT EXISTS "${DLLPACKFILE}")
+if (EXISTS "${DLLPACKFILE}" AND NOT EXISTS "${DLLPACK_DIR}")
 
 message(STATUS "正在解压 ...
      文件 '${DLLPACKFILE}'
