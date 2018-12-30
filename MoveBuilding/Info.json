@@ -2,7 +2,7 @@
     "Id": "MoveBuilding",
     "DisplayName": "太吾村建筑物搬移",
     "Author": "Eiffel",
-    "Version": "0.1.0",
+    "Version": "0.2.0",
     "AssemblyName": "MoveBuilding.dll",
     "EntryMethod": "MoveBuilding.Main.Load",
     "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/MoveBuilding",
