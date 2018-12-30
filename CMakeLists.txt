@@ -209,11 +209,11 @@ set(timeout_args TIMEOUT 600)
 set(timeout_msg "600 秒")
 
 #移除已有
-IF(NOT EXISTS "${DLLPACKFILE}" AND EXISTS "${DLLPACK_DIR}")
-	file(REMOVE_RECURSE "${DLLPACK_DIR}")
-ENDIF()
-#建立目录
-file(MAKE_DIRECTORY "${DLLPACK_DIR}")
+if(NOT EXISTS "${DLLPACKFILE}")
+
+if(EXISTS "${DLLPACK_DIR}")
+file(REMOVE_RECURSE "${DLLPACK_DIR}")
+endif()
 
 message(STATUS "下载 ${DLLPACKFILE} ... 自 ${DLLPACK_URL}
      src='${DLLPACK_URL}'
@@ -236,12 +236,18 @@ if(NOT status_code EQUAL 0)
   错误信息 : ${status_string}
   日志 : ${log}
 ")
+endif()
+
+endif()
+
+
+if (EXISTS "${DLLPACKFILE}")
+
+if (NOT EXISTS "${DLLPACKFILE}")
 
 message(STATUS "正在解压 ...
      文件 '${DLLPACKFILE}'
      到 '${DLLPACK_DIR}'")
-
-endif()
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvfz ${DLLPACKFILE}
   WORKING_DIRECTORY "${DLLPACK_DIR}\\..\\"
@@ -253,6 +259,7 @@ if(NOT rv EQUAL 0)
   message(FATAL_ERROR "解压错误: 解压 of '${DLLPACKFILE}' 失败")
 endif()
 
+endif()
 
 #为每个目录生成Mod
 MACRO(CREATEMOD moddir)
