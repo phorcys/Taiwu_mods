@@ -241,9 +241,7 @@ endif()
 endif()
 
 
-if (EXISTS "${DLLPACKFILE}")
-
-if (NOT EXISTS "${DLLPACKFILE}")
+if (EXISTS "${DLLPACKFILE}" AND NOT EXISTS "${DLLPACKFILE}")
 
 message(STATUS "正在解压 ...
      文件 '${DLLPACKFILE}'
