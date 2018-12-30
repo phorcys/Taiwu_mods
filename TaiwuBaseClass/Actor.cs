@@ -430,7 +430,7 @@ namespace TaiwuBaseClass
             {
                 get
                 {
-                    return ActorMenu.instance.MaxHp(id);
+                    return ActorMenu.instance.MaxHp(id, 100);
                 }
             }
             public int Hp//内伤
@@ -444,7 +444,7 @@ namespace TaiwuBaseClass
             {
                 get
                 {
-                    return ActorMenu.instance.MaxSp(id);
+                    return ActorMenu.instance.MaxSp(id, 100);
                 }
             }
             public int Sp//外伤

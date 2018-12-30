@@ -541,9 +541,9 @@ namespace CharacterFloatInfo
             else if (DateFile.instance.actorInjuryDate.ContainsKey(id))
             {
                 int Hp = ActorMenu.instance.Hp(id, false);
-                int maxHp = ActorMenu.instance.MaxHp(id);
+                int maxHp = ActorMenu.instance.MaxHp(id, 100);
                 int Sp = ActorMenu.instance.Sp(id, false);
-                int maxSp = ActorMenu.instance.MaxSp(id);
+                int maxSp = ActorMenu.instance.MaxSp(id, 100);
                 int dmg = Math.Max(Hp * 100 / maxHp, Sp * 100 / maxSp);
                 int dmgtyp = 0;
                 if (dmg >= 20) dmgtyp = 1;
@@ -668,9 +668,9 @@ namespace CharacterFloatInfo
                     case 9321: // 治疗伤病
                     case 9303: // 起死回生
                         int Hp = ActorMenu.instance.Hp(id, false);
-                        int maxHp = ActorMenu.instance.MaxHp(id);
+                        int maxHp = ActorMenu.instance.MaxHp(id, 100);
                         int Sp = ActorMenu.instance.Sp(id, false);
-                        int maxSp = ActorMenu.instance.MaxSp(id);
+                        int maxSp = ActorMenu.instance.MaxSp(id, 100);
                         text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp == 0 ? "white" : "red", Sp == 0 ? "white" : "red");
                         break;
                     case 9307: // 王禅典籍
