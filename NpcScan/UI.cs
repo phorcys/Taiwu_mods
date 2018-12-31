@@ -756,6 +756,10 @@ namespace NpcScan
                 value = Mathf.Max(value / 5, 1);
             }
             int num3 = Mathf.Clamp(num + value, 0, num2);
+            if (int.Parse(DateFile.instance.GetActorDate(key, 26, false)) != 0)
+            {
+                num2 = num3 = 0;
+            }
             DateFile.instance.actorsDate[key][12] = num3.ToString();
             if (int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1)
             {
@@ -875,7 +879,7 @@ namespace NpcScan
                 int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
                 int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
                 int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
-                int health = ActorMenu.instance.Health(index);
+                int health = int.Parse(DateFile.instance.GetActorDate(index, 26, false)) == 0 ? ActorMenu.instance.Health(index) : 0;
                 int cv = charmValue;
                 if (charmValue == 0)
                 {
