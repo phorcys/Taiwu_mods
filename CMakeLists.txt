@@ -381,7 +381,7 @@ using System.Runtime.Versioning\;
 		POST_BUILD
 		COMMAND if not exist "${STEAMDIR}Mods\\${moddir}/" echo not copy file & goto END
 		COMMAND copy "$(TargetPATH)" "${STEAMDIR}Mods\\${moddir}/"
-		COMMAND powershell -NoProfile -ExecutionPolicy Unrestricted -File "..\\..\\CopyMod.ps1" -Mod ${moddir} -ModsDir "${STEAMDIR}Mods"
+		COMMAND "..\\..\\CopyMod.exe" ${moddir} "${STEAMDIR}Mods"
 		COMMAND echo "copy dll file ${moddir}.dll ok"
 		COMMENT "copy dll file to steam game"
 		COMMAND :END
