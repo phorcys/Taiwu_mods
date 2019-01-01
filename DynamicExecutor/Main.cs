@@ -101,7 +101,6 @@ namespace Sth4nothing.DynamicExecutor
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打开代码路径", GUILayout.Width(100)))
             {
-                Debug.Log(Path.Combine(rootPath, "Execute.cs.template"));
                 var p = new System.Diagnostics.Process();
                 p.StartInfo.FileName = "explorer.exe";
                 p.StartInfo.UseShellExecute = true;
@@ -130,7 +129,6 @@ namespace Sth4nothing.DynamicExecutor
             // 检测文件
             foreach (var file in files)
             {
-                Debug.Log(Path.Combine(rootPath, file));
                 if (!File.Exists(Path.Combine(rootPath, file)))
                 {
                     Logger.Log("不存在文件： " + file);
@@ -164,7 +162,7 @@ namespace Sth4nothing.DynamicExecutor
                 File.WriteAllText(Path.Combine(rootPath, "Execute.csproj"),
                     csproj.Replace("<AssemblyName>Execute</AssemblyName>",
                         $"<AssemblyName>Execute{count}</AssemblyName>")
-                        .Replace("%GAMEPATH%", Setting.dllsPath)
+                        .Replace("%DLLS%", Setting.dllsPath)
                         .Replace("<!-- Mods -->", modsReference)); // 引用mods
                 // AssemblyInfo.cs
                 File.Copy(Path.Combine(rootPath, "AssemblyInfo.cs.template"),

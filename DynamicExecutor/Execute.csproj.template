@@ -41,30 +41,10 @@
       <Private>false</Private>
       <HintPath>%DLLS%\DOTween.dll</HintPath>
     </Reference>
-    <Reference Include="DOTween43">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%DLLS%\DOTween43.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween46">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%DLLS%\DOTween46.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween50">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%DLLS%\DOTween50.dll</HintPath>
-    </Reference>
     <Reference Include="DOTweenPro">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
       <HintPath>%DLLS%\DOTweenPro.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Data.Sqlite">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%DLLS%\Mono.Data.Sqlite.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Data.Tds">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
