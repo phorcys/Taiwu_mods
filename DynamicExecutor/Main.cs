@@ -22,6 +22,7 @@ namespace Sth4nothing.DynamicExecutor
         /// </summary>
         public string msbuildPath =
             @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MsBuild.exe";
+        public string dllsPath = @"D:\Desktop\Work\Taiwu_mods\build\dlls";
         public override void Save(UMM.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -91,14 +92,16 @@ namespace Sth4nothing.DynamicExecutor
 
         public static void OnGUI(UMM.ModEntry modEntry)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical("box");
             GUILayout.Label("msbuild路径：");
             Setting.msbuildPath = GUILayout.TextField(Setting.msbuildPath);
-            GUILayout.EndHorizontal();
+            GUILayout.Label("dlls路径: ");
+            Setting.dllsPath = GUILayout.TextField(Setting.dllsPath);
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打开代码路径", GUILayout.Width(100)))
             {
+                Debug.Log(Path.Combine(rootPath, "Execute.cs.template"));
                 var p = new System.Diagnostics.Process();
                 p.StartInfo.FileName = "explorer.exe";
                 p.StartInfo.UseShellExecute = true;
@@ -116,6 +119,7 @@ namespace Sth4nothing.DynamicExecutor
                 }
             }
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         /// <summary>
@@ -126,9 +130,10 @@ namespace Sth4nothing.DynamicExecutor
             // 检测文件
             foreach (var file in files)
             {
+                Debug.Log(Path.Combine(rootPath, file));
                 if (!File.Exists(Path.Combine(rootPath, file)))
                 {
-                    Logger.Log($"不存在文件： " + file);
+                    Logger.Log("不存在文件： " + file);
                     return;
                 }
             }
@@ -159,7 +164,7 @@ namespace Sth4nothing.DynamicExecutor
                 File.WriteAllText(Path.Combine(rootPath, "Execute.csproj"),
                     csproj.Replace("<AssemblyName>Execute</AssemblyName>",
                         $"<AssemblyName>Execute{count}</AssemblyName>")
-                        .Replace("%GAMEPATH%", Directory.GetParent(UMM.modsPath).FullName)
+                        .Replace("%GAMEPATH%", Setting.dllsPath)
                         .Replace("<!-- Mods -->", modsReference)); // 引用mods
                 // AssemblyInfo.cs
                 File.Copy(Path.Combine(rootPath, "AssemblyInfo.cs.template"),
