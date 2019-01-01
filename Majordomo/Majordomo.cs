@@ -275,11 +275,11 @@ namespace Majordomo
             TurnEvent.AddEvent(__instance);
 
             if (Main.settings.autoAssignBuildingWorkers)
-            {
-                HumanResource hr = new HumanResource();
+            {   
                 int mainPartId = int.Parse(DateFile.instance.GetGangDate(16, 3));
                 int mainPlaceId = int.Parse(DateFile.instance.GetGangDate(16, 4));
-                hr.AssignBuildingWorkers(mainPartId, mainPlaceId);
+                HumanResource hr = new HumanResource(mainPartId, mainPlaceId);
+                hr.AssignBuildingWorkers();
             }
 
             return true;
