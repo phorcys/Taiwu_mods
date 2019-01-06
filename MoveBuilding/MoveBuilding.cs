@@ -9,16 +9,43 @@ using UnityModManagerNet;
 
 namespace MoveBuilding
 {
+    public class ModSettings : UnityModManager.ModSettings
+    {
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
+
+        public int button = 1;
+    }
     public static class Main
     {
         public static bool enabled;
+
+        public static readonly string[] buttons = new string[] { "右键", "中键" };
+        public static ModSettings Settings { get; private set; }
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+
             modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
+
+            Settings = ModSettings.Load<ModSettings>(modEntry);
+            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
+        }
+
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        {
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("选择拖动使用的鼠标按键:");
+            Settings.button = GUILayout.SelectionGrid(Settings.button - 1, buttons, 2) + 1;
+            GUILayout.EndHorizontal();
+        }
+
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            Settings.Save(modEntry);
         }
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -30,7 +57,7 @@ namespace MoveBuilding
     [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding")]
     public static class HomeBuilding_UpdateBack_Patch
     {
-        private static void Postfix(GameObject ___buildingButton )
+        private static void Postfix(GameObject ___buildingButton)
         {
             if (!Main.enabled) return;
             string[] array = ___buildingButton.transform.parent.name.Split(',');
@@ -78,7 +105,7 @@ namespace MoveBuilding
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (Input.GetMouseButton(1) && !DraggingBuilding.Instance.isDragging)
+            if (Input.GetMouseButton(Main.Settings.button) && !DraggingBuilding.Instance.isDragging)
             {
 
                 DraggingBuilding.Instance.draggingObject = gameObject;
@@ -140,10 +167,13 @@ namespace MoveBuilding
                 DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex] = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex2];
                 DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex2] = temp;
 
-                if (DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(buildingIndex))
+                var workingDate = DateFile.instance.actorsWorkingDate;
+                if (workingDate.ContainsKey(partId)
+                    && workingDate[partId].ContainsKey(placeId)
+                    && workingDate[partId][placeId].ContainsKey(buildingIndex))
                 {
-                    DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex2] = DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex];
-                    DateFile.instance.actorsWorkingDate[partId][placeId].Remove(buildingIndex);
+                    workingDate[partId][placeId][buildingIndex2] = workingDate[partId][placeId][buildingIndex];
+                    workingDate[partId][placeId].Remove(buildingIndex);
                 }
 
                 Main.Logger.Log("Update Buildings");
@@ -178,7 +208,7 @@ namespace MoveBuilding
         bool isEntered = false;
         public void OnPointerEnter(PointerEventData eventData)
         {
-//            Helper.Functions.LogProperties(gameObject);
+            // Helper.Functions.LogProperties(gameObject);
             if (DraggingBuilding.Instance.isDragging)
             {
                 Main.Logger.Log("Enter dropablePlace: " + gameObject.transform.parent.gameObject.name);
@@ -188,7 +218,8 @@ namespace MoveBuilding
         }
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (isEntered && DraggingBuilding.Instance.dropablePlace == gameObject) {
+            if (isEntered && DraggingBuilding.Instance.dropablePlace == gameObject)
+            {
                 DraggingBuilding.Instance.dropablePlace = null;
                 Main.Logger.Log("Leave dropablePlace : " + gameObject.transform.parent.gameObject.name);
                 isEntered = false;
