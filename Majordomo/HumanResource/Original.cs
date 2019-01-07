@@ -58,7 +58,7 @@ namespace Majordomo
 
             foreach (int buildingIndex in buildings.Keys)
             {
-                if (excludedWorkers.Contains(buildingIndex))
+                if (excludedBuildings.Contains(buildingIndex))
                 {
                     if (DateFile.instance.actorsWorkingDate.ContainsKey(partId) &&
                         DateFile.instance.actorsWorkingDate[partId].ContainsKey(placeId) &&
@@ -341,6 +341,23 @@ namespace Majordomo
         {
             // 只有名誉需要转换
             return attrId == 18 ? standardAttrValue - 100 : standardAttrValue;
+        }
+
+
+        /// <summary>
+        /// 判断建筑是否需要工作人员
+        /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
+        /// <param name="buildingIndex"></param>
+        /// <returns></returns>
+        public static bool BuildingNeedsWorker(int partId, int placeId, int buildingIndex)
+        {
+            int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
+            int baseBuildingId = building[0];
+
+            var baseBuilding = DateFile.instance.basehomePlaceDate[baseBuildingId];
+            return int.Parse(baseBuilding[3]) == 1;
         }
     }
 }

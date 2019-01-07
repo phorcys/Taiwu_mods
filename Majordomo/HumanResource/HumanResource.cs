@@ -82,7 +82,12 @@ namespace Majordomo
             this.partId = partId;
             this.placeId = placeId;
 
-            this.excludedBuildings = new HashSet<int>();
+            if (Main.settings.excludedBuildings.ContainsKey(partId) &&
+                Main.settings.excludedBuildings[partId].ContainsKey(placeId))
+                this.excludedBuildings = new HashSet<int>(Main.settings.excludedBuildings[partId][placeId]);
+            else
+                this.excludedBuildings = new HashSet<int>();
+
             this.excludedWorkers = new HashSet<int>();
         }
 
@@ -134,6 +139,8 @@ namespace Majordomo
             var buildings = DateFile.instance.homeBuildingsDate[partId][placeId];
             foreach (int buildingIndex in buildings.Keys)
             {
+                if (!Original.BuildingNeedsWorker(partId, placeId, buildingIndex)) continue;
+
                 if (Bedroom.IsBedroom(partId, placeId, buildingIndex)) continue;
 
                 if (DateFile.instance.actorsWorkingDate.ContainsKey(partId) &&

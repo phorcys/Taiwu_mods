@@ -33,6 +33,13 @@ namespace Majordomo
 
         // 人员指派
         public bool autoAssignBuildingWorkers = true;   // 自动指派建筑工作人员
+        // 建筑排除列表
+        // partId -> {placeId -> {buildingIndex,}}
+        public SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>> excludedBuildings = 
+            new SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>>();
+        // 建筑排除操作鼠标键位, 0: 右键, 1: 中键
+        public int exclusionMouseButton = 1;
+        public static string[] exclusionMouseButtons = new string[] { "右键", "中键" };
 
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -145,7 +152,15 @@ namespace Majordomo
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            Main.settings.autoAssignBuildingWorkers = GUILayout.Toggle(Main.settings.autoAssignBuildingWorkers, "自动指派建筑工作人员", GUILayout.Width(120));
+            Main.settings.autoAssignBuildingWorkers = GUILayout.Toggle(Main.settings.autoAssignBuildingWorkers,
+                "自动指派建筑工作人员", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("排除建筑快捷键：Alt + 鼠标");
+            Main.settings.exclusionMouseButton = GUILayout.SelectionGrid(Main.settings.exclusionMouseButton,
+                Settings.exclusionMouseButtons, Settings.exclusionMouseButtons.Length);
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
 
