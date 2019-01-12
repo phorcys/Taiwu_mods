@@ -240,8 +240,8 @@ namespace BaseResourceMod
                         string dir = Path.GetDirectoryName(ufname);
 
                         string key = dir.Substring(uPath.Length);
-                        if (key[key.Length - 1] == '/') key = key.Substring(0, key.Length - 1);
-                        if (key[0] == '/') key = key.Substring(1);
+                        if (key[key.Length - 1] == '/' || key[key.Length - 1] == '\\') key = key.Substring(0, key.Length - 1);
+                        if (key[0] == '/' || key[0] == '\\') key = key.Substring(1);
 
                         Main.Logger.Log(String.Format("[Texture] sprite type {0} ftype {1} dir {2}  going to parsing {3}", key, ftype, dir, ufname));
 
