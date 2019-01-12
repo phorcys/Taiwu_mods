@@ -32,7 +32,7 @@ namespace KeyBoardShortCut
             if (!___battleEnd && __instance.battleWindow.activeInHierarchy == true)
             {
                 //轻功技能
-                int skillindex = Main.GetKeyListDown(Main.qinggongskilllist);
+                int skillindex = Main.GetKeys(Main.qinggongskilllist);
                 if (skillindex != -1 && Settings.testModifierKey(Main.settings.qinggong_modifier_key) == true)
                 {
                     // actorGongFaHolder[1] = 轻功列表
@@ -56,7 +56,7 @@ namespace KeyBoardShortCut
                 }
 
                 //特殊技能
-                skillindex = Main.GetKeyListDown(Main.specialskilllist);
+                skillindex = Main.GetKeys(Main.specialskilllist);
                 if (skillindex != -1 && Settings.testModifierKey(Main.settings.special_modifierkey) == true)
                 {
                     // actorGongFaHolder[2] = 绝技列表
@@ -80,7 +80,7 @@ namespace KeyBoardShortCut
                 }
 
                 //主技能
-                skillindex = Main.GetKeyListDown(Main.mainskilllist);
+                skillindex = Main.GetKeys(Main.mainskilllist);
                 if (skillindex != -1)
                 {
                     // actorGongFaHolder[0] = 攻击技能列表
