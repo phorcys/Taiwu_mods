@@ -81,7 +81,7 @@ namespace GuiWorkActor
                 }
                 List<int> newActorList = new List<int>();
                 Dictionary<int, int> dictionary = new Dictionary<int, int>();
-                List<int> list = new List<int>(DateFile.instance.GetGangActor(16, 9));
+                List<int> list = new List<int>(DateFile.instance.GetGangActor(16, 9, false));
                 foreach (int num in list)
                 {
                     dictionary.Add(num, int.Parse(DateFile.instance.GetActorDate(num, _skillTyp, true)));

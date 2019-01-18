@@ -26,7 +26,7 @@ namespace Majordomo
         {
             List<int> workerIds = new List<int>();
 
-            List<int> actorIds = DateFile.instance.GetGangActor(16, 9);
+            List<int> actorIds = DateFile.instance.GetGangActor(16, 9, false);
 
             List<int> teammates = DateFile.instance.GetFamily(getPrisoner: true);
 
