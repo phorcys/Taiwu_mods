@@ -2,7 +2,7 @@
     "Id": "SLManager",
     "DisplayName": "Save / Load",
     "Author": "Sth4nothing",
-    "Version": "1.3.5",
+    "Version": "1.4.1",
     "AssemblyName": "SLManager.dll",
     "EntryMethod": "Sth4nothing.SLManager.Main.Load",
     "HomePage": "https://bbs.nga.cn/read.php?tid=15734945"

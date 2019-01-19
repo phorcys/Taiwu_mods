@@ -16,6 +16,18 @@ using UnityModManagerNet;
 
 namespace Sth4nothing.SLManager
 {
+    [HarmonyPatch(typeof(Encoding), "GetEncoding", new Type[] { typeof(int) })]
+    public static class Encoding_GetEncoding_Path
+    {
+        public static bool Prefix(int codepage, ref Encoding __result)
+        {
+            if (!Main.Enabled || codepage != 437)
+                return true;
+            
+            __result = new I18N.West.CP437();
+            return false;
+        }
+    }
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
     public static class WorldMapSystem_Start_Patch
     {
