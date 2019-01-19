@@ -14,3 +14,5 @@
 
 * 如果不能正确显示存档列表，按Ctrl+F10调出UMM的管理界面。
     在本Mod的设置中，点击打印log，然后点击显示log路径。将log文件提交给我。
+
+* 如果出现 *ArgumentException: Getting control 4's position in a group with only 4 controls when doing repaint*，请自动忽略，不影响运行。具体原因有待分析。

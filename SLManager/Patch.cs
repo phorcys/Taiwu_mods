@@ -1,5 +1,4 @@
 using Harmony12;
-using Ionic.Zip;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -182,21 +181,13 @@ namespace Sth4nothing.SLManager
         public static void ParseFiles()
         {
             savedInfos = new Dictionary<string, SaveData>();
-            var threads = new Queue<System.Threading.Thread>();
-            foreach (var file in savedFiles)
+            System.Threading.ThreadPool.QueueUserWorkItem(obj =>
             {
-                var thread = new System.Threading.Thread(
-                    new System.Threading.ParameterizedThreadStart(ParseThread))
+                foreach (var file in savedFiles)
                 {
-                    IsBackground = true
-                };
-                threads.Enqueue(thread);
-                thread.Start(file);
-            }
-            while (threads.Count > 0)
-            {
-                threads.Dequeue().Join();
-            }
+                    ParseThread(file);
+                }
+            });
 
             savedFiles.Sort((f1, f2) =>
             {
@@ -210,24 +201,23 @@ namespace Sth4nothing.SLManager
             });
         }
 
-        public static void ParseThread(object file)
+        public static void ParseThread(string file)
         {
-            var path = file as string;
             try
             {
                 Debug.Log("Parse: " + file);
-                var data = Parse(path);
+                var data = Parse(file);
                 if (data == null)
                     throw new Exception();
 
                 lock (lockObj)
                 {
-                    savedInfos.Add(path, data);
+                    savedInfos.Add((string)file, data);
                 }
             }
             catch (Exception e)
             {
-                Debug.Log("[ERROR]" + e.ToString());
+                Debug.Log("[ERROR]" + e);
             }
         }
 
@@ -291,56 +281,47 @@ namespace Sth4nothing.SLManager
         public static SaveData ParseZip(string path)
         {
             SaveData data = null;
-            using (var zip = new ZipFile(path))
+            var items = SevenZipHelper.List(path).ToList();
+            if (items.Any(t => t.path == "date.json"))
             {
-                if (zip.ContainsEntry("date.json"))
+                using (var tmp = new TempDir())
                 {
-                    using (var stream = new MemoryStream())
-                    {
-                        zip.SelectEntries("date.json").First().Extract(stream);
-                        stream.Seek(0, SeekOrigin.Begin);
-                        using (var reader = new StreamReader(stream))
-                        {
-                            var serializer = JsonSerializer.Create();
-                            data = serializer.Deserialize(reader,
-                                typeof(SaveData)) as SaveData;
-                        }
-                    }
+                    SevenZipHelper.Extract(path, tmp.Dir, include: "date.json");
+                    var json = File.ReadAllText(Path.Combine(tmp.Dir, "date.json"), Encoding.UTF8);
+                    data = JsonConvert.DeserializeObject(json, typeof(SaveData)) as SaveData;
                 }
-                else if (!zip.ContainsEntry("TW_Save_Date_0.twV0")
-                      && !zip.ContainsEntry("TW_Save_Date_0.tw"))
+            }
+            else if (!items.Any(t => t.path == "TW_Save_Date_0.twV0")
+                    && !items.Any(t => t.path == "TW_Save_Date_0.tw"))
+            {
+                throw new InvalidDataException(path); // 错误存档
+            }
+            else // 不含加速文件
+            {
+                bool rijndeal = true;
+                string files = null;
+                if (items.Any(t => t.path == "TW_Save_Date_0.twV0"))
                 {
-                    throw new Exception(path); // 错误存档
+                    rijndeal = false;
+                    files = "TW_Save_Date_0.twV0";
                 }
-                else // 不含加速文件
+                else if (items.Any(t => t.path == "TW_Save_Date_0.tw"))
                 {
-                    var tmp = Path.Combine(
-                        Environment.GetEnvironmentVariable("TEMP"),
-                        Guid.NewGuid().ToString() + ".tw");
-
-                    bool rijndeal = true;
-                    using (var stream = File.OpenWrite(tmp))
+                    rijndeal = true;
+                    files = "TW_Save_Date_0.tw";
+                }
+                if (files != null)
+                {
+                    using (var tmp = new TempDir())
                     {
-                        if (zip.ContainsEntry("TW_Save_Date_0.twV0"))
-                        {
-                            zip.SelectEntries("TW_Save_Date_0.twV0").First().Extract(stream);
-                            rijndeal = false;
-                        }
-                        else if (zip.ContainsEntry("TW_Save_Date_0.tw"))
-                        {
-                            zip.SelectEntries("TW_Save_Date_0.tw").First().Extract(stream);
-                            rijndeal = true;
-                        }
+                        SevenZipHelper.Extract(path, tmp.Dir, include: files);
+                        DateFile.SaveDate date = ReadSaveDate(Path.Combine(tmp.Dir, files), rijndeal);
+                        data = new SaveData(date._mainActorName, date._year, date._samsara,
+                            date._dayTrun, date._playerSeatName, date._playTime);
+                        var dataPath = Path.Combine(tmp.Dir, "date.json");
+                        File.WriteAllText(dataPath, JsonConvert.SerializeObject(data));
+                        SevenZipHelper.Update(path, dataPath);
                     }
-                    DateFile.SaveDate date = ReadSaveDate(tmp, rijndeal);
-
-                    File.Delete(tmp);
-
-                    data = new SaveData(date._mainActorName, date._year, date._samsara,
-                        date._dayTrun, date._playerSeatName, date._playTime);
-                    //  添加加速文件
-                    zip.AddEntry("date.json", JsonConvert.SerializeObject(data));
-                    zip.Save();
                 }
             }
             return data;
@@ -376,6 +357,7 @@ namespace Sth4nothing.SLManager
         /// <param name="file"></param>
         public static IEnumerator<object> Load(string file)
         {
+            Main.Logger.Log("开始载入存档: " + file);
             yield return new WaitForSeconds(0.01f);
             if (file.EndsWith(".zip"))
                 Unzip(file);
@@ -390,15 +372,14 @@ namespace Sth4nothing.SLManager
         /// <param name="file"></param>
         public static void Unzip(string file)
         {
-            using (var zip = new ZipFile(file))
+            Directory.GetFiles(SaveManager.SavePath, "*.tw*", SearchOption.TopDirectoryOnly)
+                .Do(File.Delete);
+            if (File.Exists(Path.Combine(SaveManager.SavePath, "date.json")))
             {
-                Directory.GetFiles(SaveManager.SavePath, "*.tw*", SearchOption.TopDirectoryOnly)
-                    .Do(File.Delete);
-
-                zip.ExtractAll(SaveManager.SavePath, ExtractExistingFileAction.OverwriteSilently);
+                File.Delete(Path.Combine(SaveManager.SavePath, "date.json"));
             }
+            SevenZipHelper.Extract(file, SaveManager.SavePath, true);
         }
-
     }
 
     public static class SaveManager
@@ -514,11 +495,8 @@ namespace Sth4nothing.SLManager
         /// <param name="targetFile"></param>
         internal static void BackupFolderToFile(string pathToBackup, string targetFile)
         {
-            using (var zip = new ZipFile())
-            {
-                zip.AddFiles(GetFilesToBackup(pathToBackup), "/");
-                zip.Save(targetFile);
-            }
+            SevenZipHelper.WorkDir = pathToBackup;
+            SevenZipHelper.Create(targetFile, "*.tw* date.json");
         }
 
         /// <summary>
