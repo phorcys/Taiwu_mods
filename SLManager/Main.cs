@@ -20,12 +20,29 @@ namespace Sth4nothing.SLManager
 
         private static string logPath;
         private static string[] autoSaveState = { "关闭", "启用" };
+        private static string[] dlls = {
+            "I18N.dll",
+            "I18N.West.dll",
+            "Ionic.Zip.dll"
+        };
 
         public static Settings settings;
 
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
+            foreach (var dll in dlls)
+            {
+                try
+                {
+                    Assembly.LoadFrom(Path.Combine(modEntry.Path, dll));
+                    Debug.Log(dll + "已加载");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.Log(e);
+                }
+            }
             try
             {
                 var userprofile = System.Environment.GetEnvironmentVariable("USERPROFILE");
@@ -42,8 +59,6 @@ namespace Sth4nothing.SLManager
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
-
-            SevenZipHelper.SevenZipPath = Path.Combine(modEntry.Path, "7z.exe");
 
             return true;
         }
@@ -82,6 +97,7 @@ namespace Sth4nothing.SLManager
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
             {
                 Log();
+
             }
             if (GUILayout.Button("显示log路径", GUILayout.Width(100)))
             {
