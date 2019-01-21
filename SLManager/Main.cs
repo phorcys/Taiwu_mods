@@ -35,7 +35,7 @@ namespace Sth4nothing.SLManager
             {
                 try
                 {
-                    Assembly.LoadFrom(Path.Combine(modEntry.Path, dll));
+                    Assembly.LoadFile(Path.Combine(modEntry.Path, dll));
                     Debug.Log(dll + "已加载");
                 }
                 catch (System.Exception e)
