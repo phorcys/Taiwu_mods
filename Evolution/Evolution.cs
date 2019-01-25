@@ -284,7 +284,7 @@ namespace Evolution
                 var actorId = DateFile.instance.mianActorId;
                 if (Main.setting.addFeature)
                 {
-                    int grow = DateFile.instance.actorGongFas[actorId][150370][0] / 25;
+                    int grow = DateFile.instance.actorGongFas[actorId][150370][0] / 20;
                     if (Main.setting.growCount > 10)
                     {
                         Main.setting.growCount = Main.setting.growCount - 10;
@@ -392,7 +392,7 @@ namespace Evolution
 
                     int grow_num = min_grow + extra_grow;
 
-                    if (Main.setting.expCost && DateFile.instance.actorGongFas[actorId][150370][0] > p)
+                    if (Main.setting.expCost && DateFile.instance.actorGongFas[actorId][150370][0] < p)
                     {
                         DateFile.instance.actorGongFas[actorId][150370][0] =
                             DateFile.instance.actorGongFas[actorId][150370][0] - grow_num;
