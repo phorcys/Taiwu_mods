@@ -225,8 +225,10 @@ namespace Majordomo
                 case BOOTY_TYPE_ACTOR: // bootyId: actorId
                 {
                     if (!Main.settings.autoHarvestActors) return false;
+                    if (Main.settings.filterNewActorGender && TryFilterNewActorGender(bootyId)) return false;
+                    if (Main.settings.filterNewActorCharm && TryFilterNewActorCharm(bootyId)) return false;
                     if (Main.settings.filterNewActorGoodness && TryFilterNewActorGoodness(bootyId)) return false;
-                    if (Main.settings.filterNewActorAttr && TryFilterNewActorAttribute(bootyId)) return false;
+                    if (Main.settings.filterNewActorAttr && TryFilterNewActorAttribute(bootyId)) return false;                    
 
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[1]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[2]}{DateFile.instance.GetActorName(bootyId)}</color>";
                     int getActorType = Main.settings.showNewActorWindow ? 0 : -1;
@@ -256,6 +258,22 @@ namespace Majordomo
             if (building[12] > 0) --building[12];
 
             return true;
+        }
+
+
+        // 若新村民性别不符合条件，则返回 true
+        private static bool TryFilterNewActorGender(int actorId)
+        {
+            int gender = int.Parse(DateFile.instance.GetActorDate(actorId, 14));
+            return gender != Main.settings.newActorGenderFilterAccept;
+        }
+
+
+        // 若新村民原始魅力小于阈值，则返回 true
+        private static bool TryFilterNewActorCharm(int actorId)
+        {
+            int charm = int.Parse(DateFile.instance.actorsDate[actorId][15]);
+            return charm < Main.settings.newActorCharmFilterThreshold;
         }
 
 

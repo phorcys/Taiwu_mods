@@ -20,6 +20,10 @@ namespace Majordomo
         public bool autoHarvestItems = true;            // 自动收获物品
         public bool autoHarvestActors = true;           // 自动接纳新村民
         public bool showNewActorWindow = true;          // 接纳新村民时显示人物窗口
+        public bool filterNewActorGender = false;       // 过滤新村民性别
+        public int newActorGenderFilterAccept = 2;      // 保留性别 (1: 男, 2: 女)
+        public bool filterNewActorCharm = false;        // 过滤新村民魅力
+        public int newActorCharmFilterThreshold = 500;
         public bool filterNewActorGoodness = false;     // 过滤新村民立场
         public bool[] newActorGoodnessFilters = new bool[] { true, true, true, true, true };    // 0: 中庸, 1: 仁善, 2: 刚正, 3: 叛逆, 4: 唯我
         public bool filterNewActorAttr = false;         // 过滤新村民资质
@@ -94,6 +98,25 @@ namespace Majordomo
             Main.settings.autoHarvestItems = GUILayout.Toggle(Main.settings.autoHarvestItems, "自动收获物品", GUILayout.Width(120));
             Main.settings.autoHarvestActors = GUILayout.Toggle(Main.settings.autoHarvestActors, "自动接纳新村民", GUILayout.Width(120));
             Main.settings.showNewActorWindow = GUILayout.Toggle(Main.settings.showNewActorWindow, "接纳新村民时显示人物窗口", GUILayout.Width(120));
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            Main.settings.filterNewActorGender = GUILayout.Toggle(Main.settings.filterNewActorGender, "过滤新村民性别", GUILayout.Width(120));
+            GUILayout.Label("保留：");
+            Main.settings.newActorGenderFilterAccept = GUILayout.SelectionGrid(Main.settings.newActorGenderFilterAccept - 1, new string[] { "男性", "女性" }, 2) + 1;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            Main.settings.filterNewActorCharm = GUILayout.Toggle(Main.settings.filterNewActorCharm, "过滤新村民魅力", GUILayout.Width(120));
+            GUILayout.Label("保留魅力不低于");
+            var newActorCharmFilterThreshold = GUILayout.TextField(Main.settings.newActorCharmFilterThreshold.ToString(), 3, GUILayout.Width(40));
+            if (GUI.changed && !int.TryParse(newActorCharmFilterThreshold, out Main.settings.newActorAttrFilterThreshold))
+            {
+                Main.settings.newActorAttrFilterThreshold = 450;
+            }
+            GUILayout.Label("的新村民（0 ~ 900）");
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
