@@ -162,10 +162,14 @@ namespace Majordomo
         }
 
 
-        // 获取所有据点的所有收获物
+        /// <summary>
+        /// 获取所有据点的所有收获物
+        /// </summary>
         public static void GetAllBooties()
         {
             AutoHarvest.InitializeBooties();
+
+            List<int> newActorIds = new List<int>();
 
             foreach (var parts in DateFile.instance.homeShopBootysDate)
             {
@@ -181,7 +185,7 @@ namespace Majordomo
                         var booties = building.Value;
                         foreach (var booty in booties.ToArray())
                         {
-                            bool gotBooty = AutoHarvest.GetBooty(partId, placeId, buildingIndex, booty);
+                            bool gotBooty = AutoHarvest.GetBooty(partId, placeId, buildingIndex, booty, newActorIds);
                             if (gotBooty)
                             {
                                 booties.Remove(booty);
@@ -191,12 +195,25 @@ namespace Majordomo
                     }
                 }
             }
+
+            if (Main.settings.showNewActorWindow && newActorIds.Count > 0)
+            {
+                GetActorWindow.instance.ShowGetActorWindow(newActorIds, 0);
+            }
         }
 
 
-        // 拿取收获物（但没有从收获物列表中删除该收获物）
-        // @return: gotBooty - true: 拿取了收获物, false: 没有拿取收获物
-        private static bool GetBooty(int partId, int placeId, int buildingIndex, int[] booty)
+        /// <summary>
+        /// 拿取收获物（但没有从收获物列表中删除该收获物）
+        /// 同时保存了接纳的新村民列表
+        /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
+        /// <param name="buildingIndex"></param>
+        /// <param name="booty"></param>
+        /// <param name="newActorIds"></param>
+        /// <returns>是否拿取了收获物</returns>
+        private static bool GetBooty(int partId, int placeId, int buildingIndex, int[] booty, List<int> newActorIds)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
 
@@ -228,16 +245,16 @@ namespace Majordomo
                     if (Main.settings.filterNewActorGender && TryFilterNewActorGender(bootyId)) return false;
                     if (Main.settings.filterNewActorCharm && TryFilterNewActorCharm(bootyId)) return false;
                     if (Main.settings.filterNewActorGoodness && TryFilterNewActorGoodness(bootyId)) return false;
-                    if (Main.settings.filterNewActorAttr && TryFilterNewActorAttribute(bootyId)) return false;                    
+                    if (Main.settings.filterNewActorAttr && TryFilterNewActorAttribute(bootyId)) return false;
 
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[1]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[2]}{DateFile.instance.GetActorName(bootyId)}</color>";
-                    int getActorType = Main.settings.showNewActorWindow ? 0 : -1;
-                    DateFile.instance.GetActor(new List<int> { bootyId }, getActorType);
+                    DateFile.instance.GetActor(new List<int> { bootyId });
                     DateFile.instance.FamilyActorLeave(bootyId, 16);
                     DateFile.instance.MoveToPlace(int.Parse(DateFile.instance.GetGangDate(16, 3)), int.Parse(DateFile.instance.GetGangDate(16, 4)), bootyId, fromPart: false);
                     UIDate.instance.UpdateManpower();
 
                     AutoHarvest.LogNewVillagerMerchantType(bootyId);
+                    newActorIds.Add(bootyId);
                     break;
                 }
                 default:
@@ -261,7 +278,11 @@ namespace Majordomo
         }
 
 
-        // 若新村民性别不符合条件，则返回 true
+        /// <summary>
+        /// 若新村民性别不符合条件，则返回 true
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <returns></returns>
         private static bool TryFilterNewActorGender(int actorId)
         {
             int gender = int.Parse(DateFile.instance.GetActorDate(actorId, 14));
@@ -269,7 +290,11 @@ namespace Majordomo
         }
 
 
-        // 若新村民原始魅力小于阈值，则返回 true
+        /// <summary>
+        /// 若新村民原始魅力小于阈值，则返回 true
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <returns></returns>
         private static bool TryFilterNewActorCharm(int actorId)
         {
             int charm = int.Parse(DateFile.instance.actorsDate[actorId][15]);
@@ -277,7 +302,11 @@ namespace Majordomo
         }
 
 
-        // 若新村民立场在排除列表中，则返回 true
+        /// <summary>
+        /// 若新村民立场在排除列表中，则返回 true
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <returns></returns>
         private static bool TryFilterNewActorGoodness(int actorId)
         {
             int goodness = DateFile.instance.GetActorGoodness(actorId);
@@ -285,7 +314,11 @@ namespace Majordomo
         }
 
 
-        // 若新村民所有原始资质都小于阈值，则返回 true
+        /// <summary>
+        /// 若新村民所有原始资质都小于阈值，则返回 true
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <returns></returns>
         private static bool TryFilterNewActorAttribute(int actorId)
         {
             var actor = DateFile.instance.actorsDate[actorId];
@@ -300,7 +333,10 @@ namespace Majordomo
         }
 
 
-        // 在 log 中输出新村民的潜在商队
+        /// <summary>
+        /// 在 log 中输出新村民的潜在商队
+        /// </summary>
+        /// <param name="actorId"></param>
         private static void LogNewVillagerMerchantType(int actorId)
         {
             int gangType = int.Parse(DateFile.instance.GetActorDate(actorId, 9, addValue: false));

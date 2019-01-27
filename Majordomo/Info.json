@@ -2,7 +2,7 @@
   "Id": "Majordomo",
   "DisplayName": "太吾管家",
   "Author": "fenghou",
-  "Version": "0.13.0",
+  "Version": "0.13.1",
   "AssemblyName": "Majordomo.dll",
   "EntryMethod": "Majordomo.Main.Load"
 }
