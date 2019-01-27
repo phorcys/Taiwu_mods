@@ -97,7 +97,7 @@ namespace Majordomo
             GUILayout.BeginHorizontal();
             Main.settings.autoHarvestItems = GUILayout.Toggle(Main.settings.autoHarvestItems, "自动收获物品", GUILayout.Width(120));
             Main.settings.autoHarvestActors = GUILayout.Toggle(Main.settings.autoHarvestActors, "自动接纳新村民", GUILayout.Width(120));
-            Main.settings.showNewActorWindow = GUILayout.Toggle(Main.settings.showNewActorWindow, "接纳新村民时显示人物窗口", GUILayout.Width(120));
+            Main.settings.showNewActorWindow = GUILayout.Toggle(Main.settings.showNewActorWindow, "接纳新村民时显示人物窗口", GUILayout.Width(160));
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -111,9 +111,9 @@ namespace Majordomo
             Main.settings.filterNewActorCharm = GUILayout.Toggle(Main.settings.filterNewActorCharm, "过滤新村民魅力", GUILayout.Width(120));
             GUILayout.Label("保留魅力不低于");
             var newActorCharmFilterThreshold = GUILayout.TextField(Main.settings.newActorCharmFilterThreshold.ToString(), 3, GUILayout.Width(40));
-            if (GUI.changed && !int.TryParse(newActorCharmFilterThreshold, out Main.settings.newActorAttrFilterThreshold))
+            if (GUI.changed && !int.TryParse(newActorCharmFilterThreshold, out Main.settings.newActorCharmFilterThreshold))
             {
-                Main.settings.newActorAttrFilterThreshold = 450;
+                Main.settings.newActorCharmFilterThreshold = 500;
             }
             GUILayout.Label("的新村民（0 ~ 900）");
             GUILayout.FlexibleSpace();
