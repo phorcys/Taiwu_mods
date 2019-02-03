@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,6 +76,14 @@ namespace NpcScan
         string actorFeatureText = "";
         bool tarFeature = false;
         bool tarFeatureOr = false;
+
+
+        string actorGongFaText = "";
+        bool tarGongFaOr = false;
+
+        int highestLevel = 1;
+        bool tarIsGang = false;
+        bool isGang = false;
 
         float windowWidth = Screen.width * 0.8f;
 
@@ -308,6 +316,7 @@ namespace NpcScan
                 new Column {name = "坚毅", width = 30},
                 new Column {name = "冷静", width = 30},
                 new Column {name = "福缘", width = 30},
+                new Column {name = "可学功法", width = 240},
                 new Column {name = "前世", width = 120},
                 new Column {name = "特性", width = 500}
             };
@@ -531,6 +540,19 @@ namespace NpcScan
             actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
             tarFeature = GUILayout.Toggle(tarFeature, "精确特性", GUILayout.Width(75));//是否精确查找,精确查找的情况下,特性用'|'分隔
             tarFeatureOr = GUILayout.Toggle(tarFeatureOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("可教功法:", GUILayout.Width(60));
+            actorGongFaText = GUILayout.TextField(actorGongFaText, 60, GUILayout.Width(120));
+            tarGongFaOr = GUILayout.Toggle(tarGongFaOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
+
+            GUILayout.Label("最高查询品级:", GUILayout.Width(120));
+            int.TryParse(GUILayout.TextField(highestLevel.ToString(), 1, GUILayout.Width(60)), out highestLevel);
+            tarIsGang = GUILayout.Toggle(tarIsGang, "是否开启识别门派", new GUILayoutOption[0]);
+            isGang = GUILayout.Toggle(isGang, "仅搜索门派", new GUILayoutOption[0]);
+
             //Main.Logger.Log(tarFeature.ToString());
             GUILayout.Space(30);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
@@ -553,6 +575,19 @@ namespace NpcScan
                 if (actorFeatureText != "")
                 {
                     Main.findList = GetFeatureKey(actorFeatureText, tarFeature);
+                }
+
+                if (Main.gNameList.Count == 0)
+                {
+                    foreach (int i in DateFile.instance.gongFaDate.Keys)
+                    {
+                        String tem = DateFile.instance.gongFaDate[i][0].Substring(DateFile.instance.gongFaDate[i][0].IndexOf('>') + 1, DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1);
+                        Main.gNameList.Add(tem, i);
+                    }
+                }
+                if (actorGongFaText != "")
+                {
+                    Main.GongFaList = GetGongFaKey(actorGongFaText);
                 }
                 //s = Main.findList.Count.ToString();
                 //Main.Logger.Log("测试查找列表:" + s);
@@ -756,6 +791,10 @@ namespace NpcScan
                 value = Mathf.Max(value / 5, 1);
             }
             int num3 = Mathf.Clamp(num + value, 0, num2);
+            if (int.Parse(DateFile.instance.GetActorDate(key, 26, false)) != 0)
+            {
+                num2 = num3 = 0;
+            }
             DateFile.instance.actorsDate[key][12] = num3.ToString();
             if (int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1)
             {
@@ -875,7 +914,7 @@ namespace NpcScan
                 int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
                 int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
                 int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
-                int health = ActorMenu.instance.Health(index);
+                int health = int.Parse(DateFile.instance.GetActorDate(index, 26, false)) == 0 ? ActorMenu.instance.Health(index) : 0;
                 int cv = charmValue;
                 if (charmValue == 0)
                 {
@@ -985,11 +1024,17 @@ namespace NpcScan
 
                         if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
                         {
-                            if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                            if (ScanGongFa(index, Main.GongFaList, tarGongFaOr) || actorGongFaText == "")
                             {
-                                if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                                if (gangLevel >= highestLevel)
                                 {
-                                    actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
+                                    if ((!tarIsGang || (isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)
+                                    {
+                                        if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                                        {
+                                            if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                                            {
+                                                actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
                                 charm + "(" + charmText + ")" ,//魅力
                                 dateFile.GetGangDate(groupid, 0),//从属gangText
                                 gangLevelText,//身份gangLevelText
@@ -1036,8 +1081,12 @@ namespace NpcScan
                                 actorResources[4].ToString(),
                                 actorResources[5].ToString(),
                                 actorResources[6].ToString(),
+                                GetGongFaListText(index),
                                 samsaraNames,
                                 GetActorFeatureNameText(index, tarFeature)});
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1046,7 +1095,7 @@ namespace NpcScan
             }
         }
 
-		void GetRank()
+        void GetRank()
         {
             actorList.Clear();
             DateFile dateFile = DateFile.instance;
@@ -1133,11 +1182,17 @@ namespace NpcScan
 
                     if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
                     {
-                        if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                        if (ScanGongFa(index, Main.GongFaList, tarGongFaOr) || actorGongFaText == "")
                         {
-                            if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                            if (gangLevel >= highestLevel)
                             {
-                                actorList.Add(new string[] { totalrank.ToString(), actorName ,age.ToString(), genderText, place,
+                                if ((!tarIsGang || (isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)
+                                {
+                                    if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
+                                    {
+                                        if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
+                                        {
+                                            actorList.Add(new string[] { totalrank.ToString(), actorName ,age.ToString(), genderText, place,
                                 charm + "(" + charmText + ")" ,//魅力
                                 dateFile.GetGangDate(groupid, 0),//从属gangText
                                 gangLevelText,//身份gangLevelText
@@ -1184,19 +1239,23 @@ namespace NpcScan
                                 actorResources[4].ToString(),
                                 actorResources[5].ToString(),
                                 actorResources[6].ToString(),
+                                GetGongFaListText(index),
                                 samsaraNames,
                                 GetActorFeatureNameText(index, tarFeature) });
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            }
         }
         //婚姻状况
         public static string GetSpouse(int id)
         {
-            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false);
-            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true);
+            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false, false);
+            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true, false);
             bool flag = actorSocial2.Count == 0;
             string result;
             if (flag)
@@ -1365,6 +1424,77 @@ namespace NpcScan
             return result;
         }
 
+        private static List<int> GetGongFaKey(string str)
+        {
+            List<int> list = new List<int>();
+            string[] gongFaTemp = str.Split('|');
+            foreach (string s in gongFaTemp)
+            {
+                if (Main.gNameList.ContainsKey(s))
+                {
+                    int i = Main.gNameList[s];
+                    list.Add(i);
+                }
+            }
+            return list;
+        }
+
+        private static bool ScanGongFa(int key, List<int> slist, bool tarGongFaOr)
+        {
+            List<int> list = new List<int>(DateFile.instance.actorGongFas[key].Keys);
+            bool result = false;
+            if (slist.Count == 0)
+            {
+                return true;
+            }
+            //List<int> actorGongFa = new List<int>();
+            //foreach (int i in list)
+            //{
+               // actorGongFa.Add(Main.GongFaList[i]);
+            //}
+
+            if (!tarGongFaOr)   //与查找
+            {
+                if (slist.All(t => list.Any(b => b == t)))
+                {
+                    result = true;
+                }
+            }
+            else                //或查找
+            {
+                foreach (int i in list)
+                {
+                    if (slist.Contains(i))
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        private static String GetGongFaListText(int key)
+        {
+            String result = "";
+            List<int> myList = new List<int>(DateFile.instance.actorGongFas[DateFile.instance.MianActorID()].Keys);
+            List<int> list = new List<int>(DateFile.instance.actorGongFas[key].Keys);
+            int[] resultList = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+            foreach(int i in list)
+            {
+                if(myList.All(t => t != i))
+                {
+                    resultList[9 - int.Parse(DateFile.instance.gongFaDate[i][2])]++;
+                }
+            }
+            for(int i = 0; i < 9; i++)
+            {
+                result += DateFile.instance.SetColoer(20010 - i, String.Format("{0:D2}", resultList[i]));
+                if (i != 8)
+                    result += " | ";
+            }
+            return result;
+        }
 
         //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
         static class Screen_lockCursor_Patch
