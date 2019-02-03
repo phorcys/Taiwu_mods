@@ -101,11 +101,35 @@ namespace Majordomo
                 int resourceIndex = entry.Key;
                 int quantity = entry.Value;
                 string name = DateFile.instance.resourceDate[resourceIndex][1];
-                summary += name + "\u00A0" + quantity + "、";
+                summary += TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, name) + "\u00A0" +
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, quantity.ToString()) + "、";
             }
             summary = summary.Substring(0, summary.Length - 1) + "。\n";
 
             return summary;
+        }
+
+
+        private static string GetHarvestedResourcesDetails(ref int earnedMoney)
+        {
+            string details = "";
+            earnedMoney = 0;
+
+            if (AutoHarvest.harvestedResources.Count == 0) return details;
+
+            foreach (var entry in AutoHarvest.harvestedResources)
+            {
+                int resourceIndex = entry.Key;
+                int quantity = entry.Value;
+                string name = DateFile.instance.resourceDate[resourceIndex][1];
+                details += TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, name) + "\u00A0" + 
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, quantity.ToString()) + "、";
+
+                if (resourceIndex == ResourceMaintainer.RES_ID_MONEY) earnedMoney = quantity;
+            }
+            details = details.Substring(0, details.Length - 1) + "。";
+
+            return details;
         }
 
 
@@ -125,7 +149,7 @@ namespace Majordomo
                     int itemId = item.Key;
                     int quantity = item.Value;
                     string name = DateFile.instance.GetItemDate(itemId, 0, otherMassage: false);
-                    string coloredName = DateFile.instance.SetColoer(20001 + quality, name);
+                    string coloredName = TaiwuCommon.SetColor(TaiwuCommon.COLOR_LOWEST_LEVEL + quality - 1, name);
                     summary += coloredName + "、";
                     ++numDisplayedItems;
 
@@ -140,6 +164,32 @@ namespace Majordomo
         }
 
 
+        private static string GetHarvestedItemsDetails()
+        {
+            string details = "";
+
+            if (AutoHarvest.harvestedItems.Count == 0) return details;
+
+            foreach (var items in AutoHarvest.harvestedItems.Reverse())
+            {
+                int quality = items.Key;
+
+                foreach (var item in items.Value)
+                {
+                    int itemId = item.Key;
+                    int quantity = item.Value;
+                    string name = DateFile.instance.GetItemDate(itemId, 0, otherMassage: false);
+                    string coloredName = TaiwuCommon.SetColor(TaiwuCommon.COLOR_LOWEST_LEVEL + quality - 1, name);
+                    string coloredQuntity = TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, quantity.ToString());
+                    details += $"{coloredName} × {coloredQuntity}、";
+                }
+            }
+            details = details.Substring(0, details.Length - 1) + "。";
+
+            return details;
+        }
+
+
         private static string GetHarvestedActorsSummary()
         {
             string summary = "";
@@ -150,7 +200,7 @@ namespace Majordomo
             foreach (var actorId in AutoHarvest.harvestedActors)
             {
                 string name = DateFile.instance.GetActorName(actorId);
-                string coloredName = DateFile.instance.SetColoer(10002, name);
+                string coloredName = TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, name);
                 summary += coloredName + "、";
                 ++numDisplayedActors;
 
@@ -162,14 +212,30 @@ namespace Majordomo
         }
 
 
+        private static string GetHarvestedActorsDetails()
+        {
+            string details = "";
+
+            if (AutoHarvest.harvestedActors.Count == 0) return details;
+
+            foreach (var actorId in AutoHarvest.harvestedActors)
+            {
+                string name = DateFile.instance.GetActorName(actorId);
+                string coloredName = TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, name);
+                details += coloredName + "、";
+            }
+            details = details.Substring(0, details.Length - 1) + "。";
+
+            return details;
+        }
+
+
         /// <summary>
         /// 获取所有据点的所有收获物
         /// </summary>
         public static void GetAllBooties()
         {
             AutoHarvest.InitializeBooties();
-
-            List<int> newActorIds = new List<int>();
 
             foreach (var parts in DateFile.instance.homeShopBootysDate)
             {
@@ -185,7 +251,7 @@ namespace Majordomo
                         var booties = building.Value;
                         foreach (var booty in booties.ToArray())
                         {
-                            bool gotBooty = AutoHarvest.GetBooty(partId, placeId, buildingIndex, booty, newActorIds);
+                            bool gotBooty = AutoHarvest.GetBooty(partId, placeId, buildingIndex, booty);
                             if (gotBooty)
                             {
                                 booties.Remove(booty);
@@ -196,10 +262,36 @@ namespace Majordomo
                 }
             }
 
-            if (Main.settings.showNewActorWindow && newActorIds.Count > 0)
-            {
-                GetActorWindow.instance.ShowGetActorWindow(newActorIds, 0);
-            }
+            AutoHarvest.RecordHarvestDetails();
+
+            if (Main.settings.showNewActorWindow && AutoHarvest.harvestedActors.Count > 0)
+                GetActorWindow.instance.ShowGetActorWindow(AutoHarvest.harvestedActors, 0);
+        }
+
+
+        /// <summary>
+        /// 记录收获详情文本（以及当月收获银钱）
+        /// </summary>
+        private static void RecordHarvestDetails()
+        {
+            var currDate = new TaiwuDate();
+
+            int earnedMoney = 0;
+            string details = GetHarvestedResourcesDetails(ref earnedMoney);
+            if (!string.IsNullOrEmpty(details))
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月收获资源") + "：" + details);
+            MajordomoWindow.instance.SetEarnedMoney(currDate, earnedMoney);
+
+            details = GetHarvestedItemsDetails();
+            if (!string.IsNullOrEmpty(details))
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月收获物品") + "：" + details);
+
+            details = GetHarvestedActorsDetails();
+            if (!string.IsNullOrEmpty(details))
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月接纳新村民") + "：" + details);
         }
 
 
@@ -211,9 +303,8 @@ namespace Majordomo
         /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
         /// <param name="booty"></param>
-        /// <param name="newActorIds"></param>
         /// <returns>是否拿取了收获物</returns>
-        private static bool GetBooty(int partId, int placeId, int buildingIndex, int[] booty, List<int> newActorIds)
+        private static bool GetBooty(int partId, int placeId, int buildingIndex, int[] booty)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
 
@@ -254,7 +345,6 @@ namespace Majordomo
                     UIDate.instance.UpdateManpower();
 
                     AutoHarvest.LogNewVillagerMerchantType(bootyId);
-                    newActorIds.Add(bootyId);
                     break;
                 }
                 default:

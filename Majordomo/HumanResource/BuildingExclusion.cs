@@ -52,49 +52,53 @@ namespace Majordomo
                 Main.settings.excludedBuildings[partId].ContainsKey(placeId) &&
                 Main.settings.excludedBuildings[partId][placeId].Contains(buildingIndex);
         }
+    }
 
 
-        // Patch: 在建筑界面添加鼠标右键事件
-        [HarmonyPatch(typeof(HomeSystem), "MakeHomeMap")]
-        public static class HomeSystem_MakeHomeMap_RegisterMouseEvent
+    /// <summary>
+    /// Patch: 在建筑界面添加鼠标右键事件
+    /// </summary>
+    [HarmonyPatch(typeof(HomeSystem), "MakeHomeMap")]
+    public static class HomeSystem_MakeHomeMap_RegisterMouseEvent
+    {
+        static void Postfix(HomeSystem __instance)
         {
-            static void Postfix(HomeSystem __instance)
+            if (!Main.enabled) return;
+
+            int partId = HomeSystem.instance.homeMapPartId;
+            int placeId = HomeSystem.instance.homeMapPlaceId;
+            int mapSideLength = int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 32));
+            int maxBuildings = mapSideLength * mapSideLength;
+
+            for (int buildingIndex = 0; buildingIndex < __instance.allHomeBulding.Length && buildingIndex < maxBuildings; ++buildingIndex)
             {
-                if (!Main.enabled) return;
-
-                int partId = HomeSystem.instance.homeMapPartId;
-                int placeId = HomeSystem.instance.homeMapPlaceId;
-                int mapSideLength = int.Parse(DateFile.instance.GetNewMapDate(partId, placeId, 32));
-                int maxBuildings = mapSideLength * mapSideLength;
-
-                for (int buildingIndex = 0; buildingIndex < __instance.allHomeBulding.Length && buildingIndex < maxBuildings; ++buildingIndex)
-                {
-                    HomeBuilding building = __instance.allHomeBulding[buildingIndex];                    
-                    var handler = building.buildingButton.GetComponent<BuildingPointerHandler>();
-                    if (!handler) handler = building.buildingButton.AddComponent<BuildingPointerHandler>();
-                    handler.SetLocation(partId, placeId, buildingIndex);
-                }
+                HomeBuilding building = __instance.allHomeBulding[buildingIndex];
+                var handler = building.buildingButton.GetComponent<BuildingPointerHandler>();
+                if (!handler) handler = building.buildingButton.AddComponent<BuildingPointerHandler>();
+                handler.SetLocation(partId, placeId, buildingIndex);
             }
         }
+    }
 
 
-        // Patch: 在建筑图标上面加上排除标记
-        [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding")]
-        public static class HomeBuilding_UpdateBuilding_AddExclusionIcon
+    /// <summary>
+    /// Patch: 在建筑图标上面加上排除标记
+    /// </summary>
+    [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding")]
+    public static class HomeBuilding_UpdateBuilding_AddExclusionIcon
+    {
+        static void Postfix(HomeBuilding __instance)
         {
-            static void Postfix(HomeBuilding __instance)
+            if (!Main.enabled) return;
+
+            string[] array = __instance.name.Split(new char[] { ',' });
+            int partId = int.Parse(array[1]);
+            int placeId = int.Parse(array[2]);
+            int buildingIndex = int.Parse(array[3]);
+
+            if (BuildingExclusion.GetState(partId, placeId, buildingIndex))
             {
-                if (!Main.enabled) return;
-
-                string[] array = __instance.name.Split(new char[] { ',' });
-                int partId = int.Parse(array[1]);
-                int placeId = int.Parse(array[2]);
-                int buildingIndex = int.Parse(array[3]);
-
-                if (BuildingExclusion.GetState(partId, placeId, buildingIndex))
-                {
-                    __instance.placeName.text += "[锁]";
-                }
+                __instance.placeName.text += "[锁]";
             }
         }
     }

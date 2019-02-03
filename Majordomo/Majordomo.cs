@@ -16,6 +16,9 @@ namespace Majordomo
 {
     public class Settings : UnityModManager.ModSettings
     {
+        // 管家界面
+        public int messageImportanceThreshold = Message.IMPORTANCE_LOWEST;    // 消息过滤等级
+
         // 自动收获
         public bool autoHarvestItems = true;            // 自动收获物品
         public bool autoHarvestActors = true;           // 自动接纳新村民
@@ -39,11 +42,11 @@ namespace Majordomo
         public bool autoAssignBuildingWorkers = true;   // 自动指派建筑工作人员
         // 建筑排除列表
         // partId -> {placeId -> {buildingIndex,}}
-        public SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>> excludedBuildings = 
+        public SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>> excludedBuildings =
             new SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>>();
         // 建筑排除操作鼠标键位, 0: 右键, 1: 中键
         public int exclusionMouseButton = 1;
-        public static string[] exclusionMouseButtons = new string[] { "右键", "中键" };
+        public static readonly string[] EXCLUSION_MOUSE_BUTTONS = new string[] { "右键", "中键" };
 
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -55,10 +58,11 @@ namespace Majordomo
 
     public static class Main
     {
-        public static bool enabled;
+        public static bool enabled = true;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
+        public static readonly string MOD_ID = "Majordomo";
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -80,18 +84,41 @@ namespace Majordomo
         }
 
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        /// <summary>
+        /// 由于一些操作必须在游戏初始化时进行，所以关闭之后再打开 mod，一些初始化动作可能尚未进行，
+        /// 因而设定成在此状态下，必须重启才能再次打开此 mod。
+        /// </summary>
+        /// <param name="modEntry"></param>
+        /// <param name="enable"></param>
+        /// <returns></returns>
+        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool enable)
         {
-            Main.enabled = value;
+            if (!Main.enabled && enable) return false;
+
+            Main.enabled = enable;
             return true;
         }
 
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            // 管家界面 --------------------------------------------------------
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("<color=#87CEEB>管家界面</color>");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("消息过滤：只显示重要度不低于");
+            Main.settings.messageImportanceThreshold = GUILayout.SelectionGrid(
+                Mathf.Clamp(Main.settings.messageImportanceThreshold, Message.IMPORTANCE_LOWEST, Message.IMPORTANCE_HIGHEST) / 25,
+                Message.MESSAGE_IMPORTANCE_NAMES, Message.MESSAGE_IMPORTANCE_NAMES.Length) * 25;
+            GUILayout.Label("的消息");
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
             // 自动收获 --------------------------------------------------------
             GUILayout.BeginHorizontal();
-            GUILayout.Label("<color=#87CEEB>自动收获</color>");
+            GUILayout.Label("\n<color=#87CEEB>自动收获</color>");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
@@ -182,7 +209,7 @@ namespace Majordomo
             GUILayout.BeginHorizontal();
             GUILayout.Label("排除建筑快捷键：Alt + 鼠标");
             Main.settings.exclusionMouseButton = GUILayout.SelectionGrid(Main.settings.exclusionMouseButton,
-                Settings.exclusionMouseButtons, Settings.exclusionMouseButtons.Length);
+                Settings.EXCLUSION_MOUSE_BUTTONS, Settings.EXCLUSION_MOUSE_BUTTONS.Length);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -197,12 +224,41 @@ namespace Majordomo
 
     public class TurnEvent
     {
+        public static readonly string IMAGE_NAME = "TrunEventImage_majordomo";
+
         // 太吾管家过月事件 ID
         public static int eventId = -1;
 
 
-        // 检查太吾管家事件相关资源是否已注入
-        public static bool IsResourcesInjected()
+        /// <summary>
+        /// 检查资源是否存在，若不存在则创建并注册
+        /// </summary>
+        /// <returns></returns>
+        public static void TryRegisterResources()
+        {
+            if (TurnEvent.IsResourcesRegistered()) return;
+
+            string eventImagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"{TurnEvent.IMAGE_NAME}.png");
+            bool isSuccess = ResourceLoader.AppendSprite(ref GetSprites.instance.trunEventImage, eventImagePath);
+            if (!isSuccess) throw new Exception($"Failed to append sprite: {eventImagePath}");
+
+            TurnEvent.eventId = ResourceLoader.AppendRow(DateFile.instance.trunEventDate,
+                new Dictionary<int, string>
+                {
+                    [0] = "太吾管家",
+                    [1] = "0",
+                    [2] = "0",
+                    [98] = "${" + TurnEvent.IMAGE_NAME + "}",
+                    [99] = "您的管家禀告了如下收获：",
+                });
+        }
+
+
+        /// <summary>
+        /// 检查太吾管家事件相关资源是否已注册
+        /// </summary>
+        /// <returns></returns>
+        private static bool IsResourcesRegistered()
         {
             if (TurnEvent.eventId < 0) return false;
 
@@ -214,43 +270,31 @@ namespace Majordomo
             if (GetSprites.instance.trunEventImage.Length <= spriteId) return false;
 
             var sprite = GetSprites.instance.trunEventImage[spriteId];
-            if (sprite.name != "TrunEventImage_majordomo") return false;
+            if (sprite.name != TurnEvent.IMAGE_NAME) return false;
 
             return true;
         }
 
 
-        // 注入太吾管家事件相关资源
-        public static bool InjectResources()
-        {
-            string eventImagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), "TrunEventImage_majordomo.png");
-            bool isSuccess = ResourceDynamicallyLoader.AppendTurnEventImage(eventImagePath);
-            if (!isSuccess) return false;
-
-            TurnEvent.eventId = ResourceDynamicallyLoader.AppendTurnEvent(new Dictionary<int, string>
-            {
-                [0] = "太吾管家",
-                [1] = "0",
-                [2] = "0",
-                [98] = "${TrunEventImage_majordomo}",
-                [99] = "您的管家禀告了如下收获：",
-            });
-
-            return true;
-        }
-
-
-        // 往当前过月事件列表中添加太吾管家过月事件
-        // changTrunEvent format: [turnEventId, param1, param2, ...]
-        // current changTrunEvent: [TurnEvent.EVENT_ID]
-        // current GameObject.name: "TrunEventIcon,{TurnEvent.EVENT_ID}"
+        /// <summary>
+        /// 往当前过月事件列表中添加太吾管家过月事件
+        /// changTrunEvent format: [turnEventId, param1, param2, ...]
+        /// current changTrunEvent: [TurnEvent.EVENT_ID]
+        /// current GameObject.name: "TrunEventIcon,{TurnEvent.EVENT_ID}"
+        /// </summary>
+        /// <param name="__instance"></param>
         public static void AddEvent(UIDate __instance)
         {
             __instance.changTrunEvents.Add(new int[] { TurnEvent.eventId });
         }
 
 
-        // 设置过月事件文字
+        /// <summary>
+        /// 设置过月事件文字
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <param name="on"></param>
+        /// <param name="tips"></param>
         public static void SetEventText(WindowManage __instance, bool on, GameObject tips)
         {
             if (tips == null || !on) return;
@@ -278,25 +322,25 @@ namespace Majordomo
     }
 
 
-    // Patch: 动态注入资源（在其他 mod 之后注入）
-    [HarmonyPatch(typeof(Loading), "LoadScene")]
+    /// <summary>
+    /// Patch: 注册过月事件资源（在其他 mod 之后注册）
+    /// </summary>
+    [HarmonyPatch(typeof(UIDate), "Start")]
     [HarmonyPriority(Priority.Last)]
     public static class Loading_LoadScene_DynamicallyLoadResources
     {
         static void Postfix()
         {
-            if (!TurnEvent.IsResourcesInjected())
-            {
-                bool isSuccess = TurnEvent.InjectResources();
-                Main.Logger.Log(isSuccess ?
-                    "Loaded resources of TurnEvent." :
-                    "Failed to load resources of TurnEvent.");
-            }
+            if (!Main.enabled) return;
+
+            TurnEvent.TryRegisterResources();
         }
     }
 
 
-    // Patch: 展示过月事件
+    /// <summary>
+    /// Patch: 展示过月事件
+    /// </summary>
     [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
     public static class UIDate_SetTrunChangeWindow_OnChangeTurn
     {
@@ -312,20 +356,16 @@ namespace Majordomo
 
             TurnEvent.AddEvent(__instance);
 
-            if (Main.settings.autoAssignBuildingWorkers)
-            {   
-                int mainPartId = int.Parse(DateFile.instance.GetGangDate(16, 3));
-                int mainPlaceId = int.Parse(DateFile.instance.GetGangDate(16, 4));
-                HumanResource hr = new HumanResource(mainPartId, mainPlaceId);
-                hr.AssignBuildingWorkers();
-            }
+            if (Main.settings.autoAssignBuildingWorkers) HumanResource.AssignBuildingWorkersForTaiwuVillage();
 
             return true;
         }
     }
 
 
-    // Patch: 设置浮窗文字
+    /// <summary>
+    /// Patch: 设置浮窗文字
+    /// </summary>
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_SetFloatWindowText
     {
@@ -338,41 +378,33 @@ namespace Majordomo
     }
 
 
-    // Patch: 创建 UI
-    [HarmonyPatch(typeof(UIDate), "Start")]
-    public static class UIDate_Start_InitialzeResources
+    /// <summary>
+    /// Patch: 载入已保存数据
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "LoadDate")]
+    public static class DateFile_LoadDate_LoadSavedData
     {
         static void Postfix()
         {
             if (!Main.enabled) return;
 
-            ResourceMaintainer.InitialzeResourcesIdealHolding();
+            if (MajordomoWindow.instance == null) MajordomoWindow.instance = new MajordomoWindow();
+            MajordomoWindow.instance.LoadSavedData();
         }
     }
 
 
-    // Patch: 更新 UI
-    [HarmonyPatch(typeof(UIDate), "Update")]
-    public static class UIDate_Update_ShowOrHideText
+    /// <summary>
+    /// Patch: 保存数据
+    /// </summary>
+    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
+    public static class SaveDateFile_SaveSaveDate_SaveData
     {
-        static void Postfix()
-        {
-            if (!Main.enabled) return;
-
-            ResourceMaintainer.ShowResourceIdealHoldingText();
-        }
-    }
-
-
-    // Patch: 显示浮窗
-    [HarmonyPatch(typeof(WindowManage), "LateUpdate")]
-    public static class WindowManage_LateUpdate_ShowOrHideFloatWindow
-    {
-        static bool Prefix(WindowManage __instance)
+        static bool Prefix()
         {
             if (!Main.enabled) return true;
 
-            ResourceMaintainer.InterfereFloatWindow(__instance);
+            if (MajordomoWindow.instance != null) MajordomoWindow.instance.SaveData();
 
             return true;
         }

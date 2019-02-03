@@ -1,6 +1,7 @@
 ﻿using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -62,6 +63,7 @@ namespace Majordomo
 
         private readonly int partId;
         private readonly int placeId;
+        private readonly TaiwuDate currDate;
 
         // baseBuildingId -> {harvestType, }
         private static readonly Dictionary<int, HashSet<int>> buildingsHarvestTypes = Original.GetBuildingsHarvestTypes();
@@ -81,6 +83,7 @@ namespace Majordomo
         {
             this.partId = partId;
             this.placeId = placeId;
+            this.currDate = new TaiwuDate();
 
             if (Main.settings.excludedBuildings.ContainsKey(partId) &&
                 Main.settings.excludedBuildings[partId].ContainsKey(placeId))
@@ -93,21 +96,39 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 自动指派工作人员
+        /// 为太吾村指派工作人员（静态方法）
+        /// </summary>
+        public static void AssignBuildingWorkersForTaiwuVillage()
+        {
+            int mainPartId = int.Parse(DateFile.instance.GetGangDate(16, 3));
+            int mainPlaceId = int.Parse(DateFile.instance.GetGangDate(16, 4));
+            HumanResource hr = new HumanResource(mainPartId, mainPlaceId);
+            hr.AssignBuildingWorkers();
+        }
+
+
+        /// <summary>
+        /// 指派工作人员
         /// </summary>
         public void AssignBuildingWorkers()
         {
-            Main.Logger.Log($"自动指派前综合工作指数: {HumanResource.GetComprehensiveWorkIndex(this.partId, this.placeId)}");
+            float compositeWorkIndex = HumanResource.GetCompositeWorkIndex(this.partId, this.placeId);
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "开始指派工作人员") + "　-　" +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, compositeWorkIndex.ToString()));
 
             Original.RemoveWorkersFromBuildings(this.partId, this.placeId, this.excludedBuildings, this.excludedWorkers);
 
-            Main.Logger.Log("开始第一轮指派……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始第一轮指派……"));
 
             this.AssignBuildingWorkers_PrepareData();
 
             this.AssignBedroomWorkers();
 
-            Main.Logger.Log("开始第二轮指派……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始第二轮指派……"));
 
             // 指派完厢房后，重新计算
             this.AssignBuildingWorkers_PrepareData();
@@ -116,7 +137,12 @@ namespace Majordomo
 
             Original.UpdateAllBuildings(this.partId, this.placeId);
 
-            Main.Logger.Log($"自动指派后综合工作指数: {HumanResource.GetComprehensiveWorkIndex(this.partId, this.placeId)}");
+            compositeWorkIndex = HumanResource.GetCompositeWorkIndex(this.partId, this.placeId);
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "结束指派工作人员") + "　-　" +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, compositeWorkIndex.ToString()));
+            MajordomoWindow.instance.SetCompositeWorkIndex(this.currDate, compositeWorkIndex);
         }
 
 
@@ -131,9 +157,9 @@ namespace Majordomo
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
         /// <returns></returns>
-        private static float GetComprehensiveWorkIndex(int partId, int placeId)
+        private static float GetCompositeWorkIndex(int partId, int placeId)
         {
-            float comprehensiveWorkIndex = 0.0f;
+            float compositeWorkIndex = 0.0f;
 
             // 统计所有建筑的工作效率（厢房效率不计入统计）
             var buildings = DateFile.instance.homeBuildingsDate[partId][placeId];
@@ -152,11 +178,11 @@ namespace Majordomo
                     float scaledWorkEffectiveness = (workEffectiveness - 100f) / 100f;
                     int priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex);
 
-                    comprehensiveWorkIndex += scaledWorkEffectiveness * priority;
+                    compositeWorkIndex += scaledWorkEffectiveness * priority;
                 }
             }
 
-            return comprehensiveWorkIndex;
+            return compositeWorkIndex;
         }
 
 
@@ -226,7 +252,8 @@ namespace Majordomo
             }
 
             // 对于辅助类厢房，按优先级依次分配合适的人选
-            Main.Logger.Log("开始指派辅助类厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派辅助类厢房……"));
 
             var sortedAuxiliaryBedrooms = auxiliaryBedroomsPriorities.OrderByDescending(entry => entry.Value).Select(entry => entry.Key);
             foreach (int bedroomIndex in sortedAuxiliaryBedrooms)
@@ -235,11 +262,12 @@ namespace Majordomo
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, bedroomIndex, selectedWorkerId);
 
                 Output.LogAuxiliaryBedroomAndWorker(bedroomIndex, bedroomsForWork[bedroomIndex],
-                    auxiliaryBedroomsPriorities[bedroomIndex], selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                    auxiliaryBedroomsPriorities[bedroomIndex], selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
             }
 
             // 对于一般厢房，按优先级依次分配合适的人选
-            Main.Logger.Log("开始指派一般厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派一般厢房……"));
 
             var sortedBedrooms = this.buildings.Where(entry => entry.Value.IsBedroom())
                 .OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
@@ -250,7 +278,7 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
             }
         }
 
@@ -525,7 +553,8 @@ namespace Majordomo
         /// </summary>
         private void AssignLeftBuildings()
         {
-            Main.Logger.Log("开始指派主要建筑……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派主要建筑……"));
 
             var sortedBuildings = this.buildings.OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
             foreach (var info in sortedBuildings)
@@ -535,11 +564,12 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
             }
 
             // 最后指派尚未指派的厢房
-            Main.Logger.Log("开始指派尚未指派的厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派尚未指派的厢房……"));
 
             sortedBuildings = this.buildings.OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
             foreach (var info in sortedBuildings)
@@ -550,7 +580,7 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectLeftBedroomWorker(info.buildingIndex);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
             }
         }
 

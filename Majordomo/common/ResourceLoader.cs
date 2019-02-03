@@ -1,36 +1,35 @@
-﻿using System;
+﻿using Harmony12;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using Harmony12;
-using UnityModManagerNet;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.Reflection.Emit;
-using System.Runtime.Serialization;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Majordomo
 {
-    public class ResourceDynamicallyLoader
+    public class ResourceLoader
     {
         // name -> identifier
         private static Dictionary<string, string> resources = new Dictionary<string, string>();
 
 
-        public static bool AppendTurnEventImage(string filePath)
+        /// <summary>
+        /// 往指定的 Sprite 数组中添加新图片，并保存 ID 到资源库中
+        /// </summary>
+        /// <param name="sprites"></param>
+        /// <param name="filePath"></param>
+        /// <returns>图片是否添加成功</returns>
+        public static bool AppendSprite(ref Sprite[] sprites, string filePath)
         {
-            var images = GetSprites.instance.trunEventImage;
-            if (images == null || images.Length == 0)
+            if (sprites == null || sprites.Length == 0)
             {
                 Main.Logger.Log("Sprites not loaded yet, cannot append new one.");
                 return false;
             }
 
-            var sprite = CreateSpriteFromImage(filePath);
+            var sprite = ResourceLoader.CreateSpriteFromImage(filePath);
             if (sprite == null)
             {
                 Main.Logger.Log($"Failed to create sprite from {filePath}.");
@@ -39,24 +38,27 @@ namespace Majordomo
 
             sprite.name = Path.GetFileNameWithoutExtension(filePath);
 
-            GetSprites.instance.trunEventImage = images.AddToArray(sprite);
+            sprites = sprites.AddToArray(sprite);
 
-            var imageId = GetSprites.instance.trunEventImage.Length - 1;
-            resources[sprite.name] = imageId.ToString();
+            var spriteId = sprites.Length - 1;
+            resources[sprite.name] = spriteId.ToString();
 
-            Main.Logger.Log($"Appended sprite {sprite.name}, Id: {imageId}.");
+            Main.Logger.Log($"Appended sprite {sprite.name}, Id: {spriteId}.");
             return true;
         }
 
 
-        // 添加表格行，添加前进行变量替换
-        // 返回添加的行 ID
-        public static int AppendTurnEvent(Dictionary<int, string> data)
+        /// <summary>
+        /// 添加表格行，添加前进行变量替换
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="data"></param>
+        /// <returns>所添加的行 ID</returns>
+        public static int AppendRow(Dictionary<int, Dictionary<int, string>> table, Dictionary<int, string> data)
         {
             Regex rgx = new Regex(@"\${([^}]+)}");
 
-            var rows = DateFile.instance.trunEventDate;
-            int newRowId = rows.Keys.Max() + 1;
+            int newRowId = table.Keys.Max() + 1;
             Dictionary<int, string> interpolatedData = new Dictionary<int, string>();
 
             foreach (int index in data.Keys)
@@ -91,17 +93,17 @@ namespace Majordomo
                 interpolatedData[index] = sb.ToString();
             }
 
-            rows[newRowId] = interpolatedData;
+            table[newRowId] = interpolatedData;
 
             return newRowId;
         }
 
 
-        private static Sprite CreateSpriteFromImage(string path)
+        public static Sprite CreateSpriteFromImage(string path)
         {
             if (!System.IO.File.Exists(path))
             {
-                Main.Logger.Log(String.Format("Texture file not found: {0}.", path));
+                Main.Logger.Log(string.Format("Texture file not found: {0}.", path));
                 return null;
             }
 
@@ -110,7 +112,7 @@ namespace Majordomo
             texture.LoadImage(fileData);
             var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0), 100);
 
-            Main.Logger.Log(String.Format("New texture file loaded: {0}, texture size: {1}, {2}.", path, texture.width, texture.height));
+            Main.Logger.Log(string.Format("New texture file loaded: {0}, texture size: {1}, {2}.", path, texture.width, texture.height));
             return sprite;
         }
     }
