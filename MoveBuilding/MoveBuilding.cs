@@ -1,4 +1,6 @@
 ﻿using Harmony12;
+using System;
+using System.Collections;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -7,16 +9,43 @@ using UnityModManagerNet;
 
 namespace MoveBuilding
 {
+    public class ModSettings : UnityModManager.ModSettings
+    {
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
+
+        public int button = 1;
+    }
     public static class Main
     {
         public static bool enabled;
+
+        public static readonly string[] buttons = new string[] { "右键", "中键" };
+        public static ModSettings Settings { get; private set; }
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+
             modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
+
+            Settings = ModSettings.Load<ModSettings>(modEntry);
+            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
+        }
+
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
+        {
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("选择拖动使用的鼠标按键:");
+            Settings.button = GUILayout.SelectionGrid(Settings.button - 1, buttons, 2) + 1;
+            GUILayout.EndHorizontal();
+        }
+
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            Settings.Save(modEntry);
         }
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -28,7 +57,7 @@ namespace MoveBuilding
     [HarmonyPatch(typeof(HomeBuilding), "UpdateBuilding")]
     public static class HomeBuilding_UpdateBack_Patch
     {
-        private static void Postfix(GameObject ___buildingButton )
+        private static void Postfix(GameObject ___buildingButton)
         {
             if (!Main.enabled) return;
             string[] array = ___buildingButton.transform.parent.name.Split(',');
@@ -37,7 +66,7 @@ namespace MoveBuilding
             int placeId = int.Parse(array[2]);
             int buildingIndex = int.Parse(array[3]);
             int[] buildingType = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
-            if(buildingType[0] == 0 && ___buildingButton.GetComponent<DropablePlace>() == null) //空地
+            if (buildingType[0] == 0 && ___buildingButton.GetComponent<DropablePlace>() == null) //空地
             {
                 ___buildingButton.AddComponent<DropablePlace>();
             }
@@ -69,31 +98,34 @@ namespace MoveBuilding
     public class DraggingObject : MonoBehaviour, IBeginDragHandler, IEndDragHandler, IDragHandler
     {
         private Vector3 startPosition;
+        private Transform originalParent;
+        private Vector2 originalPosition;
         private GameObject buildingDummy;
-        Vector3 originalScale;
+        private Image placeBack;
+
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (Input.GetMouseButton(1) && !DraggingBuilding.Instance.isDragging)
+            if (Input.GetMouseButton(Main.Settings.button) && !DraggingBuilding.Instance.isDragging)
             {
 
                 DraggingBuilding.Instance.draggingObject = gameObject;
                 DraggingBuilding.Instance.isDragging = true;
                 startPosition = transform.position;
+                originalPosition = gameObject.GetComponent<RectTransform>().anchoredPosition;
+                originalParent = transform.parent;
 
-                Image placeBack = transform.parent.Find("PlaceImage").GetComponent<Image>();
-                Transform HomeViewPort = transform.parent.parent.parent.parent;
+                placeBack = transform.parent.Find("PlaceImage").GetComponent<Image>();
+                placeBack.color = new Color(1.000f, 1.000f, 1.000f, 0.500f);
+                Transform HomeViewport = HomeSystem.instance.homeMapHolder;
 
-                // 這裏無法直接移動GameObject,每一格已被安排了前後次序.拉動建築時會有一半無反應. 現只能以複制圖片的方法進行
                 buildingDummy = Instantiate(placeBack.gameObject, Vector3.zero, Quaternion.identity);
-                buildingDummy.layer = LayerMask.NameToLayer("Ignore Raycast");
-                buildingDummy.transform.localScale = new Vector3(.1f, .1f, 1); //這處未找到 zoom in / zoom out 的變數, 圖片大小或會有問題. 
-                buildingDummy.transform.SetParent(HomeViewPort);
+                buildingDummy.name = "buildingDummy";
+                buildingDummy.GetComponent<Image>().color = new Color(1.000f, 1.000f, 1.000f, 0.500f);
+                transform.SetParent(HomeViewport);
+                buildingDummy.transform.SetParent(HomeViewport);
+                buildingDummy.transform.localScale = transform.parent.parent.parent.localScale;
                 buildingDummy.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                buildingDummy.transform.SetAsFirstSibling();
-
-
-                originalScale = placeBack.transform.localScale; // 本想做成半透明或者全灰色, 但試許多方法都不成功. 望指點
-                placeBack.transform.localScale = new Vector3(.5f, .5f, 1);
+                buildingDummy.transform.SetAsLastSibling();
 
             }
         }
@@ -108,22 +140,20 @@ namespace MoveBuilding
         public void OnEndDrag(PointerEventData eventData)
         {
             if (!DraggingBuilding.Instance.isDragging) return;
-            Image placeBack = transform.parent.Find("PlaceImage").GetComponent<Image>();
-            Destroy(buildingDummy);
+            placeBack.color = new Color(1.000f, 1.000f, 1.000f, 1.000f);
+            transform.SetParent(originalParent);
             transform.position = startPosition;
-
-            placeBack.transform.localScale = originalScale;
+            gameObject.GetComponent<RectTransform>().anchoredPosition = originalPosition;
+            DestroyImmediate(buildingDummy);
 
             if (DraggingBuilding.Instance.dropablePlace != null && DraggingBuilding.Instance.dropablePlace != DraggingBuilding.Instance.draggingObject)
             {
-
                 // todo : 以後改版, 或會加入工作窗口, 要求搬家時像 升級建築般 花費人力或時間. 
 
                 Main.Logger.Log("Move building from " + DraggingBuilding.Instance.draggingObject.transform.parent.name);
                 Main.Logger.Log("To place " + DraggingBuilding.Instance.dropablePlace.transform.parent.name);
-
-                Destroy(DraggingBuilding.Instance.draggingObject.GetComponent<DraggingObject>());
-                Destroy(DraggingBuilding.Instance.dropablePlace.GetComponent<DropablePlace>());
+                //Helper.Functions.LogProperties(DraggingBuilding.Instance.draggingObject);
+                //Helper.Functions.LogProperties(DraggingBuilding.Instance.dropablePlace);
 
                 // interchange the content of two places
                 string[] array = DraggingBuilding.Instance.draggingObject.transform.parent.name.Split(',');
@@ -137,13 +167,28 @@ namespace MoveBuilding
                 DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex] = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex2];
                 DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex2] = temp;
 
-                if (DateFile.instance.actorsWorkingDate[partId][placeId].ContainsKey(buildingIndex))
+                var workingDate = DateFile.instance.actorsWorkingDate;
+                if (workingDate.ContainsKey(partId)
+                    && workingDate[partId].ContainsKey(placeId)
+                    && workingDate[partId][placeId].ContainsKey(buildingIndex))
                 {
-                    DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex2] = DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex];
-                    DateFile.instance.actorsWorkingDate[partId][placeId].Remove(buildingIndex);
+                    workingDate[partId][placeId][buildingIndex2] = workingDate[partId][placeId][buildingIndex];
+                    workingDate[partId][placeId].Remove(buildingIndex);
                 }
 
-                HomeSystem.instance.MakeHomeMap(partId, placeId);
+                Main.Logger.Log("Update Buildings");
+                DestroyImmediate(DraggingBuilding.Instance.draggingObject.GetComponent<DraggingObject>());
+                DestroyImmediate(DraggingBuilding.Instance.dropablePlace.GetComponent<DropablePlace>());
+                HomeSystem.instance.allHomeBulding[buildingIndex].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex);
+                //HomeSystem.instance.allHomeBulding[buildingIndex].UpdateBack();
+                HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex);
+                HomeSystem.instance.allHomeBulding[buildingIndex2].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex2);
+                //HomeSystem.instance.allHomeBulding[buildingIndex2].UpdateBack();
+                HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex2);
+
+                //Helper.Functions.LogAllChild(HomeSystem.instance.homeMapHolder.gameObject);
+                //Helper.Functions.LogProperties(DraggingBuilding.Instance.draggingObject);
+                //Helper.Functions.LogProperties(DraggingBuilding.Instance.dropablePlace);
             }
             else
             {
@@ -151,6 +196,7 @@ namespace MoveBuilding
             }
 
             DraggingBuilding.Instance.draggingObject = null;
+            DraggingBuilding.Instance.dropablePlace = null;
             DraggingBuilding.Instance.isDragging = false;
 
         }
@@ -162,18 +208,20 @@ namespace MoveBuilding
         bool isEntered = false;
         public void OnPointerEnter(PointerEventData eventData)
         {
+            // Helper.Functions.LogProperties(gameObject);
             if (DraggingBuilding.Instance.isDragging)
             {
-                Main.Logger.Log("dropablePlace: " + gameObject.transform.parent.gameObject.name);
+                Main.Logger.Log("Enter dropablePlace: " + gameObject.transform.parent.gameObject.name);
                 DraggingBuilding.Instance.dropablePlace = gameObject;
                 isEntered = true;
             }
         }
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (isEntered && DraggingBuilding.Instance.dropablePlace == gameObject) {
+            if (isEntered && DraggingBuilding.Instance.dropablePlace == gameObject)
+            {
                 DraggingBuilding.Instance.dropablePlace = null;
-                Main.Logger.Log("cancel dropablePlace : " + gameObject.transform.parent.gameObject.name);
+                Main.Logger.Log("Leave dropablePlace : " + gameObject.transform.parent.gameObject.name);
                 isEntered = false;
             }
         }

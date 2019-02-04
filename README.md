@@ -34,6 +34,7 @@
 3. 除 最后一行 Requirements 外，其他为必填
 4. 在太吾游戏路径下的Mods文件夹中，新建一个文件夹存放你的mod，如：*E:/SteamLibrary/steamapps/common/The Scroll Of Taiwu/Mods/HerbRecipes/*
 5. 运行genvsproj.cmd 生成工程，开始mod开发
+6. Windows下支持.modignore文件，用于拷贝文件到mod目录时忽略一些文件(默认包括.cs .dll .modignore，这三个毋需添加) (只支持 * 和 ? 匹配，不支持 ** 匹配)
 
 ## 注意事项 
 

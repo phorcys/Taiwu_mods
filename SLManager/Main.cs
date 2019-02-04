@@ -35,7 +35,7 @@ namespace Sth4nothing.SLManager
             {
                 try
                 {
-                    Assembly.LoadFrom(Path.Combine(modEntry.Path, dll));
+                    Assembly.LoadFile(Path.Combine(modEntry.Path, dll));
                     Debug.Log(dll + "已加载");
                 }
                 catch (System.Exception e)
@@ -70,7 +70,7 @@ namespace Sth4nothing.SLManager
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("每个存档槽最大保留备份数量(0-1000)：");
-            
+
             if (int.TryParse(GUILayout.TextField(settings.maxBackupsToKeep.ToString()),
                     out int maxBackupsToKeep))
             {
@@ -97,7 +97,7 @@ namespace Sth4nothing.SLManager
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
             {
                 Log();
-                
+
             }
             if (GUILayout.Button("显示log路径", GUILayout.Width(100)))
             {

@@ -48,26 +48,23 @@ namespace BaseResourceMod
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            
             if (!Directory.Exists(backupdir))
             {
-                System.IO.Directory.CreateDirectory(backupdir);
+                Directory.CreateDirectory(backupdir);
             }
 
             Logger = modEntry.Logger;
             settings = Settings.Load<Settings>(modEntry);
-
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-
-            
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+
+            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+
             return true;
         }
 
-        public static void registModResDir(UnityModManager.ModEntry modEntry,string respath)
+        public static void registModResDir(UnityModManager.ModEntry modEntry, string respath)
         {
             mods_res_dict[modEntry.Info.DisplayName] = respath;
         }
@@ -354,6 +351,10 @@ namespace BaseResourceMod
             }, {
                 "villagename_date",
                 "villageNameDate"
+            },
+            {
+                "fame_date",
+                "actorFameDate"
             }
         };
 
@@ -422,13 +423,13 @@ namespace BaseResourceMod
             field.SetValue(obj, value);
         }
 
-        static public Dictionary<int, Dictionary<int, string>>  getCSVDictRef(string cate)
+        static public Dictionary<int, Dictionary<int, string>> getCSVDictRef(string cate)
         {
-            if(cate == "ActorFace_Date")
+            if (cate == "ActorFace_Date")
             {
                 return GetSprites.instance.actorFaceDate;
             }
-            if(date_instance_dict.ContainsKey(cate))
+            if (date_instance_dict.ContainsKey(cate))
             {
                 return GetFieldValue<Dictionary<int, Dictionary<int, string>>>(DateFile.instance, date_instance_dict[cate]);
             }

@@ -394,8 +394,8 @@ macro( CSHARP_RESOLVE_DEPENDENCIES )
       add_custom_command(
         COMMENT "${ESCAPED_COMMENT}"
         OUTPUT ${out}
-        COMMAND ${CSHARP_COMPILER} 
-        ARGS /t:${output_type} /out:${out} /doc:${out}.xml ${platform_param} ${CSBUILDFLAGS} ${CSHARP_SDK_COMPILER} ${separated_embd_resources} ${separated_sources} ${processed_refs} && mkdir -p ${out_dir}/../Mods/${modname} && cp -rf ${out} ${CMAKE_CURRENT_LIST_DIR}/${modname}/Info.json ${CMAKE_CURRENT_LIST_DIR}/${modname}/*.dll ${out_dir}/../Mods/${modname} |true && cd ${out_dir}/../Mods/ && zip -r ${modname}-${mod_version}.zip ${modname} && rm -rf ${modname}
+        COMMAND ${CSHARP_COMPILER}
+        ARGS /t:${output_type} /out:${out} /doc:${out}.xml ${platform_param} ${CSBUILDFLAGS} ${CSHARP_SDK_COMPILER} ${separated_embd_resources} ${separated_sources} ${processed_refs} && mkdir -p ${out_dir}/../Mods/${modname} && cp -rf ${out} ${out_dir}/../Mods/${modname} | true && rsync -am --exclude "*.cs" --exclude "*.resx" --exclude ".\\*" --exclude-from=${CMAKE_CURRENT_LIST_DIR}/${modname}/.modignore ${CMAKE_CURRENT_LIST_DIR}/${modname}/ ${out_dir}/../Mods/${modname}/ | true && cd ${out_dir}/../Mods/ && zip -r ${modname}-${mod_version}.zip ${modname} && rm -rf ${modname}
         WORKING_DIRECTORY ${out_dir}
         DEPENDS ${sources_dep}
       )

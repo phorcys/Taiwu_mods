@@ -1,4 +1,4 @@
-using Harmony12;
+锘縰sing Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -38,7 +38,7 @@ namespace GuiBaseUI
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            #region 基础设置
+            #region 鍩虹璁剧疆
             settings = Settings.Load<Settings>(modEntry);
             Logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
@@ -50,7 +50,7 @@ namespace GuiBaseUI
             #endregion
 
             MainCanvas = GameObject.FindObjectOfType<Canvas>();
-            if (MainCanvas!=null)
+            if (MainCanvas != null)
             {
                 Layer = MainCanvas.gameObject.layer;
             }
@@ -58,7 +58,7 @@ namespace GuiBaseUI
             return true;
         }
 
-        static string title = "鬼的基础界面 1.0.0";
+        static string title = "楝肩殑鍩虹鐣岄潰 1.0.0";
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
@@ -72,16 +72,16 @@ namespace GuiBaseUI
         {
             GUILayout.Label(title, GUILayout.Width(300));
             GUILayout.BeginHorizontal();
-            GUILayout.Label(string.Format("<color=#{0}{1}{2}>■■■■■■■■</color>底色"
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>鈻犫枲鈻犫枲鈻犫枲鈻犫枲</color>搴曡壊"
                 , (Main.settings.bgR * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgR * 255), 16)
                 , (Main.settings.bgG * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgG * 255), 16)
                 , (Main.settings.bgB * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.bgB * 255), 16)));
             Main.settings.bgR = GUILayout.HorizontalSlider(Main.settings.bgR, 0, 1); GUILayout.Label("R:" + (Main.settings.bgR * 255).ToString("000").ToUpper());
-            Main.settings.bgG= GUILayout.HorizontalSlider(Main.settings.bgG, 0, 1); GUILayout.Label("G:" + (Main.settings.bgG * 255).ToString("000").ToUpper());
+            Main.settings.bgG = GUILayout.HorizontalSlider(Main.settings.bgG, 0, 1); GUILayout.Label("G:" + (Main.settings.bgG * 255).ToString("000").ToUpper());
             Main.settings.bgB = GUILayout.HorizontalSlider(Main.settings.bgB, 0, 1); GUILayout.Label("B:" + (Main.settings.bgB * 255).ToString("000").ToUpper());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label(string.Format("<color=#{0}{1}{2}>■■■■■■■■</color>前色"
+            GUILayout.Label(string.Format("<color=#{0}{1}{2}>鈻犫枲鈻犫枲鈻犫枲鈻犫枲</color>鍓嶈壊"
                 , (Main.settings.handR * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handR * 255), 16)
                 , (Main.settings.handG * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handG * 255), 16)
                 , (Main.settings.handB * 255 > 16 ? "" : "0") + Convert.ToString((int)(Main.settings.handB * 255), 16)));
@@ -119,7 +119,7 @@ namespace GuiBaseUI
             for (int i = 0; i < tf.childCount; i++)
             {
                 Transform child = tf.GetChild(i);
-                LogAllChild(child,logSize, idx);
+                LogAllChild(child, logSize, idx);
             }
         }
     }

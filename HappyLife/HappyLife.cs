@@ -128,8 +128,8 @@ namespace HappyLife
                     int num2 = DateFile.instance.MianActorID();
                     bool flag = fatherId == num2 || motherId == num2;
                     int num3 = (!flag) ? Main.settings.npcUpLimit || Main.settings.numChild == 0 ? 50 : 50 * Main.settings.numChild : 25;
-                    num -= DateFile.instance.GetActorSocial(fatherId, 310, false).Count * num3;
-                    num -= DateFile.instance.GetActorSocial(motherId, 310, false).Count * num3;
+                    num -= DateFile.instance.GetActorSocial(fatherId, 310, false, false).Count * num3;
+                    num -= DateFile.instance.GetActorSocial(motherId, 310, false, false).Count * num3;
                     if (UnityEngine.Random.Range(0, num4) < num)
                     {
                         DateFile.instance.ChangeActorFeature(motherId, 4002, 4003);

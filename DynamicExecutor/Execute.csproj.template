@@ -24,417 +24,397 @@
     <Reference Include="0Harmony12">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\0Harmony12.dll</HintPath>
+      <HintPath>%DLLS%\0Harmony12.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>%DLLS%\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="DemiLib">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DemiLib.dll</HintPath>
+      <HintPath>%DLLS%\DemiLib.dll</HintPath>
     </Reference>
     <Reference Include="DOTween">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DOTween.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween43">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DOTween43.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween46">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DOTween46.dll</HintPath>
-    </Reference>
-    <Reference Include="DOTween50">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DOTween50.dll</HintPath>
+      <HintPath>%DLLS%\DOTween.dll</HintPath>
     </Reference>
     <Reference Include="DOTweenPro">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\DOTweenPro.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Data.Sqlite">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Mono.Data.Sqlite.dll</HintPath>
+      <HintPath>%DLLS%\DOTweenPro.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Data.Tds">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Mono.Data.Tds.dll</HintPath>
+      <HintPath>%DLLS%\Mono.Data.Tds.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Security">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Mono.Security.dll</HintPath>
+      <HintPath>%DLLS%\Mono.Security.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\mscorlib.dll</HintPath>
+      <HintPath>%DLLS%\mscorlib.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      <HintPath>%DLLS%\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Core">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\System.Core.dll</HintPath>
+      <HintPath>%DLLS%\System.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Data">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\System.Data.dll</HintPath>
+      <HintPath>%DLLS%\System.Data.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\System.dll</HintPath>
+      <HintPath>%DLLS%\System.dll</HintPath>
     </Reference>
     <Reference Include="System.Transactions">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\System.Transactions.dll</HintPath>
+      <HintPath>%DLLS%\System.Transactions.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\System.Xml.dll</HintPath>
+      <HintPath>%DLLS%\System.Xml.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>%DLLS%\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AccessibilityModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.AccessibilityModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ARModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ARModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ARModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.AudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.BaselibModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.BaselibModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.BaselibModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClothModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ClothModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CloudWebServicesModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.CloudWebServicesModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.CloudWebServicesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterInputModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ClusterInputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterRendererModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ClusterRendererModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CrashReportingModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.CrashReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DirectorModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.DirectorModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.FacebookModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.FacebookModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.FacebookModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.FileSystemHttpModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.FileSystemHttpModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.FileSystemHttpModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GameCenterModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.GameCenterModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GridModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.GridModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.GridModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.HotReloadModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.HotReloadModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.InputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.LocalizationModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.LocalizationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Networking">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.Networking.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.Networking.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticlesLegacyModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ParticlesLegacyModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ParticlesLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PerformanceReportingModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.PerformanceReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ProfilerModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ProfilerModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ScreenCaptureModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.ScreenCaptureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SharedInternalsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.SharedInternalsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpatialTracking">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.SpatialTracking.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.SpatialTracking.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteMaskModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.SpriteMaskModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteShapeModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.SpriteShapeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.StreamingModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.StreamingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.StyleSheetsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.StyleSheetsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.StyleSheetsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SubstanceModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.SubstanceModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TerrainModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainPhysicsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TerrainPhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TilemapModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TilemapModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Timeline">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.Timeline.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TimelineModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TimelineModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TimelineModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TLSModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.TLSModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UmbraModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UmbraModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UNETModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UNETModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UNETModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityAnalyticsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityConnectModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityConnectModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAudioModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestTextureModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VehiclesModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.VehiclesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VideoModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.VideoModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.VRModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.WindModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.WindModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.WindModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.XRModule">
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>false</Private>
-      <HintPath>%GAMEPATH%\The Scroll Of Taiwu Alpha V1.0_Data\Managed\UnityEngine.XRModule.dll</HintPath>
+      <HintPath>%DLLS%\UnityEngine.XRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

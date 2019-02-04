@@ -41,11 +41,11 @@ namespace Sth4nothing.UseStorageBook
         private static List<int> GetBooks()
         {
             var actorItems =
-                from item in ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys
+                from item in ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0, false).Keys
                 where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
                 select item;
             var warehouseItems =
-                from item in ActorMenu.instance.GetActorItems(-999, 0).Keys
+                from item in ActorMenu.instance.GetActorItems(-999, 0, false).Keys
                 where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
                 select item;
             var items = actorItems.Concat(warehouseItems);
@@ -55,53 +55,55 @@ namespace Sth4nothing.UseStorageBook
         /// <summary>
         /// 检查物品id是否满足筛选条件
         /// </summary>
-        /// <param name="itemId"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
-        private static bool CheckBook(int itemId)
+        private static bool CheckBook(int id)
         {
             var df = DateFile.instance;
             // 背包
-            if (!Main.Setting.repo[0] && df.actorItemsDate[df.mianActorId].ContainsKey(itemId))
+            if (!Main.Setting.repo[0] && df.actorItemsDate[df.mianActorId].ContainsKey(id))
             {
                 return false;
             }
             // 仓库
-            if (!Main.Setting.repo[1] && df.actorItemsDate[-999].ContainsKey(itemId))
+            if (!Main.Setting.repo[1] && df.actorItemsDate[-999].ContainsKey(id))
             {
                 return false;
             }
+            int itemId = int.Parse(df.itemsDate[id][999]);
+            int gongfaId = int.Parse(df.presetitemDate[itemId][32]);
             // 品级
-            int pinji = int.Parse(df.GetItemDate(itemId, 8, false)) - 1;
+            int pinji = int.Parse(df.presetitemDate[itemId][8]) - 1;
             // Main.Logger.Log($"品级: {pinji}");
             if (!Main.Setting.pinji[pinji])
                 return false;
-            int itemType = int.Parse(df.GetItemDate(itemId, 999));
+            int itemType = int.Parse(df.presetitemDate[itemId][31]);
             // Main.Logger.Log($"类型: {itemType}");
-            int bookId = int.Parse(df.GetItemDate(itemId, 32));
             // 阅读
             int pages = 0;
             if (HomeSystem.instance.studySkillTyp >= 17)
-                pages = df.gongFaBookPages.ContainsKey(bookId) ? df.gongFaBookPages[bookId].Sum() : 0; // 阅读总页数
+                pages = df.gongFaBookPages.ContainsKey(gongfaId) ? df.gongFaBookPages[gongfaId].Sum() : 0; // 阅读总页数
             else
-                pages = df.skillBookPages.ContainsKey(bookId) ? df.skillBookPages[bookId].Sum() : 0;
+                pages = df.skillBookPages.ContainsKey(gongfaId) ? df.skillBookPages[gongfaId].Sum() : 0;
             int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
             if (!Main.Setting.read[read])
                 return false;
             // 技艺书籍
-            if (itemType < 500000)
+            if (itemType != 17)
                 return true;
             // 真传 or 手抄
-            if (itemType < 700000 && !Main.Setting.tof[0])
+            bool tof = int.Parse(df.presetitemDate[itemId][35]) != 1;
+            if (tof && !Main.Setting.tof[0])
                 return false;
-            if (itemType >= 700000 && !Main.Setting.tof[1])
+            if (!tof && !Main.Setting.tof[1])
                 return false;
             // 功法类型
-            int gongfa = int.Parse(df.gongFaDate[bookId][1]);
+            int gongfa = int.Parse(df.gongFaDate[gongfaId][1]);
             // Main.Logger.Log($"功法: {gongfa}");
             if (!Main.Setting.gongfa[gongfa])
                 return false;
             // 帮派
-            int gang = int.Parse(df.gongFaDate[bookId][3]);
+            int gang = int.Parse(df.gongFaDate[gongfaId][3]);
             // Main.Logger.Log($"帮派: {gang}");
             if (!Main.Setting.gang[gang])
                 return false;
@@ -359,6 +361,7 @@ namespace Sth4nothing.UseStorageBook
 
         public static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting)
         {
+            GUILayout.BeginVertical("Box");
             GUILayout.BeginHorizontal();
             GUILayout.Label(label, GUILayout.Width(100));
             if (GUILayout.Button("全部", GUILayout.Width(50)))
@@ -376,6 +379,7 @@ namespace Sth4nothing.UseStorageBook
                 dict[i] = GUILayout.Toggle(dict[i], setting[i], GUILayout.Width(50));
             }
             GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)

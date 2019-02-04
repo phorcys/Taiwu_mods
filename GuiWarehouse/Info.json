@@ -1,7 +1,7 @@
 ﻿{
   "Id": "GuiWarehouse",
   "DisplayName": "鬼的仓库优化",
-  "Version": "1.2.4",
+  "Version": "1.2.5",
   "AssemblyName": "GuiWarehouse.dll",
   "EntryMethod": "GuiWarehouse.Main.Load",
   "Requirements":["GuiBaseUI"]

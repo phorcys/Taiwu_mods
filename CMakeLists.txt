@@ -40,7 +40,7 @@ file(MAKE_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIR})
 
 # If no build type is set it should defaults to debug
 if( NOT CMAKE_BUILD_TYPE )
-  set( CMAKE_BUILD_TYPE Debug CACHE STRING "Choose a build type: [Debug Release]" FORCE )
+  set( CMAKE_BUILD_TYPE Release CACHE STRING "Choose a build type: [Debug Release]" FORCE )
 endif()
 
 # Set some default build flags.
@@ -96,7 +96,7 @@ MACRO(SUBDIRLIST result curdir)
   FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
   SET(dirlist "")
   FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child} AND  (NOT ${child} STREQUAL "build") AND (NOT ${child} STREQUAL ".git") AND (NOT ${child} STREQUAL "CMakeModules") AND (NOT ${child} STREQUAL ".travis") AND (EXISTS ${curdir}/${child}/Info.json))
+    IF(IS_DIRECTORY ${curdir}/${child} AND  (NOT ${child} STREQUAL "build") AND (NOT ${child} STREQUAL ".git") AND (NOT ${child} STREQUAL "CMakeModules") AND (NOT ${child} STREQUAL ".travis") AND (NOT ${child} STREQUAL "dlls") AND (EXISTS ${curdir}/${child}/Info.json))
       message(STATUS "Found Mod: " ${child})
       LIST(APPEND dirlist ${child})
     ENDIF()
@@ -197,6 +197,68 @@ ENDIF(UNIX)
 #win+vs
 IF(WIN32)
 
+
+
+#下载编译用dlls zip包
+set(DLLPACK_VERSION "190118")
+set(DLLPACK_NAME "dlls")
+set(DLLPACK_DIR "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}")
+set(DLLPACK_URL "https://github.com/phorcys/Taiwu_mods/releases/download/dll${DLLPACK_VERSION}/dlls-${DLLPACK_VERSION}.zip")
+set(DLLPACKFILE "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}-${DLLPACK_VERSION}.zip")
+set(timeout_args TIMEOUT 600)
+set(timeout_msg "600 秒")
+
+#移除已有
+if(NOT EXISTS "${DLLPACKFILE}")
+
+if(EXISTS "${DLLPACK_DIR}")
+file(REMOVE_RECURSE "${DLLPACK_DIR}")
+endif()
+
+message(STATUS "下载 ${DLLPACKFILE} ... 自 ${DLLPACK_URL}
+     src='${DLLPACK_URL}'
+     dst='${DLLPACKFILE}'
+     timeout='下载超时 ${timeout_msg}'")
+
+file(DOWNLOAD ${DLLPACK_URL} ${DLLPACKFILE}
+  ${timeout_args}
+  ${hash_args}
+  STATUS status
+  LOG log
+  SHOW_PROGRESS)
+
+list(GET status 0 status_code)
+list(GET status 1 status_string)
+
+if(NOT status_code EQUAL 0)
+  message(FATAL_ERROR "错误: 下载 '${DLLPACK_URL}' 失败..
+  错误码 : ${status_code}
+  错误信息 : ${status_string}
+  日志 : ${log}
+")
+endif()
+
+endif()
+
+
+if (EXISTS "${DLLPACKFILE}" AND NOT EXISTS "${DLLPACK_DIR}")
+
+message(STATUS "正在解压 ...
+     文件 '${DLLPACKFILE}'
+     到 '${DLLPACK_DIR}'")
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvfz ${DLLPACKFILE}
+  WORKING_DIRECTORY "${DLLPACK_DIR}\\..\\"
+  RESULT_VARIABLE rv)
+
+if(NOT rv EQUAL 0)
+  message(STATUS "解压错误，清理临时目录...")
+  file(REMOVE_RECURSE "${DLLPACK_DIR}")
+  message(FATAL_ERROR "解压错误: 解压 of '${DLLPACKFILE}' 失败")
+endif()
+
+endif()
+
 #为每个目录生成Mod
 MACRO(CREATEMOD moddir)
 
@@ -279,19 +341,19 @@ using System.Runtime.Versioning\;
 	
 	#dll 引用
 	#游戏主dll
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Assembly-CSharp "${CMAKE_CURRENT_LIST_DIR}\\Assembly-CSharp.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Assembly-CSharp "${DLLPACK_DIR}\\Assembly-CSharp.dll")
 	# harmonypatch工具
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Harmony12 "${STEAMDIR}${DLLPATH}0harmony12.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Harmony12 "${DLLPACK_DIR}\\0harmony12.dll")
 	#其他游戏相关dll
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Newtonsoft.Json "${STEAMDIR}${DLLPATH}Newtonsoft.Json.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine "${STEAMDIR}${DLLPATH}UnityEngine.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.CoreModule "${STEAMDIR}${DLLPATH}UnityEngine.CoreModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${STEAMDIR}${DLLPATH}UnityEngine.ImageConversionModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.TextRenderingModule "${STEAMDIR}${DLLPATH}UnityEngine.TextRenderingModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.IMGUIModule "${STEAMDIR}${DLLPATH}UnityEngine.IMGUIModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UI "${STEAMDIR}${DLLPATH}UnityEngine.UI.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIElementsModule "${STEAMDIR}${DLLPATH}UnityEngine.UIElementsModule.dll")
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIModule "${STEAMDIR}${DLLPATH}UnityEngine.UIModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_Newtonsoft.Json "${DLLPACK_DIR}\\Newtonsoft.Json.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine "${DLLPACK_DIR}\\UnityEngine.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.CoreModule "${DLLPACK_DIR}\\UnityEngine.CoreModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.ImageConversionModule "${DLLPACK_DIR}\\UnityEngine.ImageConversionModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.TextRenderingModule "${DLLPACK_DIR}\\UnityEngine.TextRenderingModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.IMGUIModule "${DLLPACK_DIR}\\UnityEngine.IMGUIModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UI "${DLLPACK_DIR}\\UnityEngine.UI.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIElementsModule "${DLLPACK_DIR}\\UnityEngine.UIElementsModule.dll")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCE_UnityEngine.UIModule "${DLLPACK_DIR}\\UnityEngine.UIModule.dll")
 	
 	#遍历mod目录下dll，加入引用
 	FILE(GLOB_RECURSE MODDLLFILES ${moddir}/*.dll)
@@ -319,14 +381,17 @@ using System.Runtime.Versioning\;
 		POST_BUILD
 		COMMAND if not exist "${STEAMDIR}Mods\\${moddir}/" echo not copy file & goto END
 		COMMAND copy "$(TargetPATH)" "${STEAMDIR}Mods\\${moddir}/"
-		COMMAND powershell -NoProfile -ExecutionPolicy Unrestricted -File "..\\..\\CopyMod.ps1" -Mod ${moddir} -ModsDir "${STEAMDIR}Mods"
+		COMMAND "..\\..\\CopyMod.exe" ${moddir} "${STEAMDIR}Mods"
 		COMMAND echo "copy dll file ${moddir}.dll ok"
 		COMMENT "copy dll file to steam game"
 		COMMAND :END
 	)
 
 ENDMACRO()
+
+
 ENDIF(WIN32)
+
 
 message(STATUS "Finding All subdir that contains mods")
 

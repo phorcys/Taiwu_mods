@@ -846,10 +846,10 @@ namespace MoreInfo
             //根据修习进度与心得变更颜色增加区分度
             if (Main.settings.showGongFaProgress)
             {
-                int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId)[0];
+                int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId, 0);
                 int colorFix = level / 10;
                 __instance.gongFaLevelText.text = DateFile.instance.SetColoer(20001 + colorFix, __instance.gongFaLevelText.text);
-                int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId);
+                int bookLevel = DateFile.instance.GetGongFaFLevel(actorId, gongFaId, false);
                 __instance.gongFaBookLevelText.text = DateFile.instance.SetColoer(20001 + bookLevel, __instance.gongFaBookLevelText.text);
             }
         }

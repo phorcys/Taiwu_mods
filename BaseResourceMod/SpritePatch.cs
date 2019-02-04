@@ -35,7 +35,7 @@ namespace BaseResourceMod
             if (sprite != null)
             {
                 var newsprite = ChangeTexturePartPNG(sprite, ufname);
-                if(newsprite != null)
+                if (newsprite != null)
                 {
                     int index = Array.FindIndex(instance, row => row.name == ftype);
                     string oldname = sprite.name;
@@ -43,11 +43,11 @@ namespace BaseResourceMod
                     newsprite.name = oldname;
                     instance[index] = newsprite;
                     UnityEngine.Object.Destroy(sprite);
-                    
+
                 }
                 Main.Logger.Log(String.Format("[Texture] Ijected  sprite from  {0}  to instance {1} sprite name {2}", ufname, nkey, ftype));
             }
-            else if(instance.Length >0)
+            else if (instance.Length > 0)
             {
                 sprite = AddNewSpriteFromTexturePNG(ufname);
                 if (sprite == null)
@@ -59,10 +59,10 @@ namespace BaseResourceMod
                 {
                     int index = int.Parse(Regex.Replace(Regex.Replace(ftype, @"[^_]+_", ""), @"_.*", ""));
                     sprite.name = ftype;
-                    if (instance != null && index >=0)
+                    if (instance != null && index >= 0)
                     {
                         int counter = 0;
-                        while(counter < index - instance.Length +1)
+                        while (counter < index - instance.Length + 1)
                         {
                             instance = instance.AddToArray(null);
                             counter++;
@@ -90,12 +90,12 @@ namespace BaseResourceMod
                 sprite = GetSprites.instance.buildingSprites.FirstOrDefault(o => o.name == ftype);
                 linstance = GetSprites.instance.buildingSprites;
             }
-            else if(nkey == "Cricket/Cricket")
+            else if (nkey == "Cricket/Cricket")
             {
                 //蛐蛐....
                 string ququcate = Regex.Replace(Regex.Replace(ftype, @"[^_]+_", ""), @"_.*", "");
                 int ququcateid = int.Parse(ququcate);
-                if(GetSprites.instance.cricketImage!= null && GetSprites.instance.cricketImage.ContainsKey(ququcateid))
+                if (GetSprites.instance.cricketImage != null && GetSprites.instance.cricketImage.ContainsKey(ququcateid))
                 {
                     sprite = GetSprites.instance.cricketImage[ququcateid].FirstOrDefault(o => o.name == ftype);
                     instance = GetSprites.instance.cricketImage[ququcateid];
@@ -120,10 +120,10 @@ namespace BaseResourceMod
                 int cate_m = int.Parse(Regex.Replace(Regex.Replace(ftype, @"_\d+_\d+$", ""), @".*_", ""));
                 int cate_n = int.Parse(Regex.Replace(Regex.Replace(ftype, @"_\d+$", ""), @".*_", ""));
 
-                if (GetSprites.instance.actorFace != null 
+                if (GetSprites.instance.actorFace != null
                     && GetSprites.instance.actorFace.ContainsKey(cate_k)
                     && GetSprites.instance.actorFace[cate_k].ContainsKey(cate_l)
-                    && cate_m < GetSprites.instance.actorFace[cate_k][cate_l].Count && cate_m >=0)
+                    && cate_m < GetSprites.instance.actorFace[cate_k][cate_l].Count && cate_m >= 0)
                 {
                     sprite = GetSprites.instance.actorFace[cate_k][cate_l][cate_m].FirstOrDefault(o => o.name == ftype);
                     instance = GetSprites.instance.actorFace[cate_k][cate_l][cate_m];
@@ -182,14 +182,14 @@ namespace BaseResourceMod
                 var newsprite = ChangeTexturePartPNG(sprite, ufname);
                 if (newsprite != null)
                 {
-                    if(instance!= null)
+                    if (instance != null)
                     {
                         int index = Array.FindIndex(instance, row => row.name == ftype);
                         instance[index] = newsprite;
                     }
-                    else if( linstance != null)
+                    else if (linstance != null)
                     {
-                        int index = linstance.FindIndex( row => row.name == ftype);
+                        int index = linstance.FindIndex(row => row.name == ftype);
                         linstance[index] = newsprite;
                     }
 
@@ -236,8 +236,9 @@ namespace BaseResourceMod
                 {
                     if (File.Exists(ufname))
                     {
-                        string ftype = filename.Replace(".png","");
+                        string ftype = filename.Replace(".png", "");
                         string dir = Path.GetDirectoryName(ufname);
+                        dir = dir.Replace("\\", "/");
 
                         string key = dir.Substring(uPath.Length);
                         if (key[key.Length - 1] == '/') key = key.Substring(0, key.Length - 1);
@@ -280,7 +281,7 @@ namespace BaseResourceMod
             toload.LoadImage(fileData);
             var newsprite = Sprite.Create(toload, new Rect(0, 0, toload.width, toload.height), new Vector2(0, 0), 100);
 
-            Main.Logger.Log(String.Format("[Texture] new Texture file {0} loaded, tex size : {1},{2}.", path, toload.width,toload.height));
+            Main.Logger.Log(String.Format("[Texture] new Texture file {0} loaded, tex size : {1},{2}.", path, toload.width, toload.height));
             return newsprite;
         }
 
@@ -295,7 +296,7 @@ namespace BaseResourceMod
             int h = (int)sprite.rect.height;
 
             var fileData = File.ReadAllBytes(path);
-            var toload = new Texture2D(w,h);
+            var toload = new Texture2D(w, h);
             toload.LoadImage(fileData);
             var newsprite = Sprite.Create(toload, new Rect(0, 0, toload.width, toload.height), new Vector2(0, 0), sprite.pixelsPerUnit);
             return newsprite;
@@ -303,20 +304,20 @@ namespace BaseResourceMod
 
         public static void dumpPNG(Sprite sprite, string path, int index)
         {
-            string filepath = System.IO.Path.Combine(Main.backupimgdir, path + "/" + sprite.name+ ".png");
+            string filepath = System.IO.Path.Combine(Main.backupimgdir, path + "/" + sprite.name + ".png");
             string dirpath = System.IO.Path.GetDirectoryName(filepath);
-            if(System.IO.Directory.Exists(dirpath) == false)
+            if (System.IO.Directory.Exists(dirpath) == false)
             {
                 System.IO.Directory.CreateDirectory(dirpath);
             }
             var img = sprite.texture;
             var fmbak = img.filterMode;
             img.filterMode = FilterMode.Point;
-            RenderTexture rt = RenderTexture.GetTemporary(img.width,img.height);
+            RenderTexture rt = RenderTexture.GetTemporary(img.width, img.height);
             rt.filterMode = FilterMode.Point;
             RenderTexture.active = rt;
             //x y 坐标  y坐标需要变换
-            int x = (int) sprite.rect.x;
+            int x = (int)sprite.rect.x;
             int y = (int)sprite.rect.y;
             y = img.height - y - (int)sprite.rect.height;
 
@@ -324,13 +325,13 @@ namespace BaseResourceMod
                 , img.width, img.height
                 , sprite.rect.width, sprite.rect.height
                 , x, y
-                , sprite.rect.x,sprite.rect.y
-                ,filepath
-                ,path));
+                , sprite.rect.x, sprite.rect.y
+                , filepath
+                , path));
             Graphics.Blit(img, rt);
-            Texture2D img2 = new Texture2D((int)sprite.rect.width,(int)sprite.rect.height,TextureFormat.ARGB32,false);
+            Texture2D img2 = new Texture2D((int)sprite.rect.width, (int)sprite.rect.height, TextureFormat.ARGB32, false);
             img2.hideFlags = HideFlags.HideAndDontSave;
-            img2.ReadPixels(new Rect(x,y,sprite.rect.width,sprite.rect.height), 0, 0);
+            img2.ReadPixels(new Rect(x, y, sprite.rect.width, sprite.rect.height), 0, 0);
             img2.Apply();
             RenderTexture.active = null;
             img.filterMode = fmbak;
@@ -360,7 +361,7 @@ namespace BaseResourceMod
                     dumpPNG(ss, dirpath, counter);
                     counter++;
                 }
-                
+
             }
             else
             {
@@ -396,8 +397,8 @@ namespace BaseResourceMod
                 {
                     doDumpSprite(GetSprites.instance.buildingSprites.ToArray(), "HomeMap/HomeBuildingIcon");
                 }
-                
-                if (Main.settings.save_maptile == true && GetSprites.instance.placeBack!=null)
+
+                if (Main.settings.save_maptile == true && GetSprites.instance.placeBack != null)
                 {
                     //地图
                     foreach (var kv in GetSprites.instance.placeBack)
@@ -512,7 +513,7 @@ namespace BaseResourceMod
 
         public static void post_InjectData()
         {
-            if(!Main.enabled)
+            if (!Main.enabled)
             {
                 return;
             }
@@ -566,51 +567,12 @@ namespace BaseResourceMod
                 Main.Logger.Log(e.StackTrace);
             }
 
-}
+        }
 
-static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static void Postfix()
         {
-            Main.Logger.Log(" Transpiler init codes ");
-            var codes = new List<CodeInstruction>(instructions);
-
-            var foundtheforend = false;
-            int startIndex = -1;
-
-            //寻找注入点
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-                if (codes[codes.Count -1].opcode == OpCodes.Ret)
-                {
-                    startIndex = codes.Count -1;
-                    foundtheforend = true;
-                    Main.Logger.Log(" found the end of the ret , at index: " + startIndex);
-                }
-
-            //}
-
-
-            if (foundtheforend)
-            {
-                var injectedCodes = new List<CodeInstruction>();
-
-                // 注入 IL code 
-                //
-                injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(Loading_LoadScene_Patch).GetMethod("post_InjectData")));
-
-                codes.InsertRange(startIndex, injectedCodes);
-            }
-            else
-            {
-                Main.Logger.Log(" game changed ... this mod failed to find code to patch...");
-            }
-
-            //Main.Logger.Log(" dump the patch codes ");
-
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Main.Logger.Log(String.Format("{0} : {1}  {2}", i, codes[i].opcode, codes[i].operand));
-            //}
-            return codes.AsEnumerable();
+            if (Main.enabled)
+                post_InjectData();
         }
     }
 }

@@ -1,0 +1,304 @@
+{
+	"Releases": [
+		{
+			"Id": "AutoChooseAttackPart",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/AutoChooseAttackPart-1.0.1.zip"
+		},
+		{
+			"Id": "AutoWalk",
+			"Version": "1.0.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/AutoWalk-1.0.5.zip"
+		},
+		{
+			"Id": "BaseResourceMod",
+			"Version": "1.0.7",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/BaseResourceMod-1.0.7.zip"
+		},
+		{
+			"Id": "CharacterFloatInfo",
+			"Version": "1.3.10",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/CharacterFloatInfo-1.3.10.zip"
+		},
+		{
+			"Id": "CharmMax",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/CharmMax-1.0.0.zip"
+		},
+		{
+			"Id": "DoNotDisTurb",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/DoNotDisturb-1.0.0.zip"
+		},
+		{
+			"Id": "DynamicExecutor",
+			"Version": "1.1.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/DynamicExecutor-1.1.2.zip"
+		},
+		{
+			"Id": "Evolution",
+			"Version": "0.1.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/Evolution-0.1.5.zip"
+		},
+		{
+			"Id": "ExchangeStatPoints",
+			"Version": "1.1.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ExchangeStatPoints-1.1.1.zip"
+		},
+		{
+			"Id": "GameSpeeder",
+			"Version": "1.1.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GameSpeeder-1.1.3.zip"
+		},
+		{
+			"Id": "GuiBaseUI",
+			"Version": "1.3.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiBaseUI-1.3.1.zip"
+		},
+		{
+			"Id": "GuiWarehouse",
+			"Version": "1.2.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiWarehouse-1.2.5.zip"
+		},
+		{
+			"Id": "GuiWorkActor",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiWorkActor-1.0.0.zip"
+		},
+		{
+			"Id": "GuiWorldNpc",
+			"Version": "1.1.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/GuiWorldNpc-1.1.0.zip"
+		},
+		{
+			"Id": "HappyLife",
+			"Version": "1.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/HappyLife-1.0.8.zip"
+		},
+		{
+			"Id": "HerbRecipes",
+			"Version": "2.3.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/HerbRecipes-2.3.0.zip"
+		},
+		{
+			"Id": "HomeShopSort",
+			"Version": "1.2.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/HomeShopSort-1.2.0.zip"
+		},
+		{
+			"Id": "IllustratedHandbook",
+			"Version": "1.0.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/IllustratedHandbook-1.0.2.zip"
+		},
+		{
+			"Id": "InventorySort",
+			"Version": "1.0.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/InventorySort-1.0.5.zip"
+		},
+		{
+			"Id": "Jing_yong_Mod",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/Jing_yong_Mod-1.0.1.zip"
+		},
+		{
+			"Id": "KeyBoardShortCut",
+			"Version": "1.2.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/KeyBoardShortCut-1.2.0.zip"
+		},
+		{
+			"Id": "LKX_BookMerge",
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_BookMerge-1.0.3.zip"
+		},
+		{
+			"Id": "LKX_CheatMaxPeople",
+			"Version": "1.0.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_CheatMaxPeople-1.0.5.zip"
+		},
+		{
+			"Id": "LKX_GongFaSizeToOne",
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_GongFaSizeToOne-1.0.3.zip"
+		},
+		{
+			"Id": "LKX_ItemsMerge",
+			"Version": "1.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_ItemsMerge-1.0.8.zip"
+		},
+		{
+			"Id": "LKX_LoopedStoryInKunlun",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_LoopedStoryInKunlun-1.0.0.zip"
+		},
+		{
+			"Id": "LKX_NewGameActor",
+			"Version": "1.0.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_NewGameActor-1.0.5.zip"
+		},
+		{
+			"Id": "LKX_QuQuRematch",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LKX_QuQuRematch-1.0.0.zip"
+		},
+		{
+			"Id": "LongDaoSSR",
+			"Version": "1.1.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/LongDaoSSR-1.1.0.zip"
+		},
+		{
+			"Id": "Majordomo",
+			"Version": "0.9.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/Majordomo-0.9.1.zip"
+		},
+		{
+			"Id": "ManpowerWork",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ManpowerWork-1.0.0.zip"
+		},
+		{
+			"Id": "ModsCollection",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ModsCollection-1.0.1.zip"
+		},
+		{
+			"Id": "MoreInfo",
+			"Version": "1.5.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/MoreInfo-1.5.2.zip"
+		},
+		{
+			"Id": "MoreMerchandise",
+			"Version": "1.2.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/MoreMerchandise-1.2.1.zip"
+		},
+		{
+			"Id": "MoveBuilding",
+			"Version": "0.2.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/release190101/MoveBuilding-0.2.0.zip"
+		},
+		{
+			"Id": "NoMoreTrash",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/NoMoreTrash-1.0.1.zip"
+		},
+		{
+			"Id": "NotEnoughHarvest",
+			"Version": "1.2.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/NotEnoughHarvest-1.2.0.zip"
+		},
+		{
+			"Id": "NpcScan",
+			"Version": "1.7.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/NpcScan-1.7.1.zip"
+		},
+		{
+			"Id": "ReadAssistant",
+			"Version": "1.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ReadAssistant-1.0.8.zip"
+		},
+		{
+			"Id": "Rejuvenation",
+			"Version": "1.1.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/Rejuvenation-1.1.2.zip"
+		},
+		{
+			"Id": "ResourceShop",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ResourceShop-1.0.0.zip"
+		},
+		{
+			"Id": "SLManager",
+			"Version": "1.3.5",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/SLManager-1.3.5.zip"
+		},
+		{
+			"Id": "SamsaraLock",
+			"Version": "1.0.2",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/SamsaraLock-1.0.2.zip"
+		},
+		{
+			"Id": "SaveBackup",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/SaveBackup-1.0.1.zip"
+		},
+		{
+			"Id": "SaveLoadBtns",
+			"Version": "1.1.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/SaveLoadBtns-1.1.0.zip"
+		},
+		{
+			"Id": "SelectBattleReward",
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/SelectBattleReward-1.0.3.zip"
+		},
+		{
+			"Id": "ShowBiographyOfTheDead",
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ShowBiographyOfTheDead-1.0.3.zip"
+		},
+		{
+			"Id": "ShowMap",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ShowMap-1.0.0.zip"
+		},
+		{
+			"Id": "ShowRichResources",
+			"Version": "1.1.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ShowRichResources-1.1.0.zip"
+		},
+		{
+			"Id": "StorageCheck",
+			"Version": "1.0.7",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/StorageCheck-1.0.7.zip"
+		},
+		{
+			"Id": "TaiwuBaseClass",
+			"Version": "0.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TaiwuBaseClass-0.0.0.zip"
+		},
+		{
+			"Id": "TaiwuEditor",
+			"Version": "1.0.8",
+			"DownloadUrl": "https://img.nga.178.com/attachments/mon_201812/25/heQ5-2eacK6.zip?filename=TaiwuEditor-1.0.8r.zip"
+		},
+		{
+			"Id": "TaiwuHentai",
+			"Version": "0.0.8",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TaiwuHentai-0.0.8.zip"
+		},
+		{
+			"Id": "ToTraditionalChinese",
+			"Version": "1.0.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/ToTraditionalChinese-1.0.0.zip"
+		},
+		{
+			"Id": "TrainingRoom",
+			"Version": "0.8.0",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TrainingRoom-0.8.0.zip"
+		},
+		{
+			"Id": "TreasureDetector",
+			"Version": "1.0.3",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/TreasureDetector-1.0.3.zip"
+		},
+		{
+			"Id": "UseStorageBook",
+			"Version": "1.2.7",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageBook-1.2.7.zip"
+		},
+		{
+			"Id": "UseStorageMaterial",
+			"Version": "1.0.4",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/UseStorageMaterial-1.0.4.zip"
+		},
+		{
+			"Id": "VillageHeadOfTaiwu",
+			"Version": "1.2.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/VillageHeadOfTaiwu-1.2.1.zip"
+		},
+		{
+			"Id": "neoe.AllWin",
+			"Version": "1.0.1",
+			"DownloadUrl": "https://github.com/phorcys/Taiwu_mods/releases/download/rls181225/AllWin-1.0.1.zip"
+		}
+	]
+}

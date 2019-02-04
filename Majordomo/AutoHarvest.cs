@@ -225,6 +225,8 @@ namespace Majordomo
                 case BOOTY_TYPE_ACTOR: // bootyId: actorId
                 {
                     if (!Main.settings.autoHarvestActors) return false;
+                    if (Main.settings.filterNewActorGoodness && TryFilterNewActorGoodness(bootyId)) return false;
+                    if (Main.settings.filterNewActorAttr && TryFilterNewActorAttribute(bootyId)) return false;
 
                     text = $"{DateFile.instance.massageDate[7018][1].Split('|')[1]}{DateFile.instance.basehomePlaceDate[building[0]][0]}{DateFile.instance.massageDate[7018][2].Split('|')[2]}{DateFile.instance.GetActorName(bootyId)}</color>";
                     int getActorType = Main.settings.showNewActorWindow ? 0 : -1;
@@ -254,6 +256,29 @@ namespace Majordomo
             if (building[12] > 0) --building[12];
 
             return true;
+        }
+
+
+        // 若新村民立场在排除列表中，则返回 true
+        private static bool TryFilterNewActorGoodness(int actorId)
+        {
+            int goodness = DateFile.instance.GetActorGoodness(actorId);
+            return !Main.settings.newActorGoodnessFilters[goodness];
+        }
+
+
+        // 若新村民所有原始资质都小于阈值，则返回 true
+        private static bool TryFilterNewActorAttribute(int actorId)
+        {
+            var actor = DateFile.instance.actorsDate[actorId];
+            int maxAttr = -1;
+
+            // 技艺资质
+            for (int i = 501; i <= 516; ++i) maxAttr = Mathf.Max(maxAttr, int.Parse(actor[i]));
+            // 武学资质
+            for (int i = 601; i <= 614; ++i) maxAttr = Mathf.Max(maxAttr, int.Parse(actor[i]));
+
+            return maxAttr < Main.settings.newActorAttrFilterThreshold;
         }
 
 

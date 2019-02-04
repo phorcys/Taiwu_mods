@@ -16,6 +16,18 @@ using UnityModManagerNet;
 
 namespace Sth4nothing.SLManager
 {
+    [HarmonyPatch(typeof(Encoding), "GetEncoding", new Type[] { typeof(int) })]
+    public static class Encoding_GetEncoding_Path
+    {
+        public static bool Prefix(int codepage, ref Encoding __result)
+        {
+            if (!Main.Enabled || codepage != 437)
+                return true;
+            
+            __result = new I18N.West.CP437();
+            return false;
+        }
+    }
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
     public static class WorldMapSystem_Start_Patch
     {
@@ -433,10 +445,6 @@ namespace Sth4nothing.SLManager
 
         public static void Backup(int backupType)
         {
-            // 获取当前游戏存档的路径
-            var dirPathMethod = typeof(SaveDateFile).GetMethod("Dirpath", BindingFlags.Instance | BindingFlags.NonPublic);
-            string pathToBackup = (string)dirPathMethod.Invoke(SaveDateFile.instance, new object[1] { -1 });
-
             switch (backupType)
             {
                 case AFTER_SAVE_BACKUP:
@@ -462,8 +470,6 @@ namespace Sth4nothing.SLManager
                 return;
             }
             Main.Logger.Log("开始备份存档");
-            // 确保pathToBackup末尾没有"/"或者"\\"
-            string pathToBackup = Path.GetDirectoryName(BackPath + '\\');
 
             int backupIndex;
 
@@ -522,9 +528,25 @@ namespace Sth4nothing.SLManager
         {
             using (var zip = new ZipFile())
             {
-                zip.AddDirectory(pathToBackup);
+                zip.AddFiles(GetFilesToBackup(pathToBackup), "/");
                 zip.Save(targetFile);
             }
+        }
+
+        /// <summary>
+        /// 获取备份文件列表
+        /// </summary>
+        /// <param name="pathToBackup"></param>
+        /// <returns></returns>
+        internal static List<string> GetFilesToBackup(string pathToBackup)
+        {
+            var files = new List<string>();
+            if (File.Exists(Path.Combine(pathToBackup, "date.json")))
+            {
+                files.Add(Path.Combine(pathToBackup, "date.json"));
+            }
+            files.AddRange(Directory.GetFiles(pathToBackup, "TW_Save_Date_?.tw*"));
+            return files;
         }
 
         /// <summary>

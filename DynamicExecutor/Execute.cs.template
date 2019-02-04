@@ -3,7 +3,7 @@ namespace Sth4nothing
 {
     public class Execute
     {
-        static object Main()
+        static void Main()
         {
             var id = DateFile.instance.mianActorId;
             var date = DateFile.instance.actorsDate;
@@ -11,7 +11,7 @@ namespace Sth4nothing
             {
                 Debug.Log($"{key}: {date[id][key]}");
             }
-            return null;
+            return;
         }
     }
 }
