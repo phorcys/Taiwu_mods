@@ -2,7 +2,7 @@
   "Id": "Evolution",
   "DisplayName": "九阴锻骨篇",
   "Author": "lyb",
-  "Version": "0.1.6",
+  "Version": "0.1.7",
   "AssemblyName": "Evolution.dll",
   "EntryMethod": "Evolution.Main.Load",
   "Requirements": ["BaseResourceMod"]

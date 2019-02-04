@@ -62,6 +62,8 @@ namespace Evolution
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+ 
+
             bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null ||
                          !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
             if (cond)
@@ -88,12 +90,6 @@ namespace Evolution
                 }
 
                 return;
-            }
-
-
-            if (!DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150370))
-            {
-                //DateFile.instance.ChangeActorGongFa(DateFile.instance.mianActorId, 150370, 0, 0, 0, true);
             }
             else
             {
@@ -201,13 +197,17 @@ namespace Evolution
     }
 
 
-    [HarmonyPatch(typeof(UIDate), "TrunChange")]
-    public static class UIDate_TrunChange_Patch
+    //[HarmonyPatch(typeof(UIDate), "TrunChange")]
+    //public static class UIDate_TrunChange_Patch
+
+    [HarmonyPatch(typeof(AgeChanage), "AllActorAgeChanage")]
+    public static class AgeChanage_AllActorAgeChanage_Patch
     {
         private static void Prefix()
         {
+            Main.Logger.Log("九阴--------运行ing");
             if (!DateFile.instance.gongFaDate.ContainsKey(150370))
-            {
+            {   
                 return;
             }
 
@@ -250,7 +250,7 @@ namespace Evolution
 
             if (!DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150370))
             {
-
+                Main.Logger.Log("开始修炼九阴锻骨篇");
                 int[] allQi = DateFile.instance.GetActorAllQi(DateFile.instance.mianActorId);
                 if (allQi[0] + allQi[1] + allQi[2] + allQi[3] + allQi[4] >= 500 &&
                     DateFile.instance.GetActorValue(DateFile.instance.mianActorId, 601, true) -
