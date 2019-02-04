@@ -1,0 +1,8 @@
+﻿{
+  "Id": "RobAll",
+  "DisplayName": "一键搜刮",
+  "Author": "东风有意",
+  "Version": "1.0.2",
+  "AssemblyName": "RobAll.dll",
+  "EntryMethod": "RobAll.Main.Load"
+}
