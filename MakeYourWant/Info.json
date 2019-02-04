@@ -1,8 +1,0 @@
-﻿{
-  "Id": "MakeYourWant",
-  "DisplayName": "装备定制",
-  "Author": "东风有意",
-  "Version": "1.0.3",
-  "AssemblyName": "MakeYourWant.dll",
-  "EntryMethod": "MakeYourWant.Main.Load"
-}
