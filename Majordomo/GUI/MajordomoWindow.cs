@@ -174,7 +174,7 @@ namespace Majordomo
             Debug.Assert(QuquBox.instance.ququBoxWindow);
             this.window = UnityEngine.Object.Instantiate(
                 QuquBox.instance.ququBoxWindow, QuquBox.instance.ququBoxWindow.transform.parent);
-            this.window.SetActiveRecursively(true);
+            this.window.SetActive(true);
             this.window.name = "MajordomoWindow";
 
             Common.RemoveComponent<QuquBox>(this.window);
@@ -190,7 +190,7 @@ namespace Majordomo
 
             // clone & modify menu
             this.menu = UnityEngine.Object.Instantiate(this.mainHolder, this.window.transform);
-            this.menu.SetActiveRecursively(true);
+            this.menu.SetActive(true);
             this.menu.name = "MajordomoWindowMenu";
 
             Common.RemoveChildren(this.menu);
@@ -251,7 +251,7 @@ namespace Majordomo
             Debug.Assert(oriMessageView);
 
             var messageView = UnityEngine.Object.Instantiate(oriMessageView, this.mainHolder.transform);
-            messageView.SetActiveRecursively(true);
+            messageView.SetActive(true);
             messageView.name = "MajordomoMessageView";
 
             // modify message view port
@@ -277,7 +277,7 @@ namespace Majordomo
             Debug.Assert(oriPageText);
 
             var pageText = UnityEngine.Object.Instantiate(oriPageText, this.mainHolder.transform);
-            pageText.SetActiveRecursively(true);
+            pageText.SetActive(true);
             pageText.name = "MajordomoPageText";
             Common.TranslateUI(pageText, 0, 20);
 
@@ -289,7 +289,7 @@ namespace Majordomo
             Debug.Assert(oriPageButtonPrev);
 
             var pageButtonPrev = UnityEngine.Object.Instantiate(oriPageButtonPrev, this.mainHolder.transform);
-            pageButtonPrev.SetActiveRecursively(true);
+            pageButtonPrev.SetActive(true);
             pageButtonPrev.name = "MajordomoPageButtonPrev";
             Common.TranslateUI(pageButtonPrev, 0, 20);
 
@@ -301,7 +301,7 @@ namespace Majordomo
             Debug.Assert(oriPageButtonNext);
 
             var pageButtonNext = UnityEngine.Object.Instantiate(oriPageButtonNext, this.mainHolder.transform);
-            pageButtonNext.SetActiveRecursively(true);
+            pageButtonNext.SetActive(true);
             pageButtonNext.name = "MajordomoPageButtonNext";
             Common.TranslateUI(pageButtonNext, 0, 20);
 
@@ -312,7 +312,7 @@ namespace Majordomo
 
         private void CreateMessagePageMenuControls()
         {
-            this.CreateMenuButton("AssignBuildingWorkersButton",
+            this.assignBuildingWorkersButton = this.CreateMenuButton("AssignBuildingWorkersButton",
                 () => { HumanResource.AssignBuildingWorkersForTaiwuVillage(); this.ShowMessage(showLastPage: true); },
                 Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ButtonIcon_Majordomo_AssignBuildingWorkers.png"),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, "重新指派工作"));
@@ -327,7 +327,7 @@ namespace Majordomo
             Debug.Assert(studySkillButton);
 
             var goMenuButton = UnityEngine.Object.Instantiate(studySkillButton, this.menu.transform);
-            goMenuButton.SetActiveRecursively(true);
+            goMenuButton.SetActive(true);
             goMenuButton.name = name;
             goMenuButton.tag = "Untagged";
 

@@ -64,7 +64,7 @@ namespace Majordomo
         }
 
 
-        public string ToString()
+        public override string ToString()
         {
             return TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN,
                 string.Format("第 {0} 年 {1} 月",

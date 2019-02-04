@@ -497,6 +497,8 @@ namespace Majordomo
         /// 目前固定优先级为：厢房 > 病坊、密医 > 收获人才建筑 > 收获资源建筑 > 收获物品建筑 > 收获蛐蛐建筑
         /// 同一类别中，工作难度越高，优先级越高
         /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
         /// <returns></returns>
         private static int GetBuildingWorkingPriority(int partId, int placeId, int buildingIndex)
