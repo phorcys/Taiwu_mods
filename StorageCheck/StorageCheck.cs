@@ -229,18 +229,23 @@ namespace StorageCheck
                     text += "背包功法页已读统计:\n";
                     for (int i = 0; i < curbookPage.Length; i++)
                     {
-                        text += string.Format("{0}{1}{2}{3}{4}", new object[]
+                        text += string.Format("{0}{1}{2}{3}{4}{5}\n", new object[]
                         {
                         DateFile.instance.massageDate[10][2],
                         DateFile.instance.massageDate[8][2].Split('|')[i],
                         (curbookPage[i] != 1) ? DateFile.instance.SetColoer(20010, DateFile.instance.massageDate[7010][4].Split('|')[0], false)
                                                   : DateFile.instance.SetColoer(20004, DateFile.instance.massageDate[7010][4].Split('|')[1], false),
-                        (playerlearned[i] != 1) ? DateFile.instance.SetColoer(20002, string.Format("  ({0})",
-                                                          DateFile.instance.massageDate[7009][4].Split('|')[2]), false)
-                                                   : DateFile.instance.SetColoer(20005, string.Format("  ({0})",
-                                                          DateFile.instance.massageDate[7009][4].Split('|')[3]), false),
-                        (bagpages[i] >= 1) ? DateFile.instance.SetColoer(20004, string.Format("  ○已有{0}页\n",bagpages[i]))
-                                                   : DateFile.instance.SetColoer(20010, string.Format("  ×无此页\n"))
+                        (playerlearned[i] != 1 && playerlearned[i] >- 100) ? 
+                            DateFile.instance.SetColoer(20002, string.Format("  ({0})",
+                                DateFile.instance.massageDate[7009][4].Split('|')[2]), false)
+                            : 
+                            DateFile.instance.SetColoer(20005, string.Format("  ({0})",
+                                DateFile.instance.massageDate[7009][4].Split('|')[3]), false),
+                        (bagpages[i] >= 1) ? DateFile.instance.SetColoer(20004, string.Format("  ○已有{0}页",bagpages[i]))
+                                                   : DateFile.instance.SetColoer(20010, string.Format("  ×无此页 ")),
+                        (playerlearned[i] != 1 && playerlearned[i] >- 100) ?
+                            DateFile.instance.SetColoer(10001, "  " + Mathf.Abs(playerlearned[i]) + "%", false)
+                            :DateFile.instance.SetColoer(10001, "  100%", false)
                         });
                     }
                     text += "\n";
