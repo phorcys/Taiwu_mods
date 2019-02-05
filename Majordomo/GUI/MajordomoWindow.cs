@@ -453,7 +453,7 @@ namespace Majordomo
         /// <param name="messages"></param>
         private void CreateMessageContentItems(List <string> messages)
         {
-            var item0 = Common.GetChild(this.messageContent, "MajordomoMessageContentItem0");
+            var item0 = this.messageContent.transform.GetChild(0).gameObject;
             if (!item0) throw new Exception("Failed to find the first item of MajordomoMessageContent");
 
             var messageChunks = Common.SplitList(messages, N_MESSAGES_PER_CONTENT_ITEM).ToList();
@@ -482,6 +482,9 @@ namespace Majordomo
 
             for (int i = nItemsNeeded; i < nActualItems; ++i)
             {
+                // 不删除第一个 Text 控件（没有它就不能复制了）
+                if (i == 0) continue;
+
                 var currItem = this.messageContent.transform.GetChild(i).gameObject;
                 UnityEngine.Object.Destroy(currItem);
             }
