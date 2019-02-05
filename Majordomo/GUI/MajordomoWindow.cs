@@ -283,6 +283,7 @@ namespace Majordomo
             // modify message content item
             var text = messageContentItem.GetComponent<Text>();
             TaiwuCommon.SetFont(text);
+            text.text = string.Empty;
 
             Common.RemoveComponent<ContentSizeFitter>(messageContentItem);
             Common.RemoveComponent<SetFont>(messageContentItem);
@@ -483,10 +484,14 @@ namespace Majordomo
             for (int i = nItemsNeeded; i < nActualItems; ++i)
             {
                 // 不删除第一个 Text 控件（没有它就不能复制了）
-                if (i == 0) continue;
-
                 var currItem = this.messageContent.transform.GetChild(i).gameObject;
-                UnityEngine.Object.Destroy(currItem);
+                if (i == 0)
+                {
+                    var currText = currItem.GetComponent<Text>();
+                    currText.text = string.Empty;
+                }
+                else
+                    UnityEngine.Object.Destroy(currItem);
             }
         }
 
