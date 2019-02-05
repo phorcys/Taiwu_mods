@@ -135,5 +135,19 @@ namespace Majordomo
             pos.y += y;
             rectTransform.localPosition = pos;
         }
+
+
+        /// <summary>
+        /// 把 List 分为指定长度的多个 List，最后一个 List 的长度可能会小于指定长度
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        public static IEnumerable<List<T>> SplitList<T>(List<T> source, int size)
+        {
+            for (int i = 0; i < source.Count; i += size)
+                yield return source.GetRange(i, Math.Min(size, source.Count - i));
+        }
     }
 }

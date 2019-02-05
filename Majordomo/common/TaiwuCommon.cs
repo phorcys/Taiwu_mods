@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.UI;
 
 namespace Majordomo
 {
@@ -26,9 +27,23 @@ namespace Majordomo
         public static readonly int COLOR_LOWEST_LEVEL = 20002;
 
 
-        public static string SetColor(int color, string text)
+        public static string SetColor(int colorId, string text)
         {
-            return DateFile.instance.SetColoer(color, text);
+            return DateFile.instance.massageDate[colorId][0] + text + "</color>";
+        }
+
+
+        public static void SetFont(Text text, bool isTitle = false)
+        {
+            if (isTitle)
+            {
+                text.font = DateFile.instance.boldFont;
+            }
+            else
+            {
+                text.font = DateFile.instance.font;
+                text.fontSize -= 2;
+            }
         }
     }
 }

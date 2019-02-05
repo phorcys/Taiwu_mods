@@ -66,10 +66,19 @@ namespace Majordomo
 
         public override string ToString()
         {
-            return TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN,
-                string.Format("第 {0} 年 {1} 月",
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BROWN, this.year.ToString()),
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BROWN, (this.GetMonthIndex() + 1).ToString())));
+            return string.Format("第 {0} 年 {1} 月", this.year, this.GetMonthIndex() + 1);
+        }
+
+
+        public string ToString(bool richText)
+        {
+            if (richText)
+                return TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN,
+                    string.Format("第 {0} 年 {1} 月",
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BROWN, this.year.ToString()),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BROWN, (this.GetMonthIndex() + 1).ToString())));
+            else
+                return this.ToString();
         }
     }
 }

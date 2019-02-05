@@ -61,7 +61,7 @@ namespace Majordomo
         {
             this.messages = new List<Message>
             {
-                new Message(Message.IMPORTANCE_HIGHEST, $"进入{date.ToString()}。"),
+                new Message(Message.IMPORTANCE_HIGHEST, $"进入{date.ToString(richText: true)}。"),
             };
         }
     }
@@ -74,6 +74,7 @@ namespace Majordomo
     {
         public static readonly int RECORD_SHELF_LIFE = 10 * 12;
         public static readonly int MESSAGE_SHELF_LIFE = 2 * 12;
+        public static readonly int N_MESSAGES_PER_CONTENT_ITEM = 10;
 
         public static MajordomoWindow instance;
 
@@ -82,7 +83,7 @@ namespace Majordomo
         private GameObject menu;
         private GameObject assignBuildingWorkersButton;
         private GameObject mainHolder;
-        private Text textMessage;
+        private GameObject messageContent;
         private Text textMessagePage;
         private Text textSummary;
 
@@ -108,7 +109,7 @@ namespace Majordomo
             }
 
             if (!MajordomoWindow.instance.assignBuildingWorkersButton ||
-                !MajordomoWindow.instance.textMessage ||
+                !MajordomoWindow.instance.messageContent ||
                 !MajordomoWindow.instance.textMessagePage)
             {
                 MajordomoWindow.instance.CreateMessagePage();
@@ -238,6 +239,9 @@ namespace Majordomo
 
             this.textSummary = goSummary.GetComponent<Text>();
             Debug.Assert(this.textSummary);
+            TaiwuCommon.SetFont(this.textSummary);
+
+            Common.RemoveComponent<SetFont>(goSummary);
         }
 
 
@@ -259,13 +263,29 @@ namespace Majordomo
             Debug.Assert(viewPort);
             viewPort.name = "MajordomoMessageViewport";
 
-            // modify message text
-            var messageText = Common.GetChild(viewPort, "ActorMassageText");
-            Debug.Assert(messageText);
-            messageText.name = "MajordomoMessageText";
+            // get message content, create message content item
+            this.messageContent = Common.GetChild(viewPort, "ActorMassageText");
+            Debug.Assert(this.messageContent);
+            this.messageContent.name = "MajordomoMessageContent";
 
-            this.textMessage = messageText.GetComponent<Text>();
-            Debug.Assert(this.textMessage);
+            var messageContentItem = UnityEngine.Object.Instantiate(this.messageContent, this.messageContent.transform);
+            messageContentItem.SetActive(true);
+            messageContentItem.name = "MajordomoMessageContentItem0";
+
+            // modify message content
+            Common.RemoveComponent<Text>(this.messageContent);
+            Common.RemoveComponent<SetFont>(this.messageContent);
+
+            var verticalLayoutGroup = this.messageContent.AddComponent<VerticalLayoutGroup>();
+            verticalLayoutGroup.childForceExpandWidth = false;
+            verticalLayoutGroup.childForceExpandHeight = false;
+
+            // modify message content item
+            var text = messageContentItem.GetComponent<Text>();
+            TaiwuCommon.SetFont(text);
+
+            Common.RemoveComponent<ContentSizeFitter>(messageContentItem);
+            Common.RemoveComponent<SetFont>(messageContentItem);
 
             // modify message scroll bar
             var scrollbar = Common.GetChild(messageView, "ActorMassageScrollbar");
@@ -283,6 +303,9 @@ namespace Majordomo
 
             this.textMessagePage = pageText.GetComponent<Text>();
             Debug.Assert(this.textMessagePage);
+            TaiwuCommon.SetFont(this.textMessagePage);
+
+            Common.RemoveComponent<SetFont>(pageText);
 
             // clone & modify page button prev
             var oriPageButtonPrev = Common.GetChild(ActorMenu.instance.actorMassage, "Page-Button");
@@ -365,6 +388,9 @@ namespace Majordomo
             var text = buttonText.GetComponent<Text>();
             Debug.Assert(text);
             text.text = label;
+            TaiwuCommon.SetFont(text);
+
+            Common.RemoveComponent<SetFont>(buttonText);
 
             return goMenuButton;
         }
@@ -408,15 +434,57 @@ namespace Majordomo
             {
                 var date = orderedDates[this.dateIndex - baseDateIndex];
                 var record = this.history[date];
-                this.textMessage.text = string.Join("\n", record.messages
+                var messages = record.messages
                     .Where(message => message.importance >= Main.settings.messageImportanceThreshold)
                     .Select(message => TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "·") + " " + message.content)
-                    .ToArray());
+                    .ToList();
+                this.CreateMessageContentItems(messages);
             }
             else
-                this.textMessage.text = string.Empty;
+                this.CreateMessageContentItems(new List<string>());
 
             this.textMessagePage.text = $"{this.dateIndex - baseDateIndex + 1} / {orderedDates.Count}";
+        }
+
+
+        /// <summary>
+        /// 根据消息行数，创建对应数量的消息容纳控件（或重复利用之前的控件），并填入对应的文本
+        /// </summary>
+        /// <param name="messages"></param>
+        private void CreateMessageContentItems(List <string> messages)
+        {
+            var item0 = Common.GetChild(this.messageContent, "MajordomoMessageContentItem0");
+            if (!item0) throw new Exception("Failed to find the first item of MajordomoMessageContent");
+
+            var messageChunks = Common.SplitList(messages, N_MESSAGES_PER_CONTENT_ITEM).ToList();
+            int nItemsNeeded = messageChunks.Count;
+            int nActualItems = this.messageContent.transform.childCount;
+
+            for (int i = 0; i < nItemsNeeded; ++i)
+            {
+                GameObject currItem;
+
+                if (i < nActualItems)
+                {
+                    currItem = this.messageContent.transform.GetChild(i).gameObject;
+                }
+                else
+                {
+                    currItem = UnityEngine.Object.Instantiate(item0, this.messageContent.transform);
+                    currItem.SetActive(true);
+                    currItem.name = "MajordomoMessageContentItem" + i.ToString();
+                }
+
+                var currText = currItem.GetComponent<Text>();
+                if (!currText) throw new Exception($"MajordomoMessageContentItem '{currItem.name}' does not have Text component");
+                currText.text = string.Join("\n", messageChunks[i].ToArray());
+            }
+
+            for (int i = nItemsNeeded; i < nActualItems; ++i)
+            {
+                var currItem = this.messageContent.transform.GetChild(i).gameObject;
+                UnityEngine.Object.Destroy(currItem);
+            }
         }
 
 
