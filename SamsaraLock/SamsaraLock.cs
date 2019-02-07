@@ -24,6 +24,7 @@ namespace SamsaraLock
         public bool lockFaceTaiwu = true;
         public bool lockFaceAll = false;
         public bool lockFaceFuta = true;
+
         public uint taiwuPreemptRate = 100;
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -102,7 +103,7 @@ namespace SamsaraLock
                 });
                 if (findlove)
                 {
-
+                   
                     DeadTaiwuManager.reset();
                     try
                     {
@@ -113,44 +114,13 @@ namespace SamsaraLock
                     {
                         Console.WriteLine(ex.ToString());
                     }
-                   
-                }
-
-                bool fixbug = GUILayout.Button("手动修复性转bug", new GUILayoutOption[]
-              {
-                    GUILayout.Width(200f)
-              });
-                if (fixbug)
-
-                {
-                    int taiwu = DateFile.instance.MianActorID();
-                    int sex = int.Parse(DateFile.instance.GetActorDate(taiwu, 14, false));
-                    int baseactor = sex;
-                    if (int.TryParse(DateFile.instance.GetActorDate(taiwu, 997, false), out baseactor))
-                    {
-                        Main.Logger.Log("读取成功……"+baseactor.ToString());
-                        if (int.Parse(DateFile.instance.presetActorDate[baseactor][14])!=sex)
-                        {
-                           
-                            baseactor = (Mathf.Clamp((int.Parse(DateFile.instance.GetActorDate(taiwu, 997, false)) + 1), (0 + sex), (28 + sex)));
-                            DateFile.instance.actorsDate[taiwu][997] = baseactor.ToString();
-                            Main.Logger.Log("改写成功……" + baseactor.ToString());
-
-                        }
-                        else Main.Logger.Log("您没有出BUG哦" );
-                    }
-                    else
-                    {
-                        Main.Logger.Log("读取失败……" );
-                        DateFile.instance.actorsDate[taiwu][997] = (UnityEngine.Random.Range(0, 15) * 2 + sex).ToString();
-                        Main.Logger.Log("补写成功……");
-                    }
 
                 }
+
             }
 
 
-            GUILayout.EndVertical(); 
+            GUILayout.EndVertical();
         }
 
         static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -177,7 +147,7 @@ namespace SamsaraLock
     public class DeadTaiwuManager
     {
         public const int DEAD_TAIWU_LOVE = 1;  // 用来识别死亡太吾的恋爱之魔数, 这到底代表什么呢？
-      
+
         public List<CharId> deadTaiwuList;
 
         public static DeadTaiwuManager instance { get; private set; }
@@ -187,11 +157,11 @@ namespace SamsaraLock
             DIGTaiwu();
             scanGraveForDeadTaiwu();
         }
-        
-       //从身份上识别并标记坟场中的太污,并怒刷好感
+
+        //从身份上识别并标记坟场中的太污,不刷好感也OK啦
         public void DIGTaiwu()
         {
-            
+
             foreach (int id in DateFile.instance.deadActors)
             {
                 int num2 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
@@ -200,12 +170,11 @@ namespace SamsaraLock
                 if (gangValueId == 99)
                 {
                     DateFile.instance.actorsDate[id][CharDataIndex.LOVE] = DEAD_TAIWU_LOVE.ToString();
-        
-                    if (Main.settings.taiwuBugfix) DateFile.instance.actorsDate[id][CharDataIndex.OPINION] = "60000";
+
                 }
-                
+
             }
-           
+
         }
 
 
@@ -219,12 +188,12 @@ namespace SamsaraLock
                 {
                     deadTaiwuList.Add(charId);
                     var text = DateFile.instance.GetActorName(charId, true, false);
-                    Main.Logger.Log(charId.ToString()+"["+text+"]"+ "\u00A0\u00A0");
+                    Main.Logger.Log(charId.ToString() + "[" + text + "]" + "\u00A0\u00A0");
                 }
             }
 
             Console.WriteLine(string.Format("Info: full scan on grave done, found {0} dead taiwus", deadTaiwuList.Count));
-            Main.Logger.Log("Info: full scan on grave done, found "+deadTaiwuList.Count+ "dead taiwus");
+            Main.Logger.Log("Info: full scan on grave done, found " + deadTaiwuList.Count + "dead taiwus");
         }
 
         public static void initialize()
@@ -233,6 +202,7 @@ namespace SamsaraLock
             {
                 Console.WriteLine("Info: initialize DeadTaiwuManager.");
                 instance = new DeadTaiwuManager();
+
             }
         }
 
@@ -251,7 +221,7 @@ namespace SamsaraLock
         public void setAsDeadTaiwu(CharId charId)
         {
             DateFile.instance.actorsDate[charId][CharDataIndex.LOVE] = DEAD_TAIWU_LOVE.ToString();
-            deadTaiwuList.Add(charId);
+            if(!deadTaiwuList.Contains(charId))deadTaiwuList.Add(charId);
         }
 
         public void clearDeadTaiwu(CharId charId)
@@ -262,108 +232,6 @@ namespace SamsaraLock
             // DateFile.instance.actorsDate[charId][CharDataIndex.LOVE] = "0";
         }
 
-        // 判定是否要进行强制太吾降生，如果要进行的话，从坟场里拿出一个太吾ID进行强制降生
-        // return: whether it is a taiwu getting delivered after the function applied any possible modification.
-        public bool tryDeadTaiwuBirthPreemption(int childId, ref List<CharId> previousLives)
-        {
-            // 判定太吾是否要抢这次降生机会
-            if (Main.settings.taiwuPreemptRate <= 0
-                || deadTaiwuList.Count == 0
-                || UnityEngine.Random.Range(0, 100) >= Main.settings.taiwuPreemptRate)
-            {
-                return false;
-            }
-
-            if (previousLives == null || previousLives.Count == 0)
-            {
-                if (deadTaiwuList.Count != 0)
-                {
-                    Console.WriteLine("Error: Martian dead taiwu in registry. Registry cleared.");
-                    deadTaiwuList.Clear();
-                }
-                return false;
-            }
-
-            // 检查正在降生的是否已经是死太吾
-            CharId preemptedCharId = previousLives[previousLives.Count - 1];
-            if (deadTaiwuList.Contains(preemptedCharId))
-            {
-                clearDeadTaiwu(preemptedCharId);
-                if (!isDeadTaiwu(preemptedCharId))
-                {
-                    Console.WriteLine("Error: fake taiwu in registry");
-                    return false;
-                }
-                return true;
-            }
-
-            Console.WriteLine("Start preempting birth for taiwu.");
-            Main.Logger.Log("Start preempting birth for taiwu.");
-
-            var livesBackup = new List<CharId>(previousLives);
-            try
-            {
-                DateFile data = DateFile.instance;
-
-                // 选取一只太吾
-                CharId taiwuCharId = deadTaiwuList[0];
-                clearDeadTaiwu(taiwuCharId);
-
-                // Due diligence
-                if (!isDeadTaiwu(taiwuCharId))
-                {
-                    Console.WriteLine("Error: fake taiwu in registry");
-                    return false;
-                }
-
-                // 从坟里挖出来
-                if (!data.deadActors.Remove(taiwuCharId))
-                {
-                    Console.WriteLine("Error: trying to reincarnation character not in grave.");
-                    return false;
-                }
-
-                // 塞进轮回
-                previousLives.Clear();
-                previousLives.AddRange(new List<int>(data.GetLifeDateList(taiwuCharId, 801, false)) { taiwuCharId });
-
-                // 把被抢占的人塞回坟墓
-                data.deadActors.Add(preemptedCharId);
-
-                // 触发托梦事件
-                triggerDreamEvent(childId, taiwuCharId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                Console.WriteLine("Error: Failed birth preempting attempt.");
-
-                // 恢复原本轮回数据
-                previousLives = livesBackup;
-
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool triggerDreamEvent(CharId childId, CharId taiwuCharId)
-        {
-            if (DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), taiwuCharId, false, false) >= 30000)
-            {
-                int gangGroup = int.Parse(DateFile.instance.GetActorDate(childId, 19, false));
-                UIDate.instance.changTrunEvents.Add(new int[]
-                {
-                    239,
-                    taiwuCharId,
-                    int.Parse(DateFile.instance.GetGangDate(gangGroup, 3))
-                });
-
-                return true;
-            }
-
-            return false;
-        }
     }
 
     /// <summary>
@@ -410,176 +278,125 @@ namespace SamsaraLock
         }
     }
 
-    //尝试在传剑时调用DeadTaiwuManager
+    //在传剑时把太污送入名单，因为之前已经remove过了，标记应该不会失效（虽然不标记好像也OK
 
-    [HarmonyPatch(typeof(ActorScore), "ShowActorScoreWindow")]
+    [HarmonyPatch(typeof(DateFile), "ActorInherit")]
     public static class TaiwuGetdaze
     {
-        private static void Prefix()
+        private static void Prefix(ref int actorId, ref bool die)
         {
             if (!Main.enabled) { return; }
-
-            
-                DeadTaiwuManager.reset();
-            try
+            int taiwu = DateFile.instance.MianActorID();
+            if (actorId == taiwu && die)
             {
-                // 初始化死太吾cache
                 DeadTaiwuManager.initialize();
+                DeadTaiwuManager.instance.setAsDeadTaiwu(taiwu);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+           
 
         }
     }
 
 
     /// <summary>
-    ///  绕过太吾身份传承时前后两代太吾之间的好感数据丢失，导致转生后没有提示的问题
-    ///  更新后似乎此处出现问题，总之先封存这部分代码
+    ///  直接和谐掉设置轮回的函数，MOD的写法变容易&去除因为门派新人造成的失效，但会导致MOD生效级降低(针对性别锁而言)
+    /// 也更容易躺枪（
     /// </summary>
-    /*[HarmonyPatch(typeof(ActorMenu), "NewMianActor")]
-    public static class ActorMenu_NewMianActor_Patch
+    [HarmonyPatch(typeof(DateFile), "SetActorSamsara")]
+    public static class DateFile_SetActorSamsara_Patch
     {
-        public struct Succession
+        private static bool Prefix( ref int actorId,ref int toPartId)
         {
-            public CharId predecessor;
-            public OpinionValue opinion;
-        }
-
-        public static Dictionary<CharId, Succession> taiwuOpinionsOfPredecessor = new Dictionary<CharId, Succession>();
-
-        private static void Prefix(ActorMenu __instance)
-        {
-            if (!Main.enabled)
+            if (!Main.enabled) return true;
+            bool istaiwu = false;
+            int preactor = 0;
+            //判断是否太吾转生
+            if (DeadTaiwuManager.instance == null || DeadTaiwuManager.instance.deadTaiwuList.Count < 1 || UnityEngine.Random.Range(0, 100) > Main.settings.taiwuPreemptRate)
             {
-                return;
-            }
-
-            try
-            {
-                CharId oldTaiwuId = DateFile.instance.MianActorID();
-                CharId newTaiwuId = (int)typeof(ActorMenu).GetField("chooseNewActor", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(__instance);
-
-                // 保存前后两代太吾的关系值
-                var succession = new Succession();
-                succession.predecessor = oldTaiwuId;
-                succession.opinion = int.Parse(DateFile.instance.GetActorDate(newTaiwuId, 3, false));
-                //succession.opinion = DateFile.instance.GetActorFavor(false, oldTaiwuId, newTaiwuId, false, false);
-                taiwuOpinionsOfPredecessor.Add(newTaiwuId, succession);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-        }
-
-        private static void Postfix(ActorMenu __instance)
-        {
-            if (!Main.enabled)
-            {
-                return;
-            }
-
-            try
-            {
-                CharId newTaiwuId = DateFile.instance.MianActorID();
-                Succession succession;
-                if (taiwuOpinionsOfPredecessor.TryGetValue(newTaiwuId, out succession))
+                //随机抓取一个死人
+                if (DateFile.instance.deadActors.Count < 1)
+                    return false;
+                else
                 {
-                    var predecessor = DateFile.instance.actorsDate[succession.predecessor];
-
-                    // 恢复前后两代太吾的关系值
-                    predecessor[CharDataIndex.OPINION] = succession.opinion.ToString();
-
-                    // 标记前代为死亡太吾
-                    DeadTaiwuManager.instance.setAsDeadTaiwu(succession.predecessor);
+                    preactor = DateFile.instance.deadActors[UnityEngine.Random.Range(0, DateFile.instance.deadActors.Count)];
+                    if (DeadTaiwuManager.instance != null && DeadTaiwuManager.instance.deadTaiwuList.Contains(preactor))
+                        istaiwu = true;
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-        }
-    }*/
+               
 
-    /// <summary>
-    ///  建立人物时拦截并修改结果
-    /// </summary>
-    [HarmonyPatch(typeof(DateFile), "MakeNewChildren")]
-    public static class DateFile_MakeNewChildren_Patch2
-    {
-        private static void Postfix(DateFile __instance, ref List<int> __result)
-        {
-            if (!Main.enabled)
-            {
-                return;
-            }
 
-            try
+            }
+            else
             {
-                foreach (CharId childId in __result)
+                //抓走一只试图插队的太吾
+                istaiwu = true;
+                preactor = DeadTaiwuManager.instance.deadTaiwuList[UnityEngine.Random.Range(0, DeadTaiwuManager.instance.deadTaiwuList.Count)];
+              
+            }
+            //生成轮回信息
+            List<int> value = new List<int>(DateFile.instance.GetLifeDateList(preactor, 801, false)){preactor};
+            //写入轮回信息
+            DateFile.instance.actorLife[actorId].Add(801, value);
+            //从奈何桥头移走死人
+            DateFile.instance.deadActors.Remove(preactor);
+            if (istaiwu) DeadTaiwuManager.instance.deadTaiwuList.Remove(preactor);
+            //生成过季提示
+            if (DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), preactor, false, false) >= 30000 || (istaiwu&&Main.settings.taiwuBugfix))
+            {
+                UIDate.instance.changTrunEvents.Add(new int[]
                 {
-                    // previousLives存了所有前世身份，最后一条是上一世
-                    var previousLives = __instance.actorLife[childId][801];
-                    if (previousLives == null || previousLives.Count == 0)
-                    {
-                        return;
-                    }
-
-                    // 尝试进行太吾抢占降生
-                    bool isTaiwu = DeadTaiwuManager.instance.tryDeadTaiwuBirthPreemption(childId, ref previousLives);
-
-                    if (Main.settings.lockGenderAll || (Main.settings.lockGenderTaiwu && isTaiwu))
-                    {
-                       
-                        int previousLifeId = previousLives[previousLives.Count - 1];
-                        int previousLifeGender = int.Parse(__instance.GetActorDate(previousLifeId, CharDataIndex.SEX, false));
-
-                        // 性别：１- 男， 2 - 女， 1+2=3，性别翻转用 3-x
-                        int gender = Main.settings.lockGenderAlter ? 3 - previousLifeGender : previousLifeGender;
-                       
-                        // 恢复前世脸以及肤色
-                        if (Main.settings.lockFaceAll || (Main.settings.lockFaceTaiwu && isTaiwu))
-                        {
-                            string face_components = __instance.GetActorDate(previousLifeId, CharDataIndex.FACE_COMPONENTS, false);
-                            string face_colors = __instance.GetActorDate(previousLifeId, CharDataIndex.FACE_COLORS, false);
-                            string futa = __instance.GetActorDate(previousLifeId, CharDataIndex.FUTA, false);
-
-                            int charm = __instance.GetFaceCharm(gender, Array.ConvertAll(face_components.Split(new char[] { '|' }), int.Parse));
-
-                            __instance.actorsDate[childId][CharDataIndex.FACE_COMPONENTS] = face_components;
-                            __instance.actorsDate[childId][CharDataIndex.FACE_COLORS] = face_colors;
-                            __instance.actorsDate[childId][CharDataIndex.CHARM] = charm.ToString();
-                            __instance.actorsDate[childId][CharDataIndex.FUTA] = futa;
-                            
-                        }
-                        int baseactor = int.Parse(__instance.actorsDate[childId][997]);
-                        int gender2 = int.Parse(__instance.presetActorDate[baseactor][14]);
-                       
-                        if (gender2 != gender)
-                        {
-                            Main.Logger.Log("性转启动……");
-                            //写入性别，其实不写也无所谓（那还是写8
-                            __instance.actorsDate[childId][14] = gender.ToString();
-                            //改写BUG之源997
-                            __instance.actorsDate[childId][997] = (Mathf.Clamp((int.Parse(__instance.actorsDate[childId][997])+1), (0 + gender), (28 + gender))).ToString();
-                            Main.Logger.Log(__instance.actorsDate[childId][997]);
-                            //重命名
-                            __instance.MakeActorName(childId, int.Parse(__instance.GetActorDate(childId, 29, false)), __instance.GetActorDate(childId, 5, false), true);
-                           
-                        }
-
-                    }
-                }
+                    239,
+                    preactor,
+                    toPartId
+                });
             }
-            catch (Exception ex)
+            if (Main.settings.lockGenderAll || (Main.settings.lockGenderTaiwu && istaiwu))
             {
-                Console.WriteLine(ex.ToString());
+
+
+                int previousLifeGender = int.Parse(DateFile.instance.GetActorDate(preactor, CharDataIndex.SEX, false));
+
+                // 性别：１- 男， 2 - 女， 1+2=3，性别翻转用 3-x
+                int gender = Main.settings.lockGenderAlter ? 3 - previousLifeGender : previousLifeGender;
+
+                // 恢复前世脸以及肤色
+                if (Main.settings.lockFaceAll || (Main.settings.lockFaceTaiwu && istaiwu))
+                {
+                   
+                    string face_components = DateFile.instance.actorsDate[preactor][CharDataIndex.FACE_COMPONENTS];
+                    string face_colors = DateFile.instance.actorsDate[preactor][CharDataIndex.FACE_COLORS];
+                    string futa = DateFile.instance.GetActorDate(preactor, CharDataIndex.FUTA, false);
+                  
+                    int charm = DateFile. instance.GetFaceCharm(gender, Array.ConvertAll(face_components.Split(new char[] { '|' }), int.Parse));
+
+                    DateFile.instance.actorsDate[actorId][CharDataIndex.FACE_COMPONENTS] = face_components;
+                    DateFile.instance.actorsDate[actorId][CharDataIndex.FACE_COLORS] = face_colors;
+                    DateFile.instance.actorsDate[actorId][CharDataIndex.CHARM] = charm.ToString();
+                    DateFile.instance.actorsDate[actorId][CharDataIndex.FUTA] = futa;
+                   
+
+                }
+
+                int baseactor = int.Parse(DateFile.instance.actorsDate[actorId][997]);
+                int gender2 = int.Parse(DateFile.instance.presetActorDate[baseactor][14]);
+                int brithpart = (baseactor - 1) / 2;
+
+                if (gender2 != gender)
+                {
+
+                    //改写BUG之源997
+                    DateFile.instance.actorsDate[actorId][997] = (brithpart * 2 + gender).ToString();
+
+                    //重命名
+                    DateFile.instance.MakeActorName(actorId, int.Parse(DateFile.instance.GetActorDate(actorId, 29, false)), DateFile.instance.GetActorDate(actorId, 5, false), true);
+
+                }
+
             }
+            return false;
         }
 
     }
 
 }
+
