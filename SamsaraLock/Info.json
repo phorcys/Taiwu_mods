@@ -2,7 +2,7 @@
   "Id": "SamsaraLock",
   "DisplayName": "生生世世",
   "Author": "logicor",
-  "Version": "1.0.2",
+  "Version": "1.1.2",
   "AssemblyName": "SamsaraLock.dll",
   "EntryMethod": "SamsaraLock.Main.Load"
 }
