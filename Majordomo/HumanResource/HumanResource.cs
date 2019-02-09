@@ -112,11 +112,11 @@ namespace Majordomo
         /// </summary>
         public void AssignBuildingWorkers()
         {
-            float compositeWorkIndex = HumanResource.GetCompositeWorkIndex(this.partId, this.placeId);
+            var workingStats = HumanResource.GetWorkingStats(this.partId, this.placeId);
             MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "开始指派工作人员") + "　-　" +
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, compositeWorkIndex.ToString()));
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, workingStats.compositeWorkIndex.ToString()));
 
             Original.RemoveWorkersFromBuildings(this.partId, this.placeId, this.excludedBuildings, this.excludedWorkers);
 
@@ -137,17 +137,71 @@ namespace Majordomo
 
             Original.UpdateAllBuildings(this.partId, this.placeId);
 
-            compositeWorkIndex = HumanResource.GetCompositeWorkIndex(this.partId, this.placeId);
+            var workerStats = HumanResource.GetWorkerStats(this.partId, this.placeId);
+            MajordomoWindow.instance.SetWorkerStats(this.currDate, workerStats);
+
+            workingStats = HumanResource.GetWorkingStats(this.partId, this.placeId);
             MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "结束指派工作人员") + "　-　" +
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, compositeWorkIndex.ToString()));
-            MajordomoWindow.instance.SetCompositeWorkIndex(this.currDate, compositeWorkIndex);
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, workingStats.compositeWorkIndex.ToString()));
+            MajordomoWindow.instance.SetWorkingStats(this.currDate, workingStats);
         }
 
 
         /// <summary>
-        /// 计算指定地区的综合工作指数
+        /// 计算指定地区的工作人员统计信息
+        /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
+        /// <returns></returns>
+        public static WorkerStats GetWorkerStats(int partId, int placeId)
+        {
+            int mainActorId = DateFile.instance.MianActorID();
+            List<int> workerIds = Original.GetWorkerIds(partId, placeId);
+
+            float sumHealthInjury = 0.0f;
+            float sumHealthCirculating = 0.0f;
+            float sumHealthPoison = 0.0f;
+            float sumHealthLifespan = 0.0f;
+            float sumMood = 0.0f;
+            float sumFriendliness = 0.0f;
+            float sumWorkMotivation = 0.0f;
+
+            foreach (int workerId in workerIds)
+            {
+                sumHealthInjury += 1f - TaiwuCommon.GetInjuryRate(workerId);
+                sumHealthCirculating += 1f - TaiwuCommon.GetCirculatingBlockingRate(workerId);
+                sumHealthPoison += 1f - TaiwuCommon.GetPoisoningRate(workerId);
+                sumHealthLifespan += 1f - TaiwuCommon.GetLifespanDamageRate(workerId);
+
+                int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, addValue: false));
+                int favor = DateFile.instance.GetActorFavor(false, mainActorId, workerId);
+                int favorLevel = DateFile.instance.GetActorFavor(false, mainActorId, workerId, getLevel: true);
+                int scaledFavor = Original.GetScaledFavor(favorLevel);
+                scaledFavor = Original.AdjustScaledFavorWithMood(scaledFavor, mood);
+                sumMood += mood;
+                sumFriendliness += favor;
+                sumWorkMotivation += Mathf.Max(scaledFavor, 0) / 100f;
+            }
+
+            return new WorkerStats
+            {
+                nWorkers = workerIds.Count,
+                avgHealthInjury = sumHealthInjury / workerIds.Count,
+                avgHealthCirculating = sumHealthCirculating / workerIds.Count,
+                avgHealthPoison = sumHealthPoison / workerIds.Count,
+                avgHealthLifespan = sumHealthLifespan / workerIds.Count,
+                avgCompositeHealth = (sumHealthInjury + sumHealthCirculating + sumHealthPoison + sumHealthLifespan) / (4 * workerIds.Count),
+                avgMood = sumMood / workerIds.Count,
+                avgFriendliness = sumFriendliness / workerIds.Count,
+                avgWorkMotivation = sumWorkMotivation / workerIds.Count,
+            };
+        }
+
+
+        /// <summary>
+        /// 计算指定地区的工作统计信息
         /// 
         /// 综合工作指数 = SUM(缩放平移过的建筑工作效率 * 建筑优先级)
         /// 厢房效率不计入统计
@@ -157,8 +211,10 @@ namespace Majordomo
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
         /// <returns></returns>
-        private static float GetCompositeWorkIndex(int partId, int placeId)
+        private static WorkingStats GetWorkingStats(int partId, int placeId)
         {
+            int nProductiveBuildings = 0;
+            float sumWorkEffectiveness = 0.0f;
             float compositeWorkIndex = 0.0f;
 
             // 统计所有建筑的工作效率（厢房效率不计入统计）
@@ -178,11 +234,18 @@ namespace Majordomo
                     float scaledWorkEffectiveness = (workEffectiveness - 100f) / 100f;
                     int priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex);
 
+                    ++nProductiveBuildings;
+                    sumWorkEffectiveness += workEffectiveness / 200f;
                     compositeWorkIndex += scaledWorkEffectiveness * priority;
                 }
             }
 
-            return compositeWorkIndex;
+            return new WorkingStats
+            {
+                nProductiveBuildings = nProductiveBuildings,
+                avgWorkEffectiveness = sumWorkEffectiveness / nProductiveBuildings,
+                compositeWorkIndex = compositeWorkIndex
+            };
         }
 
 

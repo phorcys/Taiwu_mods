@@ -110,10 +110,9 @@ namespace Majordomo
         }
 
 
-        private static string GetHarvestedResourcesDetails(ref int earnedMoney)
+        private static string GetHarvestedResourcesDetails(ref EarningStats stats)
         {
             string details = "";
-            earnedMoney = 0;
 
             if (AutoHarvest.harvestedResources.Count == 0) return details;
 
@@ -125,7 +124,20 @@ namespace Majordomo
                 details += TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, name) + "\u00A0" + 
                     TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, quantity.ToString()) + "、";
 
-                if (resourceIndex == ResourceMaintainer.RES_ID_MONEY) earnedMoney = quantity;
+                switch (resourceIndex)
+                {
+                    case ResourceMaintainer.RES_ID_MONEY:
+                        stats.earnedMoney += quantity;
+                        stats.gdp += quantity;
+                        break;
+                    case ResourceMaintainer.RES_ID_FAME:
+                        stats.earnedFame += quantity;
+                        stats.gdp += Mathf.RoundToInt(quantity * ResourceMaintainer.EXCHANGE_RATE_FAME);
+                        break;
+                    default:
+                        stats.gdp += Mathf.RoundToInt(quantity * ResourceMaintainer.EXCHANGE_RATE_DEFAULT);
+                        break;
+                }
             }
             details = details.Substring(0, details.Length - 1) + "。";
 
@@ -164,7 +176,7 @@ namespace Majordomo
         }
 
 
-        private static string GetHarvestedItemsDetails()
+        private static string GetHarvestedItemsDetails(ref EarningStats stats)
         {
             string details = "";
 
@@ -182,6 +194,9 @@ namespace Majordomo
                     string coloredName = TaiwuCommon.SetColor(TaiwuCommon.COLOR_LOWEST_LEVEL + quality - 1, name);
                     string coloredQuntity = TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, quantity.ToString());
                     details += $"{coloredName} × {coloredQuntity}、";
+
+                    int itemValue = int.Parse(DateFile.instance.GetItemDate(itemId, 904));
+                    stats.gdp += itemValue * quantity;
                 }
             }
             details = details.Substring(0, details.Length - 1) + "。";
@@ -212,7 +227,7 @@ namespace Majordomo
         }
 
 
-        private static string GetHarvestedActorsDetails()
+        private static string GetHarvestedActorsDetails(ref EarningStats stats)
         {
             string details = "";
 
@@ -275,23 +290,24 @@ namespace Majordomo
         private static void RecordHarvestDetails()
         {
             var currDate = new TaiwuDate();
+            var stats = new EarningStats();
 
-            int earnedMoney = 0;
-            string details = GetHarvestedResourcesDetails(ref earnedMoney);
+            string details = GetHarvestedResourcesDetails(ref stats);
             if (!string.IsNullOrEmpty(details))
                 MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
                     TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月收获资源") + "：" + details);
-            MajordomoWindow.instance.SetEarnedMoney(currDate, earnedMoney);
 
-            details = GetHarvestedItemsDetails();
+            details = GetHarvestedItemsDetails(ref stats);
             if (!string.IsNullOrEmpty(details))
                 MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
                     TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月收获物品") + "：" + details);
 
-            details = GetHarvestedActorsDetails();
+            details = GetHarvestedActorsDetails(ref stats);
             if (!string.IsNullOrEmpty(details))
                 MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
                     TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "本月接纳新村民") + "：" + details);
+
+            MajordomoWindow.instance.SetEarningStats(currDate, stats);
         }
 
 

@@ -20,9 +20,9 @@ namespace Majordomo
     /// </summary>
     public class MajordomoWindowButton
     {
-        private static readonly string IMAGE_NAME = "SystemIcon_majordomo";
-        private static readonly string MESSAGE_TITLE = "管家";
-        private static readonly string MESSAGE_CONTENT = "查看管家相关信息…";
+        private const string IMAGE_NAME = "SystemIcon_majordomo";
+        private const string MESSAGE_TITLE = "管家";
+        private const string MESSAGE_CONTENT = "查看管家相关信息…";
 
         // 管家按钮
         public static GameObject goButton;

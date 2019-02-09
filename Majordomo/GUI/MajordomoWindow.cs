@@ -21,13 +21,13 @@ namespace Majordomo
     /// </summary>
     public class Message
     {
-        public static readonly int IMPORTANCE_LOWEST = 0;
-        public static readonly int IMPORTANCE_LOW = 25;
-        public static readonly int IMPORTANCE_NORMAL = 50;
-        public static readonly int IMPORTANCE_HIGH = 75;
-        public static readonly int IMPORTANCE_HIGHEST = 100;
+        public const int IMPORTANCE_LOWEST = 0;
+        public const int IMPORTANCE_LOW = 25;
+        public const int IMPORTANCE_NORMAL = 50;
+        public const int IMPORTANCE_HIGH = 75;
+        public const int IMPORTANCE_HIGHEST = 100;
 
-        public static readonly string[] MESSAGE_IMPORTANCE_NAMES = new string[] { "最低", "低", "普通", "高", "最高" };
+        public static readonly string[] MESSAGE_IMPORTANCE_NAMES = { "最低", "低", "普通", "高", "最高" };
 
         public int importance;
         public string content;
@@ -41,19 +41,53 @@ namespace Majordomo
     }
 
 
+    public class WorkerStats
+    {
+        public int nWorkers;                // 工作人员数量
+        public float avgHealthInjury;       // 平均健康（伤势）
+        public float avgHealthCirculating;  // 平均健康（内息）
+        public float avgHealthPoison;       // 平均健康（中毒）
+        public float avgHealthLifespan;     // 平均健康（寿命）
+        public float avgCompositeHealth;    // 平均综合健康
+        public float avgMood;               // 平均心情
+        public float avgFriendliness;       // 平均好感
+        public float avgWorkMotivation;     // 平均工作动力
+    }
+
+
+    public class WorkingStats
+    {
+        public int nProductiveBuildings;    // 生产性建筑数量
+        public float avgWorkEffectiveness;  // 平均工作效率
+        public float compositeWorkIndex;    // 综合工作指数
+    }
+
+
+    public class EarningStats
+    {
+        public int earnedMoney;             // 收获银钱
+        public int earnedFame;              // 收获威望
+        public int gdp;                     // 本地生产总值（收获等价银钱）
+    }
+
+
     /// <summary>
     /// 管家界面内的单个月内的所有消息的集合
     /// </summary>
     public class Record
     {
         public List<Message> messages;
-        public float compositeWorkIndex;
-        public float earnedMoney;
+        public WorkerStats workerStats;
+        public WorkingStats workingStats;
+        public EarningStats earningStats;
 
 
         public Record()
         {
             this.messages = new List<Message>();
+            this.workerStats = new WorkerStats();
+            this.workingStats = new WorkingStats();
+            this.earningStats = new EarningStats();
         }
 
 
@@ -63,6 +97,9 @@ namespace Majordomo
             {
                 new Message(Message.IMPORTANCE_HIGHEST, $"进入{date.ToString(richText: true)}。"),
             };
+            this.workerStats = new WorkerStats();
+            this.workingStats = new WorkingStats();
+            this.earningStats = new EarningStats();
         }
     }
 
@@ -72,23 +109,35 @@ namespace Majordomo
     /// </summary>
     public class MajordomoWindow
     {
-        public static readonly int RECORD_SHELF_LIFE = 10 * 12;
-        public static readonly int MESSAGE_SHELF_LIFE = 2 * 12;
-        public static readonly int N_MESSAGES_PER_CONTENT_ITEM = 10;
+        public const int RECORD_SHELF_LIFE = 100 * 12;
+        public const int MESSAGE_SHELF_LIFE = 2 * 12;
+        public const int N_SUMMARY_ITEMS = 5;
+
+        public static readonly Color TEXT_COLOR_DEFAULT = new Color(0.882f, 0.804f, 0.667f, 1.000f);
+        public static readonly Color MENU_BTN_COLOR_UNSELECTED = new Color(0.984f, 0.984f, 0.984f, 1.000f);
+        public static readonly Color MENU_BTN_COLOR_SELECTED = new Color(0.016f, 0.016f, 0.016f, 1.000f);
+        public static readonly Color MENU_BTN_BG_COLOR_UNSELECTED = new Color(0.191f, 0.169f, 0.157f, 1.000f);
+        public static readonly Color MENU_BTN_BG_COLOR_SELECTED = new Color(0.809f, 0.831f, 0.843f, 1.000f);
 
         public static MajordomoWindow instance;
 
         private GameObject window;
         private bool isWindowOpening;
-        private GameObject menu;
-        private GameObject assignBuildingWorkersButton;
-        private GameObject mainHolder;
-        private GameObject messageContent;
-        private Text textMessagePage;
-        private Text textSummary;
 
-        private Dictionary<TaiwuDate, Record> history = new Dictionary<TaiwuDate, Record>();
-        private int dateIndex = -1;
+        private GameObject menu;
+        private GameObject logsPanelButton;
+        private GameObject chartsPanelButton;
+        private GameObject assignBuildingWorkersButton;
+
+        private GameObject panelContainer;
+        private PanelLogs panelLogs;
+        private PanelCharts panelCharts;
+        private Dictionary<ITaiwuWindow, GameObject> panels;    // panel -> menu button
+        private ITaiwuWindow selectedPanel;
+
+        private GameObject summaryBar;
+
+        private readonly Dictionary<TaiwuDate, Record> history = new Dictionary<TaiwuDate, Record>();
 
 
         /// <summary>
@@ -102,18 +151,32 @@ namespace Majordomo
 
             if (!MajordomoWindow.instance.window ||
                 !MajordomoWindow.instance.menu ||
-                !MajordomoWindow.instance.mainHolder ||
-                !MajordomoWindow.instance.textSummary)
-            {
-                MajordomoWindow.instance.CreateMainWindow();
-            }
+                !MajordomoWindow.instance.panelContainer ||
+                !MajordomoWindow.instance.summaryBar)
+                MajordomoWindow.instance.CreateWindow();
 
-            if (!MajordomoWindow.instance.assignBuildingWorkersButton ||
-                !MajordomoWindow.instance.messageContent ||
-                !MajordomoWindow.instance.textMessagePage)
+            if (MajordomoWindow.instance.panelLogs == null)
+                MajordomoWindow.instance.panelLogs = new PanelLogs(
+                    MajordomoWindow.instance.panelContainer, MajordomoWindow.instance.history);
+            MajordomoWindow.instance.panelLogs.TryRegisterResources();
+
+            if (MajordomoWindow.instance.panelCharts == null)
+                MajordomoWindow.instance.panelCharts = new PanelCharts(
+                    MajordomoWindow.instance.panelContainer, MajordomoWindow.instance.history);
+            MajordomoWindow.instance.panelCharts.TryRegisterResources();
+
+            if (!MajordomoWindow.instance.logsPanelButton ||
+                !MajordomoWindow.instance.chartsPanelButton ||
+                !MajordomoWindow.instance.assignBuildingWorkersButton)
+                MajordomoWindow.instance.CreateMenuItems();
+
+            MajordomoWindow.instance.panels = new Dictionary<ITaiwuWindow, GameObject>()
             {
-                MajordomoWindow.instance.CreateMessagePage();
-            }
+                [MajordomoWindow.instance.panelLogs] = MajordomoWindow.instance.logsPanelButton,
+                [MajordomoWindow.instance.panelCharts] = MajordomoWindow.instance.chartsPanelButton,
+            };
+
+            MajordomoWindow.instance.SwitchPanel(MajordomoWindow.instance.panelLogs);
 
             MajordomoWindow.instance.window.SetActive(false);
             MajordomoWindow.instance.isWindowOpening = false;
@@ -131,9 +194,10 @@ namespace Majordomo
             string saveKeyHistory = "MajordomoWindow.history";
             if (savedData.ContainsKey(saveKeyHistory))
             {
-                string data = savedData[saveKeyHistory];
-                this.history = JsonConvert.DeserializeObject<KeyValuePair<TaiwuDate, Record>[]>(data)
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                string serializedData = savedData[saveKeyHistory];
+                var deserializedData = JsonConvert.DeserializeObject<KeyValuePair<TaiwuDate, Record>[]>(serializedData);
+                this.history.Clear();
+                foreach (var entry in deserializedData) this.history.Add(entry.Key, entry.Value);
             }
         }
 
@@ -165,14 +229,14 @@ namespace Majordomo
             dates = this.history.Keys.OrderByDescending(date => date).Skip(MESSAGE_SHELF_LIFE);
             foreach (var date in dates) this.history[date].messages.Clear();
 
-            this.dateIndex = this.history.Count - 1;
+            if (this.panelLogs != null) this.panelLogs.SetPageIndex(-1);
         }
 
 
-        private void CreateMainWindow()
+        private void CreateWindow()
         {
             // clone & modify main window
-            Debug.Assert(QuquBox.instance.ququBoxWindow);
+            if (!QuquBox.instance.ququBoxWindow) throw new Exception("QuquBox.instance.ququBoxWindow is null");
             this.window = UnityEngine.Object.Instantiate(
                 QuquBox.instance.ququBoxWindow, QuquBox.instance.ququBoxWindow.transform.parent);
             this.window.SetActive(true);
@@ -181,45 +245,46 @@ namespace Majordomo
             Common.RemoveComponent<QuquBox>(this.window);
             Common.RemoveChildren(this.window, new List<string> { "ChooseItemMask", "ItemsBack" });
 
-            // modify main holder
-            this.mainHolder = Common.GetChild(this.window, "QuquBoxHolder");
-            Debug.Assert(this.mainHolder);
-            this.mainHolder.name = "MajordomoWindowMainHolder";
-
-            Common.RemoveComponent<GridLayoutGroup>(this.mainHolder);
-            Common.RemoveChildren(this.mainHolder);
+            // modify panel container
+            this.panelContainer = Common.GetChild(this.window, "QuquBoxHolder");
+            if (!this.panelContainer) throw new Exception("Failed to get child 'QuquBoxHolder' from QuquBox.instance.ququBoxWindow");
+            this.panelContainer.name = "MajordomoPanelContainer";
 
             // clone & modify menu
-            this.menu = UnityEngine.Object.Instantiate(this.mainHolder, this.window.transform);
+            this.menu = UnityEngine.Object.Instantiate(this.panelContainer, this.window.transform);
             this.menu.SetActive(true);
-            this.menu.name = "MajordomoWindowMenu";
+            this.menu.name = "MajordomoMenu";
 
             Common.RemoveChildren(this.menu);
 
-            // resize main holder & menu
-            var rectTransform = this.mainHolder.GetComponent<RectTransform>();
+            // modify panel container
+            Common.RemoveComponent<GridLayoutGroup>(this.panelContainer);
+            Common.RemoveComponent<Image>(this.panelContainer);
+            Common.RemoveComponent<CanvasRenderer>(this.panelContainer);
+            Common.RemoveChildren(this.panelContainer);
+
+            // resize panel container & menu
+            var rectTransform = this.panelContainer.GetComponent<RectTransform>();
             float width = rectTransform.offsetMax.x - rectTransform.offsetMin.x;
-            float mainHolderWidth = width * 0.9f;
-            float menuWidth = width - mainHolderWidth;
+            float panelContainerWidth = width * 0.9f;
+            float menuWidth = width - panelContainerWidth;
             rectTransform.offsetMin = new Vector2(rectTransform.offsetMin.x + menuWidth, rectTransform.offsetMin.y);
 
             rectTransform = this.menu.GetComponent<RectTransform>();
-            rectTransform.offsetMax = new Vector2(rectTransform.offsetMax.x - mainHolderWidth, rectTransform.offsetMax.y);
+            rectTransform.offsetMax = new Vector2(rectTransform.offsetMax.x - panelContainerWidth, rectTransform.offsetMax.y);
 
             // set menu layout
-            int menuItemWidth = 70;
-            int menuItemMargin = 20;
             var gridLayoutGroup = Common.RemoveComponent<GridLayoutGroup>(this.menu, recreate: true);
-            gridLayoutGroup.padding = new RectOffset(menuItemMargin, menuItemMargin, menuItemMargin, menuItemMargin);
-            gridLayoutGroup.cellSize = new Vector2(menuItemWidth, menuItemWidth);
-            gridLayoutGroup.spacing = new Vector2(menuItemMargin, menuItemMargin);
+            gridLayoutGroup.padding = new RectOffset(20, 20, 20, 20);
+            gridLayoutGroup.cellSize = new Vector2(110, 120);
+            gridLayoutGroup.spacing = new Vector2(20, 20);
             gridLayoutGroup.startAxis = GridLayoutGroup.Axis.Vertical;
             gridLayoutGroup.childAlignment = TextAnchor.UpperCenter;
 
             // modify close button
             var goCloseButton = Common.GetChild(this.window, "CloseQuquBoxButton");
-            Debug.Assert(goCloseButton);
-            goCloseButton.name = "MajordomoWindowCloseButton";
+            if (!goCloseButton) throw new Exception("Failed to get child 'CloseQuquBoxButton' from QuquBox.instance.ququBoxWindow");
+            goCloseButton.name = "MajordomoCloseButton";
 
             var closeButton = Common.RemoveComponent<Button>(goCloseButton, recreate: true);
             closeButton.onClick.AddListener(() => this.Close());
@@ -229,126 +294,67 @@ namespace Majordomo
             escWinComponent.escEvent.AddListener(() => this.Close());
 
             // modify summary bar
-            var goSummaryBack = Common.GetChild(this.window, "AllQuquLevelBack");
-            Debug.Assert(goSummaryBack);
-            goSummaryBack.name = "MajordomoWindowSummaryBack";
+            this.summaryBar = Common.GetChild(this.window, "AllQuquLevelBack");
+            if (!this.summaryBar) throw new Exception("Failed to get child 'AllQuquLevelBack' from QuquBox.instance.ququBoxWindow");
+            this.summaryBar.name = "MajordomoSummary";
 
-            var goSummary = Common.GetChild(goSummaryBack, "AllQuquLevelText");
-            Debug.Assert(goSummary);
-            goSummary.name = "MajordomoWindowSummary";
+            var horizontalLayoutGroup = this.summaryBar.AddComponent<HorizontalLayoutGroup>();
+            horizontalLayoutGroup.padding = new RectOffset(20, 20, 0, 0);
 
-            this.textSummary = goSummary.GetComponent<Text>();
-            Debug.Assert(this.textSummary);
-            TaiwuCommon.SetFont(this.textSummary);
+            var summaryItem = Common.GetChild(this.summaryBar, "AllQuquLevelText");
+            if (!summaryItem) throw new Exception("Failed to get child 'AllQuquLevelText' from 'AllQuquLevelBack'");
+            summaryItem.name = "MajordomoSummaryItem";
 
-            Common.RemoveComponent<SetFont>(goSummary);
+            var textSummary = summaryItem.GetComponent<Text>();
+            if (!textSummary) throw new Exception("Failed to get Text component from 'AllQuquLevelText'");
+            textSummary.color = MajordomoWindow.TEXT_COLOR_DEFAULT;
+            TaiwuCommon.SetFont(textSummary);
+
+            Common.RemoveComponent<SetFont>(summaryItem);
+
+            for (int i = 1; i < N_SUMMARY_ITEMS; ++i)
+            {
+                var currSummaryItem = UnityEngine.Object.Instantiate(summaryItem, this.summaryBar.transform);
+                currSummaryItem.SetActive(true);
+                currSummaryItem.name = "MajordomoSummaryItem";
+
+                Common.RemoveComponent<SetFont>(currSummaryItem);
+            }
         }
 
 
-        private void CreateMessagePage()
+        /// <summary>
+        /// 只要在各个 panel 创建完之后再创建 menu item，事件中的 panel 引用就都是有效的。
+        /// </summary>
+        private void CreateMenuItems()
         {
-            this.CreateMessagePageMenuControls();
+            this.logsPanelButton = this.CreateMenuButton("LogsPanelButton",
+                () => this.SwitchPanel(this.panelLogs),
+                Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ButtonIcon_Majordomo_LogsPanel.png"),
+                "翻阅记录");
 
-            // clone & modify message view
-            Debug.Assert(ActorMenu.instance.actorMassage);
-            var oriMessageView = Common.GetChild(ActorMenu.instance.actorMassage, "ActorMassageView");
-            Debug.Assert(oriMessageView);
+            this.chartsPanelButton = this.CreateMenuButton("ChartsPanelButton",
+                () => this.SwitchPanel(this.panelCharts),
+                Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ButtonIcon_Majordomo_ChartsPanel.png"),
+                "查看图表");
 
-            var messageView = UnityEngine.Object.Instantiate(oriMessageView, this.mainHolder.transform);
-            messageView.SetActive(true);
-            messageView.name = "MajordomoMessageView";
-
-            // modify message view port
-            var viewPort = Common.GetChild(messageView, "ActorMassageViewport");
-            Debug.Assert(viewPort);
-            viewPort.name = "MajordomoMessageViewport";
-
-            // get message content, create message content item
-            this.messageContent = Common.GetChild(viewPort, "ActorMassageText");
-            Debug.Assert(this.messageContent);
-            this.messageContent.name = "MajordomoMessageContent";
-
-            var messageContentItem = UnityEngine.Object.Instantiate(this.messageContent, this.messageContent.transform);
-            messageContentItem.SetActive(true);
-            messageContentItem.name = "MajordomoMessageContentItem0";
-
-            // modify message content
-            Common.RemoveComponent<Text>(this.messageContent);
-            Common.RemoveComponent<SetFont>(this.messageContent);
-
-            var verticalLayoutGroup = this.messageContent.AddComponent<VerticalLayoutGroup>();
-            verticalLayoutGroup.childForceExpandWidth = false;
-            verticalLayoutGroup.childForceExpandHeight = false;
-
-            // modify message content item
-            var text = messageContentItem.GetComponent<Text>();
-            TaiwuCommon.SetFont(text);
-            text.text = string.Empty;
-
-            Common.RemoveComponent<ContentSizeFitter>(messageContentItem);
-            Common.RemoveComponent<SetFont>(messageContentItem);
-
-            // modify message scroll bar
-            var scrollbar = Common.GetChild(messageView, "ActorMassageScrollbar");
-            Debug.Assert(scrollbar);
-            scrollbar.name = "MajordomoMessageScrollbar";
-
-            // clone & modify page text
-            var oriPageText = Common.GetChild(ActorMenu.instance.actorMassage, "PageText");
-            Debug.Assert(oriPageText);
-
-            var pageText = UnityEngine.Object.Instantiate(oriPageText, this.mainHolder.transform);
-            pageText.SetActive(true);
-            pageText.name = "MajordomoPageText";
-            Common.TranslateUI(pageText, 0, 20);
-
-            this.textMessagePage = pageText.GetComponent<Text>();
-            Debug.Assert(this.textMessagePage);
-            TaiwuCommon.SetFont(this.textMessagePage);
-
-            Common.RemoveComponent<SetFont>(pageText);
-
-            // clone & modify page button prev
-            var oriPageButtonPrev = Common.GetChild(ActorMenu.instance.actorMassage, "Page-Button");
-            Debug.Assert(oriPageButtonPrev);
-
-            var pageButtonPrev = UnityEngine.Object.Instantiate(oriPageButtonPrev, this.mainHolder.transform);
-            pageButtonPrev.SetActive(true);
-            pageButtonPrev.name = "MajordomoPageButtonPrev";
-            Common.TranslateUI(pageButtonPrev, 0, 20);
-
-            var btnPrev = Common.RemoveComponent<Button>(pageButtonPrev, recreate: true);
-            btnPrev.onClick.AddListener(() => this.ChangeMessagePage(next: false));
-
-            // clone & modify page button next
-            var oriPageButtonNext = Common.GetChild(ActorMenu.instance.actorMassage, "Page+Button");
-            Debug.Assert(oriPageButtonNext);
-
-            var pageButtonNext = UnityEngine.Object.Instantiate(oriPageButtonNext, this.mainHolder.transform);
-            pageButtonNext.SetActive(true);
-            pageButtonNext.name = "MajordomoPageButtonNext";
-            Common.TranslateUI(pageButtonNext, 0, 20);
-
-            var btnNext = Common.RemoveComponent<Button>(pageButtonNext, recreate: true);
-            btnNext.onClick.AddListener(() => this.ChangeMessagePage(next: true));
-        }
-
-
-        private void CreateMessagePageMenuControls()
-        {
             this.assignBuildingWorkersButton = this.CreateMenuButton("AssignBuildingWorkersButton",
-                () => { HumanResource.AssignBuildingWorkersForTaiwuVillage(); this.ShowMessage(showLastPage: true); },
+                () => {
+                    YesOrNoWindow.instance.SetYesOrNoWindow(-1, "太吾管家", "管家已重新指派了各个建筑的负责人。", canClose: false);
+                    HumanResource.AssignBuildingWorkersForTaiwuVillage();
+                    if (this.panelLogs.gameObject.activeInHierarchy) this.panelLogs.Update();
+                },
                 Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ButtonIcon_Majordomo_AssignBuildingWorkers.png"),
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, "重新指派工作"));
+                "重新指派工作");
         }
 
 
         private GameObject CreateMenuButton(string name, UnityEngine.Events.UnityAction callback, string iconPath, string label)
         {
             // clone & modify button
-            Debug.Assert(HomeSystem.instance.studyActor);
+            if (!HomeSystem.instance.studyActor) throw new Exception("HomeSystem.instance.studyActor is null");
             var studySkillButton = Common.GetChild(HomeSystem.instance.studyActor, "StudySkill,0");
-            Debug.Assert(studySkillButton);
+            if (!studySkillButton) throw new Exception("Failed to get child 'StudySkill,0' from HomeSystem.instance.studyActor");
 
             var goMenuButton = UnityEngine.Object.Instantiate(studySkillButton, this.menu.transform);
             goMenuButton.SetActive(true);
@@ -361,17 +367,28 @@ namespace Majordomo
 
             // modify button background
             var buttonBack = Common.GetChild(goMenuButton, "StudyEffectBack");
-            Debug.Assert(buttonBack);
+            if (!buttonBack) throw new Exception("Failed to get child 'StudyEffectBack' from 'StudySkill,0'");
             buttonBack.name = "MajordomoMenuButtonBack";
 
+            var image = buttonBack.GetComponent<Image>();
+            image.color = MajordomoWindow.MENU_BTN_BG_COLOR_UNSELECTED;
+
             var rectTransform = buttonBack.GetComponent<RectTransform>();
-            rectTransform.offsetMin = new Vector2(rectTransform.offsetMin.x - 10, rectTransform.offsetMin.y);
-            rectTransform.offsetMax = new Vector2(rectTransform.offsetMax.x + 10, rectTransform.offsetMax.y);
+            rectTransform.anchorMin = new Vector2(0, 0);
+            rectTransform.anchorMax = new Vector2(1, 0);
+            rectTransform.offsetMin = new Vector2(0, 0);
+            rectTransform.offsetMax = new Vector2(0, 30);
 
             // modify button icon
             var buttonIcon = Common.GetChild(goMenuButton, "StudySkillIcon,0");
-            Debug.Assert(buttonIcon);
+            if (!buttonIcon) throw new Exception("Failed to get child 'StudySkillIcon,0' from 'StudySkill,0'");
             buttonIcon.name = "MajordomoMenuButtonIcon";
+
+            rectTransform = buttonIcon.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0, 1);
+            rectTransform.anchorMax = new Vector2(1, 1);
+            rectTransform.offsetMin = new Vector2(25, -80);
+            rectTransform.offsetMax = new Vector2(-25, -20);
 
             var buttonIconImage = buttonIcon.GetComponent<Image>();
             buttonIconImage.sprite = ResourceLoader.CreateSpriteFromImage(iconPath);
@@ -379,16 +396,19 @@ namespace Majordomo
 
             // modify button text
             var buttonText = Common.GetChild(goMenuButton, "StudyEffectText");
-            Debug.Assert(buttonText);
+            if (!buttonText) throw new Exception("Failed to get child 'StudyEffectText' from 'StudySkill,0'");
             buttonText.name = "MajordomoMenuButtonText";
 
             rectTransform = buttonText.GetComponent<RectTransform>();
-            rectTransform.offsetMin = new Vector2(rectTransform.offsetMin.x - 10, rectTransform.offsetMin.y);
-            rectTransform.offsetMax = new Vector2(rectTransform.offsetMax.x + 10, rectTransform.offsetMax.y);
+            rectTransform.anchorMin = new Vector2(0, 0);
+            rectTransform.anchorMax = new Vector2(1, 0);
+            rectTransform.offsetMin = new Vector2(0, 0);
+            rectTransform.offsetMax = new Vector2(0, 30);
 
             var text = buttonText.GetComponent<Text>();
-            Debug.Assert(text);
+            if (!text) throw new Exception("Failed to get Text component from 'StudyEffectText'");
             text.text = label;
+            text.color = MajordomoWindow.MENU_BTN_COLOR_UNSELECTED;
             TaiwuCommon.SetFont(text);
 
             Common.RemoveComponent<SetFont>(buttonText);
@@ -402,8 +422,9 @@ namespace Majordomo
             if (this.isWindowOpening) return;
             this.isWindowOpening = true;
 
-            this.ShowMessage(showLastPage: true);
-            this.ShowSummary();
+            this.panelLogs.SetPageIndex(-1);
+            this.selectedPanel.Open();
+            this.UpdateSummary();
 
             this.window.SetActive(true);
 
@@ -421,148 +442,123 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 由于过早的月份的消息会被删除，故只显示最近的数个月的消息
+        /// 首先关闭所有 panel，然后打开指定 panel
+        /// panel 的激活状态不同，菜单按钮的样式也会不同
         /// </summary>
-        /// <param name="showLastPage"></param>
-        private void ShowMessage(bool showLastPage = false)
+        /// <param name="selectedPanel"></param>
+        private void SwitchPanel(ITaiwuWindow selectedPanel)
         {
-            if (showLastPage) this.dateIndex = this.history.Count - 1;
+            if (!this.panels.ContainsKey(selectedPanel)) throw new Exception("Unregistered panel: " + selectedPanel.gameObject.name);
 
-            int baseDateIndex = Mathf.Max(this.history.Count - MESSAGE_SHELF_LIFE, 0);
-            var orderedDates = this.history.Keys.OrderByDescending(date => date).Take(MESSAGE_SHELF_LIFE).Reverse().ToList();
+            this.selectedPanel = selectedPanel;
 
-            if (this.dateIndex >= baseDateIndex && this.dateIndex < this.history.Count)
+            foreach (var entry in this.panels)
             {
-                var date = orderedDates[this.dateIndex - baseDateIndex];
-                var record = this.history[date];
-                var messages = record.messages
-                    .Where(message => message.importance >= Main.settings.messageImportanceThreshold)
-                    .Select(message => TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "·") + " " + message.content)
-                    .ToList();
-                this.CreateMessageContentItems(messages);
+                var panel = entry.Key;
+                var button = entry.Value;
+
+                if (panel == selectedPanel) continue;
+
+                this.ChangeMenuButtonStyle(button, selected: false);
+                panel.Close();
+            }
+
+            this.ChangeMenuButtonStyle(this.panels[selectedPanel], selected: true);
+            selectedPanel.Open();
+        }
+
+
+        /// <summary>
+        /// 根据按钮选中状态更改按钮样式
+        /// </summary>
+        /// <param name="menuButton"></param>
+        /// <param name="selected"></param>
+        private void ChangeMenuButtonStyle(GameObject menuButton, bool selected)
+        {
+            var textBackground = Common.GetChild(menuButton, "MajordomoMenuButtonBack");
+            var image = textBackground.GetComponent<Image>();
+
+            var goText = Common.GetChild(menuButton, "MajordomoMenuButtonText");
+            var text = goText.GetComponent<Text>();
+
+            if (selected)
+            {
+                image.color = MajordomoWindow.MENU_BTN_BG_COLOR_SELECTED;
+                text.color = MajordomoWindow.MENU_BTN_COLOR_SELECTED;
             }
             else
-                this.CreateMessageContentItems(new List<string>());
-
-            this.textMessagePage.text = $"{this.dateIndex - baseDateIndex + 1} / {orderedDates.Count}";
-        }
-
-
-        /// <summary>
-        /// 根据消息行数，创建对应数量的消息容纳控件（或重复利用之前的控件），并填入对应的文本
-        /// </summary>
-        /// <param name="messages"></param>
-        private void CreateMessageContentItems(List <string> messages)
-        {
-            var item0 = this.messageContent.transform.GetChild(0).gameObject;
-            if (!item0) throw new Exception("Failed to find the first item of MajordomoMessageContent");
-
-            var messageChunks = Common.SplitList(messages, N_MESSAGES_PER_CONTENT_ITEM).ToList();
-            int nItemsNeeded = messageChunks.Count;
-            int nActualItems = this.messageContent.transform.childCount;
-
-            for (int i = 0; i < nItemsNeeded; ++i)
             {
-                GameObject currItem;
-
-                if (i < nActualItems)
-                {
-                    currItem = this.messageContent.transform.GetChild(i).gameObject;
-                }
-                else
-                {
-                    currItem = UnityEngine.Object.Instantiate(item0, this.messageContent.transform);
-                    currItem.SetActive(true);
-                    currItem.name = "MajordomoMessageContentItem" + i.ToString();
-                }
-
-                var currText = currItem.GetComponent<Text>();
-                if (!currText) throw new Exception($"MajordomoMessageContentItem '{currItem.name}' does not have Text component");
-                currText.text = string.Join("\n", messageChunks[i].ToArray());
-            }
-
-            for (int i = nItemsNeeded; i < nActualItems; ++i)
-            {
-                // 不删除第一个 Text 控件（没有它就不能复制了）
-                var currItem = this.messageContent.transform.GetChild(i).gameObject;
-                if (i == 0)
-                {
-                    var currText = currItem.GetComponent<Text>();
-                    currText.text = string.Empty;
-                }
-                else
-                    UnityEngine.Object.Destroy(currItem);
+                image.color = MajordomoWindow.MENU_BTN_BG_COLOR_UNSELECTED;
+                text.color = MajordomoWindow.MENU_BTN_COLOR_UNSELECTED;
             }
         }
 
 
-        private void ChangeMessagePage(bool next)
+        private void UpdateSummary()
         {
-            int baseDateIndex = Mathf.Max(this.history.Count - MESSAGE_SHELF_LIFE, 0);
-            int nPages = this.history.Count - baseDateIndex;
+            var statsTexts = this.GetSummaryStatsTexts();
 
-            if (nPages == 0) return;
-
-            this.dateIndex += next ? 1 : -1;
-
-            if (this.dateIndex >= this.history.Count)
-                this.dateIndex -= nPages;
-            else if (this.dateIndex < baseDateIndex)
-                this.dateIndex += nPages;
-
-            this.ShowMessage();
-        }
-
-
-        private void ShowSummary()
-        {
-            this.textSummary.text = "综合工作指数:  " + this.GetCurrentCompositeWorkIndex() + " 点" +
-                "          一年内收入:  " + this.GetEarnedMoneyOfLastYear() + " 银钱";
-        }
-
-
-        /// <summary>
-        /// 获取当前综合工作指数
-        /// </summary>
-        /// <returns></returns>
-        private string GetCurrentCompositeWorkIndex()
-        {
-            string text;
-            if (this.history.Count > 0)
+            for (int i = 0; i < MajordomoWindow.N_SUMMARY_ITEMS; ++i)
             {
-                var newestDate = this.history.Keys.Max(date => date);
-                text = this.history[newestDate].compositeWorkIndex.ToString("F0");
+                var summaryItem = this.summaryBar.transform.GetChild(i).gameObject;
+                var text = summaryItem.GetComponent<Text>();
+                text.text = statsTexts[i];
             }
-            else
-                text = "???";
-
-            return TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, text);
         }
 
 
         /// <summary>
-        /// 计算过去一年内金钱收入
-        /// 数据不足时会进行估算，至少有三个月数据才计算
-        /// 如果数据中间有空缺月份，则计算跨度会大于一年
+        /// 计算汇总统计信息
+        /// 
+        /// 计算过去一年内金钱收入等时，数据不足时会进行估算，至少有三个月数据才计算。
+        /// 如果数据中间有空缺月份，则计算跨度会大于一年。
         /// </summary>
-        /// <returns></returns>
-        private string GetEarnedMoneyOfLastYear()
+        private string[] GetSummaryStatsTexts()
         {
             const int MIN_CALCULATING_MONTHS = 3;
             const int N_EXPECTED_MONTHS = 12;
 
-            string text;
-            if (this.history.Count >= MIN_CALCULATING_MONTHS)
+            string avgCompositeHealth, avgWorkMotivation, avgWorkEffectiveness, earnedMoneyOfLastYear, gdpOfLastYear;
+
+            if (this.history.Count > 0)
             {
-                var earnedMoneyList = this.history.OrderByDescending(entry => entry.Key).Take(N_EXPECTED_MONTHS)
-                    .Select(entry => entry.Value.earnedMoney);
-                float earnedMoneyOfLastYear = earnedMoneyList.Sum() / earnedMoneyList.Count() * N_EXPECTED_MONTHS;
-                text = earnedMoneyOfLastYear.ToString("F0");
+                var newestDate = this.history.Keys.Max(date => date);
+                avgCompositeHealth = (this.history[newestDate].workerStats.avgCompositeHealth * 100).ToString("F2");
+                avgWorkMotivation = (this.history[newestDate].workerStats.avgWorkMotivation * 100).ToString("F2");
+                avgWorkEffectiveness = (this.history[newestDate].workingStats.avgWorkEffectiveness * 100).ToString("F2");
             }
             else
-                text = "???";
+            {
+                avgCompositeHealth = "???";
+                avgWorkMotivation = "???";
+                avgWorkEffectiveness = "???";
+            }
 
-            return TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, text);
+            if (this.history.Count >= MIN_CALCULATING_MONTHS)
+            {
+                var datesWithin = this.history.OrderByDescending(entry => entry.Key).Take(N_EXPECTED_MONTHS);
+
+                var earnedMoneyList = datesWithin.Select(entry => entry.Value.earningStats.earnedMoney);
+                float earnedMoneyOfLastYear_ = (float)earnedMoneyList.Sum() / earnedMoneyList.Count() * N_EXPECTED_MONTHS;
+                earnedMoneyOfLastYear = earnedMoneyOfLastYear_.ToString("F0");
+
+                var gdpList = datesWithin.Select(entry => entry.Value.earningStats.gdp);
+                float gdpOfLastYear_ = (float)gdpList.Sum() / gdpList.Count() * N_EXPECTED_MONTHS;
+                gdpOfLastYear = gdpOfLastYear_.ToString("F0");
+            }
+            else
+            {
+                earnedMoneyOfLastYear = "???";
+                gdpOfLastYear = "???";
+            }                
+
+            return new string[] {
+                "平均综合健康： " + TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, avgCompositeHealth) + " %",
+                "平均工作动力： " + TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, avgWorkMotivation) + " %",
+                "平均工作效率： " + TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, avgWorkEffectiveness) + " %",
+                "一年内银钱收入： " + TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, earnedMoneyOfLastYear),
+                "一年内生产总值： " + TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, gdpOfLastYear),
+            };
         }
 
 
@@ -574,19 +570,27 @@ namespace Majordomo
         }
 
 
-        public void SetCompositeWorkIndex(TaiwuDate date, float compositeWorkIndex)
+        public void SetWorkerStats(TaiwuDate date, WorkerStats workerStats)
         {
             if (!this.history.ContainsKey(date)) this.history[date] = new Record(date);
 
-            this.history[date].compositeWorkIndex = compositeWorkIndex;
+            this.history[date].workerStats = workerStats;
         }
 
 
-        public void SetEarnedMoney(TaiwuDate date, int earnedMoney)
+        public void SetWorkingStats(TaiwuDate date, WorkingStats workingStats)
         {
             if (!this.history.ContainsKey(date)) this.history[date] = new Record(date);
 
-            this.history[date].earnedMoney = earnedMoney;
+            this.history[date].workingStats = workingStats;
+        }
+
+
+        public void SetEarningStats(TaiwuDate date, EarningStats earningStats)
+        {
+            if (!this.history.ContainsKey(date)) this.history[date] = new Record(date);
+
+            this.history[date].earningStats = earningStats;
         }
     }
 

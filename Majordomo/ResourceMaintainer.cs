@@ -182,6 +182,13 @@ namespace Majordomo
         public const int RES_ID_SILK = 3;
         public const int RES_ID_HERBAL = 4;
         public const int RES_ID_MONEY = 5;
+        public const int RES_ID_FAME = 6;
+        public const int RES_ID_HUMAN = 7;
+        public const int RES_ID_CULTURE = 8;
+        public const int RES_ID_STABLE = 9;
+
+        public const float EXCHANGE_RATE_FAME = 15;
+        public const float EXCHANGE_RATE_DEFAULT = 1;
 
         public const int RESOURCE_PACK_SIZE = 480;
 

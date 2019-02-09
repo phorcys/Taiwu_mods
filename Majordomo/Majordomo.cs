@@ -1,12 +1,14 @@
 ﻿using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -46,7 +48,7 @@ namespace Majordomo
             new SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>>();
         // 建筑排除操作鼠标键位, 0: 右键, 1: 中键
         public int exclusionMouseButton = 1;
-        public static readonly string[] EXCLUSION_MOUSE_BUTTONS = new string[] { "右键", "中键" };
+        public static readonly string[] EXCLUSION_MOUSE_BUTTONS = { "右键", "中键" };
 
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -62,11 +64,14 @@ namespace Majordomo
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
-        public static readonly string MOD_ID = "Majordomo";
+        public const string MOD_ID = "Majordomo";
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+
             Main.Logger = modEntry.Logger;
 
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
@@ -224,7 +229,7 @@ namespace Majordomo
 
     public class TurnEvent
     {
-        public static readonly string IMAGE_NAME = "TrunEventImage_majordomo";
+        public const string IMAGE_NAME = "TrunEventImage_majordomo";
 
         // 太吾管家过月事件 ID
         public static int eventId = -1;

@@ -1,10 +1,12 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Majordomo
 {
     public class TaiwuDate : IComparable<TaiwuDate>
     {
-        public static readonly int N_SOLAR_TERMS = 24;
+        public const int N_SOLAR_TERMS = 24;
+        public const int N_MONTHS = 12;
 
         public int year;
         public int solarTerm;   // 二十四节气 index，一年中第一个节气 index 为 0
@@ -16,7 +18,7 @@ namespace Majordomo
         public TaiwuDate()
         {
             this.year = DateFile.instance.year;
-            this.solarTerm = N_SOLAR_TERMS - DateFile.instance.dayTrun;
+            this.solarTerm = TaiwuDate.N_SOLAR_TERMS - DateFile.instance.dayTrun;
         }
 
 
@@ -24,6 +26,13 @@ namespace Majordomo
         {
             this.year = year;
             this.solarTerm = solarTerm;
+        }
+
+
+        public static TaiwuDate CreateWithMonth(int year, int month)
+        {
+            int solarTerm = Mathf.RoundToInt(month * (float)TaiwuDate.N_SOLAR_TERMS / TaiwuDate.N_MONTHS);
+            return new TaiwuDate(year, solarTerm);
         }
 
 
@@ -35,7 +44,7 @@ namespace Majordomo
 
         public override int GetHashCode()
         {
-            return this.year * N_SOLAR_TERMS + this.solarTerm;
+            return this.year * TaiwuDate.N_SOLAR_TERMS + this.solarTerm;
         }
 
 

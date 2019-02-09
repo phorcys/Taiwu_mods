@@ -9,7 +9,7 @@ namespace Majordomo
     public class Common
     {
         // 在非 monospace 字体下对齐用
-        public static readonly char BLANK_CN = '\u3000';
+        public const char BLANK_CN = '\u3000';
 
 
         /// <summary>
@@ -148,6 +148,71 @@ namespace Majordomo
         {
             for (int i = 0; i < source.Count; i += size)
                 yield return source.GetRange(i, Math.Min(size, source.Count - i));
+        }
+
+
+        /// <summary>
+        /// 对于一段坐标轴，划分出指定数量的刻度，且保证刻度尽量取整（易读）
+        /// </summary>
+        /// <param name="minValue">坐标段的最小值</param>
+        /// <param name="maxValue">坐标段的最大值</param>
+        /// <param name="labelCount">预期的标签数量，实际数量可能比这个多</param>
+        /// <param name="nDecimalDigits">用于格式化标签的最佳小数位数</param>
+        /// <returns>各“整数”刻度所在的坐标值</returns>
+        public static List<double> FindIntegerLabels(double minValue, double maxValue, int labelCount, out int nDecimalDigits)
+        {
+            // 首先找出如何划分，才能把线段分成在限定范围内的“整数”段
+            int nIntegers = 0;
+            double multiplier = 1.0;
+            nDecimalDigits = 0;
+
+            while (true)
+            {
+                double begin = minValue * multiplier;
+                double end = maxValue * multiplier;
+                nIntegers = (int)Math.Floor(end) - (int)Math.Ceiling(begin) + 1;
+
+                if (nIntegers >= labelCount && nIntegers <= 10 * labelCount)
+                    break;
+                else if (nIntegers < labelCount)
+                {
+                    multiplier *= 10;
+                    ++nDecimalDigits;
+                }
+                else
+                    multiplier /= 10;
+            }
+
+            // 从找出的标签中，选出更整一些的，并尽量保留指定个数的标签
+            int nLabelStep = nIntegers / labelCount;
+            double beginLabelValue = Math.Ceiling(minValue * multiplier) / multiplier;
+            List<double> labelValues = new List<double>();
+
+            for (int i = 0; i < nIntegers; ++i)
+            {
+                int currInteger = (int)Math.Round(beginLabelValue * multiplier) + i;
+                if (currInteger % nLabelStep != 0) continue;
+
+                double currLabelValue = beginLabelValue + i / multiplier;
+                labelValues.Add(beginLabelValue + i / multiplier);
+            }
+
+            return labelValues;
+        }
+
+
+        /// <summary>
+        /// 通过向量计算角度
+        /// </summary>
+        /// <param name="dir"></param>
+        /// <returns></returns>
+        public static float GetAngleFromVectorFloat(Vector3 dir)
+        {
+            dir = dir.normalized;
+            float n = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+            if (n < 0) n += 360;
+
+            return n;
         }
     }
 }
