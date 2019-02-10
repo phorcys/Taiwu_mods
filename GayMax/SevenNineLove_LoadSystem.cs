@@ -74,16 +74,16 @@ namespace GayMax
 
     public static class SevenNineLove
     {
-        public static Dictionary<int, string> Transpic(Dictionary<int, string> piclist, Dictionary<int, int>index)
+        public static Dictionary<int, string> Transpic(Dictionary<int, string> piclist, Dictionary<int, int> index)
         {
             Dictionary<int, string> trans = new Dictionary<int, string>();
-            foreach(int id in piclist.Keys)
+            foreach (int id in piclist.Keys)
             {
-                if(index.Keys.Contains(id))
+                if (index.Keys.Contains(id))
                 {
                     trans.Add(index[id], piclist[id]);
                 }
-              
+
             }
             return trans;
         }
@@ -160,12 +160,12 @@ namespace GayMax
             Main.Logger.Log("Maxid=" + Maxid.ToString());
             //maxid:已有事件最大ID
             //dic{读取的事件ID，动态id}
-           
+
             for (int i = 1; i < EvevtAllString.Length; i++)
             {
                 int id;
-                if(int.TryParse(EvevtAllString[i].Split(new char[] { ',' })[0],out id))
-                IdChange.Add(id, Maxid + id);
+                if (int.TryParse(EvevtAllString[i].Split(new char[] { ',' })[0], out id))
+                    IdChange.Add(id, Maxid + id);
             }
 
 
@@ -191,7 +191,7 @@ namespace GayMax
                                 if (EventBranchs[m].Equals(x.ToString()))
                                 {
                                     EventBranchs[m] = IdChange[x].ToString();
-                                    break ;
+                                    break;
                                 }
                             }
                         }
@@ -204,7 +204,7 @@ namespace GayMax
                         EventBody[6] = s;
                     }
                     //处理跳转事件
-                    if (EventBody[8]!="" && EventBody[8]!="-1")
+                    if (EventBody[8] != "" && EventBody[8] != "-1")
                     {
                         var id = EventBody[8];
                         foreach (int x in IdChange.Keys)
@@ -217,7 +217,7 @@ namespace GayMax
                         }
                     }
                     int exid2 = int.Parse(ExId);
-                   Dictionary<int, string> EventBodyDic = new Dictionary<int, string>();
+                    Dictionary<int, string> EventBodyDic = new Dictionary<int, string>();
                     for (int j = 0; j < EventIndexs.Length; j++)
                     {
                         //#-ID，0-备注
@@ -225,9 +225,9 @@ namespace GayMax
                         {
                             EventBodyDic.Add(int.Parse(EventIndexs[j]), Regex.Unescape(EventBody[j]));
                         }
-                       
+
                     }
-                    
+
                     NewEvents.Add((exid2 + Maxid), EventBodyDic);
                     count++;
 
@@ -235,8 +235,8 @@ namespace GayMax
                 }
             }
 
-           
-            lock( DateFile.instance.eventDate)
+
+            lock (DateFile.instance.eventDate)
             {
                 foreach (int id in NewEvents.Keys)
                 {
@@ -252,13 +252,13 @@ namespace GayMax
             return IdChange;
         }
 
-        public static int GetMaxid( Dictionary<int, Dictionary<int, string>> DateList,int limit=-1)
+        public static int GetMaxid(Dictionary<int, Dictionary<int, string>> DateList, int limit = -1)
         {
             int Maxid = 0;
             List<int> Eventids_EX = new List<int>(DateList.Keys);
-            if(Eventids_EX.Count>0)
+            if (Eventids_EX.Count > 0)
             {
-               if (limit < 0)
+                if (limit < 0)
                 {
                     Maxid = Eventids_EX[0];
                     foreach (int id in Eventids_EX)
@@ -270,7 +270,7 @@ namespace GayMax
                 {
                     foreach (int id in Eventids_EX)
                     {
-                        if (id > Maxid && id<=limit) Maxid = id;
+                        if (id > Maxid && id <= limit) Maxid = id;
                     }
                 }
             }
@@ -279,7 +279,7 @@ namespace GayMax
         //79我恨你……
         //读取基础数据，out id=原始id的字典or直接改了
         //其实就是照抄茄茄朴素的读取方式啦
-        public static bool LoadBaseDate(string mianpath, string txtname, out Dictionary<int, Dictionary<int, string>> DateList,int passDateIndex = -1)
+        public static bool LoadBaseDate(string mianpath, string txtname, out Dictionary<int, Dictionary<int, string>> DateList, int passDateIndex = -1)
         {
             DateList = new Dictionary<int, Dictionary<int, string>>();
             if (GetSprites.instance == null) return false;
@@ -303,8 +303,8 @@ namespace GayMax
             {
             ','
             });
-           for (int i = 1; i < lineArray.Length; i++)
-           {
+            for (int i = 1; i < lineArray.Length; i++)
+            {
                 string[] dateBody = lineArray[i].Split(new char[]
                 {
                 ','
@@ -331,19 +331,19 @@ namespace GayMax
                         }
                     }
                     DateList.Add(int.Parse(id), dateBodydic);
-                   
+
                 }
-           }
+            }
             return true;
 
         }
 
-        public static Dictionary<int,List<int>>LoadGongFaPower(string mianpath, string name, string antiname,bool setantipower)
+        public static Dictionary<int, List<int>> LoadGongFaPower(string mianpath, string name, string antiname, bool setantipower)
         {
             Dictionary<int, Dictionary<int, string>> power = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, Dictionary<int, string>> antipower = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, List<int>> changeid = new Dictionary<int, List<int>>();
-            if (LoadBaseDate(mianpath, name, out power) && (!setantipower ||  LoadBaseDate(mianpath, antiname, out antipower)))
+            if (LoadBaseDate(mianpath, name, out power) && (!setantipower || LoadBaseDate(mianpath, antiname, out antipower)))
             {
                 int maxid = GetMaxid(DateFile.instance.gongFaFPowerDate, 5000);
                 lock (DateFile.instance.gongFaFPowerDate)
@@ -351,23 +351,23 @@ namespace GayMax
                     foreach (int id in power.Keys)
                     {
                         DateFile.instance.gongFaFPowerDate.Add(id + maxid, power[id]);
-                        changeid.Add(id, new List<int> { id + maxid,0});
-                        if(antipower.Keys.Contains(id))
+                        changeid.Add(id, new List<int> { id + maxid, 0 });
+                        if (antipower.Keys.Contains(id))
                         {
                             DateFile.instance.gongFaFPowerDate.Add(id + maxid + 5000, antipower[id]);
                             changeid[id][1] = id + maxid + 5000;
                         }
                     }
-                    
+
                 }
-               
+
 
             }
-            else Main.Logger.Log("错误：载入" + name +"&"+ antiname + "失败，请检查文件名是否正确");
+            else Main.Logger.Log("错误：载入" + name + "&" + antiname + "失败，请检查文件名是否正确");
 
             return changeid;
         }
-        public static Dictionary<int,int>LoadGongFa(string mianpath, string name, Dictionary<int, List<int>> power, int baseid=0)
+        public static Dictionary<int, int> LoadGongFa(string mianpath, string name, Dictionary<int, List<int>> power, int baseid = 0)
         {
             Dictionary<int, Dictionary<int, string>> gongfa = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, int> changeid = new Dictionary<int, int>();
@@ -388,7 +388,7 @@ namespace GayMax
                         {
                             gongfa[gongid][103] = power[gongid][0].ToString();
                             gongfa[gongid][104] = power[gongid][1].ToString();
-                            Main.Logger.Log("载入功法："+gongfa[gongid][0] + gongid.ToString() + "正练效果:" + power[gongid][0].ToString() + "逆练效果：" + power[gongid][1].ToString());
+                            Main.Logger.Log("载入功法：" + gongfa[gongid][0] + gongid.ToString() + "正练效果:" + power[gongid][0].ToString() + "逆练效果：" + power[gongid][1].ToString());
                         }
                         DateFile.instance.gongFaDate.Add(gongid + maxid, gongfa[gongid]);
                         changeid.Add(gongid, gongid + maxid);
@@ -400,13 +400,13 @@ namespace GayMax
             return changeid;
         }
 
-        public static Dictionary<int, int> LoadOtherDate(string mianpath, string name, ref Dictionary<int, Dictionary<int, string>> DateList,int preindex=-1,bool indexcheck=false)
+        public static Dictionary<int, int> LoadOtherDate(string mianpath, string name, ref Dictionary<int, Dictionary<int, string>> DateList, int preindex = -1, bool indexcheck = false)
         {
             Dictionary<int, Dictionary<int, string>> data = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, int> changeid = new Dictionary<int, int>();
             if (LoadBaseDate(mianpath, name, out data, preindex))
             {
-              if (Indexchack(name,data, DateList)||!indexcheck)
+                if (Indexchack(name, data, DateList) || !indexcheck)
                 {
                     int maxid = GetMaxid(DateList);
                     lock (DateList)
@@ -418,12 +418,12 @@ namespace GayMax
                         }
                     }
                 }
-                
+
             }
-            else Main.Logger.Log("错误：载入"+name+"失败，请检查文件名是否正确");
+            else Main.Logger.Log("错误：载入" + name + "失败，请检查文件名是否正确");
             return changeid;
         }
-        public static bool Indexchack(string datename ,Dictionary<int, Dictionary<int, string>> NewDate, Dictionary<int, Dictionary<int, string>>OldDate)
+        public static bool Indexchack(string datename, Dictionary<int, Dictionary<int, string>> NewDate, Dictionary<int, Dictionary<int, string>> OldDate)
         {
 
             if (NewDate.Keys.Count == 0 || OldDate.Keys.Count == 0)
@@ -431,19 +431,14 @@ namespace GayMax
                 Main.Logger.Log("错误：文件尚未读取，或参数输入错误");
                 return false;
             }
-            List<int> OK = new List<int>(OldDate.FirstOrDefault().Value.Keys); 
+            List<int> OK = new List<int>(OldDate.FirstOrDefault().Value.Keys);
             List<int> NK = new List<int>(NewDate.FirstOrDefault().Value.Keys);
-            if (OK == NK)
-                return true;
-           else
-            {
-               int []error = OK.Except(NK).ToArray();
-                if (error.Length==0) return true;
-               var text = string.Join(",", error);
-                Main.Logger.Log("错误：" + datename + "中目录不正确，以下目录缺失："+text);
-                
-                return false;
-            }
+            string[] error = OK.Except(NK).Select(n => Convert.ToString(n)).ToArray();
+            if (error.Length == 0) return true;
+            var text = string.Join(",", error);
+            Main.Logger.Log("错误：" + datename + "中目录不正确，以下目录缺失：" + text);
+
+            return false;
         }
 
     }
