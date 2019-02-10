@@ -188,11 +188,14 @@ namespace Majordomo
         /// </summary>
         public void LoadSavedData()
         {
+            // 载入之前先清空原有数据
+            this.history.Clear();
+
+            //
             if (!DateFile.instance.modDate.ContainsKey(Main.MOD_ID)) return;
             var savedData = DateFile.instance.modDate[Main.MOD_ID];
 
             string saveKeyHistory = "MajordomoWindow.history";
-            this.history.Clear();
             if (savedData.ContainsKey(saveKeyHistory))
             {
                 string serializedData = savedData[saveKeyHistory];
