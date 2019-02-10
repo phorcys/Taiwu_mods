@@ -2,7 +2,7 @@
   "Id": "GayMax",
   "DisplayName": "基/姬友传说",
   "Author": "koketsu",
-  "Version": "1.0.8",
+  "Version": "1.0.9",
   "AssemblyName": "GayMax.dll",
   "EntryMethod": "GayMax.Main.Load",
   "HomePage": "https://bbs.nga.cn/read.php?tid=15922628"
