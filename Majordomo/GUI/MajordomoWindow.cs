@@ -192,11 +192,11 @@ namespace Majordomo
             var savedData = DateFile.instance.modDate[Main.MOD_ID];
 
             string saveKeyHistory = "MajordomoWindow.history";
+            this.history.Clear();
             if (savedData.ContainsKey(saveKeyHistory))
             {
                 string serializedData = savedData[saveKeyHistory];
                 var deserializedData = JsonConvert.DeserializeObject<KeyValuePair<TaiwuDate, Record>[]>(serializedData);
-                this.history.Clear();
                 foreach (var entry in deserializedData) this.history.Add(entry.Key, entry.Value);
             }
         }
@@ -342,6 +342,7 @@ namespace Majordomo
                 () => {
                     YesOrNoWindow.instance.SetYesOrNoWindow(-1, "太吾管家", "管家已重新指派了各个建筑的负责人。", canClose: false);
                     HumanResource.AssignBuildingWorkersForTaiwuVillage();
+                    this.panelLogs.SetPageIndex(-1);
                     if (this.panelLogs.gameObject.activeInHierarchy) this.panelLogs.Update();
                 },
                 Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ButtonIcon_Majordomo_AssignBuildingWorkers.png"),
