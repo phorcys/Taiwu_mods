@@ -11,19 +11,19 @@ namespace Majordomo
 {
     public class PanelCharts : ITaiwuWindow
     {
-        public const int METRIC_ID_AVG_COMPOSITE_HEALTH = 0;
-        public const int METRIC_ID_AVG_WORK_MOTIVATION = 1;
-        public const int METRIC_ID_AVG_WORK_EFFECTIVENESS = 2;
-        public const int METRIC_ID_COMPOSITE_WORK_INDEX = 3;
-        public const int METRIC_ID_EARNED_MONEY = 4;
-        public const int METRIC_ID_GDP = 5;
+        public const int METRIC_IDX_AVG_COMPOSITE_HEALTH = 0;
+        public const int METRIC_IDX_AVG_WORK_MOTIVATION = 1;
+        public const int METRIC_IDX_AVG_WORK_EFFECTIVENESS = 2;
+        public const int METRIC_IDX_COMPOSITE_WORK_INDEX = 3;
+        public const int METRIC_IDX_EARNED_MONEY = 4;
+        public const int METRIC_IDX_GDP = 5;
 
-        public const int GRANULARITY_ID_MONTHLY = 0;
-        public const int GRANULARITY_ID_QUARTERLY = 1;
-        public const int GRANULARITY_ID_ANNUAL = 2;
+        public const int GRANULARITY_IDX_MONTHLY = 0;
+        public const int GRANULARITY_IDX_QUARTERLY = 1;
+        public const int GRANULARITY_IDX_ANNUAL = 2;
 
         public const int MIN_X_COUNT = 2;
-        public const int MAX_X_COUNT = 100;
+        public const int MAX_X_COUNT = 60;
         public const int X_LABEL_COUNT = 10;
         public const int Y_LABEL_COUNT = 5;
 
@@ -110,8 +110,8 @@ namespace Majordomo
             if (!this.panel || !this.chartContainer || !this.metricButtonContainer || !this.granularityButtonContainer)
                 this.CreatePanel();
 
-            this.SwitchMetric(PanelCharts.METRIC_ID_COMPOSITE_WORK_INDEX, updateChart: false);
-            this.SwitchGranularity(PanelCharts.GRANULARITY_ID_MONTHLY, updateChart: false);
+            this.SwitchMetric(PanelCharts.METRIC_IDX_COMPOSITE_WORK_INDEX, updateChart: false);
+            this.SwitchGranularity(PanelCharts.GRANULARITY_IDX_MONTHLY, updateChart: false);
 
             this.panel.SetActive(false);
         }
@@ -210,27 +210,27 @@ namespace Majordomo
         private void CreateMetricButtons()
         {
             this.CreateButton("AvgCompositeHealthButton", "平均综合健康",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_AVG_COMPOSITE_HEALTH); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_AVG_COMPOSITE_HEALTH); },
                 this.metricButtonContainer);
 
             this.CreateButton("AvgWorkMotivationButton", "平均工作动力",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_AVG_WORK_MOTIVATION); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_AVG_WORK_MOTIVATION); },
                 this.metricButtonContainer);
 
             this.CreateButton("AvgWorkEffectivenessButton", "平均工作效率",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_AVG_WORK_EFFECTIVENESS); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_AVG_WORK_EFFECTIVENESS); },
                 this.metricButtonContainer);
 
             this.CreateButton("CompositeWorkIndexButton", "综合工作指数",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_COMPOSITE_WORK_INDEX); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_COMPOSITE_WORK_INDEX); },
                 this.metricButtonContainer);
 
             this.CreateButton("EarnedMoneyButton", "收获银钱",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_EARNED_MONEY); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_EARNED_MONEY); },
                 this.metricButtonContainer);
 
             this.CreateButton("GdpButton", "本地生产总值",
-                () => { this.SwitchMetric(PanelCharts.METRIC_ID_GDP); },
+                () => { this.SwitchMetric(PanelCharts.METRIC_IDX_GDP); },
                 this.metricButtonContainer);
         }
 
@@ -238,15 +238,15 @@ namespace Majordomo
         private void CreateGranularityButtons()
         {
             this.CreateButton("MonthlyButton", "月度",
-                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_ID_MONTHLY); },
+                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_IDX_MONTHLY); },
                 this.granularityButtonContainer);
 
             this.CreateButton("QuarterlyButton", "季度",
-                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_ID_QUARTERLY); },
+                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_IDX_QUARTERLY); },
                 this.granularityButtonContainer);
 
             this.CreateButton("AnnualButton", "年度",
-                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_ID_ANNUAL); },
+                () => { this.SwitchGranularity(PanelCharts.GRANULARITY_IDX_ANNUAL); },
                 this.granularityButtonContainer);
         }
 
@@ -384,7 +384,7 @@ namespace Majordomo
 
         private void UpdateChart()
         {
-            var yValues = this.GetChartData(out List<string> xLabels);
+            var yValues = this.GetChartData(out List<string> xLabels, out List<bool> drawXLabels);
 
             if (yValues.Count != xLabels.Count)
                 throw new Exception($"Count of Y values and X labels are not match: {yValues.Count} - {xLabels.Count}");
@@ -394,7 +394,7 @@ namespace Majordomo
             if (yValues.Count < PanelCharts.MIN_X_COUNT)
                 this.CreateEmptyChartNotice();
             else
-                DateFile.instance.StartCoroutine(this.CreateChart(yValues, xLabels));
+                DateFile.instance.StartCoroutine(this.CreateChart(yValues, xLabels, drawXLabels));
         }
 
 
@@ -449,17 +449,18 @@ namespace Majordomo
         /// 因此创建标签之后先 yield，直到下一帧才继续执行。
         /// 
         /// 也存在其他手段在当前帧更新标签大小，比如 LayoutRebuilder.ForceRebuildLayoutImmediate()，
-        /// 以及 Canvas.ForceUpdateCanvasaes()，可惜在 editor 下面都能正常使用，到了 Build 环境就无效了。
+        /// 以及 Canvas.ForceUpdateCanvasaes()，可惜在 editor 下面都能正常使用，到了 build 环境就无效了。
         /// 参考链接：
         /// https://forum.unity.com/threads/content-size-fitter-refresh-problem.498536/
         /// https://answers.unity.com/questions/1276433/get-layoutgroup-and-contentsizefitter-to-update-th.html
         /// </summary>
         /// <param name="yValues"></param>
         /// <param name="xLabels"></param>
+        /// <param name="drawXLabels"></param>
         /// <returns></returns>
-        private IEnumerator CreateChart(List<double> yValues, List<string> xLabels)
+        private IEnumerator CreateChart(List<double> yValues, List<string> xLabels, List<bool> drawXLabels)
         {
-            var xLabelGroup = CreateXLabelGroup(xLabels);
+            var xLabelGroup = CreateXLabelGroup(xLabels, drawXLabels);
             var yLabelGroup = CreateYLabelGroup(yValues);
 
             yield return null;
@@ -677,6 +678,8 @@ namespace Majordomo
                 xPositions.Add(currPosition);
 
                 var goLabel = xLabelGroup.goLabels[i];
+                if (goLabel == null) continue;
+
                 var rectTransform = goLabel.GetComponent<RectTransform>();
                 rectTransform.anchoredPosition = new Vector2(currPosition, originY);
             }
@@ -738,13 +741,19 @@ namespace Majordomo
         }
 
 
-        private XLabelGroup CreateXLabelGroup(List<string> xLabels)
+        private XLabelGroup CreateXLabelGroup(List<string> xLabels, List<bool> drawXLabels)
         {
             List<GameObject> goXLabels = new List<GameObject>();
-            foreach (string label in xLabels)
+
+            for (int i = 0; i < xLabels.Count; ++i)
             {
-                var goXLabel = this.CreateXLabel(label);
-                goXLabels.Add(goXLabel);
+                if (drawXLabels[i])
+                {
+                    var goXLabel = this.CreateXLabel(xLabels[i]);
+                    goXLabels.Add(goXLabel);
+                }
+                else
+                    goXLabels.Add(null);
             }
 
             return new XLabelGroup
@@ -761,6 +770,8 @@ namespace Majordomo
             float maxXLabelHeight = 0;
             foreach (var goXLabel in xLabelGroup.goLabels)
             {
+                if (goXLabel == null) continue;
+
                 var goLabel = Common.GetChild(goXLabel, "Label");
 
                 var rectTransform = goLabel.GetComponent<RectTransform>();
@@ -835,11 +846,16 @@ namespace Majordomo
             // 如果最小值大于等于 0，则以 0 为最小值
             double min = Math.Min(yValues.Min(), 0);
             double max = yValues.Max();
-            double range = max - min;
 
-            max += range * MARGIN_RATIO;
+            if (min == max)
+            {
+                min -= 1;
+                max += 1;
+            }
+
+            double range = max - min;
             min -= range * MARGIN_RATIO;
-            range = max - min;
+            max += range * MARGIN_RATIO;
 
             var yLabelValues = Common.FindIntegerLabels(min, max, PanelCharts.Y_LABEL_COUNT, out int nDecimalDigits);
 
@@ -939,8 +955,9 @@ namespace Majordomo
         /// 计算待展示序列，以及对应坐标标签
         /// </summary>
         /// <param name="xLabels"></param>
+        /// <param name="drawXLabels"></param>
         /// <returns></returns>
-        private List<double> GetChartData(out List<string> xLabels)
+        private List<double> GetChartData(out List<string> xLabels, out List<bool> drawXLabels)
         {
             if (this.selectedMetricId < 0 || this.selectedMetricId >= PanelCharts.METRICS_SELECTORS.Count)
                 throw new Exception("MetricId out of range: " + this.selectedMetricId);
@@ -963,16 +980,14 @@ namespace Majordomo
             var yValues = results.Select(data => data.value).ToList();
 
             xLabels = new List<string>();
+            drawXLabels = new List<bool>();
             var dates = results.Select(data => data.key).ToList();
             int labelSkipStep = dates.Count > PanelCharts.X_LABEL_COUNT ? dates.Count / PanelCharts.X_LABEL_COUNT : 1;
             for (int i = 0; i < dates.Count; ++i)
             {
                 var date = dates[i];
-
-                if (i % labelSkipStep == 0)
-                    xLabels.Add(string.Format("{0:D}-{1:D2}", date.year, date.GetMonthIndex() + 1));
-                else
-                    xLabels.Add(string.Empty);
+                xLabels.Add(string.Format("{0:D}-{1:D2}", date.year, date.GetMonthIndex() + 1));
+                drawXLabels.Add(i % labelSkipStep == 0);
             }
 
             return yValues;
@@ -1018,6 +1033,9 @@ namespace Majordomo
         }
 
 
+        /// <summary>
+        /// 鼠标移入时展示 tooltip，移出时隐藏 tooltip
+        /// </summary>
         public class ChartDotMouseEventHandler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         {
             private static readonly Vector2 POSITION_OFFSET = new Vector2(0, 15);

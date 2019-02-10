@@ -161,6 +161,8 @@ namespace Majordomo
         /// <returns>各“整数”刻度所在的坐标值</returns>
         public static List<double> FindIntegerLabels(double minValue, double maxValue, int labelCount, out int nDecimalDigits)
         {
+            if (minValue == maxValue) throw new ArgumentException("minValue and maxValue are identical");
+
             // 首先找出如何划分，才能把线段分成在限定范围内的“整数”段
             int nIntegers = 0;
             double multiplier = 1.0;
