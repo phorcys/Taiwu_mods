@@ -9,7 +9,7 @@ using UnityModManagerNet;
 
 namespace MoveBuilding
 {
-    public class ModSettings : UnityModManager.ModSettings
+    public class Settings : UnityModManager.ModSettings
     {
         public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
 
@@ -20,7 +20,7 @@ namespace MoveBuilding
         public static bool enabled;
 
         public static readonly string[] buttons = new string[] { "右键", "中键" };
-        public static ModSettings Settings { get; private set; }
+        public static Settings Settings { get; private set; }
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -30,7 +30,7 @@ namespace MoveBuilding
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
 
-            Settings = ModSettings.Load<ModSettings>(modEntry);
+            Settings = Settings.Load<Settings>(modEntry);
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
         }
