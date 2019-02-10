@@ -158,12 +158,12 @@ namespace Majordomo
             if (MajordomoWindow.instance.panelLogs == null)
                 MajordomoWindow.instance.panelLogs = new PanelLogs(
                     MajordomoWindow.instance.panelContainer, MajordomoWindow.instance.history);
-            MajordomoWindow.instance.panelLogs.TryRegisterResources();
+            MajordomoWindow.instance.panelLogs.TryRegisterResources(MajordomoWindow.instance.panelContainer);
 
             if (MajordomoWindow.instance.panelCharts == null)
                 MajordomoWindow.instance.panelCharts = new PanelCharts(
                     MajordomoWindow.instance.panelContainer, MajordomoWindow.instance.history);
-            MajordomoWindow.instance.panelCharts.TryRegisterResources();
+            MajordomoWindow.instance.panelCharts.TryRegisterResources(MajordomoWindow.instance.panelContainer);
 
             if (!MajordomoWindow.instance.logsPanelButton ||
                 !MajordomoWindow.instance.chartsPanelButton ||

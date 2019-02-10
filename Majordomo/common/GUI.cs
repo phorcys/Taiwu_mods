@@ -12,7 +12,8 @@ namespace Majordomo
         /// <summary>
         /// 在显示窗口之前，检查并创建及注册资源
         /// </summary>
-        void TryRegisterResources();
+        /// <param name="parent"></param>
+        void TryRegisterResources(GameObject parent);
 
         /// <summary>
         /// 打开窗口，会修改激活状态

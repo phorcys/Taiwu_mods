@@ -10,7 +10,7 @@ namespace Majordomo
     {
         public const int N_MESSAGES_PER_CONTENT_ITEM = 10;
 
-        private readonly GameObject parent;
+        private GameObject parent;
         private GameObject panel;
         private GameObject messageContent;
         private Text textMessagePage;
@@ -34,8 +34,10 @@ namespace Majordomo
         }
 
 
-        public void TryRegisterResources()
+        public void TryRegisterResources(GameObject parent)
         {
+            this.parent = parent;
+
             if (!this.panel || !this.messageContent || !this.textMessagePage)
                 this.CreatePanel();
 

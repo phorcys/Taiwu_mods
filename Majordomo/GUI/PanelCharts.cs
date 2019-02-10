@@ -67,7 +67,7 @@ namespace Majordomo
         // 各个粒度下单个数据包含的月份数
         private static readonly int[] GRANULARITY_MONTHS = { 1, 3, 12 };
 
-        private readonly GameObject parent;
+        private GameObject parent;
         private GameObject panel;
         private GameObject chartContainer;
         private GameObject metricButtonContainer;
@@ -96,8 +96,10 @@ namespace Majordomo
         }
 
 
-        public void TryRegisterResources()
+        public void TryRegisterResources(GameObject parent)
         {
+            this.parent = parent;
+
             if (!this.spriteChartDot)
             {
                 string imagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"ChartSprite_Dot.png");
