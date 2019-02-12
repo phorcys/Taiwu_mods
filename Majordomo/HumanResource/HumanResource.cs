@@ -619,7 +619,7 @@ namespace Majordomo
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
                 Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
-                    suppressNoWorkerWarnning: false);
+                    suppressNoWorkerWarnning: info.IsBedroom());
             }
 
             // 最后指派尚未指派的厢房

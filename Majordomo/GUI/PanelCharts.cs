@@ -977,7 +977,9 @@ namespace Majordomo
                 .Where(data => data.count == nGranularityMonths)
                 .OrderBy(data => data.key);
 
-            var yValues = results.Select(data => data.value).ToList();
+            var yValues = results.Select(data => data.value)
+                .Select(value => double.IsInfinity(value) || double.IsNaN(value) ? 0 : value)
+                .ToList();
 
             xLabels = new List<string>();
             drawXLabels = new List<bool>();
