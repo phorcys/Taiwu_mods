@@ -348,7 +348,7 @@ namespace UseStorageMaterial
             {
                 //被强化物品在仓库，先挪 到背包里
                 __state = ___secondItemId;
-                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1);
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1, 0);
                 //Main.Logger.Log(" poison use warehouse second item : " + ___secondItemId + " move to bag");
             }
             return true;
@@ -364,7 +364,7 @@ namespace UseStorageMaterial
             {
                 //Main.Logger.Log(" poison use warehouse second item : " + __state + " move back to warehouse");
                 //被强化物品原来在仓库，需要挪回去仓库里
-                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1);
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1, 0);
             }
         }
 
@@ -415,7 +415,7 @@ namespace UseStorageMaterial
             {
                 //被强化物品在仓库，先挪 到背包里
                 __state = ___secondItemId;
-                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1);
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), ___secondItemId, 1, -1, 0);
                 //Main.Logger.Log(" 强化 use warehouse second item : " + ___secondItemId + " move to bag");
             }
             return true;
@@ -430,7 +430,7 @@ namespace UseStorageMaterial
             {
                 //Main.Logger.Log(" 强化 use warehouse second item : " + __state + " move back to warehouse");
                 //被强化物品原来在仓库，需要挪回去仓库里
-                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1);
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, __state, 1, -1, 0);
             }
         }
     }
