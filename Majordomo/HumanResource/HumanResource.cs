@@ -15,11 +15,23 @@ using UnityModManagerNet;
 
 namespace Majordomo
 {
+    public enum BuildingType
+    {
+        Bedroom = 0,
+        Hospital = 1,
+        Recruitment = 2,
+        GettingResource = 3,
+        GettingItem = 4,
+        GettingCricket = 5,
+        Unknown = 6,
+    }
+
+
     public class BuildingWorkInfo
     {
         public int buildingIndex;           // 建筑在所在地域中的 ID
         public int requiredAttrId;          // 工作所需资质类型
-        public int priority;                // 安排工作人员的优先级
+        public float priority;              // 安排工作人员的优先级
         public int halfWorkingAttrValue;    // 半进度工作时所需资质（标准心情好感、无邻接厢房）
         public int fullWorkingAttrValue;    // 满进度工作时所需资质（标准心情好感、无邻接厢房）
 
@@ -41,22 +53,11 @@ namespace Majordomo
 
     public class HumanResource
     {
-        public const int BASE_BUILDING_ID_BEDROOM = 1003;
-        public const int BASE_BUILDING_ID_HOSPITAL = 2904;
-        public const int BASE_BUILDING_ID_DETOXIFICATION = 3004;
-
-        public const int HARVEST_TYPE_RESOURCE = 1;
-        public const int HARVEST_TYPE_ITEM = 2;
-        public const int HARVEST_TYPE_CHARACTER = 3;
-        public const int HARVEST_TYPE_CRICKET = 4;
-
         public const int STANDARD_MOOD = 80;            // 心情：欢喜
         public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：亲密左右
 
         public const int WORK_EFFECTIVENESS_HALF = 100;
         public const int WORK_EFFECTIVENESS_FULL = 200;
-
-        public const int WORKING_PRIORITY_STEP_SIZE = 120;      // 每个建筑优先级之间的差距
 
         // 计算厢房工作人员的统合能力值时，单项能力百分比的阈值。只要达到这个值，单项能力就是满分。
         public const float ATTR_INTEGRATION_THRESHOLD = 0.6f;
@@ -224,7 +225,7 @@ namespace Majordomo
                     int workerId = DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex];
                     int workEffectiveness = Original.GetWorkEffectiveness(partId, placeId, buildingIndex, workerId);
                     float scaledWorkEffectiveness = (workEffectiveness - 100f) / 100f;
-                    int priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex);
+                    float priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex, withAdjacentBedrooms: false);
 
                     ++stats.nProductiveBuildings;
                     stats.avgWorkEffectiveness += workEffectiveness / 200f;
@@ -278,6 +279,8 @@ namespace Majordomo
 
         /// <summary>
         /// 为所有厢房安排工作人员
+        /// 
+        /// 建筑类型优先级因子中的厢房因子不能控制此处的厢房指派优先级，此处所有厢房必定优先于其他建筑指派。
         /// </summary>
         private void AssignBedroomWorkers()
         {
@@ -287,17 +290,16 @@ namespace Majordomo
                 this.buildings, this.attrCandidates, this.workerAttrs);
 
             // 更新辅助类厢房的优先级
-            // 辅助类厢房优先级 = 基础优先级 + SUM(辅助建筑优先级)
+            // 辅助类厢房优先级 = SUM(相关建筑优先级)
             // bedroomIndex -> priority
-            var auxiliaryBedroomsPriorities = new Dictionary<int, int>();
+            var auxiliaryBedroomsPriorities = new Dictionary<int, float>();
 
             foreach (var entry in bedroomsForWork)
             {
                 int bedroomIndex = entry.Key;
                 var relatedBuildings = entry.Value;
 
-                int basePriority = 7;
-                int priority = basePriority * WORKING_PRIORITY_STEP_SIZE + relatedBuildings.Select(info => info.priority).Sum();
+                float priority = relatedBuildings.Select(info => info.priority).Sum();
 
                 auxiliaryBedroomsPriorities[bedroomIndex] = priority;
             }
@@ -519,21 +521,16 @@ namespace Majordomo
 
                 int requiredAttrId = int.Parse(baseBuilding[33]);
 
+                int[] requiredAttrValues = Original.GetRequiredAttributeValues(this.partId, this.placeId, buildingIndex);
+
                 BuildingWorkInfo info = new BuildingWorkInfo
                 {
                     buildingIndex = buildingIndex,
                     requiredAttrId = requiredAttrId,
-                    priority = HumanResource.GetBuildingWorkingPriority(this.partId, this.placeId, buildingIndex),
-                    halfWorkingAttrValue = 0,
-                    fullWorkingAttrValue = 0,
+                    priority = HumanResource.GetBuildingWorkingPriority(this.partId, this.placeId, buildingIndex, withAdjacentBedrooms: true),
+                    halfWorkingAttrValue = requiredAttrValues[0],
+                    fullWorkingAttrValue = requiredAttrValues[1],
                 };
-
-                if (requiredAttrId != 0)
-                {
-                    int[] requiredAttrValues = Original.GetRequiredAttributeValues(this.partId, this.placeId, buildingIndex);
-                    info.halfWorkingAttrValue = requiredAttrValues[0];
-                    info.fullWorkingAttrValue = requiredAttrValues[1];
-                }
 
                 if (!attrBuildings.ContainsKey(requiredAttrId)) attrBuildings[requiredAttrId] = new List<BuildingWorkInfo>();
                 attrBuildings[requiredAttrId].Add(info);
@@ -544,55 +541,88 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 返回建筑安排工作人员的优先级。优先级越高，越优先安排高能力的工作人员。
-        /// 返回值越大，优先级越高；为负数时（因用户配置而排除），不参与人员分配。
-        /// 目前固定优先级为：厢房 > 病坊、密医 > 收获人才建筑 > 收获资源建筑 > 收获物品建筑 > 收获蛐蛐建筑
-        /// 同一类别中，工作难度越高，优先级越高
+        /// 返回建筑指派工作人员的优先级
+        /// 
+        /// 优先级 = 建筑种类因子 * 标准状态下满效率需求的标准化能力值
+        /// 对于厢房，“标准状态下满效率需求的标准化能力值” 即为其等级
+        /// 虽然这会导致方向的优先级和其他建筑没有可比性，但是厢房优先级本来就不会与其他建筑比较，所以没有问题
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
+        /// <param name="withAdjacentBedrooms">是否考虑邻接厢房的影响</param>
         /// <returns></returns>
-        private static int GetBuildingWorkingPriority(int partId, int placeId, int buildingIndex)
+        private static float GetBuildingWorkingPriority(int partId, int placeId, int buildingIndex, bool withAdjacentBedrooms)
         {
+            int[] requiredAttrValues = Original.GetRequiredAttributeValues(partId, placeId, buildingIndex,
+                withAdjacentBedrooms, getStandardAttrValue: true);
+            int fullWorkingAttrValue = requiredAttrValues[1];
+
+            // 对于厢房，“标准状态下满效率需求的标准化能力值” 即为其等级
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int baseBuildingId = building[0];
+            int buildingLevel = building[1];
+            int requiredAttrId = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][33]);
+            if (requiredAttrId <= 0)
+                fullWorkingAttrValue = buildingLevel;
 
-            int basePriority;
+            float typeFactor = HumanResource.GetBuildingPriorityFactor(baseBuildingId);
+            return typeFactor * fullWorkingAttrValue;
+        }
 
-            if (baseBuildingId == BASE_BUILDING_ID_BEDROOM)
+
+        /// <summary>
+        /// 获取指定建筑的优先级因子
+        /// 
+        /// 根据不同的建筑类型优先级因子排序，同一建筑的因子会产生变化，
+        /// 比如某个建筑同时产出物品和金钱，如果物品的优先级因子更大，那么该建筑就被认定为产出物品，返回物品优先级因子。
+        /// </summary>
+        /// <param name="baseBuildingId"></param>
+        /// <returns></returns>
+        private static float GetBuildingPriorityFactor(int baseBuildingId)
+        {
+            var sortedFactors = Main.settings.buildingTypePriorityFactors.OrderByDescending(entry => entry.Value);
+
+            HashSet<int> harvestTypes = null;
+            if (HumanResource.buildingsHarvestTypes.ContainsKey(baseBuildingId))
+                harvestTypes = HumanResource.buildingsHarvestTypes[baseBuildingId];
+
+            foreach (var entry in sortedFactors)
             {
-                basePriority = 6;
-            }
-            else if (baseBuildingId == BASE_BUILDING_ID_HOSPITAL || baseBuildingId == BASE_BUILDING_ID_DETOXIFICATION)
-            {
-                basePriority = 5;
-            }
-            else
-            {
-                var harvestTypes = HumanResource.buildingsHarvestTypes[baseBuildingId];
-                if (harvestTypes.Contains(HARVEST_TYPE_CHARACTER))
+                var type = entry.Key;
+                var factor = entry.Value;
+
+                switch (type)
                 {
-                    basePriority = 4;
-                }
-                else if (harvestTypes.Contains(HARVEST_TYPE_RESOURCE))
-                {
-                    basePriority = 3;
-                }
-                else if (harvestTypes.Contains(HARVEST_TYPE_ITEM))
-                {
-                    basePriority = 2;
-                }
-                else
-                {
-                    basePriority = 1;
+                    case BuildingType.Bedroom:
+                        // 厢房
+                        if (baseBuildingId == 1003) return factor;
+                        break;
+                    case BuildingType.Hospital:
+                        // 病坊，密医
+                        if (baseBuildingId == 2904 || baseBuildingId == 3004) return factor;
+                        break;
+                    case BuildingType.Recruitment:
+                        // 收获类型包含人才
+                        if (harvestTypes != null && harvestTypes.Contains(3)) return factor;
+                        break;
+                    case BuildingType.GettingResource:
+                        // 收获类型包含资源
+                        if (harvestTypes != null && harvestTypes.Contains(1)) return factor;
+                        break;
+                    case BuildingType.GettingItem:
+                        // 收获类型包含物品
+                        if (harvestTypes != null && harvestTypes.Contains(2)) return factor;
+                        break;
+                    case BuildingType.GettingCricket:
+                        // 收获类型包含蛐蛐
+                        if (harvestTypes != null && harvestTypes.Contains(4)) return factor;
+                        break;
                 }
             }
 
-            int workDifficulty = Original.GetWorkDifficulty(partId, placeId, buildingIndex);
-            int priority = basePriority * WORKING_PRIORITY_STEP_SIZE + workDifficulty;
-
-            return priority;
+            // 建筑无法被归为任意有效类时，即为未知类
+            return Main.settings.buildingTypePriorityFactors[BuildingType.Unknown];
         }
 
 
@@ -600,10 +630,11 @@ namespace Majordomo
         /// 指派完厢房之后，继续指派其他建筑
         /// 
         /// 其实本轮指派开始时仍有可能包含厢房，本轮临近结束时也仍有可能尚未指派厢房。
-        /// 本轮开始的厢房指派按一般厢房指派规则进行。
         /// 本轮最后厢房指派，不考虑是否达到心情好感阈值，只要还有人就往里放。
-        /// 第一次分配完后还有厢房剩下的原因：人太少，辅助性厢房装不满；心情都挺好，一般厢房装不满。
-        /// 第二次分配完后还有厢房剩下的原因：人太少。
+        /// 上次分配后还有厢房剩下的原因：人太少，辅助性厢房装不满；心情都挺好，一般厢房装不满。
+        /// 本次分配后还有厢房剩下的原因：人太少。
+        /// 
+        /// 建筑类型优先级因子中的厢房因子可以控制此处的厢房指派优先级。
         /// </summary>
         private void AssignLeftBuildings()
         {
@@ -614,6 +645,7 @@ namespace Majordomo
             foreach (var info in sortedBuildings)
             {
                 if (this.excludedBuildings.Contains(info.buildingIndex)) continue;
+                if (info.IsBedroom()) continue;
 
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
