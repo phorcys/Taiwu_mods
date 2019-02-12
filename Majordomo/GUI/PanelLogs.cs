@@ -184,7 +184,6 @@ namespace Majordomo
         /// <summary>
         /// 由于过早的月份的消息会被删除，故只显示最近的数个月的消息
         /// </summary>
-        /// <param name="showLastPage"></param>
         private void UpdateMessage()
         {
             int baseDateIndex = Mathf.Max(this.history.Count - MajordomoWindow.MESSAGE_SHELF_LIFE, 0);

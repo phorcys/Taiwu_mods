@@ -51,7 +51,7 @@ namespace Majordomo
         public const int HARVEST_TYPE_CRICKET = 4;
 
         public const int STANDARD_MOOD = 80;            // 心情：欢喜
-        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：喜爱左右
+        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：亲密左右
 
         public const int WORK_EFFECTIVENESS_HALF = 100;
         public const int WORK_EFFECTIVENESS_FULL = 200;
@@ -341,7 +341,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: true);
             }
         }
 
@@ -629,7 +630,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: false);
             }
 
             // 最后指派尚未指派的厢房
@@ -645,7 +647,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectLeftBedroomWorker(info.buildingIndex);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: false);
             }
         }
 
