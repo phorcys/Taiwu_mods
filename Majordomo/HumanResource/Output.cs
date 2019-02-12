@@ -17,7 +17,8 @@ namespace Majordomo
     public class Output
     {
         public static void LogBuildingAndWorker(BuildingWorkInfo info, int selectedWorkerId,
-            int partId, int placeId, TaiwuDate currDate, Dictionary<int, Dictionary<int, int>> workerAttrs)
+            int partId, int placeId, TaiwuDate currDate, Dictionary<int, Dictionary<int, int>> workerAttrs,
+            bool suppressNoWorkerWarnning)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][info.buildingIndex];
             int baseBuildingId = building[0];
@@ -58,8 +59,12 @@ namespace Majordomo
             }
             else
             {
-                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
-                    logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_RED, "ﾎﾞｺﾏﾊﾊﾈﾋﾑ｡"));
+                if (suppressNoWorkerWarnning)
+                    MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW,
+                        logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "ﾎﾞｺﾏﾊﾊﾈﾋﾑ｡"));
+                else
+                    MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
+                        logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_RED, "ﾎﾞｺﾏﾊﾊﾈﾋﾑ｡"));
             }
         }
 
@@ -111,8 +116,8 @@ namespace Majordomo
             }
             else
             {
-                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
-                    logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_RED, "ﾎﾞｺﾏﾊﾊﾈﾋﾑ｡"));
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW,
+                    logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "ﾎﾞｺﾏﾊﾊﾈﾋﾑ｡"));
             }
         }
 

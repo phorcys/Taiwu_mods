@@ -51,7 +51,7 @@ namespace Majordomo
         public const int HARVEST_TYPE_CRICKET = 4;
 
         public const int STANDARD_MOOD = 80;            // 心情：欢喜
-        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：喜爱左右
+        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：亲密左右
 
         public const int WORK_EFFECTIVENESS_HALF = 100;
         public const int WORK_EFFECTIVENESS_FULL = 200;
@@ -159,44 +159,38 @@ namespace Majordomo
         {
             int mainActorId = DateFile.instance.MianActorID();
             List<int> workerIds = Original.GetWorkerIds(partId, placeId);
-
-            float sumHealthInjury = 0.0f;
-            float sumHealthCirculating = 0.0f;
-            float sumHealthPoison = 0.0f;
-            float sumHealthLifespan = 0.0f;
-            float sumMood = 0.0f;
-            float sumFriendliness = 0.0f;
-            float sumWorkMotivation = 0.0f;
+            var stats = new WorkerStats();
 
             foreach (int workerId in workerIds)
             {
-                sumHealthInjury += 1f - TaiwuCommon.GetInjuryRate(workerId);
-                sumHealthCirculating += 1f - TaiwuCommon.GetCirculatingBlockingRate(workerId);
-                sumHealthPoison += 1f - TaiwuCommon.GetPoisoningRate(workerId);
-                sumHealthLifespan += 1f - TaiwuCommon.GetLifespanDamageRate(workerId);
+                stats.avgHealthInjury += 1f - TaiwuCommon.GetInjuryRate(workerId);
+                stats.avgHealthCirculating += 1f - TaiwuCommon.GetCirculatingBlockingRate(workerId);
+                stats.avgHealthPoison += 1f - TaiwuCommon.GetPoisoningRate(workerId);
+                stats.avgHealthLifespan += 1f - TaiwuCommon.GetLifespanDamageRate(workerId);
 
                 int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, addValue: false));
                 int favor = DateFile.instance.GetActorFavor(false, mainActorId, workerId);
                 int favorLevel = DateFile.instance.GetActorFavor(false, mainActorId, workerId, getLevel: true);
                 int scaledFavor = Original.GetScaledFavor(favorLevel);
                 scaledFavor = Original.AdjustScaledFavorWithMood(scaledFavor, mood);
-                sumMood += mood;
-                sumFriendliness += favor;
-                sumWorkMotivation += Mathf.Max(scaledFavor, 0) / 100f;
+                stats.avgMood += mood;
+                stats.avgFriendliness += favor;
+                stats.avgWorkMotivation += Mathf.Max(scaledFavor, 0) / 100f;
             }
 
-            return new WorkerStats
+            if (workerIds.Count > 0)
             {
-                nWorkers = workerIds.Count,
-                avgHealthInjury = sumHealthInjury / workerIds.Count,
-                avgHealthCirculating = sumHealthCirculating / workerIds.Count,
-                avgHealthPoison = sumHealthPoison / workerIds.Count,
-                avgHealthLifespan = sumHealthLifespan / workerIds.Count,
-                avgCompositeHealth = (sumHealthInjury + sumHealthCirculating + sumHealthPoison + sumHealthLifespan) / (4 * workerIds.Count),
-                avgMood = sumMood / workerIds.Count,
-                avgFriendliness = sumFriendliness / workerIds.Count,
-                avgWorkMotivation = sumWorkMotivation / workerIds.Count,
-            };
+                stats.nWorkers = workerIds.Count;
+                stats.avgHealthInjury /= workerIds.Count;
+                stats.avgHealthCirculating /= workerIds.Count;
+                stats.avgHealthPoison /= workerIds.Count;
+                stats.avgHealthLifespan /= workerIds.Count;
+                stats.avgCompositeHealth = (stats.avgHealthInjury + stats.avgHealthCirculating + stats.avgHealthPoison + stats.avgHealthLifespan) / 4;
+                stats.avgMood /= workerIds.Count;
+                stats.avgFriendliness /= workerIds.Count;
+                stats.avgWorkMotivation /= workerIds.Count;
+            }
+            return stats;
         }
 
 
@@ -213,9 +207,7 @@ namespace Majordomo
         /// <returns></returns>
         private static WorkingStats GetWorkingStats(int partId, int placeId)
         {
-            int nProductiveBuildings = 0;
-            float sumWorkEffectiveness = 0.0f;
-            float compositeWorkIndex = 0.0f;
+            var stats = new WorkingStats();
 
             // 统计所有建筑的工作效率（厢房效率不计入统计）
             var buildings = DateFile.instance.homeBuildingsDate[partId][placeId];
@@ -234,18 +226,14 @@ namespace Majordomo
                     float scaledWorkEffectiveness = (workEffectiveness - 100f) / 100f;
                     int priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex);
 
-                    ++nProductiveBuildings;
-                    sumWorkEffectiveness += workEffectiveness / 200f;
-                    compositeWorkIndex += scaledWorkEffectiveness * priority;
+                    ++stats.nProductiveBuildings;
+                    stats.avgWorkEffectiveness += workEffectiveness / 200f;
+                    stats.compositeWorkIndex += scaledWorkEffectiveness * priority;
                 }
             }
 
-            return new WorkingStats
-            {
-                nProductiveBuildings = nProductiveBuildings,
-                avgWorkEffectiveness = sumWorkEffectiveness / nProductiveBuildings,
-                compositeWorkIndex = compositeWorkIndex
-            };
+            if (stats.nProductiveBuildings > 0) stats.avgWorkEffectiveness /= stats.nProductiveBuildings;
+            return stats;
         }
 
 
@@ -341,7 +329,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: true);
             }
         }
 
@@ -629,7 +618,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: info.IsBedroom());
             }
 
             // 最后指派尚未指派的厢房
@@ -645,7 +635,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectLeftBedroomWorker(info.buildingIndex);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: false);
             }
         }
 
