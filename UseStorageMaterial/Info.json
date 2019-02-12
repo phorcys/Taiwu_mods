@@ -2,7 +2,7 @@
   "Id": "UseStorageMaterial",
   "DisplayName": "仓库材料使用-使用仓库材料进行制造/淬毒/强化",
   "Author": "phorcys",
-  "Version": "1.0.3",
+  "Version": "1.0.5",
   "AssemblyName": "UseStorageMaterial.dll",
   "EntryMethod": "UseStorageMaterial.Main.Load"
 }

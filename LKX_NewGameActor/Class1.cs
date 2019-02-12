@@ -219,8 +219,7 @@ namespace LKX_NewGameActor
 
                 GUILayout.Label("义父所制会覆盖原有道具效果。");
                 GUILayout.Label("传家宝数量：" + Main.settings.itemsCount.ToString());
-                uint itemsCount = (uint)GUILayout.HorizontalScrollbar(Main.settings.itemsCount, 1, 1, 10);
-                if (GUI.changed) Main.settings.itemsCount = itemsCount;
+                Main.settings.itemsCount = (uint) GUILayout.HorizontalScrollbar(Main.settings.itemsCount, 1, 1, 10);
             }
         }
 
@@ -235,7 +234,7 @@ namespace LKX_NewGameActor
     }
     
     /// <summary>
-    /// 
+    /// 读取基础数据的时候，现在发现有其他接口可以直接取，不用拆了。
     /// </summary>
     [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
     public static class GetTempItemsId_For_Loading_LoadGameBaseDateStart
@@ -245,10 +244,12 @@ namespace LKX_NewGameActor
         {
             if (Main.enabled)
             {
+                //获取index 5和index 8的key
                 List<string> keys = new List<string>(GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(','));
                 int indexTypeNum = keys.IndexOf("5");
                 int indexLevelNum = keys.IndexOf("8");
 
+                //遍历，符合的就加入字典
                 foreach (string items in GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(new string[] { "\r\n" }, StringSplitOptions.None))
                 {
                     string[] theItemParams = items.Trim().Split(',');
@@ -258,9 +259,9 @@ namespace LKX_NewGameActor
             }
         }
     }
-    
+
     /// <summary>
-    /// 新建人物的特性点数锁定为10
+    /// 新建人物的特性点数锁定为10，返回值是__result直接改就行了
     /// </summary>
     [HarmonyPatch(typeof(NewGame), "GetAbilityP")]
     public static class LockAbilityNum_For_NewGame_GetAbilityP
@@ -274,6 +275,10 @@ namespace LKX_NewGameActor
         }
     }
 
+    /// <summary>
+    /// 加入见经识经这个特质
+    /// 点击开始新游戏的时候可以用，根据字面意思理解就是被点击的时候才会执行。
+    /// </summary>
     [HarmonyPatch(typeof(NewGame), "Awake")]
     public static class AddTalent_For_NewGame_ToNewGame
     {
@@ -314,13 +319,13 @@ namespace LKX_NewGameActor
             {
                 string file = Main.settings.featureType == 1 ? "" : Path.Combine(Main.path, Main.settings.file);
 
-                //chooseAbility是开始游戏选择的特性，key = 6中就是
+                //chooseAbility是开始游戏选择的特性，key 6就是谷中密友
                 if (Main.settings.friend && ___chooseAbility.Count > 0 && ___chooseAbility.Contains(6)) ProcessingFeatureDate(10003, file);
 
                 ProcessingFeatureDate(10001, file);
             }
 
-            //处理自己添加的Ability
+            //处理自己添加的特质“见经识经”，处理后就删除
             if (___chooseAbility.Contains(1001))
             {
                 ProcessingAbilityDate(10001);
@@ -407,7 +412,7 @@ namespace LKX_NewGameActor
         static void ProcessingDevelopmentDate(int actorId)
         {
             Dictionary<int, string> actor;
-
+            //551是技艺，651是武学
             if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
             {
                 int randDevelopment = Main.settings.developmentActor;
@@ -427,6 +432,7 @@ namespace LKX_NewGameActor
             
             if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
             {
+                //先天悟性100
                 actor[65] = "100";
             }
 
@@ -452,6 +458,7 @@ namespace LKX_NewGameActor
                 }
             }
 
+            //删去身怀六甲和相怄真身
             array.Remove(4003);
             array.Remove(10011);
             foreach (int item in array.Keys)
@@ -459,6 +466,7 @@ namespace LKX_NewGameActor
                 actor[101] += "|" + item.ToString();
             }
 
+            //刷新特性缓存，要不然游戏不生效
             DateFile.instance.actorsFeatureCache.Remove(actorId);
             
         }

@@ -1,0 +1,8 @@
+﻿{
+    "Id": "LKX_CheatMaxPeople",
+    "DisplayName": "人口上限和蛐蛐无限寿命和食物合并作弊",
+    "Author": "小枫泡泡",
+    "Version": "1.0.5",
+    "AssemblyName": "LKX_CheatMaxPeople.dll",
+    "EntryMethod": "LKX_CheatMaxPeople.Main.Load"
+}

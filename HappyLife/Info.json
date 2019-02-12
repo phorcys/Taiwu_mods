@@ -2,7 +2,7 @@
   "Id": "HappyLife",
   "DisplayName": "安居乐业",
   "Author": "Vallind",
-  "Version": "1.0.7",
+  "Version": "1.0.8",
   "AssemblyName": "HappyLife.dll",
   "EntryMethod": "HappyLife.Main.Load"
 }

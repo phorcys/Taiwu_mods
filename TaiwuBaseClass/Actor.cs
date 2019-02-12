@@ -1,4 +1,4 @@
-using Harmony12;
+ï»¿using Harmony12;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,17 +11,40 @@ namespace TaiwuBaseClass
 {
     public class Actor
     {
-        public int Id;
+        private int _id;
+        public int Id
+        {
+            get
+            {
+                return _id;
+            }
+            protected set
+            {
+                _id = value;
+                SetId(_id);
+            }
+        }
 
+        protected void SetId(int id)
+        {
+            _name.id = id;
+            _kungfu.id = id;
+            _skill.id = id;
+            _status.id = id;
+        }
 
         public struct PersonName
         {
-            private int id;
+            internal int id;
             public string First
             {
                 get
                 {
-                    return DateFile.instance.GetActorDate(id, 29, false);
+                    return DateFile.instance.actorsDate[id][29];
+                }
+                set
+                {
+                    DateFile.instance.actorsDate[id][29] = value;
                 }
             }
 
@@ -29,7 +52,11 @@ namespace TaiwuBaseClass
             {
                 get
                 {
-                    return DateFile.instance.GetActorDate(id, 2, false);
+                    return DateFile.instance.actorsDate[id][2];
+                }
+                set
+                {
+                    DateFile.instance.actorsDate[id][2] = value;
                 }
             }
 
@@ -38,7 +65,7 @@ namespace TaiwuBaseClass
                 this.id = id;
             }
         }
-        private PersonName _name;
+        protected PersonName _name;
 
         public PersonName Name
         {
@@ -48,15 +75,19 @@ namespace TaiwuBaseClass
             }
         }
 
-
-        public int Age//ÄêÁä
+        public void SetName(string first, string last)
+        {
+            _name.First = first;
+            _name.Last = last;
+        }
+        public int Age//å¹´é¾„
         {
             get
             {
-                return int.Parse(DateFile.instance.GetActorDate(Id, 11, false));
+                return int.Parse(DateFile.instance.actorsDate[Id][11]);
             }
         }
-        public int Health//½¡¿µ
+        public int Health//å¥åº·
         {
             get
             {
@@ -64,42 +95,42 @@ namespace TaiwuBaseClass
             }
 
         }
-        public int Str//ëöÁ¦
+        public int Strength//è†‚åŠ›
         {
             get
             {
                 return DateFile.instance.BaseAttr(Id, 0, 0);
             }
         }
-        public int Con//ÌåÖÊ
+        public int Constitution//ä½“è´¨
         {
             get
             {
                 return DateFile.instance.BaseAttr(Id, 1, 0);
             }
         }
-        public int Agi//ÁéÃô
+        public int Agility//çµæ•
         {
             get
             {
                 return DateFile.instance.BaseAttr(Id, 2, 0);
             }
         }
-        public int Bon//¸ù¹Ç
+        public int Bone//æ ¹éª¨
         {
             get
             {
                 return DateFile.instance.BaseAttr(Id, 3, 0);
             }
         }
-        public int Int//ÎòĞÔ
+        public int Intelligence//æ‚Ÿæ€§
         {
             get
             {
                 return DateFile.instance.BaseAttr(Id, 4, 0);
             }
         }
-        public int Pat//¶¨Á¦
+        public int Patience//å®šåŠ›
         {
             get
             {
@@ -107,14 +138,14 @@ namespace TaiwuBaseClass
             }
         }
 
-        public int Gender//ĞÔ±ğ
+        public int Gender//æ€§åˆ«
         {
             get
             {
                 return int.Parse(DateFile.instance.GetActorDate(Id, 14, false));
             }
         }
-        public int Charm//÷ÈÁ¦
+        public int Charm//é­…åŠ›
         {
             get
             {
@@ -139,102 +170,102 @@ namespace TaiwuBaseClass
             }
         }
 
-        public struct PersonKungfu//ÎäÑ§×ÊÖÊ
+        public struct PersonKungfu//æ­¦å­¦èµ„è´¨
         {
-            private int id;
+            internal int id;
 
-            public int Force//ÄÚ¹¦
+            public int Force//å†…åŠŸ
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 601, true));
                 }
             }
-            public int Dodge//Éí·¨
+            public int Dodge//èº«æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 602, true));
                 }
             }
-            public int Stunt//¾ø¼¼
+            public int Stunt//ç»æŠ€
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 603, true));
                 }
             }
-            public int Strike//ÕÆ·¨
+            public int Strike//æŒæ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 604, true));
                 }
             }
-            public int Finger//Ö¸·¨
+            public int Finger//æŒ‡æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 605, true));
                 }
             }
-            public int Kick//ÍÈ·¨
+            public int Kick//è…¿æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 606, true));
                 }
             }
-            public int HidWeapon//°µÆ÷
+            public int HidWeapon//æš—å™¨
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 607, true));
                 }
             }
-            public int Sword//½£·¨
+            public int Sword//å‰‘æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 608, true));
                 }
             }
-            public int Blade//µ¶·¨
+            public int Blade//åˆ€æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 609, true));
                 }
             }
-            public int Longstick//³¤±ø
+            public int Longstick//é•¿å…µ
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 610, true));
                 }
             }
-            public int Qimen//ÆæÃÅ
+            public int Qimen//å¥‡é—¨
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 611, true));
                 }
             }
-            public int Whip//Èí±ø
+            public int Whip//è½¯å…µ
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 612, true));
                 }
             }
-            public int Shoot//ÓùÉä
+            public int Shoot//å¾¡å°„
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 613, true));
                 }
             }
-            public int Instrument//ÀÖÆ÷
+            public int Instrument//ä¹å™¨
             {
                 get
                 {
@@ -250,125 +281,124 @@ namespace TaiwuBaseClass
 
         private PersonKungfu _kungfu;
 
-        public PersonKungfu Kungfu//ÎäÑ§×ÊÖÊ
+        public PersonKungfu Kungfu//æ­¦å­¦èµ„è´¨
         {
             get
             {
                 return _kungfu;
-
             }
         }
 
-        public struct PersonSkill//¼¼ÒÕ×ÊÖÊ
+        public struct PersonSkill//æŠ€è‰ºèµ„è´¨
         {
-            private int id;
+            internal int id;
 
-            public int Music//ÒôÂÉ
+            public int Music//éŸ³å¾‹
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 501, true));
                 }
             }
-            public int ChessArt//ÆåÒÕ
+            public int ChessArt//æ£‹è‰º
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 502, true));
                 }
             }
-            public int Poem//Ê«Êé
+            public int Poem//è¯—ä¹¦
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 503, true));
                 }
             }
-            public int Paint//»æ»­
+            public int Paint//ç»˜ç”»
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 504, true));
                 }
             }
-            public int Math//ÊõÊı
+            public int Math//æœ¯æ•°
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 505, true));
                 }
             }
-            public int Tasting//Æ·¼ø
+            public int Tasting//å“é‰´
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 506, true));
                 }
             }
-            public int Smith//¶ÍÔì
+            public int Smith//é”»é€ 
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 507, true));
                 }
             }
-            public int Wood//ÖÆÄ¾
+            public int Wood//åˆ¶æœ¨
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 508, true));
                 }
             }
-            public int Medical//Ò½Êõ
+            public int Medical//åŒ»æœ¯
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 509, true));
                 }
             }
-            public int Poison//¶¾Êõ
+            public int Poison//æ¯’æœ¯
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 510, true));
                 }
             }
-            public int Cloth//Ö¯½õ
+            public int Cloth//ç»‡é”¦
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 511, true));
                 }
             }
-            public int Jwelry//ÇÉ½³
+            public int Jwelry//å·§åŒ 
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 512, true));
                 }
             }
-            public int Taoism//µÀ·¨
+            public int Taoism//é“æ³•
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 513, true));
                 }
             }
-            public int Buddhism//·ğÑ§
+            public int Buddhism//ä½›å­¦
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 514, true));
                 }
             }
-            public int Cooking//³øÒÕ
+            public int Cooking//å¨è‰º
             {
                 get
                 {
                     return int.Parse(DateFile.instance.GetActorDate(id, 515, true));
                 }
             }
-            public int MisArt//ÔÓÑ§
+            public int MisArt//æ‚å­¦
             {
                 get
                 {
@@ -393,51 +423,50 @@ namespace TaiwuBaseClass
             }
         }
 
-        public struct PersonStatus//ÈËÎï×´Ì¬
+        public struct PersonStatus//äººç‰©çŠ¶æ€
         {
-            private int id;
-            public int MaxHp//ÍâÉËÉÏÏŞ
+            internal int id;
+            public int MaxHp//å¤–ä¼¤ä¸Šé™
             {
                 get
                 {
-                    return ActorMenu.instance.MaxHp(id);
+                    return ActorMenu.instance.MaxHp(id, 100);
                 }
             }
-            public int Hp//ÄÚÉË
+            public int Hp//å†…ä¼¤
             {
                 get
                 {
                     return ActorMenu.instance.Hp(id, false);
                 }
             }
-            public int MaxSp//ÄÚÉËÉÏÏŞ
+            public int MaxSp//å†…ä¼¤ä¸Šé™
             {
                 get
                 {
-                    return ActorMenu.instance.MaxSp(id);
+                    return ActorMenu.instance.MaxSp(id, 100);
                 }
             }
-            public int Sp//ÍâÉË
+            public int Sp//å¤–ä¼¤
             {
                 get
                 {
                     return ActorMenu.instance.Sp(id, false);
                 }
             }
-            public List<int> ResPoisons//¶¾ËØ¿¹ĞÔ
+            public int[] ResPoisons//æ¯’ç´ æŠ—æ€§
             {
                 get
                 {
-                    List<int> list = new List<int> { };
+                    int[] arr = new int[6];
                     for (int i = 0; i < 6; i++)
                     {
-                        int num = int.Parse(DateFile.instance.GetActorDate(id, 42 + i, false));
-                        list.Add(num);
+                        arr[i] = int.Parse(DateFile.instance.actorsDate[id][42 + i]);
                     }
-                    return list;
+                    return arr;
                 }
             }
-            public List<int> Poisons//ÖĞ¶¾
+            public List<int> Poisons//ä¸­æ¯’
             {
                 get
                 {
@@ -450,7 +479,6 @@ namespace TaiwuBaseClass
                     return list;
                 }
             }
-
 
             public PersonStatus(int id)
             {
@@ -469,7 +497,6 @@ namespace TaiwuBaseClass
 
         protected Actor()
         {
-
         }
 
         public static Actor fromId(int id)
@@ -484,47 +511,58 @@ namespace TaiwuBaseClass
         }
     }
 
-    public class ActorGroup:Actor
+    public class GangMember : Actor
     {
-        private int id;
-        public int GroupId
+        public int GangId
         {
             get
             {
-                return int.Parse(DateFile.instance.GetActorDate(id, 19, false));
+                return int.Parse(DateFile.instance.GetActorDate(Id, 19, false));
             }
         }
-        public string GroupName
+        public string GangName
         {
             get
             {
-                return DateFile.instance.GetGangDate(GroupId, 0);
+                return DateFile.instance.GetGangDate(GangId, 0);
             }
         }
-        public int GroupLvl
+        public int GangLvl
         {
             get
             {
-                int num1 = int.Parse(DateFile.instance.GetActorDate(id, 19, false));
-                int num2 = int.Parse(DateFile.instance.GetActorDate(id, 20, false));
+                int num1 = int.Parse(DateFile.instance.GetActorDate(Id, 19, false));
+                int num2 = int.Parse(DateFile.instance.GetActorDate(Id, 20, false));
                 int gangValueId = DateFile.instance.GetGangValueId(num1, num2);
                 return gangValueId;
             }
         }
-        public string GroupLvlName
+        public string GangLvlName
         {
             get
             {
-                int num = int.Parse(DateFile.instance.GetActorDate(id, 20, false));
-                int key = (num >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(id, 14, false)));
-                string gang = DateFile.instance.presetGangGroupDateValue[GroupLvl][key];
+                int num = int.Parse(DateFile.instance.GetActorDate(Id, 20, false));
+                int key = (num >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(Id, 14, false)));
+                string gang = DateFile.instance.presetGangGroupDateValue[GangLvl][key];
                 return gang;
             }
         }
-        
-        public ActorGroup(int id)
+
+        protected GangMember()
         {
-            this.id = id;
+        }
+
+        public static new GangMember fromId(int id)
+        {
+            GangMember member = (GangMember)Actor.fromId(id);
+            return member;
+        }
+    }
+    class MyClass
+    {
+        public void func()
+        {
+            GangMember member = GangMember.fromId(111);
         }
     }
 }

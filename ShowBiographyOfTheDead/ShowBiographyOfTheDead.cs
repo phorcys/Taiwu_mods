@@ -68,7 +68,7 @@ namespace ShowBiographyOfTheDead
     }
 
    
-    [HarmonyPatch(typeof(DateFile), "RemoveActor", new Type[] { typeof(List<int>) , typeof(bool), typeof(bool) })]
+    [HarmonyPatch(typeof(DateFile), "RemoveActor")]
     public static class DateFile_RemoveActor_Patch
     {
         public static int index = 0;
@@ -77,7 +77,7 @@ namespace ShowBiographyOfTheDead
         public const int minBlurLength = 3;
         public const int maxBlurLength = 10;
 
-        static void Prefix(DateFile __instance,List<int> actorId,bool die,bool showRemove)
+        static void Prefix(DateFile __instance, List<int> actorId, bool die, bool showRemove, bool make9Level = true)
         {
             if (!Main.enabled)
                 return;

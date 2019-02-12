@@ -245,11 +245,11 @@ namespace GuiWarehouse
                 }
                 if (changTyp == "ActorItem")
                 {
-                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1);
+                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1, 0, 0);
                 }
                 else
                 {
-                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1);
+                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1, 0, 0);
                 }
                 Main.OnChangeItem = true;
                 Warehouse_UpdateActorItems_Patch.Prefix(true, Warehouse.instance.actorItemTyp);
@@ -393,7 +393,7 @@ namespace GuiWarehouse
                     {
                         actorItemHolder[typ].Init(actor,typ);
                     }
-                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0).Keys));
+                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0, false).Keys));
                     int[] data = Select(list, typ, actor);
                     actorItemHolder[typ].data = data;
                 }
@@ -433,7 +433,7 @@ namespace GuiWarehouse
                     {
                         warehouseItemHolder[typ].Init(actor, typ);
                     }
-                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0).Keys));
+                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0, false).Keys));
                     int[] data = Select(list, typ, actor);
                     warehouseItemHolder[typ].data = data;
 
@@ -617,7 +617,7 @@ namespace GuiWarehouse
                     _this.actorItemTyp = typ;
                     bool flag = HomeSystem.instance.homeMapPartId != DateFile.instance.mianPartId || HomeSystem.instance.homeMapPlaceId != DateFile.instance.mianPlaceId;
                     int childCount = _this.actorItemHolder[typ].childCount;
-                    List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0).Keys)));
+                    List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0, false).Keys)));
                     for (int i = 0; i < list.Count; i++)
                     {
                         int num3 = list[i];
@@ -669,7 +669,7 @@ namespace GuiWarehouse
                     _this.warehouseItemTyp = typ;
                     bool cantTake = HomeSystem.instance.homeMapPartId != DateFile.instance.mianPartId || HomeSystem.instance.homeMapPlaceId != DateFile.instance.mianPlaceId;
                     int childCount2 = _this.warehouseItemHolder[typ].childCount;
-                    List<int> list2 = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0).Keys)));
+                    List<int> list2 = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0, false).Keys)));
                     for (int k = 0; k < list2.Count; k++)
                     {
                         int num5 = list2[k];

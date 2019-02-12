@@ -1,0 +1,9 @@
+﻿{
+  "Id": "Majordomo",
+  "DisplayName": "太吾管家",
+  "Author": "fenghou",
+  "Version": "1.1.1",
+  "AssemblyName": "Majordomo.dll",
+  "EntryMethod": "Majordomo.Main.Load",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=16207477"
+}

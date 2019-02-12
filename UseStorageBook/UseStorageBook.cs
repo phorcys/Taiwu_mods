@@ -1,13 +1,14 @@
 using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
+using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
-namespace UseStorageBook
+namespace Sth4nothing.UseStorageBook
 {
     [HarmonyPatch(typeof(HomeSystem), "SetBook")]
     public static class HomeSystem_SetBook_Patch
@@ -15,76 +16,153 @@ namespace UseStorageBook
         /// <summary>
         /// 将HomeSystem.SetBook 修改为 NewSetBook
         /// </summary>
-        /// <param name="instructions"></param>
-        /// <returns></returns>
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static bool Prefix()
         {
-            Main.logger.Log("start to patch SetBook");
-            List<CodeInstruction> list = new List<CodeInstruction>(instructions);
-            list.InsertRange(0, new CodeInstruction[]
-            {
-                new CodeInstruction(OpCodes.Call, typeof(HomeSystem_SetBook_Patch).GetMethod("NewSetBook", BindingFlags.Public | BindingFlags.Static)),
-                new CodeInstruction(OpCodes.Ret),
-            });
-            Main.logger.Log("success!");
-            return list;
+            if (!Main.Enabled)
+                return true;
+            if (!BookSetting.Instance.Open)
+                BookSetting.Instance.ToggleWindow();
+            SetBookData();
+            return false;
         }
 
         /// <summary>
-        /// 在加载主角背包中的书同时加载仓库中的书
+        /// 加载书籍数据
         /// </summary>
-        public static void NewSetBook()
+        public static void SetBookData()
         {
-            var RemoveBook = typeof(HomeSystem).GetMethod("RemoveBook", BindingFlags.NonPublic | BindingFlags.Instance);
-            RemoveBook.Invoke(HomeSystem.instance, null);
-            List<int> list = new List<int>();
-            if (!Main.Enabled || Main.Setting.pack)
+            var list = GetBooks();
+            HomeSystem_SetChooseBookWindow_Patch.bookView.Data = list.Where(CheckBook).ToArray();
+        }
+
+        /// <summary>
+        /// 获取所有可用书籍
+        /// </summary>
+        private static List<int> GetBooks()
+        {
+            var actorItems =
+                from item in ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0, false).Keys
+                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
+                select item;
+            var warehouseItems =
+                from item in ActorMenu.instance.GetActorItems(-999, 0, false).Keys
+                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
+                select item;
+            var items = actorItems.Concat(warehouseItems);
+            return DateFile.instance.GetItemSort(items.ToList());
+        }
+
+        /// <summary>
+        /// 检查物品id是否满足筛选条件
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private static bool CheckBook(int id)
+        {
+            var df = DateFile.instance;
+            // 背包
+            if (!Main.Setting.repo[0] && df.actorItemsDate[df.mianActorId].ContainsKey(id))
             {
-                list.AddRange(ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0).Keys);
+                return false;
             }
-            if (Main.Enabled && Main.Setting.warehouse)
+            // 仓库
+            if (!Main.Setting.repo[1] && df.actorItemsDate[-999].ContainsKey(id))
             {
-                list.AddRange(ActorMenu.instance.GetActorItems(-999, 0).Keys);
+                return false;
             }
-            list = DateFile.instance.GetItemSort(list);
-            for (int i = 0; i < list.Count; i++)
+            int itemId = int.Parse(df.itemsDate[id][999]);
+            int gongfaId = int.Parse(df.presetitemDate[itemId][32]);
+            // 品级
+            int pinji = int.Parse(df.presetitemDate[itemId][8]) - 1;
+            // Main.Logger.Log($"品级: {pinji}");
+            if (!Main.Setting.pinji[pinji])
+                return false;
+            int itemType = int.Parse(df.presetitemDate[itemId][31]);
+            // Main.Logger.Log($"类型: {itemType}");
+            // 阅读
+            int pages = 0;
+            if (HomeSystem.instance.studySkillTyp >= 17)
+                pages = df.gongFaBookPages.ContainsKey(gongfaId) ? df.gongFaBookPages[gongfaId].Sum() : 0; // 阅读总页数
+            else
+                pages = df.skillBookPages.ContainsKey(gongfaId) ? df.skillBookPages[gongfaId].Sum() : 0;
+            int read = pages <= 0? 0 : (pages < 10 ? 1: 2);
+            if (!Main.Setting.read[read])
+                return false;
+            // 技艺书籍
+            if (itemType != 17)
+                return true;
+            // 真传 or 手抄
+            bool tof = int.Parse(df.presetitemDate[itemId][35]) != 1;
+            if (tof && !Main.Setting.tof[0])
+                return false;
+            if (!tof && !Main.Setting.tof[1])
+                return false;
+            // 功法类型
+            int gongfa = int.Parse(df.gongFaDate[gongfaId][1]);
+            // Main.Logger.Log($"功法: {gongfa}");
+            if (!Main.Setting.gongfa[gongfa])
+                return false;
+            // 帮派
+            int gang = int.Parse(df.gongFaDate[gongfaId][3]);
+            // Main.Logger.Log($"帮派: {gang}");
+            if (!Main.Setting.gang[gang])
+                return false;
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
+    public class WorldMapSystem_Start_Patch
+    {
+        static void Postfix()
+        {
+            HomeSystem_SetChooseBookWindow_Patch.hasInit = false;
+
+            if (BookSetting.Instance == null)
             {
-                int num = list[i];
-                if (int.Parse(DateFile.instance.GetItemDate(num, 31, true)) == HomeSystem.instance.studySkillTyp)
-                {
-                    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(HomeSystem.instance.bookIcon, Vector3.zero, Quaternion.identity);
-                    gameObject.name = "Item," + num;
-                    gameObject.transform.SetParent(HomeSystem.instance.bookHolder, false);
-                    gameObject.GetComponent<Toggle>().group = HomeSystem.instance.bookHolder.GetComponent<ToggleGroup>();
-                    Image component = gameObject.transform.Find("ItemBack").GetComponent<Image>();
-                    component.sprite = GetSprites.instance.itemBackSprites[int.Parse(DateFile.instance.GetItemDate(num, 4, true))];
-                    component.color = ActorMenu.instance.LevelColor(int.Parse(DateFile.instance.GetItemDate(num, 8, true)));
-                    GameObject gameObject2 = gameObject.transform.Find("ItemIcon").gameObject;
-                    gameObject2.name = "ItemIcon," + num;
-                    gameObject2.GetComponent<Image>().sprite = GetSprites.instance.itemSprites[int.Parse(DateFile.instance.GetItemDate(num, 98, true))];
-                    int num2 = int.Parse(DateFile.instance.GetItemDate(num, 901, true));
-                    int num3 = int.Parse(DateFile.instance.GetItemDate(num, 902, true));
-                    gameObject.transform.Find("ItemHpText").GetComponent<Text>().text = string.Format("{0}{1}</color>/{2}", ActorMenu.instance.Color3(num2, num3), num2, num3);
-                    int[] bookPage = DateFile.instance.GetBookPage(num);
-                    Transform transform = gameObject.transform.Find("PageBack");
-                    for (int j = 0; j < transform.childCount; j++)
-                    {
-                        if (bookPage[j] == 1)
-                        {
-                            transform.GetChild(j).GetComponent<Image>().color = new Color(0.392156869f, 0.784313738f, 0f, 1f);
-                        }
-                    }
-                }
+                BookSetting.Load();
             }
         }
     }
 
+    [HarmonyPatch(typeof(HomeSystem), "SetChooseBookWindow")]
+    public class HomeSystem_SetChooseBookWindow_Patch
+    {
+        public static bool hasInit;
+        public static NewBookView bookView;
+
+        static void Prefix(HomeSystem __instance)
+        {
+            var bookViewBack = HomeSystem.instance.bookHolder.parent.gameObject;
+            if (bookViewBack.GetComponent<NewBookView>() == null)
+            {
+                bookView = bookViewBack.AddComponent<NewBookView>();
+            }
+            if (!hasInit)
+            {
+                hasInit = true;
+                bookView.Init();
+            }
+            // HomeSystem.instance.bookHolder.parent.parent.gameObject.SetActive(false);
+        }
+    }
+
+    [HarmonyPatch(typeof(HomeSystem), "CloseBookWindow")]
+    public class HomeSystem_CloseBookWindow_Patch
+    {
+        static void Prefix()
+        {
+            if (BookSetting.Instance.Open)
+                BookSetting.Instance.ToggleWindow();
+        }
+    }
+
+    /// <summary>
+    /// 仓库中的书耐久为0时将其移除
+    /// </summary>
     [HarmonyPatch(typeof(ReadBook), "CloseReadBook")]
     public static class ReadBook_CloseReadBook_Patch
     {
-        /// <summary>
-        /// 仓库中的书耐久为0时将其移除
-        /// </summary>
         static void Prefix()
         {
             var df = DateFile.instance;
@@ -144,21 +222,110 @@ namespace UseStorageBook
 
     public class Settings : UnityModManager.ModSettings
     {
-        public bool warehouse = true;
-        public bool pack = true;
+        public MyDict gang = new MyDict();
+        public MyDict gongfa = new MyDict();
+        public MyDict pinji = new MyDict();
+        public MyDict tof = new MyDict();
+        public MyDict repo = new MyDict();
+        public MyDict read = new MyDict();
+        internal float scrollSpeed = 30;
 
+        public void Init()
+        {
+            for (int i = 0; i < Main.gang.Length; i++)
+            {
+                if (!gang.ContainsKey(i))
+                    gang[i] = true;
+            }
+            for (int i = 0; i < Main.gongfa.Length; i++)
+            {
+                if (!gongfa.ContainsKey(i))
+                    gongfa[i] = true;
+            }
+            for (int i = 0; i < Main.pinji.Length; i++)
+            {
+                if (!pinji.ContainsKey(i))
+                    pinji[i] = true;
+            }
+            for (int i = 0; i < Main.tof.Length; i++)
+            {
+                if (!tof.ContainsKey(i))
+                    tof[i] = true;
+            }
+            for (int i = 0; i < Main.repo.Length; i++)
+            {
+                if (!repo.ContainsKey(i))
+                    repo[i] = true;
+            }
+            for (int i = 0; i < Main.read.Length; i++)
+            {
+                if (!read.ContainsKey(i))
+                    read[i] = true;
+            }
+        }
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
         }
     }
 
+    /// <summary>
+    /// 可序列化的Dictionary[int, bool]
+    /// </summary>
+    public class MyDict : Dictionary<int, bool>, IXmlSerializable
+    {
+        public System.Xml.Schema.XmlSchema GetSchema()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReadXml(System.Xml.XmlReader reader)
+        {
+            if (reader.IsEmptyElement)
+                return;
+
+            reader.Read();
+            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            {
+                Debug.Assert(reader.Name == "Pair");
+                var key = int.Parse(reader.GetAttribute("key"));
+                reader.ReadStartElement("Pair");
+                var val = reader.ReadContentAsBoolean();
+                reader.ReadEndElement();
+                this[key] = val;
+            }
+        }
+
+        public void WriteXml(System.Xml.XmlWriter writer)
+        {
+            foreach (var pair in this)
+            {
+                writer.WriteStartElement("Pair");
+                writer.WriteAttributeString("key", pair.Key.ToString());
+                writer.WriteValue(pair.Value);
+                writer.WriteEndElement();
+            }
+        }
+    }
+
     public class Main
     {
-        public static UnityModManager.ModEntry.ModLogger logger;
+        public static UnityModManager.ModEntry.ModLogger Logger;
 
-        public static bool Enabled {get; private set;}
-        public static Settings Setting {get; private set;}
+        public static bool Enabled { get; private set; }
+        public static Settings Setting { get; private set; }
+
+        public static string[] gang = { "其他", "少林", "峨眉", "百花", "武当", "元山", "狮相", "然山", "璇女", "铸剑", "空桑", "金刚", "五仙", "界青", "伏龙", "血吼" };
+
+        public static string[] gongfa = { "内功", "轻功", "绝技", "拳掌", "指法", "腿法", "暗器", "剑法", "刀法", "长兵", "奇门", "软兵", "御射", "乐器" };
+
+        public static string[] pinji = { "九品", "八品", "七品", "六品", "五品", "四品", "三品", "二品", "一品" };
+
+        public static string[] tof = { "真传", "手抄" };
+
+        public static string[] repo = { "背包", "仓库" };
+
+        public static string[] read = { "未读", "已读", "读完" };
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
@@ -168,21 +335,51 @@ namespace UseStorageBook
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            logger = modEntry.Logger;
+            Logger = modEntry.Logger;
             Setting = Settings.Load<Settings>(modEntry);
+            Setting.Init();
+
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
         }
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            GUILayout.BeginVertical();
+            ShowSetting("背包/仓库", Setting.repo, repo);
+            ShowSetting("真传/手抄", Setting.tof, tof);
+            ShowSetting("品级", Setting.pinji, pinji);
+            ShowSetting("功法", Setting.gongfa, gongfa);
+            ShowSetting("帮派", Setting.gang, gang);
+            ShowSetting("阅读进度", Setting.read, read);
+            GUILayout.EndVertical();
+        }
+
+        public static void ShowSetting(string label, Dictionary<int, bool> dict, string[] setting)
+        {
+            GUILayout.BeginVertical("Box");
             GUILayout.BeginHorizontal();
-            Setting.warehouse = GUILayout.Toggle(Setting.warehouse, "仓库");
-            Setting.pack = GUILayout.Toggle(Setting.pack, "包裹");
+            GUILayout.Label(label, GUILayout.Width(100));
+            if (GUILayout.Button("全部", GUILayout.Width(50)))
+            {
+                var all = dict.All((pair) => pair.Value);
+                for (int i = 0; i < setting.Length; i++)
+                {
+                    dict[i] = !all;
+                }
+            }
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            for (var i = 0; i < setting.Length; i++)
+            {
+                dict[i] = GUILayout.Toggle(dict[i], setting[i], GUILayout.Width(50));
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)

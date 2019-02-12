@@ -658,11 +658,11 @@ namespace GuiWarehouse
             }
             if (actor)
             {
-                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1);
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1, 0, 0);
             }
             else
             {
-                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1);
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1, 0, 0);
             }
             lockPack = true;
             SelectTitle(true, title2 );
@@ -684,7 +684,7 @@ namespace GuiWarehouse
                     pack2 = 1;
                 }
                 title2 = index;
-                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(actorId, 0).Keys)));
+                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(actorId, 0, false).Keys)));
                 data2 = GetData(list, index);
             }
             else
@@ -694,7 +694,7 @@ namespace GuiWarehouse
                     pack = 1;
                 }
                 title = index;
-                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(warehouseId, 0).Keys)));
+                List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(warehouseId, 0, false).Keys)));
                 data = GetData(list, index);
             }
         }
@@ -738,7 +738,7 @@ namespace GuiWarehouse
             string s = name + "\n" + des;
 
             int width = 600, height = line * 30;
-            int _x, _y;
+            int _x;
             if (x > Screen.width / 2)
             {
                 _x = x - width;
