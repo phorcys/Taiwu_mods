@@ -1,5 +1,5 @@
 #!/bin/env bash -ex
-DLLPACK_VERSION="190204"
+DLLPACK_VERSION="190213"
 shopt -s nocasematch
 
 cd /build/Taiwu_Mods
