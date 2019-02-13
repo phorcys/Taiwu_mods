@@ -69,6 +69,51 @@ namespace Majordomo
         }
     }
 
+    class FloatField
+    {
+        private readonly float defaultNum;
+        private readonly string format;
+        private float num;
+        private string text, pretext;
+        private Func<float, bool> check;
+        public FloatField(float num = 0f, string format = "0.00"): this(num, format, f => true) {}
+        public FloatField(float num, string format, Func<float, bool> check)
+        {
+            this.defaultNum = num;
+            this.format = format;
+            this.check = check;
+            Init();
+        }
+
+        private void Init()
+        {
+            this.num = defaultNum;
+            this.text = defaultNum.ToString(format);
+            this.pretext = defaultNum.ToString(format);
+        }
+
+        public float GetFloat(int maxLength, params GUILayoutOption[] options)
+        {
+            text = GUILayout.TextField(text, maxLength, options);
+            if (float.TryParse(text, out float num) && check(num))
+            {
+                pretext = text;
+                this.num = num;
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(text))
+                {
+                    text = pretext;
+                }
+                else
+                {
+                    Init();
+                }
+            }
+            return this.num;
+        }
+    }
 
     public static class Main
     {
@@ -78,11 +123,15 @@ namespace Majordomo
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
 
+        private static Dictionary<string, FloatField> dict;
+
+
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
-            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+            dict = new Dictionary<string, FloatField>();
 
             Main.Logger = modEntry.Logger;
 
@@ -246,14 +295,14 @@ namespace Majordomo
         {
             GUILayout.Space(10);
             GUILayout.Label(label);
-            string factor = GUILayout.TextField(
-                Main.settings.buildingTypePriorityFactors[buildingType].ToString("0.00"), 4, GUILayout.Width(40));
-
-            if (factor.EndsWith(".")) factor = factor.Substring(0, factor.Length - 1);
-            bool success = float.TryParse(factor, out float value);
+            if (!dict.ContainsKey(label))
+            {
+                dict[label] = new FloatField(defaultValue);
+            }
+            float val = dict[label].GetFloat(4, GUILayout.Width(40));
             if (!GUI.changed) return;
 
-            Main.settings.buildingTypePriorityFactors[buildingType] = success ? value : defaultValue;
+            Main.settings.buildingTypePriorityFactors[buildingType] = val;
         }
 
 
