@@ -172,7 +172,7 @@ MACRO(CREATEMOD moddir)
 		System.Data
 		System.Xml
 		System.Runtime.Serialization
-		${STEAMDIR}${DLLPATH}/Assembly-CSharp.dll
+		${STEAMDIR}${DLLPATH}Assembly-CSharp.dll
 		${STEAMDIR}${DLLPATH}0Harmony12.dll
 		${STEAMDIR}${DLLPATH}Newtonsoft.Json.dll
 		${STEAMDIR}${DLLPATH}UnityEngine.dll
@@ -313,7 +313,6 @@ using System.Runtime.Versioning\;
 [assembly: AssemblyProduct(\"${Id}\")]
 [assembly: AssemblyCopyright(\"Copyright ©  2018\")]
 [assembly: AssemblyFileVersion(\"${Version}\")]
-[assembly: AssemblyCulture(\"\")]
 ")
 
      FILE(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${moddir}/Properties/AssemblyInfo.cs" ${assemblyinfo})
@@ -326,8 +325,8 @@ using System.Runtime.Versioning\;
 		${FILELIST}
 		${moddir}/Info.json
 		)
-	#项目版本 .net 3.5
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v3.5")
+	#项目版本 .net 4.6
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.6")
 	#项目基础引用
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCES
 		"System"
