@@ -78,6 +78,8 @@ namespace Majordomo
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
 
+        private static readonly Dictionary<string, FloatField> floatFields = new Dictionary<string, FloatField>();
+
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -246,14 +248,14 @@ namespace Majordomo
         {
             GUILayout.Space(10);
             GUILayout.Label(label);
-            string factor = GUILayout.TextField(
-                Main.settings.buildingTypePriorityFactors[buildingType].ToString("0.00"), 4, GUILayout.Width(40));
 
-            if (factor.EndsWith(".")) factor = factor.Substring(0, factor.Length - 1);
-            bool success = float.TryParse(factor, out float value);
+            if (!Main.floatFields.ContainsKey(label))
+                Main.floatFields[label] = new FloatField(defaultValue);
+
+            float factor = Main.floatFields[label].GetFloat(4, GUILayout.Width(40));
             if (!GUI.changed) return;
 
-            Main.settings.buildingTypePriorityFactors[buildingType] = success ? value : defaultValue;
+            Main.settings.buildingTypePriorityFactors[buildingType] = factor;
         }
 
 

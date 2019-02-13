@@ -1,7 +1,11 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Majordomo
 {
+    /// <summary>
+    /// 适用于 mod 的、使用注册方式创建的功能性窗口的接口
+    /// </summary>
     public interface ITaiwuWindow
     {
         /// <summary>
@@ -30,5 +34,62 @@ namespace Majordomo
         /// 关闭窗口，会修改激活状态
         /// </summary>
         void Close();
+    }
+
+
+    /// <summary>
+    /// 用于 Unity OnGUI 的浮点数输入框
+    /// </summary>
+    public class FloatField
+    {
+        private readonly float defaultValue;
+        private readonly string format;
+        private readonly Func<float, bool> validator;
+        private float currValue;
+        private string currText;
+        private string prevText;
+
+
+        public FloatField(float defaultValue, string format = "0.00")
+            : this(defaultValue, format, value => true) { }
+
+
+        public FloatField(float defaultValue, string format, Func<float, bool> validator)
+        {
+            this.defaultValue = defaultValue;
+            this.format = format;
+            this.validator = validator;
+            this.Init();
+        }
+
+
+        private void Init()
+        {
+            this.currValue = defaultValue;
+            this.currText = defaultValue.ToString();
+            this.prevText = defaultValue.ToString(format);
+        }
+
+
+        public float GetFloat(int maxLength, params GUILayoutOption[] options)
+        {
+            this.currText = GUILayout.TextField(this.currText, maxLength, options);
+
+            if (float.TryParse(this.currText, out float parsedValue) && validator(parsedValue))
+            {
+                this.prevText = this.currText;
+                this.currValue = parsedValue;
+                return this.currValue;
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(this.currText))
+                    this.currText = this.prevText;
+                else
+                    this.Init();
+
+                return this.currValue;
+            }
+        }
     }
 }
