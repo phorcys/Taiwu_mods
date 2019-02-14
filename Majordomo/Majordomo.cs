@@ -69,6 +69,7 @@ namespace Majordomo
         }
     }
 
+
     public static class Main
     {
         public static bool enabled = true;
@@ -76,14 +77,14 @@ namespace Majordomo
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
-        private static Dictionary<string, FloatField> dict;
+
+        private static readonly Dictionary<string, FloatField> floatFields = new Dictionary<string, FloatField>();
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
-            dict = new Dictionary<string, FloatField>();
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
             Main.Logger = modEntry.Logger;
 
@@ -248,14 +249,13 @@ namespace Majordomo
             GUILayout.Space(10);
             GUILayout.Label(label);
 
-            if (!dict.ContainsKey(label))
-            {
-                dict[label] = new FloatField(defaultValue);
-            }
-            float val = dict[label].GetFloat(4, GUILayout.Width(40));
+            if (!Main.floatFields.ContainsKey(label))
+                Main.floatFields[label] = new FloatField(defaultValue);
+
+            float factor = Main.floatFields[label].GetFloat(4, GUILayout.Width(40));
             if (!GUI.changed) return;
 
-            Main.settings.buildingTypePriorityFactors[buildingType] = val;
+            Main.settings.buildingTypePriorityFactors[buildingType] = factor;
         }
 
 
