@@ -69,52 +69,6 @@ namespace Majordomo
         }
     }
 
-    class FloatField
-    {
-        private readonly float defaultNum;
-        private readonly string format;
-        private float num;
-        private string text, pretext;
-        private Func<float, bool> check;
-        public FloatField(float num = 0f, string format = "0.00"): this(num, format, f => true) {}
-        public FloatField(float num, string format, Func<float, bool> check)
-        {
-            this.defaultNum = num;
-            this.format = format;
-            this.check = check;
-            Init();
-        }
-
-        private void Init()
-        {
-            this.num = defaultNum;
-            this.text = defaultNum.ToString(format);
-            this.pretext = defaultNum.ToString(format);
-        }
-
-        public float GetFloat(int maxLength, params GUILayoutOption[] options)
-        {
-            text = GUILayout.TextField(text, maxLength, options);
-            if (float.TryParse(text, out float num) && check(num))
-            {
-                pretext = text;
-                this.num = num;
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(text))
-                {
-                    text = pretext;
-                }
-                else
-                {
-                    Init();
-                }
-            }
-            return this.num;
-        }
-    }
-
     public static class Main
     {
         public static bool enabled = true;

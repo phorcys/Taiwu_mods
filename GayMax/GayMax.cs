@@ -501,7 +501,7 @@ namespace GayMax
             para4.AddRange(para2);
             if (para1.Count > 0 && para2.Count > 0)
             {
-                foreach (int id in para1) if (para2.Contains(id)) { return true; break; }
+                foreach (int id in para1) if (para2.Contains(id)) { return true; }
 
             }
             if (para3.Contains(motherId)) return true;
@@ -842,7 +842,7 @@ namespace GayMax
             }
             if (head2.Count == 0 && point > 0)
             {
-                head2.Add(UnityEngine.Random.RandomRange(2001, 2013));
+                head2.Add(UnityEngine.Random.Range(2001, 2013));
                 point--;
             }
             if (point > 0)
