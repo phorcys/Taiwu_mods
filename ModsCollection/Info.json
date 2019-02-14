@@ -1,0 +1,10 @@
+﻿{
+    "Id": "ModsCollection",
+    "DisplayName": "ModsCollection",
+    "Author": "Eiffel",
+    "Version": "1.0.1",
+    "AssemblyName": "ModsCollection.dll",
+    "EntryMethod": "ModsCollection.Main.Load",
+    "HomePage": "https://github.com/phorcys/Taiwu_mods/tree/master/ModsCollection",
+    "Repository": "https://raw.githubusercontent.com/phorcys/Taiwu_mods/master/Repository.json"
+}

@@ -1,0 +1,9 @@
+﻿{
+    "Id": "LKX_LoopedStoryInKunlun",
+    "DisplayName": "昆仑·镜冢",
+    "Author": "小枫泡泡",
+    "Version": "1.0.0",
+    "AssemblyName": "LKX_LoopedStoryInKunlun.dll",
+    "EntryMethod": "LKX_LoopedStoryInKunlun.Main.Load",
+    "Requirements": ["BaseResourceMod"]
+}

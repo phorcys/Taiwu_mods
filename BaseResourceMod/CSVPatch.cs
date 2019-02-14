@@ -22,7 +22,6 @@ namespace BaseResourceMod
     [HarmonyPatch(typeof(GetSprites), "GetDate")]
     public static class GetSprites_GetDate_Patch
     {
-
         static public void new_GetData(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
         {
             dateList.Clear();
@@ -113,41 +112,12 @@ namespace BaseResourceMod
             }
         }
 
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static bool Prefix(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
         {
-            Main.Logger.Log(" Transpiler init codes ");
-            var codes = new List<CodeInstruction>(instructions);
-
-            var foundtheforend = true;
-            int startIndex = 0;
-
-
-            if (foundtheforend)
-            {
-                var injectedCodes = new List<CodeInstruction>();
-
-                // 注入 IL code 
-                //
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_1));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_2));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_3));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(GetSprites_GetDate_Patch).GetMethod("new_GetData")));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ret));
-
-                codes.InsertRange(startIndex, injectedCodes);
-            }
-            else
-            {
-                Main.Logger.Log(" game changed ... this mod failed to find code to patch...");
-            }
-
-            //Main.Logger.Log(" dump the patch codes ");
-
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Main.Logger.Log(String.Format("{0} : {1}  {2}", i, codes[i].opcode, codes[i].operand));
-            //}
-            return codes.AsEnumerable();
+            if (!Main.enabled)
+                return true;
+            new_GetData(dateName, dateList, passDateIndex);
+            return false;
         }
     }
 
@@ -238,8 +208,8 @@ namespace BaseResourceMod
         public static void processDir(string path)
         {
             Dictionary<string, Dictionary<int, string>> allfiles = new Dictionary<string, Dictionary<int, string>>();
-            //遍历 子目录下所有txt
-            foreach (string fname in Directory.GetFiles(path, "*.txt"))
+            // 遍历该目录及子目录下所有 txt 文件
+            foreach (string fname in Directory.GetFiles(path, "*.txt", SearchOption.AllDirectories))
             {
 
                 string filename = Path.GetFileName(fname);
@@ -335,50 +305,10 @@ namespace BaseResourceMod
             }
         }
 
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static void Postfix()
         {
-            Main.Logger.Log(" Transpiler init codes ");
-            var codes = new List<CodeInstruction>(instructions);
-
-            var foundtheforend = false;
-            int startIndex = -1;
-
-            //寻找注入点
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (codes[i].opcode == OpCodes.Ret && codes[i - 1].opcode == OpCodes.Stfld)
-                {
-                    startIndex = i;
-                    foundtheforend = true;
-                    Main.Logger.Log(" found the end of the ret , at index: " + i);
-                }
-
-            }
-
-
-            if (foundtheforend)
-            {
-                var injectedCodes = new List<CodeInstruction>();
-
-                // 注入 IL code 
-                //
-                injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(Loading_LoadBaseDate_Patch).GetMethod("post_InjectData")));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Ret));
-
-                codes.InsertRange(startIndex, injectedCodes);
-            }
-            else
-            {
-                Main.Logger.Log(" game changed ... this mod failed to find code to patch...");
-            }
-
-            //Main.Logger.Log(" dump the patch codes ");
-
-            //for (int i = 0; i < codes.Count; i++)
-            //{
-            //    Main.Logger.Log(String.Format("{0} : {1}  {2}", i, codes[i].opcode, codes[i].operand));
-            //}
-            return codes.AsEnumerable();
+            if (Main.enabled)
+                post_InjectData();
         }
     }
 }

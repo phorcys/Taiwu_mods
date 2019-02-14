@@ -1,0 +1,8 @@
+﻿{
+  "Id": "NotEnoughHarvest",
+  "DisplayName": "更多收获",
+  "Author": "c4r50nz",
+  "Version": "1.2.0",
+  "AssemblyName": "NotEnoughHarvest.dll",
+  "EntryMethod": "NotEnoughHarvest.Main.Load"
+}

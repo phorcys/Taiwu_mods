@@ -1,8 +1,11 @@
 ﻿{
-  "Id": "CharacterFloatInfo",
-  "DisplayName": "人物浮动信息",
-  "Author": "Vallind",
-  "Version": "1.0.8",
-  "AssemblyName": "CharacterFloatInfo.dll",
-  "EntryMethod": "CharacterFloatInfo.Main.Load"
+    "Id": "CharacterFloatInfo",
+    "DisplayName": "人物浮动信息",
+    "Author": "Vallind",
+    "Version": "1.3.11",
+    "ManagerVersion": "0.1.6.3",
+    "AssemblyName": "CharacterFloatInfo.dll",
+    "EntryMethod": "CharacterFloatInfo.Main.Load",
+    "HomePage": "https://bbs.nga.cn/read.php?tid=15297274",
+    "Repository": "https://raw.githubusercontent.com/phorcys/Taiwu_mods/master/Repository.json"
 }

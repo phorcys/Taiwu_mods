@@ -1,0 +1,9 @@
+﻿{
+  "Id": "IllustratedHandbook",
+  "DisplayName": "图鉴/获取物品",
+  "Author": "yyuueexxiinngg",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=15239374",
+  "Version": "1.0.2",
+  "AssemblyName": "IllustratedHandbook.dll",
+  "EntryMethod": "IllustratedHandbook.Main.Load"
+}

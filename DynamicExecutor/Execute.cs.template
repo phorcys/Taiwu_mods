@@ -1,0 +1,17 @@
+﻿using UnityEngine;
+namespace Sth4nothing
+{
+    public class Execute
+    {
+        static void Main()
+        {
+            var id = DateFile.instance.mianActorId;
+            var date = DateFile.instance.actorsDate;
+            foreach (var key in date[id].Keys)
+            {
+                Debug.Log($"{key}: {date[id][key]}");
+            }
+            return;
+        }
+    }
+}

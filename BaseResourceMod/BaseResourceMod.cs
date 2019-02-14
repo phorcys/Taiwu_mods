@@ -48,26 +48,23 @@ namespace BaseResourceMod
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            
             if (!Directory.Exists(backupdir))
             {
-                System.IO.Directory.CreateDirectory(backupdir);
+                Directory.CreateDirectory(backupdir);
             }
 
             Logger = modEntry.Logger;
             settings = Settings.Load<Settings>(modEntry);
-
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-
-            
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+
+            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+
             return true;
         }
 
-        public static void registModResDir(UnityModManager.ModEntry modEntry,string respath)
+        public static void registModResDir(UnityModManager.ModEntry modEntry, string respath)
         {
             mods_res_dict[modEntry.Info.DisplayName] = respath;
         }
@@ -354,6 +351,10 @@ namespace BaseResourceMod
             }, {
                 "villagename_date",
                 "villageNameDate"
+            },
+            {
+                "fame_date",
+                "actorFameDate"
             }
         };
 
@@ -404,13 +405,31 @@ namespace BaseResourceMod
             return (T)field.GetValue(obj);
         }
 
-        static public Dictionary<int, Dictionary<int, string>>  getCSVDictRef(string cate)
+        public static void SetFieldValue<T>(object obj, string fieldName, T value)
         {
-            if(cate == "ActorFace_Date")
+            if (obj == null)
+                throw new ArgumentNullException("obj");
+
+            var field = obj.GetType().GetField(fieldName, BindingFlags.Public |
+                                                          BindingFlags.NonPublic |
+                                                          BindingFlags.Instance);
+
+            if (field == null)
+                throw new ArgumentException("fieldName", "No such field was found.");
+
+            if (!field.FieldType.IsAssignableFrom(typeof(T)))
+                throw new InvalidOperationException("Field type and requested type are not compatible.");
+
+            field.SetValue(obj, value);
+        }
+
+        static public Dictionary<int, Dictionary<int, string>> getCSVDictRef(string cate)
+        {
+            if (cate == "ActorFace_Date")
             {
                 return GetSprites.instance.actorFaceDate;
             }
-            if(date_instance_dict.ContainsKey(cate))
+            if (date_instance_dict.ContainsKey(cate))
             {
                 return GetFieldValue<Dictionary<int, Dictionary<int, string>>>(DateFile.instance, date_instance_dict[cate]);
             }
@@ -424,6 +443,14 @@ namespace BaseResourceMod
                 return GetFieldValue<T>(GetSprites.instance, sprite_instance_dict[cate]);
             }
             return default(T);
+        }
+
+        static public void SetSprite<T>(string cate, T value)
+        {
+            if (sprite_instance_dict.ContainsKey(cate))
+            {
+                SetFieldValue(GetSprites.instance, sprite_instance_dict[cate], value);
+            }
         }
     }
 

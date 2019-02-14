@@ -101,6 +101,13 @@ namespace LKX_GongFaSizeToOne
         public static bool enabled;
 
         /// <summary>
+        /// 初始全功法类型
+        /// </summary>
+        public static List<string> gongFaKey = new List<string> { "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114" };
+
+        public static string messageLabel;
+
+        /// <summary>
         /// 载入mod。
         /// </summary>
         /// <param name="modEntry">mod管理器对象</param>
@@ -139,6 +146,20 @@ namespace LKX_GongFaSizeToOne
             GUIStyle redLabelStyle = new GUIStyle();
             redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
             GUILayout.Label("如果status亮红灯代表mod失效！游戏过程中修改了mod配置需要重新开启游戏让mod生效！", redLabelStyle);
+            if (GUILayout.Button("手动激活功法1格大小"))
+            {
+                if (DateFile.instance.gongFaDate.Count == 0)
+                {
+                    messageLabel = "请进入游戏存档";
+                }
+                else
+                {
+                    Main.ProcessingGongFaSize();
+                    messageLabel = "已执行修改";
+                }
+            }
+            GUILayout.Label(messageLabel);
+
             Main.settings.gongFaGuiType = GUILayout.SelectionGrid(Main.settings.gongFaGuiType, new string[] { "全功法1格", "自定义功法1格" }, 2);
 
             if (Main.settings.gongFaGuiType == 1)
@@ -179,42 +200,58 @@ namespace LKX_GongFaSizeToOne
         {
             Main.settings.Save(modEntry);
         }
+
+        public static void ProcessingGongFaSize()
+        {
+            if (!Main.enabled) return;
+            
+            Main.logger.Log("开始执行功法替换1格");
+            foreach (Dictionary<int, string> item in DateFile.instance.gongFaDate.Values)
+            {
+                if (Main.gongFaKey.Contains(item[61])) item[7] = "1";
+            }
+        }
+
+        /// <summary>
+        /// 检查用户选项，没选的去掉。于是剩下的就是选择的
+        /// </summary>
+        public static void ProcessingGongFaType()
+        {
+            if (Main.settings.gongFaGuiType != 0)
+            {
+                if (!Main.settings.neigongActive) Main.gongFaKey.Remove("101");
+                if (!Main.settings.shenfaActive) Main.gongFaKey.Remove("102");
+                if (!Main.settings.juejiActive) Main.gongFaKey.Remove("103");
+                if (!Main.settings.quanfaActive) Main.gongFaKey.Remove("104");
+                if (!Main.settings.zhifaActive) Main.gongFaKey.Remove("105");
+                if (!Main.settings.tuifaActive) Main.gongFaKey.Remove("106");
+                if (!Main.settings.anqiActive) Main.gongFaKey.Remove("107");
+                if (!Main.settings.jianfaActive) Main.gongFaKey.Remove("108");
+                if (!Main.settings.daofaActive) Main.gongFaKey.Remove("109");
+                if (!Main.settings.changbingActive) Main.gongFaKey.Remove("110");
+                if (!Main.settings.qimenActive) Main.gongFaKey.Remove("111");
+                if (!Main.settings.ruanbingActive) Main.gongFaKey.Remove("112");
+                if (!Main.settings.yusheActive) Main.gongFaKey.Remove("113");
+                if (!Main.settings.yueqiActive) Main.gongFaKey.Remove("114");
+            }
+        }
     }
 
     /// <summary>
     /// 点击人物读取游戏时载入。
     /// </summary>
     [HarmonyPatch(typeof(Loading), "LoadGameDateStart2")]
-    public static class SetGongFaSizeToOne_For_GetSprites_GetDate
+    public static class SetGongFaSizeToOne_For_Loading_LoadGameDateStart2
     {
-        /// <summary>
-        /// 初始全功法类型
-        /// </summary>
-        static List<string> gongFaKey = new List<string> { "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114"};
 
         /// <summary>
         /// 前置处理
         /// </summary>
         static void Prepare()
         {
-            //不是全功法就根据选择去删除未选择的功法类型
-            if (Main.settings.gongFaGuiType != 0)
-            {
-                if (!Main.settings.neigongActive) gongFaKey.Remove("101");
-                if (!Main.settings.shenfaActive) gongFaKey.Remove("102");
-                if (!Main.settings.juejiActive) gongFaKey.Remove("103");
-                if (!Main.settings.quanfaActive) gongFaKey.Remove("104");
-                if (!Main.settings.zhifaActive) gongFaKey.Remove("105");
-                if (!Main.settings.tuifaActive) gongFaKey.Remove("106");
-                if (!Main.settings.qimenActive) gongFaKey.Remove("107");
-                if (!Main.settings.jianfaActive) gongFaKey.Remove("108");
-                if (!Main.settings.daofaActive) gongFaKey.Remove("109");
-                if (!Main.settings.changbingActive) gongFaKey.Remove("110");
-                if (!Main.settings.anqiActive) gongFaKey.Remove("111");
-                if (!Main.settings.ruanbingActive) gongFaKey.Remove("112");
-                if (!Main.settings.yusheActive) gongFaKey.Remove("113");
-                if (!Main.settings.yueqiActive) gongFaKey.Remove("114");
-            }
+            if (!Main.enabled) return;
+            
+            Main.ProcessingGongFaType();
         }
         
         /// <summary>
@@ -224,10 +261,7 @@ namespace LKX_GongFaSizeToOne
         {
             if (!Main.enabled) return;
 
-            foreach (Dictionary<int, string> item in DateFile.instance.gongFaDate.Values)
-            {
-                if (gongFaKey.Contains(item[61])) item[7] = "1";
-            }
+            Main.ProcessingGongFaSize();
         }
     }
     

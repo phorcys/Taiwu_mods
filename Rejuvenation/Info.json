@@ -1,0 +1,8 @@
+﻿{
+  "Id": "Rejuvenation",
+  "DisplayName": "天长地久不老长春功",
+  "Version": "1.1.2",
+  "AssemblyName": "Rejuvenation.dll",
+  "EntryMethod": "Rejuvenation.Main.Load",
+  "Requirements": [ "BaseResourceMod" ]
+}

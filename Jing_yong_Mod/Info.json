@@ -1,0 +1,8 @@
+﻿{
+  "Id": "Jing_yong_Mod",
+  "DisplayName": "金庸MOD",
+  "Version": "1.0.1",
+  "AssemblyName": "Jing_yong_Mod.dll",
+  "EntryMethod": "Jing_yong_Mod.Main.Load",
+  "Requirements": [ "BaseResourceMod" ]
+}

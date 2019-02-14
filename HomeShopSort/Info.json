@@ -1,0 +1,8 @@
+﻿{
+  "Id": "HomeShopSort",
+  "DisplayName": "秩序",
+  "Author": "xyzkljl1",
+  "Version": "1.2.0",
+  "AssemblyName": "HomeShopSort.dll",
+  "EntryMethod": "HomeShopSort.Main.Load"
+}

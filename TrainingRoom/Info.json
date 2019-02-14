@@ -1,0 +1,10 @@
+﻿{
+    "Id": "TrainingRoom",
+    "DisplayName": "个人用合理向练功房",
+    "Author": "Rainsillwood, Eiffel",
+    "Version": "0.8.0",
+    "AssemblyName": "TrainingRoom.dll",
+    "EntryMethod": "TrainingRoom.Main.Load",
+    "HomePage": "https://bbs.nga.cn/read.php?tid=15394342",
+    "Repository": "https://raw.githubusercontent.com/phorcys/Taiwu_mods/master/Repository.json"
+}
