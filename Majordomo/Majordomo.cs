@@ -122,9 +122,7 @@ namespace Majordomo
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
-
         private static Dictionary<string, FloatField> dict;
-
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -295,6 +293,7 @@ namespace Majordomo
         {
             GUILayout.Space(10);
             GUILayout.Label(label);
+
             if (!dict.ContainsKey(label))
             {
                 dict[label] = new FloatField(defaultValue);
