@@ -423,7 +423,23 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 载入已保存数据
+    /// Patch: 新建存档时初始化数据
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "NewDate")]
+    public static class DateFile_NewDate_InitData
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+
+            if (MajordomoWindow.instance == null) MajordomoWindow.instance = new MajordomoWindow();
+            MajordomoWindow.instance.InitData();
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 载入存档时载入已保存数据
     /// </summary>
     [HarmonyPatch(typeof(DateFile), "LoadDate")]
     public static class DateFile_LoadDate_LoadSavedData
@@ -439,7 +455,7 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 保存数据
+    /// Patch: 保存存档时保存数据
     /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
     public static class SaveDateFile_SaveSaveDate_SaveData
