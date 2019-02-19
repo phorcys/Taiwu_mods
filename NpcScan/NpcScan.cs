@@ -84,7 +84,7 @@ namespace NpcScan
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             if (!Main.uiIsShow)
             {
-                UI.Load();
+                UI.Load(modEntry);
                 UI.key = settings.key;
                 Main.uiIsShow = true;
                 //Logger.Log("scan测试");
