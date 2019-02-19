@@ -12,6 +12,7 @@ namespace NpcScan
 {
     public class UI : MonoBehaviour
     {
+        public static UnityModManager.ModEntry.ModLogger logger;
         int minage = 0;
         int maxage = 0;
         int strValue = 0;
@@ -85,7 +86,14 @@ namespace NpcScan
         bool tarIsGang = false;
         bool isGang = false;
 
-        float windowWidth = Screen.width * 0.8f;
+        float windowWidth()
+        {
+            return (DateFile.instance.screenWidth * 0.8f);
+        }
+        float screenWidth()
+        {
+            return (DateFile.instance.screenWidth);
+        }
 
         string aName = "";
 
@@ -98,8 +106,10 @@ namespace NpcScan
         bool isman = false;
         bool iswoman = false;
 
-        internal static bool Load()
+        internal static bool Load(UnityModManager.ModEntry modEntry)
         {
+            logger = modEntry.Logger;
+            //logger.Log(windowWidth.ToString);
             try
             {
                 new GameObject(typeof(UI).FullName, typeof(UI));
@@ -325,8 +335,8 @@ namespace NpcScan
 
         private void CalculateWindowPos()
         {
-
-            mWindowRect = new Rect(Screen.width * 0.1f, 50f, windowWidth, 0);
+            logger.Log(screenWidth().ToString()+" "+ windowWidth().ToString());
+            mWindowRect = new Rect(screenWidth()*0.05f, 50f, windowWidth(), 0);
         }
 
         private void WindowFunction(int windowId)
@@ -342,12 +352,21 @@ namespace NpcScan
                 ToggleWindow();
             }
             GUILayout.EndHorizontal();
+            int currentwidth = 0;
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("年龄:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(minage.ToString(), 3, GUILayout.Width(30)), out minage);
             GUILayout.Label("--", GUILayout.Width(10));
             int.TryParse(GUILayout.TextField(maxage.ToString(), 3, GUILayout.Width(30)), out maxage);
             GUILayout.Space(10);
+            currentwidth += 110;
+            currentwidth += 150;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 150;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("性别:", GUILayout.Width(30));
             GUILayout.Space(5);
             isall = GUILayout.Toggle(isall, "全部", GUILayout.Width(45));
@@ -373,37 +392,114 @@ namespace NpcScan
                 genderValue = 2;
             }
             GUILayout.Space(10);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("膂力:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(strValue.ToString(), 10, GUILayout.Width(30)), out strValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("体质:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(conValue.ToString(), 10, GUILayout.Width(30)), out conValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("灵敏:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(agiValue.ToString(), 10, GUILayout.Width(30)), out agiValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("根骨:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(bonValue.ToString(), 10, GUILayout.Width(30)), out bonValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("悟性:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(intValue.ToString(), 10, GUILayout.Width(30)), out intValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("定力:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(patValue.ToString(), 10, GUILayout.Width(30)), out patValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("魅力:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(charmValue.ToString(), 10, GUILayout.Width(30)), out charmValue);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("健康:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(healthValue.ToString(), 10, GUILayout.Width(30)), out healthValue);
             GUILayout.Space(5);
+            currentwidth += 130;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("轮回次数:", GUILayout.Width(60));
             int.TryParse(GUILayout.TextField(samsaraCount.ToString(), 10, GUILayout.Width(30)), out samsaraCount);
             GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / 50d)), GUILayout.Width(40));
+            currentwidth += 60;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             if (GUILayout.Button("上页", GUILayout.Width(60)))
             {
                 if (page > 1)
                     page = page - 1;
+            }
+            currentwidth += 60;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 60;
+                GUILayout.BeginHorizontal("box");
             }
             if (GUILayout.Button("下页", GUILayout.Width(60)))
             {
@@ -411,114 +507,343 @@ namespace NpcScan
                     page = page + 1;
             }
             GUILayout.EndHorizontal();
+            currentwidth = 0;
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("内功:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[0].ToString(), 10, GUILayout.Width(30)), out gongfa[0]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("身法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[1].ToString(), 10, GUILayout.Width(30)), out gongfa[1]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("绝技:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[2].ToString(), 10, GUILayout.Width(30)), out gongfa[2]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("拳掌:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[3].ToString(), 10, GUILayout.Width(30)), out gongfa[3]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("指法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[4].ToString(), 10, GUILayout.Width(30)), out gongfa[4]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("腿法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[5].ToString(), 10, GUILayout.Width(30)), out gongfa[5]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("暗器:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[6].ToString(), 10, GUILayout.Width(30)), out gongfa[6]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("剑法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[7].ToString(), 10, GUILayout.Width(30)), out gongfa[7]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("刀法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[8].ToString(), 10, GUILayout.Width(30)), out gongfa[8]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("长兵:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[9].ToString(), 10, GUILayout.Width(30)), out gongfa[9]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("奇门:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[10].ToString(), 10, GUILayout.Width(30)), out gongfa[10]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("软兵:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[11].ToString(), 10, GUILayout.Width(30)), out gongfa[11]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("御射:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[12].ToString(), 10, GUILayout.Width(30)), out gongfa[12]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("乐器:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(gongfa[13].ToString(), 10, GUILayout.Width(30)), out gongfa[13]);
             GUILayout.Space(10);
+            currentwidth += 160;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 160;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("取值:", GUILayout.Width(30));
 	        GUILayout.Space(5);
 	        getreal = GUILayout.Toggle(getreal, "基础值", GUILayout.Width(55));
             GUILayout.Space(5);
             rankmode = GUILayout.Toggle(rankmode, "排行模式", GUILayout.Width(65));
             GUILayout.EndHorizontal();
+            currentwidth = 0;
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("音律:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[0].ToString(), 10, GUILayout.Width(30)), out life[0]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("弈棋:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[1].ToString(), 10, GUILayout.Width(30)), out life[1]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("诗书:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[2].ToString(), 10, GUILayout.Width(30)), out life[2]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("绘画:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[3].ToString(), 10, GUILayout.Width(30)), out life[3]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("术数:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[4].ToString(), 10, GUILayout.Width(30)), out life[4]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("品鉴:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[5].ToString(), 10, GUILayout.Width(30)), out life[5]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("锻造:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[6].ToString(), 10, GUILayout.Width(30)), out life[6]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("制木:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[7].ToString(), 10, GUILayout.Width(30)), out life[7]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("医术:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[8].ToString(), 10, GUILayout.Width(30)), out life[8]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("毒术:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[9].ToString(), 10, GUILayout.Width(30)), out life[9]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("织锦:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[10].ToString(), 10, GUILayout.Width(30)), out life[10]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("巧匠:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[11].ToString(), 10, GUILayout.Width(30)), out life[11]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("道法:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[12].ToString(), 10, GUILayout.Width(30)), out life[12]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("佛学:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[13].ToString(), 10, GUILayout.Width(30)), out life[13]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("厨艺:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[14].ToString(), 10, GUILayout.Width(30)), out life[14]);
             GUILayout.Space(5);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("杂学:", GUILayout.Width(30));
             int.TryParse(GUILayout.TextField(life[15].ToString(), 10, GUILayout.Width(30)), out life[15]);
             GUILayout.EndHorizontal();
-
+            currentwidth = 0;
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("姓名（包括前世）:", GUILayout.Width(120));
             aName = GUILayout.TextField(aName, 10, GUILayout.Width(80));
+            currentwidth += 200;
+            currentwidth += 110;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 110;
+                GUILayout.BeginHorizontal("box");
+            }
             //从属gangText
             GUILayout.Label("从属:", GUILayout.Width(50));
             gangValue = GUILayout.TextField(gangValue, 10, GUILayout.Width(60));
+            currentwidth += 110;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 110;
+                GUILayout.BeginHorizontal("box");
+            }
             //身份gangLevelText
             GUILayout.Label("身份:", GUILayout.Width(50));
             gangLevelValue = GUILayout.TextField(gangLevelValue, 10, GUILayout.Width(60));
+            currentwidth += 300;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 300;
+                GUILayout.BeginHorizontal("box");
+            }
             //立场goodnessText
             GUILayout.Label("立场:", GUILayout.Width(30));
             for (int i = 0; i < goodness.Length; i++)
@@ -536,6 +861,13 @@ namespace NpcScan
                     }
                 }
             }
+            currentwidth += 255;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 255;
+                GUILayout.BeginHorizontal("box");
+            }
             GUILayout.Label("人物特性:", GUILayout.Width(60));
             actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
             tarFeature = GUILayout.Toggle(tarFeature, "精确特性", GUILayout.Width(75));//是否精确查找,精确查找的情况下,特性用'|'分隔
@@ -547,6 +879,14 @@ namespace NpcScan
             GUILayout.Label("可教功法:", GUILayout.Width(60));
             actorGongFaText = GUILayout.TextField(actorGongFaText, 60, GUILayout.Width(120));
             tarGongFaOr = GUILayout.Toggle(tarGongFaOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
+            currentwidth += 180;
+            currentwidth += 210;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 180;
+                GUILayout.BeginHorizontal("box");
+            }
 
             GUILayout.Label("最高查询品级:", GUILayout.Width(120));
             int.TryParse(GUILayout.TextField(highestLevel.ToString(), 1, GUILayout.Width(60)), out highestLevel);
@@ -555,6 +895,13 @@ namespace NpcScan
 
             //Main.Logger.Log(tarFeature.ToString());
             GUILayout.Space(30);
+            currentwidth += 150;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 150;
+                GUILayout.BeginHorizontal("box");
+            }
             if (GUILayout.Button("查找", GUILayout.Width(150)))
             {
                 page = 1;
@@ -581,8 +928,17 @@ namespace NpcScan
                 {
                     foreach (int i in DateFile.instance.gongFaDate.Keys)
                     {
-                        String tem = DateFile.instance.gongFaDate[i][0].Substring(DateFile.instance.gongFaDate[i][0].IndexOf('>') + 1, DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1);
-                        Main.gNameList.Add(tem, i);
+                        //logger.Log(DateFile.instance.gongFaDate[i][0]);
+                        if (DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1 > 0)
+                        {
+                            String tem = DateFile.instance.gongFaDate[i][0].Substring(DateFile.instance.gongFaDate[i][0].IndexOf('>') + 1, DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1);
+                            Main.gNameList.Add(tem, i);
+                        }
+                        else
+                        {
+                            Main.gNameList.Add(DateFile.instance.gongFaDate[i][0], i);
+                        }
+                            
                     }
                 }
                 if (actorGongFaText != "")
@@ -609,7 +965,7 @@ namespace NpcScan
 
             if (actorList.Count > 0)
             {
-                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(70), GUILayout.Width(windowWidth + 60f));
+                scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, new GUIStyle(), new GUIStyle(), GUILayout.Height(70), GUILayout.Width(windowWidth() + 60f));
                 GUILayout.BeginVertical("Box");
                 GUILayout.BeginHorizontal("box");
                 if (rankmode && !rankcolumnadded && showlistadded)
@@ -627,7 +983,7 @@ namespace NpcScan
                 var mods = actorList;
                 var colWidth = mColumns.Select(x =>
                     x.expand
-                        ? GUILayout.Width(x.width / expandWidth * (windowWidth - 60 + expandWidth - amountWidth))
+                        ? GUILayout.Width(x.width / expandWidth * (windowWidth() - 60 + expandWidth - amountWidth))
                         : GUILayout.Width(x.width)).ToArray();
                 for (int i = 0; i < mColumns.Count; i++)
                 {
