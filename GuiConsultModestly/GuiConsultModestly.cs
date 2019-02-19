@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace GuiConsultModestly
+namespace GuiHand
 {
     public class Settings : UnityModManager.ModSettings
     {
