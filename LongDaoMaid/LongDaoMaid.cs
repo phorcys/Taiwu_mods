@@ -21,6 +21,7 @@ namespace LongDaoMaid
         public bool sexOrientation = true;
         public int maxAge = 25;
         public int minAge = 16;
+        public bool buyMaid = true;
     }
 
     public static class Main
@@ -54,7 +55,7 @@ namespace LongDaoMaid
             GUILayout.Label("<color=#FF6EB4>【龙岛女仆】</color>：龙岛只为你提供女性仆从.");
             GUILayout.Label("<color=#FF6EB4>【慧眼识珠】</color>：你总会挑到好看的仆从.");
             //GUILayout.Label("<color=#FF6EB4>【】</color>：你不接受石芯玉女.");//想不到起什么名，不显示了！
-            //后续待增加功能：【女装山脉】
+            //后续待增加功能：【女装山脉】【人口买卖】
 
             GUILayout.BeginVertical("Box");
 
@@ -74,8 +75,8 @@ namespace LongDaoMaid
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            settings.sexOrientation = GUILayout.Toggle(settings.sexOrientation, "<color=#FF6EB4>【妇科圣手】</color> ");
-            GUILayout.Label("效果：选中状态时，你获得的女仆不会有生育的负面特性（【一串佛珠】除外）");
+            settings.buyMaid = GUILayout.Toggle(settings.buyMaid, "<color=#FF6EB4>【人口买卖】</color> ");
+            GUILayout.Label("效果：获得女仆后，花费9998银钱赎回消耗的地区恩义.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
@@ -194,12 +195,19 @@ namespace LongDaoMaid
                 npc[21] = Convert.ToString(sexo);
             }
 
-            //npc[0] = DateFile.instance.presetActorDate[DateFile.instance.mianActorId][14];//待施工
-
             //4.年龄区间
             if (settings.maxAge > 0 && settings.minAge > 0)
             {
                 npc[11] = Convert.ToString(Random.Range(settings.minAge, settings.maxAge));
+            }
+
+            //5.人口买卖
+                if (settings.buyMaid && Convert.ToInt32(player[406]) >= 9998)
+                {
+                    DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[14][11])][int.Parse(DateFile.instance.gangDate[14][3])][3] += 300;
+
+                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] = 
+                    Convert.ToString(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) - 9998);
             }
 
             //慧眼识珠
@@ -212,7 +220,7 @@ namespace LongDaoMaid
             string rdMouse = Convert.ToString(Random.Range(30, 44));
 
             npc[995] = "0" + "|" + rdNose + "|" + rdSign + "|" + rdEyes + "|" + rdBrow + "|" + rdMouse + "|" + "0" + "|" + rdHair;
-            if (Random.Range(1, 5) != 1)
+            if (Random.Range(1, 4) != 1)
                 npc[996] = 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
@@ -221,24 +229,31 @@ namespace LongDaoMaid
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
-                    Convert.ToString(Random.Range(0, 4));//80%概率，发肤颜色取前5
+                    Convert.ToString(Random.Range(0, 4));//75%概率，发肤颜色取前5
 
             //重新roll魅力
             npc[15] = Convert.ToString(Random.Range(501,900));
 
-            if (Random.Range(1, 5) == 1)//再roll，20%概率发肤色与太吾一致，好歹给黑妹留点机会
+            if (Random.Range(1, 10) == 1)//再roll，10%概率发肤色与太吾一致，好歹给黑妹留点机会
                 npc[996] = player[996];
 
-            npc[0] = npc[996];
+            //List<int> love = DateFile.instance.GetActorSocial(id, 312, false, false);
 
             //资质均衡
             npc[551] = "2";
             npc[651] = "2";
 
-            //73602__73902
-            int newItem = 73002 + Random.Range(6,9) * 100;
+            //73603——73703 73801——73809
+            int newItem;
+            if (Random.Range(1, 2) == 1)
+            {
+                newItem = 73003 + Random.Range(6, 7) * 100;
+            }
+            else
+            {
+                newItem = 73800 + Random.Range(1, 9);
+            }
             npc[305] = DateFile.instance.MakeNewItem(newItem).ToString();
-            //npc[311] = DateFile.instance.MakeNewItem(83503).ToString();
 
             DateFile.instance.actorsFeatureCache.Remove(id); //刷新特性
         }
