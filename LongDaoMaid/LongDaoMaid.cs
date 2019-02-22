@@ -197,11 +197,13 @@ namespace LongDaoMaid
             {
                 npc[14] = "2";
                 if (settings.nvZhuang == 1) npc[17] = "1";
+                else npc[17] = "0";
             }
             else
             {
                 npc[14] = "1";
                 if (settings.nvZhuang == 2) npc[17] = "1";
+                else npc[17] = "0";
             }
 
             //1.龙岛女仆的处世立场与玩家获得女仆时的立场相同
@@ -260,7 +262,7 @@ namespace LongDaoMaid
             string rdBrow = Convert.ToString(Random.Range(30, 44));
             string rdMouse = Convert.ToString(Random.Range(30, 44));
 
-            npc[995] = "0" + "|" + rdNose + "|" + rdSign + "|" + rdEyes + "|" + rdBrow + "|" + rdMouse + "|" + "0" + "|" + rdHair;
+            npc[995] = "1" + "|" + rdNose + "|" + rdSign + "|" + rdEyes + "|" + rdBrow + "|" + rdMouse + "|" + "0" + "|" + rdHair;
             if (Random.Range(1, 4) != 1)
                 npc[996] = 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
