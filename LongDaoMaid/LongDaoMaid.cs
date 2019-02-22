@@ -22,6 +22,7 @@ namespace LongDaoMaid
         public int maxAge = 25;
         public int minAge = 16;
         public bool buyMaid = true;
+        public int nvZhuang = 0;
     }
 
     public static class Main
@@ -54,24 +55,25 @@ namespace LongDaoMaid
         {
             GUILayout.Label("<color=#FF6EB4>【龙岛女仆】</color>：龙岛只为你提供女性仆从.");
             GUILayout.Label("<color=#FF6EB4>【慧眼识珠】</color>：你总会挑到好看的仆从.");
+            GUILayout.Label("<color=#FF6EB4>【品如衣服】</color>：女仆初始拥有一件下品服装.");
             //GUILayout.Label("<color=#FF6EB4>【】</color>：你不接受石芯玉女.");//想不到起什么名，不显示了！
-            //后续待增加功能：【女装山脉】【人口买卖】
+            //后续待增加功能：暂无
 
             GUILayout.BeginVertical("Box");
 
             GUILayout.BeginHorizontal("Box");
             settings.stanceChange = GUILayout.Toggle(settings.stanceChange, "<color=#FF6EB4>【革命战友】</color> ");
-            GUILayout.Label("效果：处世立场与玩家获得女仆时的立场相同");
+            GUILayout.Label("效果：处世立场与玩家获得女仆时的立场相同.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
             settings.add1s = GUILayout.Toggle(settings.add1s, "<color=#FF6EB4>【再续十年】</color> ");
-            GUILayout.Label("效果：女仆被龙神赋予额外十年阳寿");
+            GUILayout.Label("效果：女仆被龙神赋予额外十年阳寿.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
             settings.sexOrientation = GUILayout.Toggle(settings.sexOrientation, "<color=#FF6EB4>【后宫展开】</color> ");
-            GUILayout.Label("效果：太吾为女时，女仆为同性恋；为男时，女仆为异性恋");
+            GUILayout.Label("效果：太吾为女时，女仆为同性恋；为男时，女仆为异性恋.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
@@ -80,11 +82,24 @@ namespace LongDaoMaid
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("<color=#FF6EB4>你与伏龙坛主商议，只挑走</color>", GUILayout.Width(160));
+            GUILayout.Label("　 <color=#FF6EB4>【女装山脉】</color> ：你有时想要些不一样的<color=#FF6EB4>女仆</color>.");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            settings.nvZhuang = GUILayout.SelectionGrid(settings.nvZhuang, new string[]
+            {
+                "<color=#FF6EB4>正常女仆</color>",
+                "<color=#FF6EB4>女生男相</color>",
+                "<color=#3987D6>男生女相</color>",
+                "<color=#3987D6>正常男仆</color>",
+            }, 4, new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.Label("<color=#FF6EB4>　 【挑老拣少】：你与伏龙坛主商议，只挑走</color>", GUILayout.Width(270));
             int.TryParse(GUILayout.TextField(settings.minAge.ToString(), 3, GUILayout.Width(30)), out settings.minAge);
-            GUILayout.Label("--", GUILayout.Width(10));
+            GUILayout.Label("~", GUILayout.Width(10));
             int.TryParse(GUILayout.TextField(settings.maxAge.ToString(), 3, GUILayout.Width(30)), out settings.maxAge);
-            GUILayout.Label("<color=#FF6EB4>岁的女仆</color>");
+            GUILayout.Label("<color=#FF6EB4> 岁的女仆</color>");
             GUILayout.EndHorizontal();
         }
 
@@ -168,7 +183,16 @@ namespace LongDaoMaid
             {
                 npc.Add(14, DateFile.instance.GetActorDate(id, 14, false));
             }
-            npc[14] = "2";//性别修改为女，可能有BUG
+            if (settings.nvZhuang <= 1)//女生男相也为女
+            {
+                npc[14] = "2";
+                if (settings.nvZhuang == 1) npc[17] = "1";
+            }
+            else
+            {
+                npc[14] = "1";
+                if (settings.nvZhuang == 2) npc[17] = "1";
+            }
 
             //1.龙岛女仆的处世立场与玩家获得女仆时的立场相同
             if (settings.stanceChange == true)
@@ -243,11 +267,42 @@ namespace LongDaoMaid
             npc[551] = "2";
             npc[651] = "2";
 
-            //73603——73703 73801——73809
+            //挑选最出众的资质
+            int yiID = 501;
+            for (int i = 0; i < 16; i++)
+            {
+                if (Int32.Parse(npc[yiID]) < Int32.Parse(npc[501 + i]))
+                {
+                    yiID = 501 + i;
+                }
+            }
+            int wuID = 604;
+            for (int i = 0; i < 11; i++)
+            {
+                if (Int32.Parse(npc[wuID]) < Int32.Parse(npc[604 + i]))
+                {
+                    wuID = 604 + i;
+                }
+            }
+
+            //略微强化资质
+            if (int.Parse(npc[yiID]) <= 100)
+                npc[yiID] = Convert.ToString(Convert.ToInt32(npc[yiID]) + 5);
+            if (int.Parse(npc[wuID]) <= 100)
+                npc[wuID] = Convert.ToString(Convert.ToInt32(npc[wuID]) + 5);
+            if (int.Parse(npc[601]) <= 100)
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+            if (int.Parse(npc[602]) <= 100)
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+            if (int.Parse(npc[603]) <= 100)
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+
+            //给衣服
+            //73601——73703 73801——73809
             int newItem;
             if (Random.Range(1, 2) == 1)
             {
-                newItem = 73003 + Random.Range(6, 7) * 100;
+                newItem = 73000 + Random.Range(1, 3) + Random.Range(6, 7) * 100;
             }
             else
             {
