@@ -23,6 +23,8 @@ namespace LongDaoMaid
         public int minAge = 16;
         public bool buyMaid = true;
         public int nvZhuang = 0;
+        public string getNewSurname = "";
+        public string getNewName = "";
     }
 
     public static class Main
@@ -95,11 +97,19 @@ namespace LongDaoMaid
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("<color=#FF6EB4>　 【挑老拣少】：你与伏龙坛主商议，只挑走</color>", GUILayout.Width(270));
+            GUILayout.Label("<color=#FF6EB4>　 【挑老拣少】</color>：你与伏龙坛主商议，只挑走", GUILayout.Width(270));
             int.TryParse(GUILayout.TextField(settings.minAge.ToString(), 3, GUILayout.Width(30)), out settings.minAge);
             GUILayout.Label("~", GUILayout.Width(10));
             int.TryParse(GUILayout.TextField(settings.maxAge.ToString(), 3, GUILayout.Width(30)), out settings.maxAge);
-            GUILayout.Label("<color=#FF6EB4> 岁的女仆</color>");
+            GUILayout.Label("岁的女仆");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.Label("<color=#FF6EB4>　 【再生父母】</color>：你为招募到的女仆　赐姓：", GUILayout.Width(280));
+            settings.getNewSurname = GUILayout.TextField(settings.getNewSurname, 10, GUILayout.Width(80));
+            GUILayout.Label("　赐名：", GUILayout.Width(60));
+            settings.getNewName = GUILayout.TextField(settings.getNewName, 10, GUILayout.Width(80));
+            GUILayout.Label("　　　（赐姓赐名皆可选填）");
             GUILayout.EndHorizontal();
         }
 
@@ -226,13 +236,20 @@ namespace LongDaoMaid
             }
 
             //5.人口买卖
-                if (settings.buyMaid && Convert.ToInt32(player[406]) >= 9998)
-                {
+            if (settings.buyMaid && Convert.ToInt32(player[406]) >= 9998)
+            {
                     DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[14][11])][int.Parse(DateFile.instance.gangDate[14][3])][3] += 300;
 
                     DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] = 
                     Convert.ToString(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) - 9998);
             }
+
+            //6.再生父母
+            if (settings.getNewSurname != "")
+                npc[5] = settings.getNewSurname;
+
+            if (settings.getNewName != "")
+                npc[0] = settings.getNewName;
 
             //慧眼识珠
             //0|鼻子|特征|眼睛|眉毛|嘴|胡子|头发

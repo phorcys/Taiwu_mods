@@ -2,7 +2,7 @@
   "Id": "LongDaoMaid",
   "DisplayName": "龙岛女仆",
   "Author": "Futurer",
-  "Version": "1.0.0",
+  "Version": "1.0.2",
   "AssemblyName": "LongDaoMaid.dll",
   "EntryMethod": "LongDaoMaid.Main.Load"
 }
