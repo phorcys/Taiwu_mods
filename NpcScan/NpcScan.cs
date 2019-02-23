@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Reflection;
 using Harmony12;
 using UnityEngine;
@@ -25,6 +25,8 @@ namespace NpcScan
         public static Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
         public static List<Features> findList = new List<Features>();
         public static Dictionary<string, int> fNameList = new Dictionary<string, int>();
+        public static List<int> GongFaList = new List<int>();
+        public static Dictionary<string, int> gNameList = new Dictionary<string, int>();
         public static Dictionary<int, string> textColor = new Dictionary<int, string>()
         {
             { 10000,"<color=#323232FF>"},
@@ -82,7 +84,7 @@ namespace NpcScan
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             if (!Main.uiIsShow)
             {
-                UI.Load();
+                UI.Load(modEntry);
                 UI.key = settings.key;
                 Main.uiIsShow = true;
                 //Logger.Log("scan测试");
