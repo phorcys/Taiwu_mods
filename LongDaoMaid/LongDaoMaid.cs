@@ -58,6 +58,7 @@ namespace LongDaoMaid
             GUILayout.Label("<color=#FF6EB4>【龙岛女仆】</color>：龙岛只为你提供女性仆从.");
             GUILayout.Label("<color=#FF6EB4>【慧眼识珠】</color>：你总会挑到好看的仆从.");
             GUILayout.Label("<color=#FF6EB4>【品如衣服】</color>：女仆初始拥有一件下品服装.");
+            GUILayout.Label("<color=#FF6EB4>【略通六艺】</color>：女仆资质比常人略高一线.");
             //GUILayout.Label("<color=#FF6EB4>【】</color>：你不接受石芯玉女.");//想不到起什么名，不显示了！
             //后续待增加功能：暂无
 
@@ -75,7 +76,7 @@ namespace LongDaoMaid
 
             GUILayout.BeginHorizontal("Box");
             settings.sexOrientation = GUILayout.Toggle(settings.sexOrientation, "<color=#FF6EB4>【后宫展开】</color> ");
-            GUILayout.Label("效果：太吾为女时，女仆为同性恋；为男时，女仆为异性恋.");
+            GUILayout.Label("效果：太吾为女时，女仆为同性恋；为男时，女仆为异性恋.（10%几率双性恋）");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
@@ -106,9 +107,9 @@ namespace LongDaoMaid
 
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("<color=#FF6EB4>　 【再生父母】</color>：你为招募到的女仆　赐姓：", GUILayout.Width(280));
-            settings.getNewSurname = GUILayout.TextField(settings.getNewSurname, 10, GUILayout.Width(80));
+            settings.getNewSurname = GUILayout.TextField(settings.getNewSurname, 5, GUILayout.Width(80));
             GUILayout.Label("　赐名：", GUILayout.Width(60));
-            settings.getNewName = GUILayout.TextField(settings.getNewName, 10, GUILayout.Width(80));
+            settings.getNewName = GUILayout.TextField(settings.getNewName, 5, GUILayout.Width(80));
             GUILayout.Label("　　　（赐姓赐名皆可选填）");
             GUILayout.EndHorizontal();
         }
@@ -230,6 +231,7 @@ namespace LongDaoMaid
                 int sexo = Convert.ToInt32(DateFile.instance.GetActorDate(id, 14, false)) - 1;
                 npc[21] = Convert.ToString(sexo);
             }
+            if (Random.Range(1,10) == 1) npc[21] = "3";//10%几率出双性恋
 
             //4.年龄区间
             if (settings.maxAge > 0 && settings.minAge > 0)
@@ -248,7 +250,10 @@ namespace LongDaoMaid
 
             //6.再生父母
             if (settings.getNewSurname != "")
+            {
+                npc[29] = settings.getNewSurname;
                 npc[5] = settings.getNewSurname;
+            }
 
             if (settings.getNewName != "")
                 npc[0] = settings.getNewName;
@@ -262,7 +267,7 @@ namespace LongDaoMaid
             string rdBrow = Convert.ToString(Random.Range(30, 44));
             string rdMouse = Convert.ToString(Random.Range(30, 44));
 
-            npc[995] = "1" + "|" + rdNose + "|" + rdSign + "|" + rdEyes + "|" + rdBrow + "|" + rdMouse + "|" + "0" + "|" + rdHair;
+            npc[995] = "0" + "|" + rdNose + "|" + rdSign + "|" + rdEyes + "|" + rdBrow + "|" + rdMouse + "|" + "0" + "|" + rdHair;
             if (Random.Range(1, 4) != 1)
                 npc[996] = 
                     Convert.ToString(Random.Range(0, 4)) + "|" + 
@@ -306,15 +311,19 @@ namespace LongDaoMaid
 
             //略微强化资质
             if (int.Parse(npc[yiID]) <= 100)
-                npc[yiID] = Convert.ToString(Convert.ToInt32(npc[yiID]) + 5);
+                npc[yiID] = Convert.ToString(Convert.ToInt32(npc[yiID]) + 10);
             if (int.Parse(npc[wuID]) <= 100)
-                npc[wuID] = Convert.ToString(Convert.ToInt32(npc[wuID]) + 5);
+                npc[wuID] = Convert.ToString(Convert.ToInt32(npc[wuID]) + 10);
             if (int.Parse(npc[601]) <= 100)
-                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 10);
             if (int.Parse(npc[602]) <= 100)
-                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 10);
             if (int.Parse(npc[603]) <= 100)
-                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 5);
+                npc[601] = Convert.ToString(Convert.ToInt32(npc[601]) + 10);
+
+            int rdyiID = Random.Range(501, 516);
+            if (int.Parse(npc[rdyiID]) <= 100)
+                npc[rdyiID] = Convert.ToString(Convert.ToInt32(npc[rdyiID]) + 10);
 
             //给衣服
             //73601——73703 73801——73809
