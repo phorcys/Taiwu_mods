@@ -352,7 +352,7 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 判断建筑是否需要工作人员
+        /// 判断建筑是否需要工作人员（建筑本身需要工作人员，且不处于新建、拆除状态）
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -364,7 +364,7 @@ namespace Majordomo
             int baseBuildingId = building[0];
 
             var baseBuilding = DateFile.instance.basehomePlaceDate[baseBuildingId];
-            return int.Parse(baseBuilding[3]) == 1;
+            return int.Parse(baseBuilding[3]) == 1 && building[3] <= 0 && building[6] <= 0;
         }
     }
 }
