@@ -2,7 +2,8 @@
   "Id": "LongDaoMaid",
   "DisplayName": "龙岛女仆",
   "Author": "Futurer",
-  "Version": "1.0.2",
+  "Version": "1.0.3",
   "AssemblyName": "LongDaoMaid.dll",
-  "EntryMethod": "LongDaoMaid.Main.Load"
+  "EntryMethod": "LongDaoMaid.Main.Load",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=16466223"
 }

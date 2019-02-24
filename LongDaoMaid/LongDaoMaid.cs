@@ -76,7 +76,7 @@ namespace LongDaoMaid
 
             GUILayout.BeginHorizontal("Box");
             settings.sexOrientation = GUILayout.Toggle(settings.sexOrientation, "<color=#FF6EB4>【后宫展开】</color> ");
-            GUILayout.Label("效果：太吾为女时，女仆为同性恋；为男时，女仆为异性恋.（10%几率双性恋）");
+            GUILayout.Label("效果：太吾与女仆同性时，女仆为双性恋，否则为异性恋.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
@@ -225,13 +225,14 @@ namespace LongDaoMaid
             npc[13] = Convert.ToString(countTemp13);
             npc[12] = Convert.ToString(countTemp12);
 
-            //3.用（player性别-1）总能得到向着太吾的性取向
+            //3.改变取向
             if (settings.sexOrientation == true)
             {
-                int sexo = Convert.ToInt32(DateFile.instance.GetActorDate(id, 14, false)) - 1;
-                npc[21] = Convert.ToString(sexo);
+                if (DateFile.instance.GetActorDate(id, 14, false) == npc[14])
+                    npc[21] = "1";
+                else npc[21] = "0";
             }
-            if (Random.Range(1,10) == 1) npc[21] = "3";//10%几率出双性恋
+            //麻蛋！原来只要不是0（异性恋）就是双性恋！我还以为1是同2是双！原来这游戏没有同！！！
 
             //4.年龄区间
             if (settings.maxAge > 0 && settings.minAge > 0)
@@ -242,10 +243,8 @@ namespace LongDaoMaid
             //5.人口买卖
             if (settings.buyMaid && Convert.ToInt32(player[406]) >= 9998)
             {
-                    DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[14][11])][int.Parse(DateFile.instance.gangDate[14][3])][3] += 300;
-
-                    DateFile.instance.actorsDate[DateFile.instance.mianActorId][406] = 
-                    Convert.ToString(int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][406]) - 9998);
+                DateFile.instance.baseWorldDate[int.Parse(DateFile.instance.gangDate[14][11])][int.Parse(DateFile.instance.gangDate[14][3])][3] += 300;
+                UIDate.instance.ChangeResource(DateFile.instance.mianActorId, 5, -9998, true);
             }
 
             //6.再生父母
