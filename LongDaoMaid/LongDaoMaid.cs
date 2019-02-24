@@ -25,6 +25,8 @@ namespace LongDaoMaid
         public int nvZhuang = 0;
         public string getNewSurname = "";
         public string getNewName = "";
+        public bool ssr = true;
+        public int ssrBoom = 1;
     }
 
     public static class Main
@@ -82,6 +84,12 @@ namespace LongDaoMaid
             GUILayout.BeginHorizontal("Box");
             settings.buyMaid = GUILayout.Toggle(settings.buyMaid, "<color=#FF6EB4>【人口买卖】</color> ");
             GUILayout.Label("效果：获得女仆后，花费9998银钱赎回消耗的地区恩义.");
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal("Box");
+            settings.ssr = GUILayout.Toggle(settings.ssr, "<color=#FF6EB4>【ＳＳＲ！】</color> ");
+            int.TryParse(GUILayout.TextField(settings.ssrBoom.ToString(), 3, GUILayout.Width(30)), out settings.ssrBoom);
+            GUILayout.Label("%的爆率爆出剑冢相貌的女仆（无法生育）.");
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
@@ -171,7 +179,7 @@ namespace LongDaoMaid
                     flag = true;
                 }
 
-                if (npcFeature[i] == 1002)//石芯玉女
+                if (npcFeature[i] == 1002)//石芯玉女 1001为无根之人
                 {
                     npcFeature.Remove(i);
                 }
@@ -323,6 +331,15 @@ namespace LongDaoMaid
             int rdyiID = Random.Range(501, 516);
             if (int.Parse(npc[rdyiID]) <= 100)
                 npc[rdyiID] = Convert.ToString(Convert.ToInt32(npc[rdyiID]) + 10);
+
+            //SSR
+            if (settings.ssr && Random.Range(1, 100) < settings.ssrBoom)
+            {
+                npc[995] = Convert.ToString(Random.Range(2001, 2009));
+                DateFile.instance.AddActorFeature(id, 1002);
+            }
+
+            
 
             //给衣服
             //73601——73703 73801——73809
