@@ -179,9 +179,9 @@ namespace LongDaoMaid
                     flag = true;
                 }
 
-                if (npcFeature[i] == 1002)//石芯玉女 1001为无根之人
+                if (npcFeature[i] == 1002 | npcFeature[i] == 1001)//石芯玉女 无根之人
                 {
-                    npcFeature.Remove(i);
+                    DateFile.instance.RemoveActorFeature(id,i);
                 }
             }
             return flag;
@@ -333,10 +333,11 @@ namespace LongDaoMaid
                 npc[rdyiID] = Convert.ToString(Convert.ToInt32(npc[rdyiID]) + 10);
 
             //SSR
-            if (settings.ssr && Random.Range(1, 100) < settings.ssrBoom)
+            if (settings.ssr && Random.Range(1, 100) <= settings.ssrBoom)
             {
                 npc[995] = Convert.ToString(Random.Range(2001, 2009));
-                DateFile.instance.AddActorFeature(id, 1002);
+                if (npc[14] == "2") DateFile.instance.AddActorFeature(id, 1002);
+                else DateFile.instance.AddActorFeature(id, 1001);
             }
 
             
