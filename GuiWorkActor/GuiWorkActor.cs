@@ -71,7 +71,7 @@ namespace GuiWorkActor
             public static GameObject listActorsHolder;
             public static bool Prefix(int _skillTyp, bool favorChange = false)
             {
-                // Main.Logger.Log("获取行动者" + _skillTyp.ToString() + " " + favorChange.ToString());
+                //Main.Logger.Log("获取行动者" + _skillTyp.ToString() + " " + favorChange.ToString());
                 if (workActor == null)
                 {
                     listActorsHolder = HomeSystem.instance.listActorsHolder.gameObject;
@@ -94,6 +94,7 @@ namespace GuiWorkActor
                 }
 
                 List<int> data = new List<int>();
+
                 //这段循环设置数据，应该挪到SetItemCell
                 for (int i = 0; i < newActorList.Count; i++)
                 {
@@ -105,9 +106,41 @@ namespace GuiWorkActor
                         //gameObject.transform.SetParent(HomeSystem.instance.listActorsHolder, false);
                         //gameObject.GetComponent<Toggle>().group = HomeSystem.instance.listActorsHolder.GetComponent<ToggleGroup>();
                         //gameObject.GetComponent<SetWorkActorIcon>().SetActor(num2, _skillTyp, favorChange);
+
+                        //string des;
+                        //int key = num2;
+                        //des = DateFile.instance.GetActorName(key, false, false);
+                        //if (favorChange)
+                        //{
+                        //    des += " " + DateFile.instance.massageDate[303][1];
+                        //    des += ":" + DateFile.instance.moodTypDate[0][0];
+                        //}
+                        //else
+                        //{
+                        //    int num = int.Parse(DateFile.instance.GetActorDate(key, _skillTyp, true));
+                        //    int coloer = 20002 + Mathf.Clamp((num - 20) / 10, 0, 8);
+                        //    bool flag2 = _skillTyp < 501;
+                        //    if (flag2)
+                        //    {
+                        //        des += " " + DateFile.instance.actorAttrDate[_skillTyp + 1][0];
+                        //        des += ":" + ActorMenu.instance.Color7(num);
+                        //    }
+                        //    else
+                        //    {
+                        //        des += " " + DateFile.instance.baseSkillDate[_skillTyp - 501][0];
+                        //        des += ":" + DateFile.instance.SetColoer(coloer, DateFile.instance.massageDate[2002][0] + num, false);
+                        //    }
+                        //}
+                        //Logger.Log(des);
+
                         data.Add(num2);
                     }
                 }
+
+                //Main.Logger.Log("设置数据" + _skillTyp.ToString() + " " + favorChange.ToString());
+
+                workActor.skillTyp = _skillTyp;
+                workActor.favorChange = favorChange;
 
                 workActor.data = data.ToArray();
 

@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace GuiHand
+namespace GuiConsultModestly
 {
     public class Settings : UnityModManager.ModSettings
     {
@@ -66,10 +66,10 @@ namespace GuiHand
             {
                 get
                 {
-                    if (m_actorSkillBattleValue == null)
-                    {
+                    //if (m_actorSkillBattleValue == null)
+                    //{
                         m_actorSkillBattleValue = typeof(SkillBattleSystem).GetField("actorSkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //}
                     int[] value;
                     try
                     {
@@ -89,10 +89,10 @@ namespace GuiHand
             {
                 get
                 {
-                    if (m_enemySkillBattleValue == null)
-                    {
+                    //if (m_enemySkillBattleValue == null)
+                    //{
                         m_enemySkillBattleValue = typeof(SkillBattleSystem).GetField("enemySkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //}
                     int[] value;
                     try
                     {
@@ -113,10 +113,10 @@ namespace GuiHand
             {
                 get
                 {
-                    if (m_nowSkillIndex == null)
-                    {
+                    //if (m_nowSkillIndex == null)
+                    //{
                         m_nowSkillIndex = typeof(SkillBattleSystem).GetField("nowSkillIndex", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //}
                     int value;
                     try
                     {
@@ -136,10 +136,10 @@ namespace GuiHand
             {
                 get
                 {
-                    if (m_questionPower == null)
-                    {
+                    //if (m_questionPower == null)
+                    //{
                         m_questionPower = typeof(SkillBattleSystem).GetField("questionPower", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //}
                     int value;
                     try
                     {
@@ -159,10 +159,10 @@ namespace GuiHand
             {
                 get
                 {
-                    if (m_mianEnemyId == null)
-                    {
+                    //if (m_mianEnemyId == null)
+                    //{
                         m_mianEnemyId = typeof(SkillBattleSystem).GetField("mianEnemyId", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //}
                     int value;
                     try
                     {
@@ -182,6 +182,7 @@ namespace GuiHand
             {
                 if (!Main.enabled)
                     return;
+                _this = SkillBattleSystem.instance;
 
                 try
                 {
@@ -221,9 +222,10 @@ namespace GuiHand
                 selfName = "<color=#8E8E8EFF>" + DateFile.instance.GetActorName(_actorId, false, false)+"</color>";
                 opponentName = "<color=#8E8E8EFF>" + DateFile.instance.GetActorName(_mianEnemyId, false, false) + "</color>";
 
-                int _skillId = DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1]);
+                //int _skillId = DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1]);
+                int _skillId = int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1], System.Globalization.CultureInfo.InvariantCulture);
                 //string book_name = DateFile.instance.skillDate[_skillId][typ];// 书籍名
-                var data = DateFile.instance.skillDate[DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex + 1])];
+                var data = DateFile.instance.skillDate[int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex + 1], System.Globalization.CultureInfo.InvariantCulture)];
                 string book_name = "<color=#8E8E8EFF>《"+ data[0] + "》</color>" + data[1001];
 
 
@@ -488,7 +490,7 @@ namespace GuiHand
                     bool flag9 = num8 != 1 && num8 > -100;
                     if (flag9)
                     {
-                        int num9 = DateFile.instance.ParseInt(DateFile.instance.skillDate[skillId][2]);
+                        int num9 = int.Parse(DateFile.instance.skillDate[skillId][2], System.Globalization.CultureInfo.InvariantCulture);
                         bool flag10 = !DateFile.instance.actorSkills.ContainsKey(skillId);
                         if (flag10)
                         {
