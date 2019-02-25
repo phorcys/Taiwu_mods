@@ -1,107 +1,188 @@
-using Harmony12;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityModManagerNet;
-using System.Text.RegularExpressions;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
 
 namespace GuiMartialArts
 {
-    public class Settings : UnityModManager.ModSettings
+
+    public class MartialArtsData
     {
-        public override void Save(UnityModManager.ModEntry modEntry)
+
+        public MartialArtsData()
         {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
+
         }
 
 
+        /// <summary>
+        /// 功法熟练度
+        /// </summary>
+        private Dictionary<int, int> gongfaProficiency;
+        public Dictionary<int, int> GongfaProficiency
+        {
+            get
+            {
+                if (gongfaProficiency == null)
+                    gongfaProficiency = new Dictionary<int, int>();
+                return gongfaProficiency;
+            }
+            set
+            {
+                gongfaProficiency = value;
+            }
+        }
+
+        private List<int> battleEnemyIds;
+        public List<int> BattleEnemyIds
+        {
+            get
+            {
+                if (battleEnemyIds == null)
+                    battleEnemyIds = new List<int>();
+                return battleEnemyIds;
+            }
+            set
+            {
+                battleEnemyIds = value;
+            }
+        }
+        private Dictionary<int, int> battleGongfaWeitht;
+        public Dictionary<int, int> BattleGongfaWeitht
+        {
+            get
+            {
+                if (battleGongfaWeitht == null)
+                    battleGongfaWeitht = new Dictionary<int, int>();
+                return battleGongfaWeitht;
+            }
+            set
+            {
+                battleGongfaWeitht = value;
+            }
+        }
+
+
+        public void AddUseGongfa(bool isActor, int gongFaId)
+        {
+            if (isActor)
+            {
+                if (GongfaProficiency.ContainsKey(gongFaId))
+                    GongfaProficiency[gongFaId]++;
+                else
+                    GongfaProficiency.Add(gongFaId, 1);
+            }
+            else
+            {
+                if (BattleGongfaWeitht.ContainsKey(gongFaId))
+                    BattleGongfaWeitht[gongFaId] += 1;
+                else
+                    BattleGongfaWeitht.Add(gongFaId, 2);
+            }
+        }
+
+
+        string winTitle = "获得战斗领悟";
+        string winMessage = "你在战斗中偷窥到了对方的心法，是否静心参悟？";
+        public void SaveWindows()
+        {
+            Main.Logger.Log("弹出领悟功法窗口:");
+            YesOrNoWindow.instance.SetYesOrNoWindow(1992062500, winTitle, winMessage, true, true);
+            Button okbtn = YesOrNoWindow.instance.yesOrNoWindow.Find("YesButton").GetComponent<Button>();
+            okbtn.onClick.AddListener(SaveData);
+            Button nobtn = YesOrNoWindow.instance.yesOrNoWindow.Find("NoButton").GetComponent<Button>();
+            nobtn.onClick.AddListener(DiscardData);
+        }
+
+        private void SaveData()
+        {
+            int id = OnClick.instance.ID;
+            Main.Logger.Log("点击了确认按钮:" + id);
+            if (id == 1992062500)
+            {
+                Main.Logger.Log("保存数据");
+            }
+            RemoveBind();
+        }
+
+        private void DiscardData()
+        {
+            int id = OnClick.instance.ID;
+            Main.Logger.Log("点击了取消按钮:" + id);
+            if (id == 1992062500)
+            {
+                Main.Logger.Log("丢弃数据");
+            }
+            RemoveBind();
+        }
+
+        private void RemoveBind()
+        {
+            Button okbtn = YesOrNoWindow.instance.yesOrNoWindow.Find("YesButton").GetComponent<Button>();
+            okbtn.onClick.RemoveAllListeners();
+            Button nobtn = YesOrNoWindow.instance.yesOrNoWindow.Find("NoButton").GetComponent<Button>();
+            nobtn.onClick.RemoveAllListeners();
+        }
     }
-    public static class Main
+
+
+    public class Test : UnityEngine.MonoBehaviour
     {
-        public static bool OnChangeList;
-        public static bool showNpcInfo;
-
-        public static bool enabled;
-        public static Settings settings;
-        public static UnityModManager.ModEntry.ModLogger Logger;
-
-        public static bool Load(UnityModManager.ModEntry modEntry)
+        void Awake()
         {
-            #region 基础设置
-            settings = Settings.Load<Settings>(modEntry);
-            Logger = modEntry.Logger;
-            modEntry.OnToggle = OnToggle;
-            modEntry.OnGUI = OnGUI;
-            modEntry.OnSaveGUI = OnSaveGUI;
+            Main.Logger.Log("Awake" + this.ToString());
 
-            HarmonyInstance harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-            #endregion
+        }
+        void Start()
+        {
+            Main.Logger.Log("Start" + this.ToString());
 
-            return true;
         }
 
-        static string title = "鬼的战斗艺术";
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        void OnGUI()
         {
-            enabled = value;
-            return true;
-        }
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
-        {
-            settings.Save(modEntry);
-        }
-        static void OnGUI(UnityModManager.ModEntry modEntry)
-        {
-            GUILayout.Label(title, GUILayout.Width(300));
-        }
-
-
-        [HarmonyPatch(typeof(BattleSystem), "UseGongFaStart")]
-        public static class SetPlaceActor_ShowEventMassage_Patch
-        {
-            public static bool Prefix(bool isActor, int gongFaId)
+            if (UnityEngine.GUILayout.Button("xxxx"))
             {
-                if (!Main.enabled)
-                    return true;
-
-                Logger.Log("使用功法开始 isActor=" + isActor + " gongFaId=" + gongFaId);
-                return true;
+                //LogAllChild(YesOrNoWindow.instance.yesOrNoWindow, true);
+                Main.artsData.SaveWindows();
             }
         }
-
-        [HarmonyPatch(typeof(BattleSystem), "UseGongFa")]
-        public static class WorldMapSystem_RemoveActor_Patch1
+        public void LogAllChild(Transform tf, bool logSize = false, int idx = 0)
         {
-            public static bool Prefix(bool isActor, int gongFaId)
+            string s = "";
+            for (int i = 0; i < idx; i++)
             {
-                if (!Main.enabled)
-                    return true;
+                s += "-- ";
+            }
+            s += tf.name + " " + tf.gameObject.activeSelf;
+            if (logSize)
+            {
+                RectTransform rect = tf as RectTransform;
+                if (rect == null)
+                {
+                    s += " scale=" + tf.localScale.ToString();
+                }
+                else
+                {
+                    s += " sizeDelta=" + rect.sizeDelta.ToString();
+                }
+            }
+            Main.Logger.Log(s);
 
-                Logger.Log("使用功法 isActor=" + isActor + " gongFaId=" + gongFaId);
-                return true;
+            idx++;
+            for (int i = 0; i < tf.childCount; i++)
+            {
+                Transform child = tf.GetChild(i);
+                LogAllChild(child, logSize, idx);
             }
         }
-
-        [HarmonyPatch(typeof(BattleSystem), "BattleEnd")]
-        public static class WorldMapSystem_UpdatePlaceActor_Patch1
-        {
-            public static bool Prefix(bool actorWin, int actorRun = 0)
-            {
-                if (!Main.enabled)
-                    return true;
-
-
-
-                Logger.Log("战斗结束 actorWin=" + actorWin + " actorRun=" + actorRun);
-                return true;
-            }
-        }
-
     }
 }
+
+//[GuiMartialArts] YesOrNoWindow True sizeDelta=(720.0, 280.0)
+//[GuiMartialArts] -- YesOrNoTitle True sizeDelta=(280.0, 40.0)
+//[GuiMartialArts] -- -- YesOrNoTitleText True sizeDelta=(0.0, 0.0)
+//[GuiMartialArts] -- -- YesOrNoMassageText True sizeDelta=(580.0, 140.0)
+//[GuiMartialArts] -- NoButton True sizeDelta=(60.0, 60.0)
+//[GuiMartialArts] -- -- Image True sizeDelta=(0.0, 0.0)
+//[GuiMartialArts] -- YesButton True sizeDelta=(90.0, 90.0)
+//[GuiMartialArts] -- -- Image True sizeDelta=(0.0, 0.0)
