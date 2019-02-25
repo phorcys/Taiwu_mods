@@ -513,12 +513,11 @@ namespace Majordomo
             {
                 int buildingIndex = entry.Key;
                 int[] building = entry.Value;
+
+                if (!Original.BuildingNeedsWorker(this.partId, this.placeId, buildingIndex)) continue;
+                
                 int baseBuildingId = building[0];
-
                 var baseBuilding = DateFile.instance.basehomePlaceDate[baseBuildingId];
-                bool needWorker = int.Parse(baseBuilding[3]) == 1;
-                if (!needWorker) continue;
-
                 int requiredAttrId = int.Parse(baseBuilding[33]);
 
                 int[] requiredAttrValues = Original.GetRequiredAttributeValues(this.partId, this.placeId, buildingIndex);
