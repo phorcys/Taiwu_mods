@@ -198,8 +198,8 @@ namespace GuiMartialArts
 
         private int GongfaUpLevel(int gongFaId, int value)
         {
-            int actorId = DateFile.instance.MianActorID(); 
-            bool flag2 = !DateFile.instance.gongFaBookPages.ContainsKey(gongFaId);
+            int actorId = DateFile.instance.MianActorID();  // 角色id
+            bool flag2 = !DateFile.instance.gongFaBookPages.ContainsKey(gongFaId); // 是否学会了技能
             if (flag2)
             {
                 DateFile.instance.gongFaBookPages.Add(gongFaId, new int[10]);
@@ -217,12 +217,10 @@ namespace GuiMartialArts
             foreach (var pageIndex in pages)
             {
                 int num5 = DateFile.instance.gongFaBookPages[gongFaId][pageIndex];
-                Main.Logger.Log("num5 " + num5);
                 bool flag3 = num5 != 1 && num5 > -100;
-                Main.Logger.Log("flag3 " + flag3);
-                if (flag3)
+                Main.Logger.Log("flag3功法" + gongFaId + " 书页" + pageIndex + "还没读吗" + flag3);
+                if (flag3)// 
                 {
-
                     int num6 = int.Parse(DateFile.instance.gongFaDate[gongFaId][2]);
 
                     bool flag4 = !DateFile.instance.actorGongFas[actorId].ContainsKey(gongFaId);
@@ -243,52 +241,30 @@ namespace GuiMartialArts
 
     public class Test : UnityEngine.MonoBehaviour
     {
-        void Awake()
-        {
-            Main.Logger.Log("Awake" + this.ToString());
-
-        }
-        void Start()
-        {
-            Main.Logger.Log("Start" + this.ToString());
-
-        }
 
         void OnGUI()
         {
             if (UnityEngine.GUILayout.Button("xxxx"))
             {
-                //LogAllChild(YesOrNoWindow.instance.yesOrNoWindow, true);
-                Main.artsData.SaveWindows();
-            }
-        }
-        public void LogAllChild(Transform tf, bool logSize = false, int idx = 0)
-        {
-            string s = "";
-            for (int i = 0; i < idx; i++)
-            {
-                s += "-- ";
-            }
-            s += tf.name + " " + tf.gameObject.activeSelf;
-            if (logSize)
-            {
-                RectTransform rect = tf as RectTransform;
-                if (rect == null)
-                {
-                    s += " scale=" + tf.localScale.ToString();
-                }
-                else
-                {
-                    s += " sizeDelta=" + rect.sizeDelta.ToString();
-                }
-            }
-            Main.Logger.Log(s);
+                var gongfas = DateFile.instance.actorGongFas[DateFile.instance.MianActorID()];
 
-            idx++;
-            for (int i = 0; i < tf.childCount; i++)
-            {
-                Transform child = tf.GetChild(i);
-                LogAllChild(child, logSize, idx);
+
+                foreach (var item in gongfas)
+                {
+                    int gongFaId = item.Key; // 功法id
+                    string s = "";
+                    foreach (int v in item.Value) // [0]修习程度  [1]npc独有心法等级  [2]逆练页数？
+                    {
+                        s += " " + v.ToString();
+                    }
+                    Main.Logger.Log("玩家功法"+ gongFaId + s);
+
+                    var gongfasdata = DateFile.instance.gongFaDate[gongFaId];
+                    foreach (var data in gongfasdata)
+                    {
+                        Main.Logger.Log("功法数据"+data.Key + " " + data.Value);
+                    }
+                }
             }
         }
     }
@@ -302,3 +278,257 @@ namespace GuiMartialArts
 //[GuiMartialArts] -- -- Image True sizeDelta=(0.0, 0.0)
 //[GuiMartialArts] -- YesButton True sizeDelta=(90.0, 90.0)
 //[GuiMartialArts] -- -- Image True sizeDelta=(0.0, 0.0)
+
+
+//逆练
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 10701
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 True
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 1
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 True
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 10701
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 1
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 True
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 10701
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 1
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 True
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 10701
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 1
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 True
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 True
+
+
+//正练
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 True
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 False
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 0
+//[GuiMartialArts]
+//flag3 True
+//[GuiMartialArts] num6 1
+//[GuiMartialArts] num7 0
+//[GuiMartialArts]
+//flag4 False
+//[GuiMartialArts] flag5 False
+//[GuiMartialArts] flag6 False
+//[GuiMartialArts] flag7 True
+//[GuiMartialArts] num 10001
+//[GuiMartialArts] 功法idnum3 150001
+//[GuiMartialArts] 分数num4 60
+//[GuiMartialArts]
+//flag True
+//[GuiMartialArts] 读的是功法书
+//[GuiMartialArts] flag2 False
+//[GuiMartialArts] num5 1
+//[GuiMartialArts]
+//flag3 False
