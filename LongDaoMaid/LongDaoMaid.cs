@@ -27,10 +27,16 @@ namespace LongDaoMaid
         public string getNewName = "";
         public bool ssr = true;
         public int ssrBoom = 1;
+
+        public override void Save(UnityModManager.ModEntry modEntry)
+        {
+            Save(this, modEntry);
+        }
     }
 
     public static class Main
     {
+        public static UnityModManager.ModEntry.ModLogger Logger;
         public static Settings settings;
         public static bool enabled;
         public static int lastNPCid = -1; //最后生成且还未判断的NPC的id，-1表示无
@@ -44,6 +50,7 @@ namespace LongDaoMaid
 
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
 
             return true;
         }
@@ -55,16 +62,21 @@ namespace LongDaoMaid
             return true;
         }
 
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        {
+            settings.Save(modEntry);
+        }
+
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            GUILayout.BeginVertical("Box");
+
             GUILayout.Label("<color=#FF6EB4>【龙岛女仆】</color>：龙岛只为你提供女性仆从.");
             GUILayout.Label("<color=#FF6EB4>【慧眼识珠】</color>：你总会挑到好看的仆从.");
             GUILayout.Label("<color=#FF6EB4>【品如衣服】</color>：女仆初始拥有一件下品服装.");
             GUILayout.Label("<color=#FF6EB4>【略通六艺】</color>：女仆资质比常人略高一线.");
             //GUILayout.Label("<color=#FF6EB4>【】</color>：你不接受石芯玉女.");//想不到起什么名，不显示了！
             //后续待增加功能：暂无
-
-            GUILayout.BeginVertical("Box");
 
             GUILayout.BeginHorizontal("Box");
             settings.stanceChange = GUILayout.Toggle(settings.stanceChange, "<color=#FF6EB4>【革命战友】</color> ");
@@ -95,6 +107,7 @@ namespace LongDaoMaid
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("　 <color=#FF6EB4>【女装山脉】</color> ：你有时想要些不一样的<color=#FF6EB4>女仆</color>.");
             GUILayout.EndHorizontal();
+
             GUILayout.BeginHorizontal("Box");
             settings.nvZhuang = GUILayout.SelectionGrid(settings.nvZhuang, new string[]
             {
@@ -120,6 +133,8 @@ namespace LongDaoMaid
             settings.getNewName = GUILayout.TextField(settings.getNewName, 5, GUILayout.Width(80));
             GUILayout.Label("　　　（赐姓赐名皆可选填）");
             GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
         }
 
         /// <summary>
