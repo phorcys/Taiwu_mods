@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using UnityEngine.EventSystems;
 
 namespace GuiMartialArts
 {
@@ -59,9 +60,31 @@ namespace GuiMartialArts
             settings.Save(modEntry);
         }
 
+        //static int x = 280;
+        //static int y = 50;
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+            //int.TryParse(GUILayout.TextField(x.ToString()), out x);
+            //int.TryParse(GUILayout.TextField(y.ToString()), out y);
+            //if (GUILayout.Button("测试"))
+            //{
+            //    YesOrNoWindow.instance.SetYesOrNoWindow(-1, "鬼的测试窗口", "测试功法图标", false, true);
+
+            //    Transform okbtn = YesOrNoWindow.instance.yesOrNoWindow;
+
+
+            //    int gongFaId = 150002;
+            //    //GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.canChooseGongFa ? this.gongFa : this.gongFaNoToggle, Vector3.zero, Quaternion.identity);
+            //    GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.gongFa);
+            //    Transform transform = gameObject.transform;
+            //    gameObject.name = "GongFa," + gongFaId;
+            //    SetGongFaIcon component2 = gameObject.GetComponent<SetGongFaIcon>();
+            //    component2.SetGongFa(gongFaId, DateFile.instance.MianActorID());
+            //    component2.SetEquipIcon(true);
+            //    transform.SetParent(okbtn, false);
+            //    transform.localPosition = new Vector3(x, y, 0);
+            //}
         }
 
 
@@ -129,6 +152,61 @@ namespace GuiMartialArts
                 return;
             }
         }
+
+        //[HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
+        //public static class WindowManage_WindowSwitch_Patch1
+        //{
+        //    public static bool Prefix(bool on, GameObject tips = null)
+        //    {
+        //        if (tips != null)
+        //        {
+        //            String s = "name=" + tips.name + " tag=" + tips.tag;
+        //            if (tips.transform.parent != null)
+        //                s += " ppname=" + tips.transform.parent.name;
+        //            DropObject dropObject = tips.GetComponent<DropObject>();
+        //            if (dropObject != null)
+        //            {
+        //                int num = dropObject.dropObjectTyp;
+        //                s += " typ" + num;
+        //            }
+        //            Logger.Log(s);
+        //            if (tips.name == "GongFaIcon")
+        //                LogAllChild(tips.transform.root);
+        //        }
+
+        //        return true;
+        //    }
+        //}
+
+        //public static void LogAllChild(Transform tf, bool logSize = false, int idx = 0)
+        //{
+        //    string s = "";
+        //    for (int i = 0; i < idx; i++)
+        //    {
+        //        s += "-- ";
+        //    }
+        //    s += tf.name + " " + tf.gameObject.activeSelf;
+        //    if (logSize)
+        //    {
+        //        RectTransform rect = tf as RectTransform;
+        //        if (rect == null)
+        //        {
+        //            s += " scale=" + tf.localScale.ToString();
+        //        }
+        //        else
+        //        {
+        //            s += " sizeDelta=" + rect.sizeDelta.ToString();
+        //        }
+        //    }
+        //    Logger.Log(s);
+
+        //    idx++;
+        //    for (int i = 0; i < tf.childCount; i++)
+        //    {
+        //        Transform child = tf.GetChild(i);
+        //        LogAllChild(child, logSize, idx);
+        //    }
+        //}
 
 
         //[HarmonyPatch(typeof(ReadBook), "GetReadBooty")]

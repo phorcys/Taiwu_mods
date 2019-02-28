@@ -81,6 +81,8 @@ namespace GuiMartialArts
         /// <param name="gongFaId"></param>
         public void AddUseGongfa(bool isActor, int gongFaId)
         {
+            if (gongFaId / 10000 > 15)
+                return;
             if (isActor)
             {
                 if (GongfaProficiency.ContainsKey(gongFaId))
@@ -144,23 +146,36 @@ namespace GuiMartialArts
         int enemyUseGongfaTimes = 0;
         int actorUseGongfaTimes = 0;
         int msgRand = 0;
-
+        string canTitle = "此次战斗有机会习得功法：";
+        string zhenChuan = "真传";
+        string shouChao = "手抄";
         string winTitle = "鬼的战斗艺术";
         string[] failMes = new string[] {
-            "你在战斗中发动了太吾秘术【写轮眼】，但是由于太急功近利，并未得到什么。\n<color=#8E8E8EFF>【冷静相关】摇点{0}/{1}</color>" ,
+            "你在战斗中发动了太吾秘术【写轮眼】，在战斗中偷窥到对方使用的《{0}》{1}，但是由于太急功近利，并未得到什么。<color=#8E8E8EFF>\n【冷静相关】摇点{2}/{3}</color>" ,
         };
         string[] winMsg = new string[] {
-            "你在战斗中发动了太吾秘术【写轮眼】，在战斗中偷窥到对方使用的《{0}》{1}，是否静心参悟？" ,
+            "你在战斗中发动了太吾秘术【写轮眼】，在战斗中偷窥到对方使用的《{0}》{1}，获得了些许感悟，是否静心参悟？<color=#8E8E8EFF>\n【冷静相关】摇点{2}/{3}</color>" ,
             //"你发动了最新研究出来的写轮眼，你在战斗中观察对方运转{0}{1}，是否推演功法？",
+        };
+        string[] noMsg = new string[] {
+            "你在战斗中发动了太吾秘术【写轮眼】，但是没有发现任何可以学习借鉴的功法。\n<color=#8E8E8EFF>【对方没有可以被学习的功法】</color>",
+            //"经过一番推演，{0}研习进度增加了{1}页",
         };
         string[] endMsg = new string[] {
             "你参悟了其中奥妙，《{0}》研习进度增加了{1}页！\n<color=#8E8E8EFF>【福缘相关】</color>",
+            //"经过一番推演，{0}研习进度增加了{1}页",
+        };
+        string[] getMsg = new string[] {
+            "你在战斗中有所感悟，将参悟到的要领记了下" + "\n获得残页书籍\n<color=#8E8E8EFF></color>",
             //"经过一番推演，{0}研习进度增加了{1}页",
         };
 
         int getGongFaId = 0;
         int isNiLian = 0;
         int addGongFaLevel = 0;
+        int iconX = -400;
+        int iconY = 50;
+        GameObject icon;
 
         public void SaveWindows()
         {
@@ -174,9 +189,20 @@ namespace GuiMartialArts
                 okbtn.onClick.AddListener(ClickYes);
                 Button nobtn = YesOrNoWindow.instance.yesOrNoWindow.Find("NoButton").GetComponent<Button>();
                 nobtn.onClick.AddListener(ClickNo);
+
+                Transform parent = YesOrNoWindow.instance.yesOrNoWindow;
+                icon = UnityEngine.Object.Instantiate<GameObject>(ActorMenu.instance.gongFa);
+                Transform transform = icon.transform;
+                icon.name = "GongFa," + getGongFaId;
+                SetGongFaIcon component2 = icon.GetComponent<SetGongFaIcon>();
+                component2.SetGongFa(getGongFaId, DateFile.instance.MianActorID());
+                component2.SetEquipIcon(false);
+                transform.SetParent(parent, false);
+                transform.localPosition = new Vector3(iconX, iconY, 0);
+                icon.SetActive(true);
+
                 // Main.Logger.Log("弹出领悟功法窗口:" + msg);
-                YesOrNoWindow.instance.SetYesOrNoWindow(1992062500, winTitle, msg, true, true);
-            }
+                YesOrNoWindow.instance.SetYesOrNoWindow(1992062500, winTitle, msg, true, true);            }
             else
             {
                 YesOrNoWindow.instance.SetYesOrNoWindow(-1, winTitle, msg, false, true);
@@ -190,7 +216,7 @@ namespace GuiMartialArts
         private string GetMessage()
         {
             // 计算每个功法使用次数平均数
-            int enemyAverage = enemyUseGongfaTimes / (BattleGongfaWeitht.Count+1);
+            int enemyAverage = enemyUseGongfaTimes / (BattleGongfaWeitht.Count + 1);
             // Main.Logger.Log("计算每个功法使用次数平均数" + enemyAverage);
             // 此处加上装备的内功，身法，绝技
             foreach (int enemyId in BattleEnemyIds)
@@ -205,6 +231,8 @@ namespace GuiMartialArts
                     int p = (GongFaIds.Key != 1 && GongFaIds.Key != 2 && GongFaIds.Key != 3) ? 4 : 1;
                     foreach (var gongFaId in GongFaIds.Value)
                     {
+                        if (gongFaId / 10000 > 15)
+                            continue;
                         if (!enemyGongFas.ContainsKey(gongFaId))
                             continue;
 
@@ -243,6 +271,8 @@ namespace GuiMartialArts
             }
 
             List<int> GongfaIds = new List<int>();
+            string canGetGongFa = canTitle;
+            int canGetCount = 0;
             foreach (var item in BattleGongfaWeitht)
             {
                 // 此处可能应该排除掉已经大成的功法
@@ -256,9 +286,29 @@ namespace GuiMartialArts
                     {
                         GongfaIds.Add(item.Key);
                     }
+                    if((item.Value[0] > 0) || (item.Value[0] > 0))
+                    {
+                        if (canGetCount < 8)
+                        {
+                            if (canGetGongFa != canTitle)
+                                canGetGongFa += "、";
+                            canGetGongFa += "《" + DateFile.instance.gongFaDate[item.Key][0] + "》";
+                        }
+                        canGetCount++;
+                    }
                 }
             }
+            if (canGetCount > 8)
+            {
+                canGetGongFa += "等" + canGetCount + "门功法";
+            }
             msgRand = Random.Range(0, winMsg.Length);
+            if (GongfaIds.Count > 0 && canGetGongFa != canTitle)
+                canGetGongFa += "。";
+            else
+                canGetGongFa = noMsg[msgRand];
+
+
             int rand = 0;
             int gongFaPower = 1;
             // 随机得到的功法
@@ -268,19 +318,24 @@ namespace GuiMartialArts
                 isNiLian = Random.Range(0, BattleGongfaWeitht[getGongFaId][0] + BattleGongfaWeitht[getGongFaId][1]) < BattleGongfaWeitht[getGongFaId][1] ? 1 : 0; // 判断学习到的是正练还是逆练
                 var seven = ActorMenu.instance.GetActorResources(DateFile.instance.MianActorID())[5]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
                 var stage = int.Parse(DateFile.instance.gongFaDate[getGongFaId][2]);
-                rand = (Random.Range(stage * 3 + seven * 2 + 10, stage * 13));
-                gongFaPower = (stage * 9 + 1);
+                gongFaPower = stage * 10;
+                rand = (Random.Range(5, 105) + seven);
                 addGongFaLevel = rand / gongFaPower;
                 // Main.Logger.Log("计算获得功法等级" + rand + "/" + gongFaPower + "=" + addGongFaLevel);
                 if (addGongFaLevel > 0)
                 {
-                    return string.Format(winMsg[msgRand], DateFile.instance.gongFaDate[getGongFaId][0], (isNiLian == 1 ? "手抄" : "真传") + "功法");
+                    canGetGongFa = string.Format(winMsg[msgRand], DateFile.instance.gongFaDate[getGongFaId][0], (isNiLian == 1 ? shouChao : zhenChuan), rand, gongFaPower) + "\n" + canGetGongFa;
+                    return canGetGongFa;
+                }
+                else
+                {
+                    canGetGongFa = string.Format(failMes[msgRand], DateFile.instance.gongFaDate[getGongFaId][0], (isNiLian == 1 ? shouChao : zhenChuan), rand, gongFaPower) + "\n" + canGetGongFa;
                 }
             }
             getGongFaId = 0;
             isNiLian = 0;
             addGongFaLevel = 0;
-            return string.Format(failMes[msgRand], rand, gongFaPower);
+            return canGetGongFa;
         }
 
         private void ClickYes()
@@ -312,6 +367,11 @@ namespace GuiMartialArts
             okbtn.onClick.RemoveAllListeners();
             Button nobtn = YesOrNoWindow.instance.yesOrNoWindow.Find("NoButton").GetComponent<Button>();
             nobtn.onClick.RemoveAllListeners();
+            if (icon != null)
+            {
+                UnityEngine.Object.Destroy(icon);
+                icon = null;
+            }
         }
 
         private void ClearData()
@@ -330,6 +390,11 @@ namespace GuiMartialArts
             var newSeven = (int)((Random.Range(75, 125) / 100f) * seven);
             addGongFaLevel = 1 * Random.Range(10, 10 + newSeven) / 30 + 1;
             int newAddLevel = GongfaUpLevel(getGongFaId, addGongFaLevel, isNiLian);
+            if (newAddLevel == -100)
+            {
+                delayCalculation.msg = getMsg[msgRand];
+                return;
+            }
             delayCalculation.msg = string.Format(endMsg[msgRand], DateFile.instance.gongFaDate[getGongFaId][0], newAddLevel);
         }
 
@@ -348,6 +413,8 @@ namespace GuiMartialArts
             if (flag2)
             {
                 DateFile.instance.gongFaBookPages.Add(gongFaId, new int[10]);
+                AddGongFaBook();
+                return -100;
             }
             int[] pages = new int[value];
             int idx = 0;
@@ -382,6 +449,35 @@ namespace GuiMartialArts
                 }
             }
             return idx;
+        }
+        void AddGongFaBook()
+        {
+            int itemId = 0;
+            foreach (var item in DateFile.instance.presetitemDate)
+            {
+                if (item.Value.ContainsKey(32))
+                {
+                    if (int.Parse(item.Value[32]) == getGongFaId) // 32 是对应的功法   35是是否手抄
+                    {
+                        if(int.Parse(item.Value[35]) == isNiLian)
+                        {
+                            itemId = item.Key;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (itemId > 0)
+            {
+                int item = DateFile.instance.GetItem(DateFile.instance.MianActorID(), itemId, 1, true);
+                if (item > 0)
+                {
+                    DateFile.instance.itemsDate[item][33] = "0|0|0|0|0|0|0|0|0|0";
+                    DateFile.instance.itemsDate[item][901] = "3";
+                    DateFile.instance.itemsDate[item][902] = "3";
+                }
+            }
         }
     }
 
