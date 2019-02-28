@@ -1,7 +1,7 @@
 ﻿{
   "Id": "GuiConsultModestly",
   "DisplayName": "鬼的谦虚请教",
-  "Version": "1.2.0",
+  "Version": "2.0.0",
   "AssemblyName": "GuiConsultModestly.dll",
   "EntryMethod": "GuiConsultModestly.Main.Load"
 }
