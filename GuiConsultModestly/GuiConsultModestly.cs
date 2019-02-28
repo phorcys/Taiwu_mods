@@ -563,8 +563,8 @@ namespace GuiConsultModestly
                 if (item > 0)
                 {
                     DateFile.instance.itemsDate[item][33] = "0|0|0|0|0|0|0|0|0|0";
-                    DateFile.instance.itemsDate[item][901] = "1";
-                    DateFile.instance.itemsDate[item][902] = "1";
+                    DateFile.instance.itemsDate[item][901] = "3";
+                    DateFile.instance.itemsDate[item][902] = "3";
                 }
             }
         }
