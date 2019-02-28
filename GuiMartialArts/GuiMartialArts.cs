@@ -59,19 +59,9 @@ namespace GuiMartialArts
             settings.Save(modEntry);
         }
 
-        static Test test;
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
-
-            if (GUILayout.Button("xxx")||UnityEngine.Time.time > 10)
-            {
-                if (test == null)
-                {
-                    Main.Logger.Log("添加Test");
-                    test = YesOrNoWindow.instance.gameObject.AddComponent<Test>();
-                }
-            }
         }
 
 
@@ -83,7 +73,7 @@ namespace GuiMartialArts
                 if (!Main.enabled)
                     return;
 
-                Logger.Log("使用功法开始 isActor=" + isActor + " gongFaId=" + gongFaId);
+                // Logger.Log("使用功法开始 isActor=" + isActor + " gongFaId=" + gongFaId);
 
                 artsData.AddUseGongfa(isActor, gongFaId);
 
@@ -99,7 +89,7 @@ namespace GuiMartialArts
                 if (!Main.enabled)
                     return;
 
-                Logger.Log("使用功法 isActor=" + isActor + " gongFaId=" + gongFaId);
+                // Logger.Log("使用功法 isActor=" + isActor + " gongFaId=" + gongFaId);
 
                 artsData.AddUseGongfa(isActor, gongFaId);
 
@@ -115,7 +105,7 @@ namespace GuiMartialArts
                 if (!Main.enabled)
                     return;
 
-                Logger.Log("战斗结束 actorWin=" + actorWin + " actorRun=" + actorRun);
+                // Logger.Log("战斗结束 actorWin=" + actorWin + " actorRun=" + actorRun);
 
                 artsData.SaveWindows();
 
@@ -133,7 +123,7 @@ namespace GuiMartialArts
 
                 int _newEnemyId = DateFile.instance.enemyBattlerIdDate[index];
                 int _oldEnemyId = DateFile.instance.enemyBattlerIdDate[0];
-                Logger.Log("更换敌人 index=" + index + " _newEnemyId=" + _newEnemyId + " _oldEnemyId=" + _oldEnemyId);
+                // Logger.Log("更换敌人 index=" + index + " _newEnemyId=" + _newEnemyId + " _oldEnemyId=" + _oldEnemyId);
                 artsData.AddBattleEnemy(_newEnemyId, _oldEnemyId);
 
                 return;
@@ -160,7 +150,7 @@ namespace GuiMartialArts
 
 
         //        int num = DateFile.instance.MianActorID();
-        //        Logger.Log("num " + num);
+        //        // Logger.Log("num " + num);
         //        int num2 = 100;
         //        for (int i = 0; i < 3; i++)
         //        {
@@ -169,34 +159,34 @@ namespace GuiMartialArts
         //        }
 
         //        int num3 = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true)); // 功法id
-        //        Logger.Log("功法idnum3 " + num3);
+        //        // Logger.Log("功法idnum3 " + num3);
         //        int num4 = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 34, true)) * num2 / 100; // 分数
-        //        Logger.Log("分数num4 " + num4);
+        //        // Logger.Log("分数num4 " + num4);
         //        int[] bookPage = DateFile.instance.GetBookPage(HomeSystem.instance.readBookId);
         //        bool flag = HomeSystem.instance.studySkillTyp == 17;
-        //        Logger.Log("flag " + flag);
+        //        // Logger.Log("flag " + flag);
         //        if (flag) // 读的是功法书
         //        {
-        //            Logger.Log("读的是功法书");
+        //            // Logger.Log("读的是功法书");
         //            bool flag2 = !DateFile.instance.gongFaBookPages.ContainsKey(num3);
-        //            Logger.Log("flag2 " + flag2);
+        //            // Logger.Log("flag2 " + flag2);
         //            if (flag2)
         //            {
         //                DateFile.instance.gongFaBookPages.Add(num3, new int[10]);
         //            }
         //            int num5 = DateFile.instance.gongFaBookPages[num3][__readPageIndex];
-        //            Logger.Log("num5 " + num5);
+        //            // Logger.Log("num5 " + num5);
         //            bool flag3 = num5 != 1 && num5 > -100;
-        //            Logger.Log("flag3 " + flag3);
+        //            // Logger.Log("flag3 " + flag3);
         //            if (flag3)
         //            {
         //                int num6 = int.Parse(DateFile.instance.gongFaDate[num3][2]);
-        //                Logger.Log("num6 " + num6);
+        //                // Logger.Log("num6 " + num6);
         //                int num7 = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 35, true));
-        //                Logger.Log("num7 " + num7);
+        //                // Logger.Log("num7 " + num7);
         //                DateFile.instance.ChangeActorGongFa(num, num3, 0, 0, num7, true);
         //                bool flag4 = !DateFile.instance.actorGongFas[num].ContainsKey(num3);
-        //                Logger.Log("flag4 " + flag4);
+        //                // Logger.Log("flag4 " + flag4);
         //                if (flag4)
         //                {
         //                    __this.getSkillWindow.SetActive(true);
@@ -205,7 +195,7 @@ namespace GuiMartialArts
         //                    //TweenSettingsExtensions.SetEase<Tweener>(TweenSettingsExtensions.SetDelay<Tweener>(TweenSettingsExtensions.SetUpdate<Tweener>(ShortcutExtensions.DOScale(__this.getSkillNameText.GetComponent<RectTransform>(), new Vector3(1f, 1f, 1f), 0.4f), true), 0.1f), 27);
         //                }
         //                bool flag5 = num7 != 0;
-        //                Logger.Log("flag5 " + flag5);
+        //                // Logger.Log("flag5 " + flag5);
         //                if (flag5)
         //                {
         //                    ActorMenu.instance.ChangeMianQi(num, 50 * num6, 5);
@@ -227,13 +217,13 @@ namespace GuiMartialArts
         //                //TweenSettingsExtensions.SetEase<Tweener>(TweenSettingsExtensions.SetDelay<Tweener>(TweenSettingsExtensions.SetUpdate<Tweener>(ShortcutExtensions.DOScale(__this.getFlevelText.GetComponent<RectTransform>(), new Vector3(1f, 1f, 1f), 0.4f), true), 0.1f), 27);
         //                DateFile.instance.AddActorScore(303, num6 * 100);
         //                bool flag6 = DateFile.instance.GetGongFaLevel(num, num3, 0) >= 100 && DateFile.instance.GetGongFaFLevel(num, num3, false) >= 10;
-        //                Logger.Log("flag6 " + flag6);
+        //                // Logger.Log("flag6 " + flag6);
         //                if (flag6)
         //                {
         //                    DateFile.instance.AddActorScore(304, num6 * 100);
         //                }
         //                bool flag7 = bookPage[__readPageIndex] == 0;
-        //                Logger.Log("flag7 " + flag7);
+        //                // Logger.Log("flag7 " + flag7);
         //                if (flag7)
         //                {
         //                    DateFile.instance.AddActorScore(305, num6 * 100);
