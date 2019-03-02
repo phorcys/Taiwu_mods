@@ -1,0 +1,8 @@
+﻿{
+  "Id": "GuiltyNature",
+  "DisplayName": "人性本恶（相人不相虫&太吾亦可欺）",
+  "Author": "东风有意",
+  "Version": "1.0.5",
+  "AssemblyName": "GuiltyNature.dll",
+  "EntryMethod": "GuiltyNature.Main.Load"
+}
