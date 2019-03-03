@@ -30,7 +30,7 @@ namespace Majordomo
             string attrName = Output.GetRequiredAttrName(info.requiredAttrId);
 
             string logText = string.Format("{0}£º{1} ({2})¡¡{3} [{4}, {5}]¡¡-¡¡",
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(info.priority.ToString().PadLeft(4))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(info.priority.ToString("F0").PadLeft(4))),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(buildingName.PadRight(5))),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(buildingLevel.ToString().PadLeft(2))),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_RICE_WHITE, Common.ToFullWidth(attrName.PadRight(2))),
@@ -70,7 +70,7 @@ namespace Majordomo
 
 
         public static void LogAuxiliaryBedroomAndWorker(int bedroomIndex, List<BuildingWorkInfo> relatedBuildings,
-            int priority, int selectedWorkerId,
+            float priority, int selectedWorkerId,
             int partId, int placeId, TaiwuDate currDate, Dictionary<int, Dictionary<int, int>> workerAttrs)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][bedroomIndex];
@@ -88,7 +88,7 @@ namespace Majordomo
             }
 
             string logText = string.Format("{0}£º{1} ({2})¡¡[{3}]¡¡-¡¡",
-                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(priority.ToString().PadLeft(4))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(priority.ToString("F0").PadLeft(4))),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(buildingName.PadRight(5))),
                 TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(buildingLevel.ToString().PadLeft(2))),
                 string.Join(", ", attrNames.ToArray()));

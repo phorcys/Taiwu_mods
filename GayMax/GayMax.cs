@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -18,7 +18,7 @@ namespace GayMax
     {
         //真基友传说
         public bool PriceOFSalt = false;
-        public bool TheRedString = false;
+        //public bool TheRedString = false;
         //基友传说
         public bool Togayther = false;
         public bool SuperGay = false;
@@ -371,7 +371,7 @@ namespace GayMax
             MassageWindow.instance.SetEventWindow(ThanxGift, false);
         }
 
-        /*public static void Science()
+        public static void ReScience()
         {
             List<int> list0 = new List<int>();
             foreach (int id in DateFile.instance.actorsDate.Keys)
@@ -386,7 +386,7 @@ namespace GayMax
 
             }
             return;
-        }*/
+        }
 
 
     }
@@ -394,31 +394,10 @@ namespace GayMax
 
     //301莫逆之交 302兄弟姐妹 303亲生父母 304义父义母 305授业恩师 306两情相悦
     //307恩深意重 308义结金兰 309配偶 310子嗣 312倾心爱慕 少311，推测为嫡系传人
-    //为了接轨[Test],为了防止茄子再乱改，直接读数据得了（好累啊不想）
+   
     public static class LifeLine
     {
-        public static List<int> GetGangActor(int gangId, int level, bool getOther = false)
-        {
-            int key = Mathf.Abs(level);
-            int key2 = int.Parse(DateFile.instance.GetGangDate(gangId, 3));
-            int key3 = int.Parse(DateFile.instance.GetGangDate(gangId, 4));
-            List<int> list = new List<int>();
-            if (DateFile.instance.gangGroupDate.ContainsKey(key2) && DateFile.instance.gangGroupDate[key2].ContainsKey(key3) && DateFile.instance.gangGroupDate[key2][key3].ContainsKey(key))
-            {
-                List<int> list2 = DateFile.instance.gangGroupDate[key2][key3][key];
-                for (int i = 0; i < list2.Count; i++)
-                {
-                    int id = list2[i];
-                    if (int.Parse(DateFile.instance.GetActorDate(id, 26, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(id, 6, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(id, 27, false)) != 1 && (getOther || int.Parse(DateFile.instance.GetActorDate(id, 20, false)) > 0))
-                    {
-                        list.Add(list2[i]);
-                    }
-                }
-            }
-            return list;
-        }
-
-        public static List<int> GetActorSocial(int actorId, int socialTyp, bool getDieActor = false, bool getNPC = false)
+         public static List<int> GetActorSocial(int actorId, int socialTyp, bool getDieActor = false, bool getNPC = false)
         {
             List<int> list = new List<int>();
             List<int> list2 = new List<int>(DateFile.instance.GetLifeDateList(actorId, socialTyp, false));
@@ -522,7 +501,7 @@ namespace GayMax
             para4.AddRange(para2);
             if (para1.Count > 0 && para2.Count > 0)
             {
-                foreach (int id in para1) if (para2.Contains(id)) { return true; break; }
+                foreach (int id in para1) if (para2.Contains(id)) { return true; }
 
             }
             if (para3.Contains(motherId)) return true;
@@ -738,7 +717,7 @@ namespace GayMax
         }
 
 
-        //下半身都没有就别生了啊！！！！！！！！
+       
         //{time0, father1, mother2,1,1}
         public static bool FightingGold(int taiwu, int jiyou)
         {
@@ -863,7 +842,7 @@ namespace GayMax
             }
             if (head2.Count == 0 && point > 0)
             {
-                head2.Add(UnityEngine.Random.RandomRange(2001, 2013));
+                head2.Add(UnityEngine.Random.Range(2001, 2013));
                 point--;
             }
             if (point > 0)
@@ -976,7 +955,7 @@ namespace GayMax
                         int num6 = int.Parse(DateFile.instance.presetGangGroupDateValue[gangValueId][803]);
                         if (num6 > 0)
                         {
-                            int count =LifeLine.GetGangActor(num5, num6).Count;
+                            int count =DateFile.instance.GetGangActor(num5, num6,false).Count;
                             int num7 = int.Parse(DateFile.instance.presetGangGroupDateValue[gangValueId][1]);
                             if (count >= num7 * 2)
                             {
@@ -1153,7 +1132,7 @@ namespace GayMax
             List<int> spouse = new List<int>();
             List<int> baseActorslist = (List<int>)Interfunctional.baseActors.GetValue(__instance);
             //调用私有变量真累，虽然其实我不知道这是个啥
-            Interfunctional.baseActors.SetValue(__instance, baseActorslist);
+           // Interfunctional.baseActors.SetValue(__instance, baseActorslist);
 
             spouse0.AddRange(LifeLine.GetActorSocial(actorId, Memo.Wife, false, false));
             greenhat.AddRange(LifeLine.LessLover(actorId, false));
@@ -1377,7 +1356,7 @@ namespace GayMax
 
                 }
                 //“在命运交错的洪流中，你是我唯一的眷恋。”
-                if (Main.settings.TheRedString && istaiwucp && !DateFile.instance.HaveLifeDate(actorId, 306) && !DateFile.instance.HaveLifeDate(loverId, 306) && !DateFile.instance.HaveLifeDate(actorId, 309) && !DateFile.instance.HaveLifeDate(loverId, 309))
+                if (istaiwucp && !DateFile.instance.HaveLifeDate(actorId, 306) && !DateFile.instance.HaveLifeDate(loverId, 306) && !DateFile.instance.HaveLifeDate(actorId, 309) && !DateFile.instance.HaveLifeDate(loverId, 309))
                 {
                     loverate += StarFall.TheLoverOverHavean(actorId, loverId, true) * 20;
                 }
@@ -1396,79 +1375,16 @@ namespace GayMax
         private static bool Prefix()
         {
             if (!Main.enabled || !Main.settings.PriceOFSalt) return true;
+            int casenum = MassageWindow.instance.eventValue[1];
+            if (casenum != 6) return true;
             int jiyou = MassageWindow.instance.mianEventDate[1];
             int taiwu = DateFile.instance.MianActorID();
             int actorGoodness = DateFile.instance.GetActorGoodness(jiyou);
-            int actorGoodness2 = DateFile.instance.GetActorGoodness(taiwu);
-            int loveup = 100 + Mathf.Max(int.Parse(DateFile.instance.GetActorDate(taiwu, 15, true)) / 9 + DateFile.instance.GetActorFame(taiwu), 0);
-            switch (MassageWindow.instance.eventValue[1])
-            {
-                case 1://这里是闲聊
-                    //if (LifeLine.GetActorSocial(taiwu, Memo.Wife, false, false).Contains(jiyou))
-                    //{
-                   //     EndEventChangeMassageWindow(801200000);
-                   // }
-                    if (actorGoodness == actorGoodness2)
-                    {
-                        DateFile.instance.SetTalkFavor(jiyou, 0, loveup * 4);
-                        EndEventChangeMassageWindow(9101);
-                    }
-                    else if (((actorGoodness == 1 || actorGoodness == 2) && (actorGoodness2 == 3 || actorGoodness2 == 4)) || ((actorGoodness2 == 1 || actorGoodness2 == 2) && (actorGoodness == 3 || actorGoodness == 4)))
-                    {
-                        DateFile.instance.SetTalkFavor(jiyou, 0, -1000);
-                        EndEventChangeMassageWindow(9102);
-                    }
-                    else
-                    {
-                        DateFile.instance.SetTalkFavor(jiyou, 0, loveup * 2);
-                        EndEventChangeMassageWindow(9103);
-                    }
-                    DateFile.instance.ChangeActorLifeFace(jiyou, 0, 1);
-                    break;
-                case 3://侮辱
-                    {
-                        DateFile.instance.actorLife[jiyou].Remove(708);
-                        int lovep = DateFile.instance.GetActorFavor(false, taiwu, jiyou, false, false);
-                        if (lovep <= 0)
-                        {
-                            if (!LifeLine.GetActorSocial(jiyou, 401, false, false).Contains(taiwu))
-                            {
-                                DateFile.instance.AddSocial(jiyou, taiwu, 401);
-                                PeopleLifeAI.instance.AISetMassage(38, jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], taiwu, true);
-                            }
-                            else if (!LifeLine.GetActorSocial(jiyou, 402, false, false).Contains(taiwu))
-                            {
-                                DateFile.instance.AddSocial(jiyou, taiwu, 402);
-                                PeopleLifeAI.instance.AISetMassage(39, jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], taiwu, true);
-                            }
-                        }
-                        DateFile.instance.SetActorMood(jiyou, -(lovep / 2000), 100, false);
-                        DateFile.instance.ChangeFavor(jiyou, -6000, true, true);
-                        break;
-                    }
-                case 4://交友
-                    DateFile.instance.AddSocial(taiwu, jiyou, 301);
-                    DateFile.instance.SetActorMood(jiyou, 5, 100, false);
-                    DateFile.instance.SetActorMood(taiwu, 5, 100, false);
-                    DateFile.instance.SetActorFameList(taiwu, 1, 1, jiyou);
-                    DateFile.instance.SetActorFameList(jiyou, 1, 1, taiwu);
-                    PeopleLifeAI.instance.AISetMassage(45, jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], taiwu, true);
-                    DateFile.instance.ChangeActorLifeFace(jiyou, 0, 2);
-                    EndEventChangeMassageWindow(9191 + actorGoodness);
-                    break;
-                case 5://结义
-                    DateFile.instance.AddSocial(taiwu, jiyou, 308);
-                    DateFile.instance.AddActorScore(5, 100);
-                    DateFile.instance.SetActorMood(jiyou, 25, 100, false);
-                    DateFile.instance.SetActorMood(taiwu, 25, 100, false);
-                    DateFile.instance.SetActorFameList(taiwu, 3, 1, jiyou);
-                    DateFile.instance.SetActorFameList(jiyou, 3, 1, taiwu);
-                    PeopleLifeAI.instance.AISetMassage(52, jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], taiwu, true);
-                    DateFile.instance.ChangeActorLifeFace(jiyou, 0, 5);
-                    EndEventChangeMassageWindow(9196 + actorGoodness);
-                    break;
-                case 6://求爱
-                    {
+            
+           
+           
+                
+                   
                         var sex1 = DateFile.instance.GetActorDate(taiwu, 14, false);
                         var sex2 = DateFile.instance.GetActorDate(jiyou, 14, false);
                         int lovetest = int.Parse(DateFile.instance.GetActorDate(jiyou, 15, true)) + (10 - Mathf.Abs(int.Parse(DateFile.instance.GetActorDate(jiyou, 20, false)))) * 200;
@@ -1478,99 +1394,49 @@ namespace GayMax
                         if ((pasta != "0" && pasta != Memo.Homo) || (!gaygay && pasta == "0") || (gaygay && pasta == Memo.Homo))
                             loverate = 200;
 
-                        if (loverate > 0)
-                        {
-                            loverate += ((sex1 != "2") ? 0 : 300);//妹子加成
-                            if (!Main.settings.FFF) loverate += ((sex1 != sex2) ? 0 : 300);//异端加成（好气，审判你）
-                            if (gaygay && pasta == Memo.Homo) loverate += 400;//我真盖纯姬也要有加成，还要加的比楼上多哼
-                            loverate += int.Parse(DateFile.instance.GetActorDate(taiwu, 15, true));//天人加成
-                            loverate += DateFile.instance.GetActorFame(taiwu);//妖魔鬼怪加成（雾
-                            loverate += (10 - Mathf.Abs(int.Parse(DateFile.instance.GetActorDate(taiwu, 11, false)) - int.Parse(DateFile.instance.GetActorDate(jiyou, 11, false)))) * 20;//同龄加成
-                            loverate += DateFile.instance.GetActorFavor(false, taiwu, jiyou, false, false) / 40;//好感加成
-                            //又到了喜闻乐见的绿帽判定环节
-                            int faith1 = int.Parse(DateFile.instance.GetActorDate(taiwu, 209, true)) / 10 + 300;
-                            int faith2 = int.Parse(DateFile.instance.GetActorDate(jiyou, 209, true)) / 10 + 300;
-                            if (DateFile.instance.HaveLifeDate(jiyou, 312))
-                            {
-                                loverate -= ((!LifeLine.GetActorSocial(jiyou, 312, false, false).Contains(taiwu)) ? faith2 : -300);
-                            }
-                            loverate -= ((!DateFile.instance.HaveLifeDate(taiwu, 306)) ? 0 : faith1);
-                            loverate -= ((!DateFile.instance.HaveLifeDate(jiyou, 306)) ? 0 : faith2);
-                            loverate -= ((!DateFile.instance.HaveLifeDate(taiwu, 309)) ? 0 : faith1);
-                            loverate -= ((!DateFile.instance.HaveLifeDate(jiyou, 309)) ? 0 : faith2);
-                            loverate -= ((int.Parse(DateFile.instance.GetActorDate(taiwu, 2, false)) == 0) ? 0 : 600);
-                            loverate -= ((int.Parse(DateFile.instance.GetActorDate(jiyou, 2, false)) == 0) ? 0 : 600);
-                            loverate -= ((int.Parse(DateFile.instance.GetActorDate(taiwu, 24, true)) != 0) ? 0 : 300);
-                            loverate -= ((int.Parse(DateFile.instance.GetActorDate(jiyou, 24, true)) != 0) ? 0 : 300);
-                        }
-                        if (Main.settings.TheRedString && !DateFile.instance.HaveLifeDate(jiyou, 306) && !DateFile.instance.HaveLifeDate(jiyou, 306) && !DateFile.instance.HaveLifeDate(jiyou, 309) && !DateFile.instance.HaveLifeDate(jiyou, 309))
-                        {
-                            loverate += StarFall.TheLoverOverHavean(taiwu, jiyou, true) * 200;
-                        }
-
-                        if (loverate >= lovetest)
-                        {
-                            SetLoveSocial(taiwu, jiyou, 9201 + actorGoodness);
-                            DateFile.instance.ChangeActorLifeFace(jiyou, 0, 2);
-                        }
-                        else
-                        {
-                            DateFile.instance.AddSocial(taiwu, jiyou, 312);
-                            DateFile.instance.SetActorMood(taiwu, -10, 100, false);
-                            EndEventChangeMassageWindow(9206 + actorGoodness);
-                        }
-                        break;
-                    }
-                case 7://结婚
-                    SetSpouseSocial(taiwu, jiyou, 9211 + actorGoodness);
-                    DateFile.instance.ChangeActorLifeFace(jiyou, 0, 5);
-                    break;
-                case 8://干爹（好像
-                    {
-                        int sex = int.Parse(DateFile.instance.GetActorDate(taiwu, 14, false));
-                        int fatherId = (sex != 1) ? -1 : taiwu;
-                        int motherId = (sex != 2) ? -1 : taiwu;
-                        DateFile.instance.AddActorChildrenSocial(fatherId, motherId, jiyou, 304);
-                        DateFile.instance.SetActorMood(taiwu, 10, 100, false);
-                        DateFile.instance.SetActorMood(jiyou, 10, 100, false);
-                        DateFile.instance.SetActorFameList(taiwu, 7, 1, jiyou);
-                        DateFile.instance.SetActorFameList(jiyou, 9, 1, taiwu);
-                        PeopleLifeAI.instance.AISetMassage(42 + int.Parse(DateFile.instance.GetActorDate(jiyou, 14, false)), taiwu, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[]
-                        {
-                jiyou
-                        }, -1, true);
-                        PeopleLifeAI.instance.AISetMassage(78 + sex, jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[]
-                        {
-                taiwu
-                        }, -1, true);
-                        DateFile.instance.AddActorScore(6, 100);
-                        DateFile.instance.ChangeActorLifeFace(jiyou, 0, 5);
-                        break;
-                    }
-                case 9://干妈（大概
-                    {
-                        int sex = int.Parse(DateFile.instance.GetActorDate(jiyou, 14, false));
-                        int fatherId2 = (sex != 1) ? -1 : jiyou;
-                        int motherId2 = (sex != 2) ? -1 : jiyou;
-                        DateFile.instance.AddActorChildrenSocial(fatherId2, motherId2, taiwu, 304);
-                        DateFile.instance.SetActorMood(taiwu, 10, 100, false);
-                        DateFile.instance.SetActorMood(jiyou, 10, 100, false);
-                        DateFile.instance.SetActorFameList(taiwu, 9, 1, jiyou);
-                        DateFile.instance.SetActorFameList(jiyou, 7, 1, taiwu);
-                        PeopleLifeAI.instance.AISetMassage(42 + int.Parse(DateFile.instance.GetActorDate(taiwu, 14, false)), jiyou, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[]
-                        {
-                taiwu
-                        }, -1, true);
-                        PeopleLifeAI.instance.AISetMassage(78 + sex, taiwu, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[]
-                        {
-                jiyou
-                        }, -1, true);
-                        DateFile.instance.AddActorScore(7, 100);
-                        DateFile.instance.ChangeActorLifeFace(jiyou, 0, 5);
-                        break;
-                    }
+            if (loverate > 0)
+            {
+                loverate += ((sex1 != "2") ? 0 : 300);//妹子加成
+                if (!Main.settings.FFF) loverate += ((sex1 != sex2) ? 0 : 300);//异端加成（好气，审判你）
+                if (gaygay && pasta == Memo.Homo) loverate += 400;//我真盖纯姬也要有加成，还要加的比楼上多哼
+                loverate += int.Parse(DateFile.instance.GetActorDate(taiwu, 15, true));//天人加成
+                loverate += DateFile.instance.GetActorFame(taiwu);//妖魔鬼怪加成（雾
+                loverate += (10 - Mathf.Abs(int.Parse(DateFile.instance.GetActorDate(taiwu, 11, false)) - int.Parse(DateFile.instance.GetActorDate(jiyou, 11, false)))) * 20;//同龄加成
+                loverate += DateFile.instance.GetActorFavor(false, taiwu, jiyou, false, false) / 40;//好感加成
+                                                                                                    //又到了喜闻乐见的绿帽判定环节
+                int faith1 = int.Parse(DateFile.instance.GetActorDate(taiwu, 209, true)) / 10 + 300;
+                int faith2 = int.Parse(DateFile.instance.GetActorDate(jiyou, 209, true)) / 10 + 300;
+                if (DateFile.instance.HaveLifeDate(jiyou, 312))
+                {
+                    loverate -= ((!LifeLine.GetActorSocial(jiyou, 312, false, false).Contains(taiwu)) ? faith2 : -300);
+                }
+                loverate -= ((!DateFile.instance.HaveLifeDate(taiwu, 306)) ? 0 : faith1);
+                loverate -= ((!DateFile.instance.HaveLifeDate(jiyou, 306)) ? 0 : faith2);
+                loverate -= ((!DateFile.instance.HaveLifeDate(taiwu, 309)) ? 0 : faith1);
+                loverate -= ((!DateFile.instance.HaveLifeDate(jiyou, 309)) ? 0 : faith2);
+                loverate -= ((int.Parse(DateFile.instance.GetActorDate(taiwu, 2, false)) == 0) ? 0 : 600);
+                loverate -= ((int.Parse(DateFile.instance.GetActorDate(jiyou, 2, false)) == 0) ? 0 : 600);
+                loverate -= ((int.Parse(DateFile.instance.GetActorDate(taiwu, 24, true)) != 0) ? 0 : 300);
+                loverate -= ((int.Parse(DateFile.instance.GetActorDate(jiyou, 24, true)) != 0) ? 0 : 300);
             }
-            if (UIMove.instance.movePlaceActorIn)
+            if (!DateFile.instance.HaveLifeDate(jiyou, 306) && !DateFile.instance.HaveLifeDate(jiyou, 306) && !DateFile.instance.HaveLifeDate(jiyou, 309) && !DateFile.instance.HaveLifeDate(jiyou, 309))
+            {
+                loverate += StarFall.TheLoverOverHavean(taiwu, jiyou, true) * 200;
+            }
+
+            if (loverate >= lovetest)
+            {
+                MethodInfo SetLoveSocial = typeof(MassageWindow).GetMethod("SetLoveSocial", BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic);
+                SetLoveSocial.Invoke(MassageWindow.instance, new System.Object[] { taiwu,jiyou, 9201 + actorGoodness });
+               DateFile.instance.ChangeActorLifeFace(jiyou, 0, 2);
+            }
+            else
+            {
+                DateFile.instance.AddSocial(taiwu, jiyou, 312);
+                DateFile.instance.SetActorMood(taiwu, -10, 100, false);
+                EndEventChangeMassageWindow(9206 + actorGoodness);
+            }
+           if (UIMove.instance.movePlaceActorIn)
             {
                 WorldMapSystem.instance.UpdatePlaceActor(WorldMapSystem.instance.choosePartId, WorldMapSystem.instance.choosePlaceId);
             }
@@ -1583,170 +1449,6 @@ namespace GayMax
             MassageWindow.instance.eventValue = new List<int>();
         }
 
-        private static void SetLoveSocial(int actorId1, int actorId2, int changeEventId)
-        {
-
-            DateFile.instance.AddSocial(actorId1, actorId2, 306);
-            if (DateFile.instance.GetLifeDate(actorId1, 705, 0) == actorId2)
-            {
-                DateFile.instance.SetMoveToActor(actorId1, -1, 705);
-            }
-            if (DateFile.instance.GetLifeDate(actorId2, 705, 0) == actorId1)
-            {
-                DateFile.instance.SetMoveToActor(actorId2, -1, 705);
-            }
-            DateFile.instance.SetActorMood(actorId2, 25, 100, false);
-            DateFile.instance.SetActorMood(actorId1, 25, 100, false);
-            DateFile.instance.SetActorFameList(actorId1, 5, 1, actorId2);
-            DateFile.instance.SetActorFameList(actorId2, 5, 1, actorId1);
-            PeopleLifeAI.instance.AISetMassage(51, actorId2, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], actorId1, true);
-            if (int.Parse(DateFile.instance.GetActorDate(actorId2, 2, false)) != 0 || int.Parse(DateFile.instance.GetActorDate(actorId1, 2, false)) != 0)//出家警告
-            {
-                DateFile.instance.SetActorFameList(actorId1, 401, 1, 0);
-                DateFile.instance.SetActorFameList(actorId2, 401, 1, 0);
-            }
-            if (DateFile.instance.GetActorDate(actorId2, 14, false) == DateFile.instance.GetActorDate(actorId1, 14, false))//基佬警告
-            {
-                DateFile.instance.SetActorFameList(actorId1, 401, 1, 0);
-                DateFile.instance.SetActorFameList(actorId2, 401, 1, 0);
-            }
-          
-            int don = FamilyDon(actorId1, actorId2);
-            if (don != 0)
-            {
-                DateFile.instance.SetActorFameList(actorId1, 401, don, 0);
-                DateFile.instance.SetActorFameList(actorId2, 401, don, 0);
-            }
-
-            if (actorId1 == DateFile.instance.MianActorID())
-            {
-                DateFile.instance.AddActorScore(2, 100);
-            }
-            if (changeEventId != 0)
-            {
-                EndEventChangeMassageWindow(changeEventId);
-            }
-        }
-        private static int FamilyDon(int taiwu, int jiyou)
-        {
-            List<int> list1 = new List<int>();
-            List<int> list2 = new List<int>();
-            int don = 0;
-            foreach (int type in Memo.FamilyType)
-            {
-                list1.AddRange(LifeLine.GetActorSocial(taiwu, type, false, false));
-                list2.AddRange(LifeLine.GetActorSocial(jiyou, type, false, false));
-            }
-            foreach (int id in list1)
-            {
-                if (id == jiyou) don++;
-            }
-            foreach (int id in list2)
-            {
-                if (id == taiwu) don++;
-            }
-            return don / 2;
-        }
-        private static void SetSpouseSocial(int actorId1, int actorId2, int changeEventId)
-        {
-            int taiwu = DateFile.instance.MianActorID();
-            bool istaiwucp = (actorId1 == taiwu || actorId2 == taiwu);
-            if (DateFile.instance.GetLifeDate(actorId1, 705, 0) == actorId2)
-            {
-                DateFile.instance.SetMoveToActor(actorId1, -1, 705);
-            }
-            if (DateFile.instance.GetLifeDate(actorId2, 705, 0) == actorId1)
-            {
-                DateFile.instance.SetMoveToActor(actorId2, -1, 705);
-            }
-            DateFile.instance.AddSocial(actorId1, actorId2, 309);
-            DateFile.instance.SetActorMood(actorId2, 50, 100, false);
-            DateFile.instance.SetActorMood(actorId1, 50, 100, false);
-            DateFile.instance.SetActorFameList(actorId1, 5, 5, actorId2);
-            DateFile.instance.SetActorFameList(actorId2, 5, 5, actorId1);
-            PeopleLifeAI.instance.AISetMassage(50, actorId2, DateFile.instance.mianPartId, DateFile.instance.mianPlaceId, new int[1], actorId1, true);
-            DateFile.instance.ChangeActorFeature(actorId1, 4001, 4002);
-            DateFile.instance.ChangeActorFeature(actorId2, 4001, 4002);
-            var sex1 = DateFile.instance.GetActorDate(actorId1, 14, false);
-            var sex2 = DateFile.instance.GetActorDate(actorId2, 14, false);
-            if (sex1 != sex2)
-            {
-                PeopleLifeAI.instance.AISetChildren((sex1 != "1") ? actorId2 : actorId1, (sex1 != "1") ? actorId1 : actorId2, 1, 1);
-                if (Main.settings.FFF)
-                {
-                    DateFile.instance.SetActorFameList(actorId1, 401, 5, 0);
-                    DateFile.instance.SetActorFameList(actorId2, 401, 5, 0);
-                }
-            }
-            else
-            {/*//并不想结婚怀孕（喂
-                if (Main.settings.JoyOfLove && (istaiwucp || Main.settings.SongOfPraises))
-                { 
-                    bool rootless = (DateFile.instance.GetActorFeature(actorId1).Contains((int.Parse(DateFile.instance.GetActorDate(actorId1, 14, false)) != 1) ? 1002 : 1001));
-                    bool rootless2 = (DateFile.instance.GetActorFeature(actorId2).Contains((int.Parse(DateFile.instance.GetActorDate(actorId2, 14, false)) != 1) ? 1002 : 1001));
-                    var baseid = DateFile.instance.GetActorDate(actorId1, 997, false);
-                    var baseid2 = DateFile.instance.GetActorDate(actorId2, 997, false);
-                    if ((rootless && sex1 == "1") || (rootless2 && sex1 == "2") || baseid2 == "1" || baseid == "30")
-                    {
-                        StarFall.BondByLove(actorId2, actorId1, 1, 1,0,0);
-
-                    }
-                    else if ((rootless && sex1 == "2") || (rootless2 && sex1 == "1") || baseid == "1" || baseid2 == "30")
-                    {
-                        StarFall.BondByLove(actorId1, actorId2, 1, 1,0,0);
-
-                    }
-
-                    else if (istaiwucp)
-                    {
-                        int jiyou = (actorId2 == taiwu ? actorId1 : actorId2);
-                        if (Main.settings.babyoption==1) StarFall.BondByLove(jiyou, taiwu, 1, 1,0,0);
-                        else if (Main.settings.babyoption==2) StarFall.BondByLove(taiwu, jiyou, 1, 1,0,0);
-                        else if (UnityEngine.Random.Range(0, 100) < 50) StarFall.BondByLove(jiyou, taiwu, 1, 1,0,0);
-                        else StarFall.BondByLove(taiwu, jiyou, 1, 1,0,0);
-                    }
-                    else
-                    {
-
-                        if (UnityEngine.Random.Range(0, 100) < 50)
-                        {
-                            StarFall.BondByLove(actorId1, actorId2, 1, 1,0,0);
-                        }
-                        else
-                        {
-                            StarFall.BondByLove(actorId2, actorId1, 1, 1,0,0);
-                        }
-                    }
-                }*/
-               
-                
-                    DateFile.instance.SetActorFameList(actorId1, 401, 5, 0);
-                    DateFile.instance.SetActorFameList(actorId2, 401, 5, 0);
-               
-            }
-            //出家人不可以结婚啦
-            if (int.Parse(DateFile.instance.GetActorDate(actorId2, 2, false)) != 0 || int.Parse(DateFile.instance.GetActorDate(actorId1, 2, false)) != 0)
-            {
-                DateFile.instance.SetActorFameList(actorId1, 401, 10, 0);
-                DateFile.instance.SetActorFameList(actorId2, 401, 10, 0);
-            }
-            int don = FamilyDon(actorId1, actorId2);
-            if (don != 0)
-            {
-                DateFile.instance.SetActorFameList(actorId1, 401, don * 5, 0);
-                DateFile.instance.SetActorFameList(actorId2, 401, don * 5, 0);
-            }
-            if (actorId1 == DateFile.instance.MianActorID())
-            {
-                DateFile.instance.AddActorScore(3, 100);
-            }
-            if (changeEventId != 0)
-            {
-                EndEventChangeMassageWindow(changeEventId);
-            }
-        }
-       
-        
     }
 
     //時よ、止せ！
@@ -1853,18 +1555,22 @@ namespace GayMax
             if (MassageWindow.instance.eventValue.Count > 0 && MassageWindow.instance.eventValue[0] != 0)
 
             {
-                int key = MassageWindow.instance.eventValue[0];//规定使用4位数end参数，8010~9010 & 参数
-                switch (key)//为了将来不变成另一个十二IF大阵，先弄个万化十四Case
+                int key0 = MassageWindow.instance.eventValue[0];//只占用一个eventvalue
+                if (key0 == 8010)
                 {
-                    case (8010):
-                        EndEvent_8010(); break;
-                   // case (8011):
-                       // EndEvent_8011_LetterForYou(); break;
-                    case (8012):
-                        EndEvent_8012_TheBizarreColourChangingOfSixStreetCityWine(); break;
-                    case (8013):
-                        EndEvent8013_CallMyName(); break;
+                    int key = MassageWindow.instance.eventValue[1];
+                    switch (key)//为了将来不变成另一个十二IF大阵，先弄个万化十四Case
+                    {
+                        case (8010):
+                            EndEvent_8010(); break;
+                        // case (8011):
+                        // EndEvent_8011_LetterForYou(); break;
+                        case (8012):
+                            EndEvent_8012_TheBizarreColourChangingOfSixStreetCityWine(); break;
+                        case (8013):
+                            EndEvent8013_CallMyName(); break;
 
+                    }
                 }
 
             }
@@ -1882,85 +1588,16 @@ namespace GayMax
         {
             int num = MassageWindow.instance.mianEventDate[1];//jiyou id   
             int num2 = DateFile.instance.MianActorID();
-            int num3 = MassageWindow.instance.eventValue[1];//8010 & X
+            int num3 = MassageWindow.instance.eventValue[2];//8010 & X
             if (DateFile.instance.HaveLifeDate(num, 901))
                 DateFile.instance.actorLife[num][901].Add(num3);
         }
-
-        /*private static void EndEvent_8011_LetterForYou()//感谢信的（弃用）分歧判定。第一次写这么复杂的事件判定，很紧张啊
-        {
-            int switchnum = 0;
-            int sexnum = 0;
-            int jumpnum = 801000150;
-            int actor = MassageWindow.instance.mianEventDate[1];
-            int taiwusex = int.Parse(DateFile.instance.GetActorDate(taiwu, 14, false));
-            int actorsex = int.Parse(DateFile.instance.GetActorDate(actor, 14, false));
-            if (taiwusex == actorsex) sexnum = 10;
-
-
-            bool purelove = false;
-            bool fixdlove = false;
-            if (actor != taiwu)
-            {
-                purelove = StarFall.PureLove(taiwu, actor);
-                fixdlove = StarFall.FixedLove(taiwu, actor);
-
-
-                int fristtouch = StarFall.FirstTouch(actor, taiwu);
-                if (purelove && fristtouch == 0) switchnum = 21;
-                else if (purelove && (fristtouch == 3 || fristtouch == 9)) switchnum = 22;
-                else if (fristtouch == 0 && fixdlove) switchnum = 1;
-                else if (fixdlove) switchnum = 2;
-                else if (fristtouch == 99) switchnum = 14;
-                else if (fristtouch == 999) switchnum = 4;
-                else switchnum = 3;
-
-
-            }
-            else
-            {
-                List<int> list0 = new List<int>();
-                List<int> list1 = new List<int>();
-                List<int> list2 = new List<int>();
-                list0.AddRange(LifeLine.GetActorSocial(taiwu, Memo.Lover, false, false));
-                list1.AddRange(LifeLine.PhantomBlood(taiwu, false));
-                list2.AddRange(LifeLine.GetActorSocial(taiwu, Memo.Wife, true, false));
-                if (list1.Count != 0)
-                {
-                    if (list2.Count != 0 && list0.Count == 0) switchnum = -4;
-                    else switchnum = -3;
-
-                }
-                else if (list0.Count == 0) switchnum = -1;
-                else if (list0.Count == 1) switchnum = -2;
-                else switchnum = -5;
-            }
-            if (switchnum == 22 || switchnum == 21)
-            {
-                int loveP = int.Parse(DateFile.instance.actorsDate[actor][3]);
-                if (loveP >= 40000) switchnum += sexnum;
-                else switchnum -= 20;
-            }
-
-            if (switchnum > 0 && switchnum < 4)
-            {
-                jumpnum += sexnum;
-                jumpnum += switchnum;
-            }
-            else
-            {
-                jumpnum += switchnum;
-            }
-            Main.Logger.Log(jumpnum.ToString());
-            EndEventChangeMassageWindow(jumpnum);
-
-        }*/
 
 
         private static void EndEvent_8012_TheBizarreColourChangingOfSixStreetCityWine()//@七街城酒[/devil]的奇妙变色
         {
             int actor = MassageWindow.instance.mianEventDate[1];
-            int num = MassageWindow.instance.eventValue[1];
+            int num = MassageWindow.instance.eventValue[2];
             int num2 = Index.EventIndex[30];
             if (UnityEngine.Random.Range(0, 10) < 1) num2 = Index.EventIndex[34];//喊！全都给我喊大佬流啤！
             else
@@ -1975,7 +1612,7 @@ namespace GayMax
 
         private static void EndEvent8013_CallMyName()
         {
-            int xxx = MassageWindow.instance.eventValue[1];//end&…… & X
+            int xxx = MassageWindow.instance.eventValue[2];//end&…… & X
             int jiyou = MassageWindow.instance.mianEventDate[3];
             int taiwu = DateFile.instance.MianActorID();
             int child = MassageWindow.instance.mianEventDate[4];
@@ -2113,6 +1750,7 @@ namespace GayMax
             return;
         }
     }
+    //防BUG补丁
     [HarmonyPatch(typeof(DateFile), "MakeGangActor")]
     public static class DateFile_MakeGangActor_Patch
     {
@@ -2235,7 +1873,7 @@ namespace GayMax
                         break;
                     }
 
-                    List<int> list3 = new List<int>(LifeLine.GetGangActor(toGangId, k + 1));
+                    List<int> list3 = new List<int>(DateFile.instance. GetGangActor(toGangId, k + 1,false));
                     if (list3.Count > 0)
                     {
                         foreach (int luckydog in list3)
@@ -2271,42 +1909,13 @@ namespace GayMax
 
     }
 
-    /// <summary>
-    ///  MOD教程CharmMax的魔改，将初代太吾(和竹马)变基/姬佬
-    /// </summary>
-    /*[HarmonyPatch(typeof(NewGame), "SetNewGameDate")]
-    public static class NewGame_SetNewGameDate_Patch
-    {
-
-        private static void Postfix()
-        {
-            var change = (Main.settings.PriceOFSalt ? Memo.Homo : Memo.Bi);
-            Main.Logger.Log("!!?!");
-            Dictionary<int, string> actor;
-            if (DateFile.instance.actorsDate.TryGetValue(10001, out actor))
-            {
-                Main.Logger.Log("1");
-                if (Main.settings.brosis) DateFile.instance.actorsDate[10001][21] = change;
-            }
-            Dictionary<int, string> actor2;
-            if (DateFile.instance.actorsDate.TryGetValue(10003, out actor2))
-            {
-                Main.Logger.Log("2");
-                if (Main.settings.brosis) DateFile.instance.actorsDate[10003][21] = change;
-                var sex = DateFile.instance.GetActorDate(10001, 997, false);
-                if (sex != "0") { DateFile.instance.actorsDate[10003][997] = sex;Main.Logger.Log("???"); }
-                else DateFile.instance.actorsDate[10003][997] = (UnityEngine.Random.Range(0, 14) * 2 + sex).ToString();
-                DateFile.instance.MakeActorName(10003, 0, "", true);
-            }
-            return;
-        }
-    }*/
-
+   
     //这破MOD到底要写多长啊！？？！？！？
     public static class Study
     {
         public static void LoveSong()
         {
+            if (!Main.enabled || Index.GongFaIndex.Keys.Count < 1) return;
             int taiwu = DateFile.instance.MianActorID();
             if(DateFile.instance.GetActorDate(taiwu,21,false)==Memo.Heresy)
             {
@@ -2322,6 +1931,7 @@ namespace GayMax
 
         public static void GoodNight()
         {
+            if (!Main.enabled || Index.GongFaIndex.Keys.Count < 1) return;
             int taiwu = DateFile.instance.MianActorID();
             if (DateFile.instance.actorGongFas[taiwu].Keys.Contains(Index.GongFaIndex[1]) && !DateFile.instance.GetActorEquipGongFa(taiwu)[0].Contains(Index.GongFaIndex[1]))
             {
@@ -2335,6 +1945,7 @@ namespace GayMax
     {
         private static void Postfix(ref int __result, ref int gongFaId, ref int index)
         {
+            if (!Main.enabled || Index.GongFaIndex.Keys.Count < 1) return;
             if (gongFaId == Index.GongFaIndex[1] && index == 2)
             {
                 if (Main.settings.Gongoption==1)__result = 6;
@@ -2350,6 +1961,7 @@ namespace GayMax
     {
         private static void Postfix(ref int __result, ref int gongFaId, ref bool getSkillAdd)
         {
+            if (!Main.enabled || Index.GongFaIndex.Keys.Count < 1) return;
             if (gongFaId == Index.GongFaIndex[1])
             {
                 if (!getSkillAdd) __result = 10;
@@ -2365,7 +1977,7 @@ namespace GayMax
     {
         private static void Postfix(ref int __result, ref int attackActorId, ref int defActorId, ref int gongFaId, ref bool isActor, ref int defTyp)
         {
-
+            if (!Main.enabled || Index.GongFaIndex.Keys.Count < 1) return;
             int id = int.Parse(DateFile.instance.GetActorDate(defActorId, 997, false));
             int id2 = int.Parse(DateFile.instance.GetActorDate(attackActorId, 997, false));
             var sex1 = DateFile.instance.GetActorDate(attackActorId, 21, false);

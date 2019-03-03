@@ -212,12 +212,17 @@ namespace Majordomo
         /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
         /// <param name="withAdjacentBedrooms"></param>
+        /// <param name="getStandardAttrValue">是否返回标准化的能力值</param>
         /// <returns></returns>
-        public static int[] GetRequiredAttributeValues(int partId, int placeId, int buildingIndex, bool withAdjacentBedrooms = true)
+        public static int[] GetRequiredAttributeValues(int partId, int placeId, int buildingIndex,
+            bool withAdjacentBedrooms = true, bool getStandardAttrValue = false)
         {
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int baseBuildingId = building[0];
             int requiredAttrId = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][33]);
+
+            if (requiredAttrId == 0) return new int[] { 0, 0 };
+
             int mood = HumanResource.STANDARD_MOOD;
             int scaledFavor = Original.GetScaledFavor(HumanResource.STANDARD_FAVOR_LEVEL);
             scaledFavor = Original.AdjustScaledFavorWithMood(scaledFavor, mood);
@@ -230,11 +235,13 @@ namespace Majordomo
             int requiredHalfAttrValue = Mathf.Max(workDifficulty * 100 / Mathf.Max(scaledFavor, 0) - adjacentAttrBonus, 0);
             int requiredFullAttrValue = Mathf.Max(workDifficulty * 200 / Mathf.Max(scaledFavor, 0) - adjacentAttrBonus, 0);
 
-            return new int[]
+            if (!getStandardAttrValue)
             {
-                Original.FromStandardAttrValue(requiredAttrId, requiredHalfAttrValue),
-                Original.FromStandardAttrValue(requiredAttrId, requiredFullAttrValue),
-            };
+                requiredHalfAttrValue = Original.FromStandardAttrValue(requiredAttrId, requiredHalfAttrValue);
+                requiredFullAttrValue = Original.FromStandardAttrValue(requiredAttrId, requiredFullAttrValue);
+            }
+
+            return new int[] { requiredHalfAttrValue, requiredFullAttrValue };
         }
 
 
@@ -345,7 +352,7 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 判断建筑是否需要工作人员
+        /// 判断建筑是否需要工作人员（建筑本身需要工作人员，且不处于新建、拆除状态）
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -357,7 +364,7 @@ namespace Majordomo
             int baseBuildingId = building[0];
 
             var baseBuilding = DateFile.instance.basehomePlaceDate[baseBuildingId];
-            return int.Parse(baseBuilding[3]) == 1;
+            return int.Parse(baseBuilding[3]) == 1 && building[3] <= 0 && building[6] <= 0;
         }
     }
 }

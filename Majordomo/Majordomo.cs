@@ -42,6 +42,18 @@ namespace Majordomo
 
         // 人员指派
         public bool autoAssignBuildingWorkers = true;   // 自动指派建筑工作人员
+        // 建筑类型优先级因子
+        public SerializableDictionary<BuildingType, float> buildingTypePriorityFactors =
+            new SerializableDictionary<BuildingType, float>()
+            {
+                [BuildingType.Bedroom] = 1.00f,
+                [BuildingType.Hospital] = 1.50f,
+                [BuildingType.Recruitment] = 1.25f,
+                [BuildingType.GettingResource] = 1.00f,
+                [BuildingType.GettingItem] = 0.75f,
+                [BuildingType.GettingCricket] = 0.50f,
+                [BuildingType.Unknown] = 0.25f,
+            };
         // 建筑排除列表
         // partId -> {placeId -> {buildingIndex,}}
         public SerializableDictionary<int, SerializableDictionary<int, HashSet<int>>> excludedBuildings =
@@ -65,6 +77,8 @@ namespace Majordomo
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
+
+        private static readonly Dictionary<string, FloatField> floatFields = new Dictionary<string, FloatField>();
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -105,7 +119,7 @@ namespace Majordomo
         }
 
 
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             // 管家界面 --------------------------------------------------------
             GUILayout.BeginHorizontal();
@@ -212,6 +226,16 @@ namespace Majordomo
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("建筑类型优先级因子：");
+            ShowBuildingTypePriorityFactor("医疗类", BuildingType.Hospital, 1.50f);
+            ShowBuildingTypePriorityFactor("招募类", BuildingType.Recruitment, 1.25f);
+            ShowBuildingTypePriorityFactor("资源类", BuildingType.GettingResource, 1.00f);
+            ShowBuildingTypePriorityFactor("物品类", BuildingType.GettingItem, 0.75f);
+            ShowBuildingTypePriorityFactor("蛐蛐类", BuildingType.GettingCricket, 0.50f);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("排除建筑快捷键：Alt + 鼠标");
             Main.settings.exclusionMouseButton = GUILayout.SelectionGrid(Main.settings.exclusionMouseButton,
                 Settings.EXCLUSION_MOUSE_BUTTONS, Settings.EXCLUSION_MOUSE_BUTTONS.Length);
@@ -220,7 +244,22 @@ namespace Majordomo
         }
 
 
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        public static void ShowBuildingTypePriorityFactor(string label, BuildingType buildingType, float defaultValue)
+        {
+            GUILayout.Space(10);
+            GUILayout.Label(label);
+
+            if (!Main.floatFields.ContainsKey(label))
+                Main.floatFields[label] = new FloatField(defaultValue);
+
+            float factor = Main.floatFields[label].GetFloat(4, GUILayout.Width(40));
+            if (!GUI.changed) return;
+
+            Main.settings.buildingTypePriorityFactors[buildingType] = factor;
+        }
+
+
+        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             Main.settings.Save(modEntry);
         }
@@ -384,7 +423,23 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 载入已保存数据
+    /// Patch: 新建存档时初始化数据
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "NewDate")]
+    public static class DateFile_NewDate_InitData
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+
+            if (MajordomoWindow.instance == null) MajordomoWindow.instance = new MajordomoWindow();
+            MajordomoWindow.instance.InitData();
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 载入存档时载入已保存数据
     /// </summary>
     [HarmonyPatch(typeof(DateFile), "LoadDate")]
     public static class DateFile_LoadDate_LoadSavedData
@@ -400,7 +455,7 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 保存数据
+    /// Patch: 保存存档时保存数据
     /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
     public static class SaveDateFile_SaveSaveDate_SaveData
