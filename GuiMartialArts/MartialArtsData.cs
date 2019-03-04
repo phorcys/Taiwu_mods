@@ -100,7 +100,7 @@ namespace GuiMartialArts
                     return;
                 var gongFaData = gongFas[gongFaId];// [0]修习程度  [1]npc独有心法等级  [2]逆练页数
                 int playerLevel = 0;
-                if(DateFile.instance.gongFaBookPages.ContainsKey(gongFaId))
+                if (DateFile.instance.gongFaBookPages.ContainsKey(gongFaId))
                 {
                     var pages = DateFile.instance.gongFaBookPages[gongFaId];
                     for (int i = 0; i < pages.Length; i++)
@@ -113,7 +113,7 @@ namespace GuiMartialArts
                 }
                 // Main.Logger.Log("敌人功法 " + DateFile.instance.gongFaDate[gongFaId][0] + " " + gongFaData[0] + " " + gongFaData[1] + " " + gongFaData[2] + " 玩家等级" + playerLevel);
 
-                if(playerLevel< gongFaData[1])
+                if (playerLevel < gongFaData[1])
                 {
                     int isNiLian = Random.Range(0, gongFaData[1]) < gongFaData[2] ? 1 : 0; // 判断领悟到的功法是正练还是逆练
                     // Main.Logger.Log("记录一个功法使用记录：" + (isNiLian == 1 ? "逆" : "正"));
@@ -136,10 +136,10 @@ namespace GuiMartialArts
         /// <param name="_oldEnemyId"></param>
         public void AddBattleEnemy(int _newEnemyId, int _oldEnemyId)
         {
-            if (!BattleEnemyIds.Contains(_newEnemyId))
+            if (_newEnemyId != 0 && !BattleEnemyIds.Contains(_newEnemyId))
                 BattleEnemyIds.Add(_newEnemyId);
 
-            if (!BattleEnemyIds.Contains(_oldEnemyId))
+            if (_oldEnemyId != 0 && !BattleEnemyIds.Contains(_oldEnemyId))
                 BattleEnemyIds.Add(_oldEnemyId);
         }
 
@@ -202,7 +202,8 @@ namespace GuiMartialArts
                 icon.SetActive(true);
 
                 // Main.Logger.Log("弹出领悟功法窗口:" + msg);
-                YesOrNoWindow.instance.SetYesOrNoWindow(1992062500, winTitle, msg, true, true);            }
+                YesOrNoWindow.instance.SetYesOrNoWindow(1992062500, winTitle, msg, true, true);
+            }
             else
             {
                 YesOrNoWindow.instance.SetYesOrNoWindow(-1, winTitle, msg, false, true);
@@ -229,8 +230,12 @@ namespace GuiMartialArts
                     // 0是内功 1是攻击类 2是身法类 3是护体类 4是绝技类
 
                     int p = (GongFaIds.Key != 1 && GongFaIds.Key != 2 && GongFaIds.Key != 3) ? 4 : 1;
+                    Main.Logger.Log("遍历敌人功法");
+                    // 遍历敌人的功法
                     foreach (var gongFaId in GongFaIds.Value)
                     {
+                        Main.Logger.Log("敌人功法" + DateFile.instance.gongFaDate[gongFaId][0]);
+
                         if (gongFaId / 10000 > 15)
                             continue;
                         if (!enemyGongFas.ContainsKey(gongFaId))
@@ -286,7 +291,7 @@ namespace GuiMartialArts
                     {
                         GongfaIds.Add(item.Key);
                     }
-                    if((item.Value[0] > 0) || (item.Value[0] > 0))
+                    if ((item.Value[0] > 0) || (item.Value[0] > 0))
                     {
                         if (canGetCount < 8)
                         {
@@ -319,7 +324,7 @@ namespace GuiMartialArts
                 var seven = ActorMenu.instance.GetActorResources(DateFile.instance.MianActorID())[5]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
                 var stage = int.Parse(DateFile.instance.gongFaDate[getGongFaId][2]);
                 gongFaPower = stage * 10;
-                rand = (Random.Range(5, 105) + seven);
+                rand = (Random.Range(5, 105) + seven + Main.settings.AddWind);
                 addGongFaLevel = rand / gongFaPower;
                 // Main.Logger.Log("计算获得功法等级" + rand + "/" + gongFaPower + "=" + addGongFaLevel);
                 if (addGongFaLevel > 0)
@@ -367,11 +372,8 @@ namespace GuiMartialArts
             okbtn.onClick.RemoveAllListeners();
             Button nobtn = YesOrNoWindow.instance.yesOrNoWindow.Find("NoButton").GetComponent<Button>();
             nobtn.onClick.RemoveAllListeners();
-            if (icon != null)
-            {
-                UnityEngine.Object.Destroy(icon);
-                icon = null;
-            }
+            icon.transform.SetParent(null);
+            UnityEngine.Object.Destroy(icon);
         }
 
         private void ClearData()
@@ -388,7 +390,7 @@ namespace GuiMartialArts
         {
             var seven = ActorMenu.instance.GetActorResources(DateFile.instance.MianActorID())[6]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
             var newSeven = (int)((Random.Range(75, 125) / 100f) * seven);
-            addGongFaLevel = 1 * Random.Range(10, 10 + newSeven) / 30 + 1;
+            addGongFaLevel = (1 * Random.Range(10, 10 + newSeven) / 30 + 1) * Main.settings.ReadLevel;
             int newAddLevel = GongfaUpLevel(getGongFaId, addGongFaLevel, isNiLian);
             if (newAddLevel == -100)
             {
@@ -404,7 +406,7 @@ namespace GuiMartialArts
             //int gongFaLevel = sortedDictionary[gongFaId][0];
             return DateFile.instance.GetGongFaLevel(DateFile.instance.mianActorId, gongFaId) >= 10;
         }
-        
+
 
         private int GongfaUpLevel(int gongFaId, int value, int isNiLian)
         {
@@ -459,7 +461,7 @@ namespace GuiMartialArts
                 {
                     if (int.Parse(item.Value[32]) == getGongFaId) // 32 是对应的功法   35是是否手抄
                     {
-                        if(int.Parse(item.Value[35]) == isNiLian)
+                        if (int.Parse(item.Value[35]) == isNiLian)
                         {
                             itemId = item.Key;
                             break;
@@ -486,7 +488,8 @@ namespace GuiMartialArts
     {
         string winTitle = "鬼的战斗艺术";
         private string m_msg = null;
-        public string msg {
+        public string msg
+        {
             set
             {
                 // Main.Logger.Log("参悟功法 " + value);

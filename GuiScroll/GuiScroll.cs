@@ -10,7 +10,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace GuiWorkActor
+namespace GuiScroll
 {
     public class Settings : UnityModManager.ModSettings
     {
@@ -38,8 +38,8 @@ namespace GuiWorkActor
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             #endregion
-            ActorPatch.Init(modEntry);
-
+            //ActorPatch.Init(modEntry);
+            ActorMenuActorListPatch.Init(modEntry);
             return true;
         }
 

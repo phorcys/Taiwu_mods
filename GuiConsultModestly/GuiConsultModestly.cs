@@ -14,6 +14,8 @@ namespace GuiConsultModestly
 {
     public class Settings : UnityModManager.ModSettings
     {
+        public int AddWind = 0;
+        public int ReadLevel = 1;
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
@@ -43,7 +45,7 @@ namespace GuiConsultModestly
             return true;
         }
 
-        static string title = "鬼的虚心请教 2.0.0";
+        static string title = "鬼的虚心请教";
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
@@ -56,12 +58,19 @@ namespace GuiConsultModestly
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
-            if (GUILayout.Button("设置书页"))
-            {
-                DateFile.instance.itemsDate[2466257][33] = "0|0|0|0|0|0|0|0|0|0";
-                DateFile.instance.itemsDate[2466257][901] = "1";
-                DateFile.instance.itemsDate[2466257][902] = "1";
-            }
+
+            GUILayout.BeginHorizontal();
+            Main.settings.AddWind = (int)GUILayout.HorizontalSlider(Main.settings.AddWind, 0, 30);
+            GUILayout.Label(string.Format("作弊增加成功率：{0}%", Main.settings.AddWind));
+            float v = Main.settings.AddWind / 100f;
+            GUILayout.Label("<color=#" + (v * 255 > 16 ? "" : "0") + Convert.ToString((int)(v * 255), 16) + "0000>此举有伤天和，请酌情使用</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.ReadLevel = (int)GUILayout.HorizontalSlider(Main.settings.ReadLevel, 1, 3);
+            GUILayout.Label(string.Format("作弊增加研读页数：{0}倍", Main.settings.ReadLevel));
+            v = (Main.settings.ReadLevel - 1) / 9f;
+            GUILayout.Label("<color=#" + (v * 255 > 16 ? "" : "0") + Convert.ToString((int)(v * 255), 16) + "0000>此举有伤天和，请酌情使用</color>");
+            GUILayout.EndHorizontal();
         }
 
         [HarmonyPatch(typeof(SkillBattleSystem), "AnQusetion")]
@@ -209,6 +218,7 @@ namespace GuiConsultModestly
             /// </summary>
             static string[] SetSkillBatterGains(bool isActor)
             {
+                Main.Logger.Log("设置技艺比拼收获");
                 if (isActor)
                     return null;
 
@@ -289,12 +299,14 @@ namespace GuiConsultModestly
                         else if (battleValue > (opponentBattleValue + 100)) // 指点江山：《"+book_name+"》心中已经有了深刻认识，觉得"+opponentName+"讲解颇有不足，为其讲解了此中深意。
                         {
                             result[0] = "指点江山";
-                            result[1] = selfName + "觉得" + opponentName + "对" + book_name + "理解不够深刻，为其讲解了此中深意，" + opponentName + "感激不尽。";
+                            result[1] = selfName + "觉得" + opponentName + "对" + book_name + "理解不够深刻，为其讲解了此中深意，" + opponentName + "感激不尽。\n<color=#8E8E8EFF>【需要对方水平比自己高100】"+
+                                opponentBattleValue +":"+ battleValue + "</color>";
                         }
                         else
                         {
                             result[0] = "各抒己见";
-                            result[1] = selfName + "和" + opponentName + "对" + book_name + "均有不同见解，双方吵得不可开交，差点就打起来了";
+                            result[1] = selfName + "和" + opponentName + "对" + book_name + "均有不同见解，双方吵得不可开交，差点就打起来了\n<color=#8E8E8EFF>【需要对方水平比自己高100】" +
+                                opponentBattleValue + ":" + battleValue + "</color>";
                         }
                     }
                     else if (exceed >= 1 && exceed <= 100) // 茅塞顿开：《"+book_name+"》已经困扰自己已久，此时听了"+opponentName+"的讲解之后茅塞顿开，心中有了更深刻的认识。
@@ -317,22 +329,32 @@ namespace GuiConsultModestly
 
                     if (value > 0)
                     {
-                        value = UnityEngine.Random.Range(0, 100) < value ? 1 : 0;
+                        var seven = ActorMenu.instance.GetActorResources(_actorId)[0]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                        var rand = UnityEngine.Random.Range(0, 100);
+                        var need = (value + seven + Main.settings.AddWind);
+                        result[1] += "\n<color=#8E8E8EFF>【细腻影响领悟成功率】粗心点数越小越好" + rand + "/" + need+ "</color>";
+                        value = rand <= need ? 1 : 0;
 
                         if (value > 0)
                         {
-                            var seven = ActorMenu.instance.GetActorResources(_actorId);
-                            int rand = UnityEngine.Random.Range(0, 95) + seven[1]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                            seven = ActorMenu.instance.GetActorResources(_actorId)[1];
+                            rand = UnityEngine.Random.Range(0, 95) + seven + Main.settings.AddWind; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                            need = (stage * 10);
+                            result[1] += "\n<color=#8E8E8EFF>【聪颖影响研读成功率】研读点数越大越好" + rand + "/" + need + "</color>";
                             //Logger.Log(stage + "阶书籍判断几率 " + rand + "<=" + (stage * 10) + " " + (rand <= (stage * 10)));
-                            if (rand <= (stage * 10)) // 书籍阶数 研读成功率越低
+                            if (rand <= need) // 书籍阶数 研读成功率越低
                                 value = 0;
                         }
 
                         if (value > 0)
                         {
                             //Logger.Log(stage + "阶书籍 下级将研读 " + (num2+1) + "<=" + (power / 90) + "   问题难度 " + power + "   " + (num2 > (power / 90)));
-                            if (num2 > (power / 90))
+                            //Logger.Log(stage + "阶书籍 下级将研读 " + (num2+1) + "<=" + (power / 90) + "   问题难度 " + power + "   " + (num2 > (power / 90)));
+                            if ((num2*90) > power)
+                            {
                                 value = 0;
+                                result[1] += "\n<color=#8E8E8EFF>【书籍页数相关】题目难度不足" + power + "/" + (num2 * 90)+ "</color>";
+                            }
                         }
 
                         if (value > 0 && result[0] == "受益良多" && (num2 + 1) <= (power / 90))
@@ -344,6 +366,7 @@ namespace GuiConsultModestly
                         // 如果大于0则增加技艺等级
                         if (value > 0)
                         {
+                            value = value * Main.settings.ReadLevel;
                             value = SkillFLevel(_skillId, value);
                         }
                     }
@@ -407,11 +430,16 @@ namespace GuiConsultModestly
                         result[0] = "相谈甚欢";
                         result[1] = selfName + "与" + opponentName + "对" + book_name + "达成一致看法，相谈甚欢。";
                     }
-                }
-
-                if (value == 0 && UnityEngine.Random.Range(0, 10) < 8)
-                {
-                    return null;
+                    //if (num2 != 10 && (stage == 1 || num >= 5))
+                    if(num2 == 10)
+                    {
+                        result[1]+= "<color=#8E8E8EFF>【书籍研习进度已满】</color>";
+                    }else if(!(stage == 1 || num >= 5))
+                    {
+                        result[1] += "<color=#8E8E8EFF>【需要"+
+                            DateFile.instance.skillDate[int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex], System.Globalization.CultureInfo.InvariantCulture)][0]
+                            + "研习至5页以上】</color>";
+                    }
                 }
 
 
