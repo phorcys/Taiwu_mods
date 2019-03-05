@@ -119,7 +119,7 @@ namespace GuiScroll
             m_listActorsHolder.Init();
         }
 
-        static int[] sort_result = new  int[0]; // 存放排序过的角色id列表
+        public static int[] sort_result = new  int[0]; // 存放排序过的角色id列表
 
 
         // 显示角色菜单
@@ -285,12 +285,6 @@ namespace GuiScroll
                         int actorId = list[j];
                         if (actorId == DateFile.instance.MianActorID())
                         {
-                            //Transform transform = listActorsHolder.Find("Actor," + actorId);
-                            //SetListActor component = transform.GetComponent<SetListActor>();
-                            //component.SetInTeamIcon(show: true);
-                            //component.SetInBuildingIcon(show: false);
-                            //component.RestMoodFace();
-                            //transform.SetSiblingIndex(idx);
                             sort_result[idx] = actorId;
                             idx++;
                         }
@@ -315,48 +309,24 @@ namespace GuiScroll
                     for (int k = 0; k < list2.Count; k++)
                     {
                         int num3 = list2[k];
-                        //Transform transform2 = listActorsHolder.Find("Actor," + num3);
-                        //SetListActor component2 = transform2.GetComponent<SetListActor>();
-                        //component2.SetInTeamIcon(show: true);
-                        //component2.SetInBuildingIcon(show: false);
-                        //component2.RestMoodFace();
-                        //transform2.SetSiblingIndex(idx);
                         sort_result[idx] = num3;
                         idx++;
                     }
                     for (int l = 0; l < list5.Count; l++)
                     {
                         int num4 = list5[l];
-                        //Transform transform3 = listActorsHolder.Find("Actor," + num4);
-                        //SetListActor component3 = transform3.GetComponent<SetListActor>();
-                        //component3.SetInTeamIcon(show: false);
-                        //component3.SetInBuildingIcon(show: false);
-                        //component3.RestMoodFace();
-                        //transform3.SetSiblingIndex(idx);
                         sort_result[idx] = num4;
                         idx++;
                     }
                     for (int m = 0; m < list4.Count; m++)
                     {
                         int num5 = list4[m];
-                        //Transform transform4 = listActorsHolder.Find("Actor," + num5);
-                        //SetListActor component4 = transform4.GetComponent<SetListActor>();
-                        //component4.SetInTeamIcon(show: false);
-                        //component4.SetInBuildingIcon(show: false);
-                        //component4.RestMoodFace();
-                        //transform4.SetSiblingIndex(idx);
                         sort_result[idx] = num5;
                         idx++;
                     }
                     for (int n = 0; n < list3.Count; n++)
                     {
                         int num6 = list3[n];
-                        //Transform transform5 = listActorsHolder.Find("Actor," + num6);
-                        //SetListActor component5 = transform5.GetComponent<SetListActor>();
-                        //component5.SetInTeamIcon(show: false);
-                        //component5.SetInBuildingIcon(show: true);
-                        //component5.RestMoodFace();
-                        //transform5.SetSiblingIndex(idx);
                         sort_result[idx] = num6;
                         idx++;
                     }
@@ -365,21 +335,9 @@ namespace GuiScroll
                 else
                 {
                     sort_result = list.ToArray();
-                    //for (int num7 = 0; num7 < list.Count; num7++)
-                    //{
-                    //    int num8 = list[num7];
-                    //    Transform transform6 = listActorsHolder.Find("Actor," + num8);
-                    //    SetListActor component6 = transform6.GetComponent<SetListActor>();
-                    //    component6.SetInTeamIcon(show: false);
-                    //    component6.SetInBuildingIcon(show: false);
-                    //    component6.RestMoodFace();
-                    //    transform6.SetSiblingIndex(idx);
-                    //    idx++;
-                    //}
                 }
                 Main.Logger.Log("开始设置敌人 SortActorList");
-                //if (sort_result.Length > 0)
-                //    ActorMenu.instance.acotrId = sort_result[0];
+
                 m_listActorsHolder.data = sort_result;
 
                 Main.Logger.Log("设置敌人好了 SortActorList");
@@ -491,11 +449,11 @@ namespace GuiScroll
             ActorMenuActorListPatch.acotrId = 0;
             ActorMenu.instance.SetActorTeam();
             ActorMenu.instance.SetActorList();
-            if (ActorMenuActorListPatch.listActorsHolder.childCount > 0)
-            {
-                ActorMenuActorListPatch.listActorsHolder.GetChild(0).GetComponent<Toggle>().isOn = true;
-            }
-            ActorMenuActorListPatch.actorMenu.SetActive(value: true);
+            //if (ActorMenuActorListPatch.listActorsHolder.childCount > 0)
+            //{
+            //    ActorMenuActorListPatch.listActorsHolder.GetChild(0).GetComponent<Toggle>().isOn = true;
+            //}
+            ActorMenuActorListPatch.actorMenu.SetActive(true);
             if (ActorMenuActorListPatch.isEnemy)
             {
                 ActorMenuActorListPatch.actorAttrToggle.isOn = true;
@@ -525,8 +483,9 @@ namespace GuiScroll
             ActorMenuActorListPatch.actorMassageToggle.interactable = (!ActorMenuActorListPatch.isEnemy || DateFile.instance.ParseInt(DateFile.instance.GetActorDate(ActorMenuActorListPatch.acotrId, 8, addValue: false)) == 1);
             if (!DateFile.instance.battleStart && !HomeSystem.instance.homeSystem.activeSelf && !StorySystem.instance.storySystem.activeSelf)
             {
-                WorldMapSystem.instance.worldMapSystemHolder.gameObject.SetActive(value: false);
+                WorldMapSystem.instance.worldMapSystemHolder.gameObject.SetActive(false);
             }
+            ActorMenuActorListPatch.m_listActorsHolder.data = ActorMenuActorListPatch.sort_result;
         }
     }
 
