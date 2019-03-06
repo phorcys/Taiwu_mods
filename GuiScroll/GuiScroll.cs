@@ -28,7 +28,6 @@ namespace GuiScroll
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
-
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             #region 基础设置
@@ -40,6 +39,10 @@ namespace GuiScroll
             #endregion
             //ActorPatch.Init(modEntry);
             ActorMenuActorListPatch.Init(modEntry);
+
+
+
+
             return true;
         }
 
@@ -53,9 +56,45 @@ namespace GuiScroll
         {
             settings.Save(modEntry);
         }
+
+
+
+        //static RectTransform testImage;
+        //static float x;
+        //static float y;
+        //static float width;
+        //static float height;
+
+
+
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+
+            //if (GUILayout.Button("测试"))
+            //{
+
+            //    testImage = ((RectTransform)GuiBaseUI.CreateUI.NewImage().transform);
+            //    testImage.SetParent(ActorMenu.instance.listActorsHolder.parent.parent, false); // 设置父物体
+            //}
+
+            //if (testImage != null)
+            //{
+
+            //    float.TryParse(GUILayout.TextField(x.ToString()), out x);
+            //    float.TryParse(GUILayout.TextField(y.ToString()), out y);
+            //    float.TryParse(GUILayout.TextField(width.ToString()), out width);
+            //    float.TryParse(GUILayout.TextField(height.ToString()), out height);
+
+
+            //    testImage.anchoredPosition = new Vector2(x, y);
+            //    testImage.sizeDelta = new Vector2(width, height);
+
+
+            //}
+
+
+
         }
 
     }
