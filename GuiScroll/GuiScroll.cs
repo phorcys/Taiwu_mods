@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using System.Diagnostics;
+using UnityEngine.EventSystems;
 
 namespace GuiScroll
 {
@@ -38,9 +40,12 @@ namespace GuiScroll
             modEntry.OnSaveGUI = OnSaveGUI;
             #endregion
             //ActorPatch.Init(modEntry);
+
+
             ActorMenuActorListPatch.Init(modEntry);
 
-
+            HarmonyInstance harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
 
 
             return true;
@@ -59,42 +64,22 @@ namespace GuiScroll
 
 
 
-        //static RectTransform testImage;
-        //static float x;
-        //static float y;
-        //static float width;
-        //static float height;
-
-
-
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
 
             //if (GUILayout.Button("测试"))
             //{
-
-            //    testImage = ((RectTransform)GuiBaseUI.CreateUI.NewImage().transform);
-            //    testImage.SetParent(ActorMenu.instance.listActorsHolder.parent.parent, false); // 设置父物体
+            //    ActorMenu.instance.listActorsHolder.root.gameObject.SetActive(!ActorMenu.instance.listActorsHolder.root.gameObject.activeSelf);
+            //    Main.Logger.Log(ActorMenu.instance.listActorsHolder.root.ToString());
+            //    Main.Logger.Log(ActorMenu.instance.listActorsHolder.ToString());
             //}
 
-            //if (testImage != null)
+            //if (GUILayout.Button("打印"))
             //{
-
-            //    float.TryParse(GUILayout.TextField(x.ToString()), out x);
-            //    float.TryParse(GUILayout.TextField(y.ToString()), out y);
-            //    float.TryParse(GUILayout.TextField(width.ToString()), out width);
-            //    float.TryParse(GUILayout.TextField(height.ToString()), out height);
-
-
-            //    testImage.anchoredPosition = new Vector2(x, y);
-            //    testImage.sizeDelta = new Vector2(width, height);
-
-
+            //    GuiBaseUI.Main.LogAllChild(ActorMenu.instance.listActorsHolder.root);
+                
             //}
-
-
-
         }
 
     }
