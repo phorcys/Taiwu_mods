@@ -70,7 +70,11 @@ namespace MoveBuilding
             {
                 ___buildingButton.AddComponent<DropablePlace>();
             }
-            else if (buildingType[0] >= 1002 && ___buildingButton.GetComponent<DraggingObject>() == null) // 人工建築
+            //Modify By InpayH Start
+            //else if (buildingType[0] >= 1002 && ___buildingButton.GetComponent<DraggingObject>() == null) // 人工建築
+            // 判定：当前建筑不为太污村 且 该对象元素不为空
+            else if (buildingType[0] != 1001 && ___buildingButton.GetComponent<DraggingObject>() == null)
+            //Modify By InpayH End
             {
                 ___buildingButton.AddComponent<DraggingObject>();
             }
@@ -134,7 +138,9 @@ namespace MoveBuilding
         {
             if (!DraggingBuilding.Instance.isDragging) return;
             buildingDummy.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Delete By InpayH Start
+            //transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Delete By InpayH End
         }
 
         public void OnEndDrag(PointerEventData eventData)
