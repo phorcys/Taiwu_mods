@@ -245,11 +245,11 @@ namespace GuiWarehouse
                 }
                 if (changTyp == "ActorItem")
                 {
-                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1, 0, 0);
+                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1);
                 }
                 else
                 {
-                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1, 0, 0);
+                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1);
                 }
                 Main.OnChangeItem = true;
                 Warehouse_UpdateActorItems_Patch.Prefix(true, Warehouse.instance.actorItemTyp);

@@ -14,6 +14,8 @@ namespace GuiConsultModestly
 {
     public class Settings : UnityModManager.ModSettings
     {
+        public int AddWind = 0;
+        public int ReadLevel = 1;
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
@@ -43,7 +45,7 @@ namespace GuiConsultModestly
             return true;
         }
 
-        static string title = "鬼的虚心请教 1.2.0";
+        static string title = "鬼的虚心请教";
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
@@ -56,6 +58,19 @@ namespace GuiConsultModestly
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.Label(title, GUILayout.Width(300));
+
+            GUILayout.BeginHorizontal();
+            Main.settings.AddWind = (int)GUILayout.HorizontalSlider(Main.settings.AddWind, 0, 30);
+            GUILayout.Label(string.Format("作弊增加成功率：{0}%", Main.settings.AddWind));
+            float v = Main.settings.AddWind / 100f;
+            GUILayout.Label("<color=#" + (v * 255 > 16 ? "" : "0") + Convert.ToString((int)(v * 255), 16) + "0000>此举有伤天和，请酌情使用</color>");
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            Main.settings.ReadLevel = (int)GUILayout.HorizontalSlider(Main.settings.ReadLevel, 1, 3);
+            GUILayout.Label(string.Format("作弊增加研读页数：{0}倍", Main.settings.ReadLevel));
+            v = (Main.settings.ReadLevel - 1) / 9f;
+            GUILayout.Label("<color=#" + (v * 255 > 16 ? "" : "0") + Convert.ToString((int)(v * 255), 16) + "0000>此举有伤天和，请酌情使用</color>");
+            GUILayout.EndHorizontal();
         }
 
         [HarmonyPatch(typeof(SkillBattleSystem), "AnQusetion")]
@@ -66,10 +81,10 @@ namespace GuiConsultModestly
             {
                 get
                 {
-                    if (m_actorSkillBattleValue == null)
-                    {
-                        m_actorSkillBattleValue = typeof(SkillBattleSystem).GetField("actorSkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //if (m_actorSkillBattleValue == null)
+                    //{
+                    m_actorSkillBattleValue = typeof(SkillBattleSystem).GetField("actorSkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
+                    //}
                     int[] value;
                     try
                     {
@@ -89,10 +104,10 @@ namespace GuiConsultModestly
             {
                 get
                 {
-                    if (m_enemySkillBattleValue == null)
-                    {
-                        m_enemySkillBattleValue = typeof(SkillBattleSystem).GetField("enemySkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //if (m_enemySkillBattleValue == null)
+                    //{
+                    m_enemySkillBattleValue = typeof(SkillBattleSystem).GetField("enemySkillBattleValue", BindingFlags.NonPublic | BindingFlags.Instance);
+                    //}
                     int[] value;
                     try
                     {
@@ -113,10 +128,10 @@ namespace GuiConsultModestly
             {
                 get
                 {
-                    if (m_nowSkillIndex == null)
-                    {
-                        m_nowSkillIndex = typeof(SkillBattleSystem).GetField("nowSkillIndex", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //if (m_nowSkillIndex == null)
+                    //{
+                    m_nowSkillIndex = typeof(SkillBattleSystem).GetField("nowSkillIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+                    //}
                     int value;
                     try
                     {
@@ -136,10 +151,10 @@ namespace GuiConsultModestly
             {
                 get
                 {
-                    if (m_questionPower == null)
-                    {
-                        m_questionPower = typeof(SkillBattleSystem).GetField("questionPower", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //if (m_questionPower == null)
+                    //{
+                    m_questionPower = typeof(SkillBattleSystem).GetField("questionPower", BindingFlags.NonPublic | BindingFlags.Instance);
+                    //}
                     int value;
                     try
                     {
@@ -159,10 +174,10 @@ namespace GuiConsultModestly
             {
                 get
                 {
-                    if (m_mianEnemyId == null)
-                    {
-                        m_mianEnemyId = typeof(SkillBattleSystem).GetField("mianEnemyId", BindingFlags.NonPublic | BindingFlags.Instance);
-                    }
+                    //if (m_mianEnemyId == null)
+                    //{
+                    m_mianEnemyId = typeof(SkillBattleSystem).GetField("mianEnemyId", BindingFlags.NonPublic | BindingFlags.Instance);
+                    //}
                     int value;
                     try
                     {
@@ -182,11 +197,12 @@ namespace GuiConsultModestly
             {
                 if (!Main.enabled)
                     return;
+                _this = SkillBattleSystem.instance;
 
                 try
                 {
                     string[] conten = SetSkillBatterGains(isActor);
-                    if (conten != null && conten[0]!=null)
+                    if (conten != null && conten[0] != null)
                     {
                         YesOrNoWindow.instance.SetYesOrNoWindow(-1, conten[0], conten[1], false, true);
                     }
@@ -202,6 +218,7 @@ namespace GuiConsultModestly
             /// </summary>
             static string[] SetSkillBatterGains(bool isActor)
             {
+                Main.Logger.Log("设置技艺比拼收获");
                 if (isActor)
                     return null;
 
@@ -218,13 +235,15 @@ namespace GuiConsultModestly
 
                 battleValue = actorSkillBattleValue[typ];
                 opponentBattleValue = enemySkillBattleValue[typ];
-                selfName = "<color=#8E8E8EFF>" + DateFile.instance.GetActorName(_actorId, false, false)+"</color>";
+                selfName = "<color=#8E8E8EFF>" + DateFile.instance.GetActorName(_actorId, false, false) + "</color>";
                 opponentName = "<color=#8E8E8EFF>" + DateFile.instance.GetActorName(_mianEnemyId, false, false) + "</color>";
 
-                int _skillId = DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1]);
+                //int _skillId = DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1]);
+                int _skillId = int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][typ + 1], System.Globalization.CultureInfo.InvariantCulture);
                 //string book_name = DateFile.instance.skillDate[_skillId][typ];// 书籍名
-                var data = DateFile.instance.skillDate[DateFile.instance.ParseInt(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex + 1])];
-                string book_name = "<color=#8E8E8EFF>《"+ data[0] + "》</color>" + data[1001];
+                var data = DateFile.instance.skillDate[int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex + 1], System.Globalization.CultureInfo.InvariantCulture)];
+                string book_name = "<color=#8E8E8EFF>《" + data[0] + "》</color>" + data[1001];
+                string bname = "<color=#8E8E8EFF>《" + data[0] + "》</color>";
 
 
 
@@ -280,12 +299,14 @@ namespace GuiConsultModestly
                         else if (battleValue > (opponentBattleValue + 100)) // 指点江山：《"+book_name+"》心中已经有了深刻认识，觉得"+opponentName+"讲解颇有不足，为其讲解了此中深意。
                         {
                             result[0] = "指点江山";
-                            result[1] = selfName + "觉得" + opponentName + "对" + book_name + "理解不够深刻，为其讲解了此中深意，" + opponentName + "感激不尽。";
+                            result[1] = selfName + "觉得" + opponentName + "对" + book_name + "理解不够深刻，为其讲解了此中深意，" + opponentName + "感激不尽。\n<color=#8E8E8EFF>【需要对方水平比自己高100】"+
+                                opponentBattleValue +":"+ battleValue + "</color>";
                         }
                         else
                         {
                             result[0] = "各抒己见";
-                            result[1] = selfName + "和" + opponentName + "对" + book_name + "均有不同见解，双方吵得不可开交，差点就打起来了";
+                            result[1] = selfName + "和" + opponentName + "对" + book_name + "均有不同见解，双方吵得不可开交，差点就打起来了\n<color=#8E8E8EFF>【需要对方水平比自己高100】" +
+                                opponentBattleValue + ":" + battleValue + "</color>";
                         }
                     }
                     else if (exceed >= 1 && exceed <= 100) // 茅塞顿开：《"+book_name+"》已经困扰自己已久，此时听了"+opponentName+"的讲解之后茅塞顿开，心中有了更深刻的认识。
@@ -308,40 +329,53 @@ namespace GuiConsultModestly
 
                     if (value > 0)
                     {
-                        value = UnityEngine.Random.Range(0, 100) < value ? 1 : 0;
+                        var seven = ActorMenu.instance.GetActorResources(_actorId)[0]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                        var rand = UnityEngine.Random.Range(0, 100);
+                        var need = (value + seven + Main.settings.AddWind);
+                        result[1] += "\n<color=#8E8E8EFF>【细腻影响领悟成功率】粗心点数越小越好" + rand + "/" + need+ "</color>";
+                        value = rand <= need ? 1 : 0;
 
                         if (value > 0)
                         {
-                            var seven = ActorMenu.instance.GetActorResources(_actorId);
-                            int rand = UnityEngine.Random.Range(0, 95) + seven[1]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                            seven = ActorMenu.instance.GetActorResources(_actorId)[1];
+                            rand = UnityEngine.Random.Range(0, 95) + seven + Main.settings.AddWind; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                            need = (stage * 10);
+                            result[1] += "\n<color=#8E8E8EFF>【聪颖影响研读成功率】研读点数越大越好" + rand + "/" + need + "</color>";
                             //Logger.Log(stage + "阶书籍判断几率 " + rand + "<=" + (stage * 10) + " " + (rand <= (stage * 10)));
-                            if (rand <= (stage * 10)) // 书籍阶数 研读成功率越低
+                            if (rand <= need) // 书籍阶数 研读成功率越低
                                 value = 0;
                         }
 
                         if (value > 0)
                         {
                             //Logger.Log(stage + "阶书籍 下级将研读 " + (num2+1) + "<=" + (power / 90) + "   问题难度 " + power + "   " + (num2 > (power / 90)));
-                            if (num2 > (power / 90))
+                            //Logger.Log(stage + "阶书籍 下级将研读 " + (num2+1) + "<=" + (power / 90) + "   问题难度 " + power + "   " + (num2 > (power / 90)));
+                            if ((num2*90) > power)
+                            {
                                 value = 0;
+                                result[1] += "\n<color=#8E8E8EFF>【书籍页数相关】题目难度不足" + power + "/" + (num2 * 90)+ "</color>";
+                            }
                         }
-                        if (value > 0 && result[0] == "受益良多"&& (num2+1) <= (power / 90))
+
+                        if (value > 0 && result[0] == "受益良多" && (num2 + 1) <= (power / 90))
                         {
                             value = 2;
                         }
 
 
-                        // 如果大于0则增加技艺等级if (value > 0)
+                        // 如果大于0则增加技艺等级
+                        if (value > 0)
                         {
+                            value = value * Main.settings.ReadLevel;
                             value = SkillFLevel(_skillId, value);
                         }
                     }
+
                     if (value > 0)
                     {
-
-                        result[1] += "\n\n\n【" + selfName + "抓住了意思明悟，" + book_name + "研习进度增加了" + value + "页】";
+                        result[1] += "\n\n\n【" + selfName + "抓住了一丝明悟，" + book_name + "研习进度增加了" + value + "页】";
                     }
-                    else
+                    else if(value != -100)
                     {
                         int rand = UnityEngine.Random.Range(0, 4);
                         switch (rand)
@@ -359,6 +393,11 @@ namespace GuiConsultModestly
                                 result[1] += "\n\n\n【" + selfName + "似乎抓住了一丝明悟，但却不甚明朗，始终无法突破。】";
                                 break;
                         }
+                    }
+                    else
+                    {
+                        result[0] = "领悟技艺";
+                        result[1] = selfName + "在比拼中有所领悟，赶紧将心中领悟记下" + "\n\n\n【获得残页书籍" + bname + "】";
                     }
                 }
                 else
@@ -391,13 +430,20 @@ namespace GuiConsultModestly
                         result[0] = "相谈甚欢";
                         result[1] = selfName + "与" + opponentName + "对" + book_name + "达成一致看法，相谈甚欢。";
                     }
-                }
-                if (value == 0&&UnityEngine.Random.Range(0,10)<8)
-                {
-                    return null;
+                    //if (num2 != 10 && (stage == 1 || num >= 5))
+                    if(num2 == 10)
+                    {
+                        result[1]+= "<color=#8E8E8EFF>【书籍研习进度已满】</color>";
+                    }else if(!(stage == 1 || num >= 5))
+                    {
+                        result[1] += "<color=#8E8E8EFF>【需要"+
+                            DateFile.instance.skillDate[int.Parse(DateFile.instance.baseSkillDate[_this.battleSkillTyp][nowSkillIndex], System.Globalization.CultureInfo.InvariantCulture)][0]
+                            + "研习至5页以上】</color>";
+                    }
                 }
 
 
+                #region 打印能力值
 
                 ////// 打印能力值
                 //Logger.Log("书页判断结果： " + stage + " " + num + " " + num2);
@@ -460,7 +506,7 @@ namespace GuiConsultModestly
                 //}
                 //Logger.Log(de);
 
-
+                #endregion
                 return result;
             }
 
@@ -470,49 +516,85 @@ namespace GuiConsultModestly
                 bool flag8 = !DateFile.instance.skillBookPages.ContainsKey(skillId);
                 if (flag8)
                 {
+                    // 习得新的书籍
                     DateFile.instance.skillBookPages.Add(skillId, new int[10]);
-                }
-                int[] pages = new int[value];
-                int idx = 0;
-                for (int i = 0; i < 10; i++)
-                {
-                    if (DateFile.instance.skillBookPages[skillId][i] == 0 && idx < value)
-                    {
-                        pages[idx++] = i;
-                    }
-                }
 
-                foreach (var pageIndex in pages)
+                    AddSkillBook(skillId);
+                    return -100;
+                }
+                if (value > 0)
                 {
-                    int num8 = DateFile.instance.skillBookPages[skillId][pageIndex];
-                    bool flag9 = num8 != 1 && num8 > -100;
-                    if (flag9)
+                    int[] pages = new int[value];
+                    int idx = 0;
+                    for (int i = 0; i < 10; i++)
                     {
-                        int num9 = DateFile.instance.ParseInt(DateFile.instance.skillDate[skillId][2]);
-                        bool flag10 = !DateFile.instance.actorSkills.ContainsKey(skillId);
-                        if (flag10)
+                        if (DateFile.instance.skillBookPages[skillId][i] == 0 && idx < value)
                         {
-                            DateFile.instance.ChangeMianSkill(skillId, 0, 0, true);
-                        }
-                        DateFile.instance.skillBookPages[skillId][pageIndex] = 1;
-                        DateFile.instance.AddActorScore(203, num9 * 100);
-                        bool flag11 = DateFile.instance.GetSkillLevel(skillId) >= 100 && DateFile.instance.GetSkillFLevel(skillId) >= 10;
-                        if (flag11)
-                        {
-                            DateFile.instance.AddActorScore(204, num9 * 100);
+                            pages[idx++] = i;
                         }
                     }
+
+                    foreach (var pageIndex in pages)
+                    {
+                        int num8 = DateFile.instance.skillBookPages[skillId][pageIndex];
+                        bool flag9 = num8 != 1 && num8 > -100;
+                        if (flag9)
+                        {
+                            int num9 = int.Parse(DateFile.instance.skillDate[skillId][2], System.Globalization.CultureInfo.InvariantCulture);
+                            bool flag10 = !DateFile.instance.actorSkills.ContainsKey(skillId);
+                            if (flag10)
+                            {
+                                DateFile.instance.ChangeMianSkill(skillId, 0, 0, true);
+                            }
+                            DateFile.instance.skillBookPages[skillId][pageIndex] = 1;
+                            DateFile.instance.AddActorScore(203, num9 * 100);
+                            bool flag11 = DateFile.instance.GetSkillLevel(skillId) >= 100 && DateFile.instance.GetSkillFLevel(skillId) >= 10;
+                            if (flag11)
+                            {
+                                DateFile.instance.AddActorScore(204, num9 * 100);
+                            }
+                        }
+                    }
+                    return idx;
                 }
-                return idx;
+                return 0;
             }
 
             // 提升技艺修习
             static int SkillLevel(int skillId, int value)
             {
+                
                 int idx = 0;
                 return idx;
             }
         }
 
+
+        static void AddSkillBook(int skillId)
+        {
+            int itemId = 0;
+            foreach (var item in DateFile.instance.presetitemDate)
+            {
+                if (item.Value.ContainsKey(32))
+                {
+                    if (int.Parse(item.Value[32]) == skillId) // 32 是对应的功法   35是是否手抄
+                    {
+                        itemId = item.Key;
+                        break;
+                    }
+                }
+            }
+
+            if (itemId > 0)
+            {
+                int item = DateFile.instance.GetItem(DateFile.instance.MianActorID(), itemId, 1, true);
+                if (item > 0)
+                {
+                    DateFile.instance.itemsDate[item][33] = "0|0|0|0|0|0|0|0|0|0";
+                    DateFile.instance.itemsDate[item][901] = "3";
+                    DateFile.instance.itemsDate[item][902] = "3";
+                }
+            }
+        }
     }
 }
