@@ -195,7 +195,7 @@ namespace GuiScroll
                         btn.onClick.RemoveAllListeners();
                         btn.onClick.AddListener(delegate ()
                         {
-                            ActorMenu.instance.SetActorAttr(num2);
+                            ClickItem(num2);
                         });
                     }
                     else
