@@ -1,0 +1,8 @@
+﻿{
+  "Id": "MakeMyselfTheMianActor",
+  "DisplayName": "传剑给自己",
+  "Author": "inpay",
+  "Version": "1.0.0",
+  "AssemblyName": "MakeMyselfTheMianActor.dll",
+  "EntryMethod": "MakeMyselfTheMianActor.Main.Load"
+}
