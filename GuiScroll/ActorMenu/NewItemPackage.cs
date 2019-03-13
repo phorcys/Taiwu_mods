@@ -229,12 +229,123 @@ namespace GuiScroll
                 else
                 {
                     Main.Logger.Log(actorId + "暂存" + giveId + "物品" + itemId);
+                    SaveItem(giveId, actorId, itemId);
                 }
             }
             else
             {
                 Main.Logger.Log(actorId + "使用物品" + itemId);
             }
+        }
+
+        private void SaveItem(int giveId,int actorId,int itemId)
+        {
+            if (ActorMenu.instance.isEnemy)
+            {
+                Main.Logger.Log("是敌人");
+                return;
+            }
+            int typ = 8;
+            int mainActorId = DateFile.instance.MianActorID();
+            //int itemId = DateFile.instance.ParseInt(containerImage.transform.parent.gameObject.name.Split(',')[1]);
+            Main.Logger.Log("不能更换团队"+ ActorMenu.instance.cantChanageTeam);
+            if (ActorMenu.instance.cantChanageTeam)
+            {
+                if (!DateFile.instance.acotrTeamDate.Contains(actorId))
+                {
+                    // <color=#E3C66DFF>一</color>未与我们同行！< color =#E3C66DFF>（无法在奇遇过程中向其拿取物品。）</color>
+                    float x = -770f;
+                    float y = 365f;
+                    TipsWindow.instance.SetTips(0, new string[1]
+                    {
+                                DateFile.instance.SetColoer(20008, DateFile.instance.GetActorDate(actorId, 0, addValue: false)) + DateFile.instance.massageDate[304][0]
+                    }, 180, x, y);
+                    return;
+                }
+                if (!DateFile.instance.acotrTeamDate.Contains(giveId))
+                {
+                    //< color =#E3C66DFF>0</color>未与我们同行！< color =#E3C66DFF>（无法在奇遇过程中向不在出战队伍的同道转交物品。）</color>
+                    float x2 = -400f;
+                    float y2 = 315f;
+                    TipsWindow.instance.SetTips(0, new string[1]
+                    {
+                                DateFile.instance.SetColoer(20008, DateFile.instance.GetActorDate(giveId, 0, addValue: false)) + DateFile.instance.massageDate[304][1]
+                    }, 180, x2, y2);
+                    return;
+                }
+            }
+            Main.Logger.Log("actorId != mainActorId " + (actorId != mainActorId));
+            Main.Logger.Log("!DateFile.instance.giveItemsDate.ContainsKey(actorId) "+(!DateFile.instance.giveItemsDate.ContainsKey(actorId)));
+            Main.Logger.Log("actorId != mainActorId && (!DateFile.instance.giveItemsDate.ContainsKey(actorId) || !DateFile.instance.giveItemsDate[actorId].ContainsKey(giveId)) "+(actorId != mainActorId && (!DateFile.instance.giveItemsDate.ContainsKey(actorId) || !DateFile.instance.giveItemsDate[actorId].ContainsKey(itemId))));
+            if (actorId != mainActorId && (!DateFile.instance.giveItemsDate.ContainsKey(actorId) || !DateFile.instance.giveItemsDate[actorId].ContainsKey(itemId)))
+            {
+                int num13 = 0;
+                int num14 = 100;
+                int num15 = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 5));
+                Main.Logger.Log("num15 "+ num15+" "+(DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 202, addValue: false)))+" "+(DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 203, addValue: false))));
+                if (num15 == DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 202, addValue: false)))
+                {
+                    num13 = 2;
+                    num14 += 100;
+                    DateFile.instance.actorsDate[actorId][207] = "1";
+                }
+                else if (num15 == DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 203, addValue: false)))
+                {
+                    num13 = 1;
+                    num14 -= 50;
+                    DateFile.instance.actorsDate[actorId][208] = "1";
+                }
+                Main.Logger.Log("xx == 1 "+(DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 27, addValue: false))));
+                if (DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 27, addValue: false)) == 1)
+                {
+                    num13 = 2;
+                    num14 += 100;
+                    DateFile.instance.SetActorMood(actorId, -DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 103)));
+                }
+                //for (int j = 0; j < ActorMenu.instance.listActorsHolder.childCount; j++)
+                //{
+                //    Transform child = ActorMenu.instance.listActorsHolder.GetChild(j);
+                //    if (DateFile.instance.ParseInt(child.name.Split(',')[1]) == actorId)
+                //    {
+                //        GameObject[] moodFace = child.GetComponent<SetListActor>().moodFace;
+                //        for (int k = 0; k < moodFace.Length; k++)
+                //        {
+                //            bool flag = k == num13;
+                //            moodFace[k].SetActive(flag);
+                //            if (flag)
+                //            {
+                //                Component[] componentsInChildren = moodFace[k].GetComponentsInChildren<Component>();
+                //                Component[] array = componentsInChildren;
+                //                foreach (Component component in array)
+                //                {
+                //                    if (component is Graphic)
+                //                    {
+                //                        (component as Graphic).CrossFadeAlpha(1f, 0f, ignoreTimeScale: true);
+                //                        (component as Graphic).CrossFadeAlpha(0f, 5f, ignoreTimeScale: true);
+                //                    }
+                //                }
+                //            }
+                //        }
+                //        break;
+                //    }
+                //}
+                int num16 = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 102)) * num14 / 100;
+                Main.Logger.Log("num16 = "+ num16);
+                DateFile.instance.actorsDate[actorId][210] = (DateFile.instance.ParseInt(DateFile.instance.GetActorDate(actorId, 210, addValue: false)) + num16).ToString();
+                DateFile.instance.ChangeFavor(actorId, -num16, updateActor: false, showMassage: false);
+            }
+            Main.Logger.Log("OK1 ");
+            DateFile.instance.AddGiveItems(giveId, itemId);
+            Main.Logger.Log("OK2 ");
+            DateFile.instance.ChangeTwoActorItem(actorId, giveId, itemId);
+            Main.Logger.Log("OK3 ");
+            ActorMenu.instance.UpdateActorListFavor();
+            Main.Logger.Log("OK4 ");
+            DateFile.instance.PlayeSE(typ);
+            WindowManage.instance.WindowSwitch(on: false);
+            ActorMenu.instance.UpdateItems(actorId, ActorMenu.instance.itemTyp);
+            ActorMenu.instance.UpdateEquips(actorId, ActorMenu.instance.equipTyp);
+            Main.Logger.Log("OK5 ");
         }
 
         private void Update()
