@@ -46,6 +46,8 @@ namespace GuiBaseUI
                 root.SetParent(Object.FindObjectOfType<Canvas>().transform,false);
                 root.position = Vector3.zero;
                 prefab = CreateUI.NewImage();
+                prefab.transform.SetParent(root);
+                prefab.transform.localScale = Vector3.zero;
             }
             IconItem item = new IconItem(Object.Instantiate(prefab));
             return item;
