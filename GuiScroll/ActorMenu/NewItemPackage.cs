@@ -301,7 +301,7 @@ namespace GuiScroll
                             }
                         }
                     }
-                    IconMove.Move(start, target, 20, sprite);
+                    IconMove.Move(start, target, 0.5f, sprite);
 
 
                     SaveItem(giveId, actorId, itemId);
