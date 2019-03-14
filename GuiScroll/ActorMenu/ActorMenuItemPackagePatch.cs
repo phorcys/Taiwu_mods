@@ -20,9 +20,14 @@ namespace GuiScroll
                 m_itemPackage[i] = t[i].parent.parent.gameObject.AddComponent<NewItemPackage>();
                 m_itemPackage[i].Init();
             }
-
-
         }
+        public static int[] items_data;
+
+        public static void UpdateItems()
+        {
+            m_itemPackage[Typ].data = items_data;
+        }
+
 
         [HarmonyPatch(typeof(ActorMenu), "UpdateItems")]
         public static class ActorMenu_UpdateItems_Patch
@@ -108,7 +113,8 @@ namespace GuiScroll
                 }
 
                 Main.Logger.Log("设置数据");
-                m_itemPackage[typ].data = result.ToArray();
+                items_data = result.ToArray();
+                m_itemPackage[typ].data = items_data;
                 return false;
             }
         }
@@ -123,9 +129,10 @@ namespace GuiScroll
 
                 Main.Logger.Log("RemoveAllItems 清除所有物品");
 
+                items_data = new int[0];
                 foreach (var item in m_itemPackage)
                 {
-                    item.data = new int[0];
+                    item.data = items_data;
                 }
                 return false;
             }

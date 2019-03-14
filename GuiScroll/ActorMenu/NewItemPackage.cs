@@ -56,7 +56,7 @@ namespace GuiScroll
 
             scrollRect.verticalNormalizedPosition = 1; // 设置最上的位置
             Image imgScrollView = scrollView.GetComponentInChildren<Image>(); // 拿到背景图
-            imgScrollView.color = new Color(0f, 0f, 0f, 1f); // 背景图颜色
+            //imgScrollView.color = new Color(0f, 0f, 0f, 1f); // 背景图颜色
             imgScrollView.raycastTarget = false; // 设置背景不可点击
             RectTransform rScrollView = ((RectTransform)scrollView.transform); // 拿到滑动UI
             rScrollView.SetParent(gameObject.transform, false); // 设置父物体
@@ -72,8 +72,8 @@ namespace GuiScroll
             rItemCell.sizeDelta = new Vector2(720, 85); // 设置大小
 
             // 测试图片
-            Image imgItemCell = gItemCell.AddComponent<Image>();
-            imgItemCell.color = new Color(1, 0, 0, 0.5f);
+            //Image imgItemCell = gItemCell.AddComponent<Image>();
+            //imgItemCell.color = new Color(1, 0, 0, 0.5f);
             Main.Logger.Log("完成");
 
             GameObject prefab = ActorMenu.instance.itemIconNoToggle; // 拿到子物体预制件  ！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
@@ -146,7 +146,7 @@ namespace GuiScroll
             if (bigDataScroll != null && m_data != null && isInit)
             {
                 int count = m_data.Length / lineCount + 1;
-                Main.Logger.Log("=======！！！！！=======数据数量"+count);
+                Main.Logger.Log("=======！！！！！=======数据数量" + count);
 
                 bigDataScroll.cellCount = count;
                 //if (!Main.OnChangeList)
@@ -158,9 +158,10 @@ namespace GuiScroll
 
         private void SetCell(ItemCell itemCell, int index)
         {
+            int mainActorId = DateFile.instance.MianActorID();
             int key = ActorMenuItemPackagePatch.Key;
             int typ = ActorMenuItemPackagePatch.Typ;
-            int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key,  false,  true);
+            int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key, false, true);
             ActorMenu _this = ActorMenu.instance;
             Main.Logger.Log(index.ToString() + "设置 itemCell。。。" + itemCell.ToString() + " pos=" + scrollRect.verticalNormalizedPosition.ToString());
             PackageItem item = itemCell as PackageItem;
@@ -195,8 +196,9 @@ namespace GuiScroll
                         btn.onClick.RemoveAllListeners();
                         btn.onClick.AddListener(delegate ()
                         {
-                            ClickItem(num2);
+                            ClickItem(num2, setItem);
                         });
+
                     }
                     else
                     {
@@ -216,8 +218,14 @@ namespace GuiScroll
             }
         }
 
-        private void ClickItem(int itemId)
+        private void ClickItem(int itemId, SetItem setItem)
         {
+            if(setItem.notakeIcon.activeSelf&&setItem.notakeIcon.GetComponent<Image>().color == Color.red)
+            {
+                YesOrNoWindow.instance.SetYesOrNoWindow(-1, "触动禁制", "这个东西被锁住了！", false, true);
+                return;
+            }
+
             int actorId = ActorMenuActorListPatch.acotrId;
             int giveId = ActorMenuActorListPatch.giveActorId;
             if(actorId!= giveId)
@@ -229,6 +237,73 @@ namespace GuiScroll
                 else
                 {
                     Main.Logger.Log(actorId + "暂存" + giveId + "物品" + itemId);
+
+                    Vector3 start, target = new Vector3(-1000, 0, 0);
+                    start = setItem.transform.position;
+                    bool get_target = false;
+                    Sprite sprite = setItem.itemIcon.GetComponent<Image>().sprite;
+                    int star_id = 0, end_id = 0;
+                    Vector3 start_pos = Vector3.zero, end_pos = Vector3.zero;
+                    Vector3 dis = Vector3.zero;
+                    int for_end = ActorMenuActorListPatch.m_listActorsHolder.rectContent.childCount - 1;
+                    int idx = 0;
+                    for (int i = 0; i <= for_end; i++)
+                    {
+                        Transform child = ActorMenuActorListPatch.m_listActorsHolder.rectContent.GetChild(i);
+                        string[] ss = child.name.Split(',');
+                        if(ss.Length <= 1)
+                        {
+                            continue;
+                        }
+                        idx++;
+                        int actor_id = DateFile.instance.ParseInt(ss[1]);
+                        if (actor_id == giveId)
+                        {
+                            target = child.position;
+                            get_target = true;
+                            break;
+                        }
+                        if (idx == 0)
+                        {
+                            star_id = actor_id;
+                            start_pos = child.position;
+                        }
+                        end_id = actor_id;
+                        end_pos = child.position;
+                        if (idx == 1)
+                        {
+                            dis = start_pos - child.position;
+                        }
+                    }
+                    if (!get_target)
+                    {
+                        bool top = true;
+                        for (int i = 0; i < data.Length; i++)
+                        {
+                            int actor_id = data[i];
+                            if (top)
+                            {
+                                if (actor_id == star_id || actor_id == end_id)
+                                {
+                                    top = false;
+                                }
+                            }
+                            if (actor_id == giveId)
+                            {
+                                if (top)
+                                {
+                                    target = start_pos + dis;
+                                }
+                                else
+                                {
+                                    target = start_pos - dis;
+                                }
+                            }
+                        }
+                    }
+                    IconMove.Move(start, target, 20, sprite);
+
+
                     SaveItem(giveId, actorId, itemId);
                 }
             }

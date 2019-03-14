@@ -278,6 +278,7 @@ namespace GuiScroll
                     }
                     if (i == 0 && !go.transform.parent.gameObject.activeSelf)
                         go.transform.parent.gameObject.SetActive(true);
+
                 }
                 else
                 {
