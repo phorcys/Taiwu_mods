@@ -227,6 +227,11 @@ namespace GuiScroll
             }
 
             int actorId = ActorMenuActorListPatch.acotrId;
+            if (DateFile.instance.ActorIsInBattle(actorId) != 0)
+            {
+                YesOrNoWindow.instance.SetYesOrNoWindow(-1, "战斗中", "战斗中不能使用这个功能！", false, true);
+                return;
+            }
             int giveId = ActorMenuActorListPatch.giveActorId;
             if(actorId!= giveId)
             {
@@ -310,11 +315,127 @@ namespace GuiScroll
             else
             {
                 Main.Logger.Log(actorId + "使用物品" + itemId);
-
+                bool use = UseCure(actorId, itemId);
 
             }
         }
 
+        /// <summary>
+        /// 尝试使用物品疗伤
+        /// </summary>
+        /// <param name="actorId">人物id</param>
+        /// <param name="itemId">物品id</param>
+        /// <returns>是否为疗伤药</returns>
+        private bool UseCure(int actorId,int itemId)
+        {
+            bool result = false; // 是否判定为疗伤药并且使用成功
+            int cureValue = 0; // 疗伤值
+            int damageTyp = 1; // 伤口类型 1是外伤 2是内伤
+            cureValue = Mathf.Abs(DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 11))); // 判断是否外伤药 如果是拿到疗伤效果 11是外伤疗伤效果
+            if (cureValue > 0)
+            {
+                damageTyp = 1;
+                Main.Logger.Log("外伤药");
+                result = true;
+                //if (DateFile.instance.actorInjuryDate[actorId][num19] > num21 * 3)
+                //{
+                //    num21 /= 5;
+                //}
+                //DateFile.instance.RemoveInjury(actorId, num19, -num21);
+            }
+            cureValue = Mathf.Abs(DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 12))); // 判断是否内伤药 如果是拿到疗伤效果 12是内伤疗伤效果
+            if (cureValue > 0)
+            {
+                damageTyp = 2;
+                Main.Logger.Log("内伤药");
+                result = true;
+                //if (DateFile.instance.actorInjuryDate[actorId][num19] > num22 * 3)
+                //{
+                //    num22 /= 5;
+                //}
+                //DateFile.instance.RemoveInjury(actorId, num19, -num22);
+            }
+
+            Main.Logger.Log("打印伤口 伤口类型："+ damageTyp);
+            if (!result)
+                return false;
+
+            int injuryId = -1; // 记录可治疗药效不削弱的最深的伤口id
+            int ijIdValue = 0; // 当前记录的伤口id的伤害值
+            int maxIjId = -1; // 最深的伤口id
+            int maxIjIdValue = 0; // 当前记录的最深的伤口伤害值
+            foreach (var item in DateFile.instance.actorInjuryDate[actorId])
+            {
+                Main.Logger.Log(item.Key + " 伤口 " + item.Value);
+                int ijId = item.Key;
+                foreach (var vvv in DateFile.instance.injuryDate[ijId])
+                {
+                    Main.Logger.Log(vvv.Key + " 伤口类型 " + vvv.Value);
+                }
+                if (DateFile.instance.injuryDate[ijId].ContainsKey(damageTyp))
+                {
+                    int injury = DateFile.instance.ParseInt(DateFile.instance.injuryDate[ijId][damageTyp]);
+                    if (injury > 0) // 是对应疗伤药的伤口
+                    {
+                        if (injury > maxIjIdValue) // 更新记录的最深的伤口
+                        {
+                            maxIjId = ijId;
+                            maxIjIdValue = injury;
+                        }
+                        if (injury > ijIdValue && !(DateFile.instance.actorInjuryDate[actorId][ijId] > cureValue * 3)) // 更新记录可治疗药效不削弱的最深的伤口id
+                        {
+                            injuryId = ijId;
+                            ijIdValue = injury;
+                        }
+                    }
+                }
+            }
+            if (injuryId == -1)
+            {
+                if (maxIjId == -1)
+                {
+                    YesOrNoWindow.instance.SetYesOrNoWindow(-1, "你逗我呢？", "你都没有受伤干嘛要吃药？", false, true);
+                    return true;
+                }
+                else
+                {
+                    injuryId = maxIjId;
+                    ijIdValue = maxIjIdValue / 5;
+                }
+            }
+            DateFile.instance.RemoveInjury(actorId, injuryId, -ijIdValue);
+
+
+
+            // 如果药物有淬毒那么会中毒
+            for (int m = 0; m < 6; m++)
+            {
+                int num23 = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 71 + m));
+                if (num23 != 0)
+                {
+                    ActorMenu.instance.ChangePoison(actorId, m, num23 * 10);
+                }
+            }
+            DateFile.instance.ChangeItemHp(actorId, itemId, -1); // 消耗物品耐久度
+            DateFile.instance.RemoveInjury(actorId, injuryId, -cureValue); // 删除角色伤口
+
+
+            DateFile.instance.PlayeSE(8); // 音效
+            WindowManage.instance.WindowSwitch(on: false);
+            ActorMenu.instance.GetActorInjury(actorId, damageTyp);
+            if (DateFile.instance.battleStart)
+            {
+                StartBattle.instance.UpdateActorHSQP();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 存放物品到同道身上
+        /// </summary>
+        /// <param name="giveId">受赠者人物ID</param>
+        /// <param name="actorId">赠送者人物ID</param>
+        /// <param name="itemId">物品ID</param>
         private void SaveItem(int giveId,int actorId,int itemId)
         {
             if (ActorMenu.instance.isEnemy)
@@ -324,7 +445,7 @@ namespace GuiScroll
             }
             int typ = 8;
             int mainActorId = DateFile.instance.MianActorID();
-            //int itemId = DateFile.instance.ParseInt(containerImage.transform.parent.gameObject.name.Split(',')[1]);
+            //int giveId = DateFile.instance.ParseInt(containerImage.transform.parent.gameObject.name.Split(',')[1]);
             Main.Logger.Log("不能更换团队"+ ActorMenu.instance.cantChanageTeam);
             if (ActorMenu.instance.cantChanageTeam)
             {
