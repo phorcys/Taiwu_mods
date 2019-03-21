@@ -77,7 +77,7 @@ namespace ShowBiographyOfTheDead
         public const int minBlurLength = 3;
         public const int maxBlurLength = 10;
 
-        static void Prefix(DateFile __instance, List<int> actorId, bool die, bool showRemove, bool make9Level = true)
+        static void Prefix(DateFile __instance, List<int> actorId, bool die, bool showRemove)
         {
             if (!Main.enabled)
                 return;
