@@ -8,18 +8,37 @@ namespace GuiScroll
     public static class ActorMenuItemPackagePatch
     {
         public static int Key, Typ;
-        public static NewItemPackage[] m_itemPackage;
+        private static NewItemPackage[] mm;
+        public static NewItemPackage[] m_itemPackage
+        {
+            get
+            {
+                Main.Logger.Log("获取 NewItem");
+                if (mm == null || mm[0] == null)
+                {
+                    InitGuiUI();
+                }
+                Main.Logger.Log("获取 NewItem = "+mm.ToString());
+                return mm;
+            }
+            set
+            {
+                Main.Logger.Log("设置 NewItem mm");
+                mm = value;
+            }
+        }
         private static void InitGuiUI()
         {
-
+            Main.Logger.Log("初始化 NewItem mm begin");
             var t = ActorMenu.instance.itemsHolder;
-            m_itemPackage = new NewItemPackage[t.Length];
+            mm = new NewItemPackage[t.Length];
             for (int i = 0; i < t.Length; i++)
             {
                 t[i].gameObject.SetActive(false);
-                m_itemPackage[i] = t[i].parent.parent.gameObject.AddComponent<NewItemPackage>();
-                m_itemPackage[i].Init();
+                mm[i] = t[i].parent.parent.gameObject.AddComponent<NewItemPackage>();
+                mm[i].Init();
             }
+            Main.Logger.Log("初始化 NewItem mm end");
         }
         public static int[] items_data;
 
@@ -39,13 +58,6 @@ namespace GuiScroll
 
 
                 Key = key; Typ = typ;
-
-                if (m_itemPackage == null)
-                {
-                    InitGuiUI();
-                }
-
-
 
                 Main.Logger.Log((new System.Diagnostics.StackTrace(true)).ToString());
 

@@ -183,7 +183,10 @@ namespace GuiWarehouse
                                 go.SetActive(true);
                             }
                             go.name = "ActorItem," + num3;
-                            childData.setItem.SetWarehouseItemIcon(num2, num3, int.Parse(DateFile.instance.GetItemDate(num3, 3, true)) != 1 || flag);
+                            //childData.setItem.SetWarehouseItemIcon(num2, num3, int.Parse(DateFile.instance.GetItemDate(num3, 3, true)) != 1 || flag);
+                            childData.setItem.SetWarehouseItemIcon(num2, num3, (DateFile.instance.ParseInt(
+                                DateFile.instance.GetItemDate(num3, 3)) != 1 
+                                || DateFile.instance.ParseInt(DateFile.instance.GetItemDate(num3, 5)) == 42) | flag, Warehouse.instance.warehouseItemDes, 201);
                         }
                         else
                         {

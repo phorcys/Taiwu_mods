@@ -178,6 +178,7 @@ namespace GuiScroll
                     GameObject go = childData.gameObject;
                     if (idx < m_data.Length)
                     {
+                        go.transform.parent.gameObject.SetActive(true);
                         if (!go.activeSelf)
                         {
                             go.SetActive(true);
