@@ -2,6 +2,7 @@
 using Harmony12;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GuiScroll
 {
@@ -13,23 +14,23 @@ namespace GuiScroll
         {
             get
             {
-                Main.Logger.Log("获取 NewItem");
+                // Main.Logger.Log("获取 NewItem");
                 if (mm == null || mm[0] == null)
                 {
                     InitGuiUI();
                 }
-                Main.Logger.Log("获取 NewItem = "+mm.ToString());
+                // Main.Logger.Log("获取 NewItem = "+mm.ToString());
                 return mm;
             }
             set
             {
-                Main.Logger.Log("设置 NewItem mm");
+                // Main.Logger.Log("设置 NewItem mm");
                 mm = value;
             }
         }
         private static void InitGuiUI()
         {
-            Main.Logger.Log("初始化 NewItem mm begin");
+            // Main.Logger.Log("初始化 NewItem mm begin");
             var t = ActorMenu.instance.itemsHolder;
             mm = new NewItemPackage[t.Length];
             for (int i = 0; i < t.Length; i++)
@@ -38,7 +39,7 @@ namespace GuiScroll
                 mm[i] = t[i].parent.parent.gameObject.AddComponent<NewItemPackage>();
                 mm[i].Init();
             }
-            Main.Logger.Log("初始化 NewItem mm end");
+            // Main.Logger.Log("初始化 NewItem mm end");
         }
         public static int[] items_data;
 
@@ -59,10 +60,10 @@ namespace GuiScroll
 
                 Key = key; Typ = typ;
 
-                Main.Logger.Log((new System.Diagnostics.StackTrace(true)).ToString());
+                // Main.Logger.Log((new System.Diagnostics.StackTrace(true)).ToString());
 
 
-                Main.Logger.Log("UpdateItems 更新物品 key ：" + key + "      typ = " + typ);
+                // Main.Logger.Log("UpdateItems 更新物品 key ：" + key + "      typ = " + typ);
                 ActorMenu _this = ActorMenu.instance;
 
                 _this.itemTyp = typ;
@@ -74,7 +75,7 @@ namespace GuiScroll
                 //int childCount = transform.childCount;
                 List<int> itemSort = DateFile.instance.GetItemSort(new List<int>(_this.GetActorItems(key).Keys));
                 List<int> result = new List<int>();
-                Main.Logger.Log("开始循环");
+                // Main.Logger.Log("开始循环");
                 for (int i = 0; i < itemSort.Count; i++)
                 {
                     int num2 = itemSort[i];
@@ -82,37 +83,8 @@ namespace GuiScroll
                     {
                         num++;
                         result.Add(num2);
-                        //GameObject gameObject = null;
-                        //if (childCount >= num)
-                        //{
-                        //    gameObject = transform.GetChild(num - 1).gameObject;
-                        //    gameObject.SetActive(value: true);
-                        //}
-                        //else
-                        //{
-                        //    gameObject = UnityEngine.Object.Instantiate(_this.itemIconNoToggle, Vector3.zero, Quaternion.identity);
-                        //    gameObject.transform.SetParent(transform, worldPositionStays: false);
-                        //}
-                        //gameObject.name = "Item," + num2;
-                        //gameObject.GetComponent<SetItem>().SetActorMenuItemIcon(key, num2, actorFavor, _this.injuryTyp);
                     }
                 }
-                //for (int j = 0; j < transform.childCount; j++)
-                //{
-                //    GameObject gameObject2 = transform.GetChild(j).gameObject;
-                //    if (gameObject2 != null && gameObject2.activeSelf)
-                //    {
-                //        gameObject2.GetComponent<SetItem>().SetItemAdd(key, DateFile.instance.ParseInt(gameObject2.name.Split(',')[1]), transform);
-                //    }
-                //}
-                //if (childCount > num)
-                //{
-                //    for (int k = num; k < childCount; k++)
-                //    {
-                //        transform.GetChild(k).gameObject.SetActive(value: false);
-                //    }
-                //}
-                Main.Logger.Log("完成循环");
                 if (_this.isEnemy)
                 {
                     _this.actorItemSize.text = DateFile.instance.SetColoer(20003, "- / -");
@@ -124,7 +96,7 @@ namespace GuiScroll
                     _this.actorItemSize.text = string.Format("{0}{3}{1} / {2}</color>", _this.Color8(useItemSize, maxItemSize), ((float)useItemSize / 100f).ToString("f1"), ((float)maxItemSize / 100f).ToString("f1"), DateFile.instance.massageDate[807][2].Split('|')[0]);
                 }
 
-                Main.Logger.Log("设置数据");
+                // Main.Logger.Log("设置数据");
                 items_data = result.ToArray();
                 m_itemPackage[typ].data = items_data;
                 return false;
@@ -139,7 +111,7 @@ namespace GuiScroll
                 if (!Main.enabled)
                     return true;
 
-                Main.Logger.Log("RemoveAllItems 清除所有物品");
+                // Main.Logger.Log("RemoveAllItems 清除所有物品");
 
                 items_data = new int[0];
                 foreach (var item in m_itemPackage)
@@ -147,6 +119,43 @@ namespace GuiScroll
                     item.data = items_data;
                 }
                 return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(ActorMenu), "UpdateEquips")]
+        public static class ActorMenu_UpdateEquips_Patch
+        {
+            public static void Postfix(int key, int typ)
+            {
+                if (!Main.enabled)
+                    return;
+
+                Transform parent = ActorMenu.instance.equipHolders[typ];
+
+                for (int i = 0; i < parent.childCount; i++)
+                {
+                    Transform child = parent.GetChild(i);
+                    Button btn = child.GetComponent<Button>();
+                    if (!btn)
+                    {
+                        btn = child.gameObject.AddComponent<Button>();
+                    }
+                    var onclick = btn.onClick;
+                    onclick.RemoveAllListeners();
+                    onclick.AddListener(delegate { NewItemPackage.ClickItem(DateFile.instance.ParseInt(child.name.Split(',')[1]), child.GetComponent<SetItem>(), true); });
+                }
+
+                foreach (var child in ActorMenu.instance.equipIcons)
+                {
+                    Button btn = child.GetComponent<Button>();
+                    if (!btn)
+                    {
+                        btn = child.gameObject.AddComponent<Button>();
+                    }
+                    var onclick = btn.onClick;
+                    onclick.RemoveAllListeners();
+                    onclick.AddListener(delegate { NewItemPackage.UnfixEquip(ActorMenu.instance.acotrId, DateFile.instance.ParseInt(child.name.Split(',')[1])); });
+                }
             }
         }
 

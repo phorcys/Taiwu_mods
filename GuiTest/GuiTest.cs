@@ -72,38 +72,78 @@ namespace GuiTest
             //if (GUILayout.Button("打印"))
             //{
             //    GuiBaseUI.Main.LogAllChild(ActorMenu.instance.listActorsHolder.root);
-                
+
             //}
         }
 
-        [HarmonyPatch(typeof(DropObject), "OnDrop")]
-        public static class DropObject_OnDrop_Patch
+        [HarmonyPatch(typeof(ActorMenu), "CloseActorMenu")]
+        public static class ActorMenu_CloseActorMenu_Patch
         {
-            public static void Postfix(PointerEventData eventData)
+            public static void Postfix()
             {
-                Main.Logger.Log("dropObjectTyp = " + DropUpdate.instance.updateId);
-                Main.Logger.Log(eventData.ToString());
-
-                int id = DateFile.instance.ParseInt(eventData.pointerEnter.gameObject.name.Split(',')[1]);
-                Dictionary<int, string> data1;
-                DateFile.instance.itemsDate.TryGetValue(id, out data1);
-                Main.Logger.Log("打印物品 pointerEnter =============================== ");
-                foreach (var item in data1)
-                {
-                    Main.Logger.Log(item.Key + " " + item.Value);
-                }
-
-                int id2 = DateFile.instance.ParseInt(eventData.pointerDrag.gameObject.name.Split(',')[1]);
-                Dictionary<int, string> data2;
-                DateFile.instance.itemsDate.TryGetValue(id2, out data2);
-                Main.Logger.Log("打印物品 pointerDrag =============================== ");
-                foreach (var item in data2)
-                {
-                    Main.Logger.Log(item.Key + " " + item.Value);
-                }
-                Main.Logger.Log("打印完毕  =============================== ");
+                Main.Logger.Log("关闭");
+                StackTrace st = new StackTrace(true);
+                Main.Logger.Log(st.ToString());
             }
         }
+
+        [HarmonyPatch(typeof(DateFile), "ChangeTwoActorItem")]
+        public static class DateFile_ChangeTwoActorItem_Patch
+        {
+            public static void Postfix(int loseItemActorId, int getItemActorId, int itemId, int itemNumber = 1, int getTyp = -1, int partId = 0, int placeId = 0)
+            {
+                Main.Logger.Log("massageItemTyp=" + MassageWindow.instance.massageItemTyp);
+                Main.Logger.Log(loseItemActorId + " " + getItemActorId + " " + itemId + " " + itemNumber + " " + getTyp + " " + partId + placeId);
+                StackTrace st = new StackTrace(true);
+
+                Main.Logger.Log(st.ToString());
+            }
+        }
+
+        //[HarmonyPatch(typeof(DateFile), "SetActorEquip")]
+        //public static class DateFile_SetActorEquip_Patch
+        //{
+        //    public static void Postfix(int key, int equipIndex, int newEquipId)
+        //    {
+        //        Main.Logger.Log(key + "穿戴装备 " + equipIndex + " 新装备= " + newEquipId);
+        //    }
+        //}
+
+        //[HarmonyPatch(typeof(DropObject), "OnDrop")]
+        //public static class DropObject_OnDrop_Patch
+        //{
+        //    public static void Postfix(PointerEventData eventData)
+        //    {
+        //        try
+        //        {
+        //            Main.Logger.Log("dropObjectTyp = " + DropUpdate.instance.updateId);
+        //            Main.Logger.Log(eventData.ToString());
+
+        //            int id = DateFile.instance.ParseInt(eventData.pointerEnter.gameObject.name.Split(',')[1]);
+        //            Dictionary<int, string> data1;
+        //            DateFile.instance.itemsDate.TryGetValue(id, out data1);
+        //            Main.Logger.Log("打印物品 pointerEnter =============================== ");
+        //            foreach (var item in data1)
+        //            {
+        //                Main.Logger.Log(item.Key + " " + item.Value);
+        //            }
+
+        //            int id2 = DateFile.instance.ParseInt(eventData.pointerDrag.gameObject.name.Split(',')[1]);
+        //            Dictionary<int, string> data2;
+        //            DateFile.instance.itemsDate.TryGetValue(id2, out data2);
+        //            Main.Logger.Log("打印物品 pointerDrag =============================== ");
+        //            foreach (var item in data2)
+        //            {
+        //                Main.Logger.Log(item.Key + " " + item.Value);
+        //            }
+        //            Main.Logger.Log("打印完毕  =============================== ");
+        //        }
+        //        catch
+        //        {
+
+        //        }
+        //    }
+        //}
 
         //[HarmonyPatch(typeof(DateFile), "DragObjectEnd")]
         //public static class DateFile_DragObjectEnd_Patch

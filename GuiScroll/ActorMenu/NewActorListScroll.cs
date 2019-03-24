@@ -232,6 +232,8 @@ namespace GuiScroll
                                 component.SetInTeamIcon(true);
                                 component.SetInBuildingIcon(false);
                                 component.RestMoodFace();
+                                component.listActorFavorText.text = "";
+                                component.listActorSamsaraText.text = "";
                             }
                             else if (DateFile.instance.acotrTeamDate.Contains(num2))
                             {
