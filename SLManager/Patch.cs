@@ -38,37 +38,92 @@ namespace Sth4nothing.SLManager
                 UI.Load();
 
                 Transform parent = GameObject.Find("ResourceBack").transform;
+                //
+                Single startX = 1520f;
+                Single size = 40f;
+                Vector2 iconSize = new Vector2(size, size);
 
-                GameObject loadBtn = UnityEngine.Object.Instantiate(
-                    GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(1620f, -30f, 0), Quaternion.identity);
-                loadBtn.name = "LoadButton2";
-                loadBtn.tag = "SystemIcon";
-                loadBtn.transform.SetParent(parent, false);
-                loadBtn.transform.localPosition = new Vector3(1620f, -30f, 0);
-                Selectable loadButton = loadBtn.GetComponent<Selectable>();
-                ((Image)loadButton.targetGraphic).sprite =
-                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn.AddComponent<MyPointerClick>();
-
+                //快速存档
+                startX += size;
                 GameObject saveBtn = UnityEngine.Object.Instantiate(
                     GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(1570f, -30f, 0), Quaternion.identity);
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
                 saveBtn.name = "SaveButton";
                 saveBtn.tag = "SystemIcon";
                 saveBtn.transform.SetParent(parent, false);
-                saveBtn.transform.localPosition = new Vector3(1570f, -30f, 0);
+                saveBtn.transform.localPosition = new Vector3(startX, -30f, 0);
                 Selectable saveButton = saveBtn.GetComponent<Selectable>();
                 ((Image)saveButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
+                saveBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
                 saveBtn.AddComponent<MyPointerClick>();
 
-                GameObject loadBtn2 = GameObject.Find("EncyclopediaButton,609");
-                loadBtn2.name = "LoadButton";
-                Selectable loadButton2 = loadBtn2.GetComponent<Selectable>();
-                ((Image)loadButton2.targetGraphic).sprite =
+                // 快速载入
+                startX += size;
+                GameObject loadBtn = UnityEngine.Object.Instantiate(
+                    GameObject.Find("EncyclopediaButton,609"),
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
+                loadBtn.name = "LoadButton";
+                loadBtn.tag = "SystemIcon";
+                loadBtn.transform.SetParent(parent, false);
+                loadBtn.transform.localPosition = new Vector3(startX, -30f, 0);
+                Selectable loadButton = loadBtn.GetComponent<Selectable>();
+                ((Image)loadButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn2.AddComponent<MyPointerClick>();
+                loadBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
+                loadBtn.AddComponent<MyPointerClick>();
+
+                // 列表载入
+                startX += size;
+                GameObject loadBtnForList = UnityEngine.Object.Instantiate(
+                    GameObject.Find("EncyclopediaButton,609"),
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
+                loadBtnForList.name = "LoadButtonList";
+                loadBtnForList.tag = "SystemIcon";
+                loadBtnForList.transform.SetParent(parent, false);
+                loadBtnForList.transform.localPosition = new Vector3(startX, -30f, 0);
+                Selectable loadBtnForList_Selectable = loadBtnForList.GetComponent<Selectable>();
+                ((Image)loadBtnForList_Selectable.targetGraphic).sprite =
+                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
+                loadBtnForList.GetComponent<RectTransform>().sizeDelta = iconSize;
+                loadBtnForList.AddComponent<MyPointerClick>();
+
+                //产业视图
+                //HomeButton,612
+                startX += size;
+                GameObject HomeButton = GameObject.Find("HomeButton,612");
+                HomeButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                HomeButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //时节回顾
+                //ReShowTrunEventButton,822
+                startX += size;
+                GameObject ReShowTrunEventButton = GameObject.Find("ReShowTrunEventButton,822");
+                ReShowTrunEventButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                ReShowTrunEventButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //太吾传承
+                //ScrollButton,607
+                startX += size;
+                GameObject ScrollButton = GameObject.Find("ScrollButton,607");
+                ScrollButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                ScrollButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //太吾百晓册
+                //EncyclopediaButton,609
+                startX += size;
+                GameObject EncyclopediaButton = GameObject.Find("EncyclopediaButton,609");
+                EncyclopediaButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                EncyclopediaButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //铭刻
+                //SaveActorsButton,723
+                startX += size;
+                GameObject SaveActorsButton = GameObject.Find("SaveActorsButton,723");
+                SaveActorsButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                SaveActorsButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //系统设置
+                //SystemButton,608
+                startX += size;
+                GameObject SystemButton = GameObject.Find("SystemButton,608");
+                SystemButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                SystemButton.transform.localPosition = new Vector3(startX, -30f, 0);
             }
         }
     }
@@ -78,11 +133,11 @@ namespace Sth4nothing.SLManager
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!Main.Enabled) return;
-            if (gameObject.name == "LoadButton")
+            if (gameObject.name == "LoadButtonList")
             {
                 LoadFiles();
             }
-            else if (gameObject.name == "LoadButton2")
+            else if (gameObject.name == "LoadButton")
             {
                 YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入",
                     DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧存档")
@@ -572,8 +627,7 @@ namespace Sth4nothing.SLManager
             ref Text ___informationMassage, ref Text ___informationName,
             ref int ___tipsW, ref bool ___anTips)
         {
-            if (tips == null) return;
-            if (!Main.Enabled) return;
+            if (!Main.Enabled || tips == null) return;
             if (tips.name == "SaveButton")
             {
                 ___informationName.text = "立即储存";
@@ -581,14 +635,14 @@ namespace Sth4nothing.SLManager
                 ___tipsW = 230;
                 ___anTips = true;
             }
-            else if (tips.name == "LoadButton")
+            else if (tips.name == "LoadButtonList")
             {
                 ___informationName.text = "载入";
                 ___informationMassage.text = "显示存档列表，选择存档读取\n";
                 ___tipsW = 260;
                 ___anTips = true;
             }
-            else if (tips.name == "LoadButton2")
+            else if (tips.name == "LoadButton")
             {
                 ___informationName.text = "快速载入";
                 ___informationMassage.text = "放弃当前进度, 重新读档\n";
