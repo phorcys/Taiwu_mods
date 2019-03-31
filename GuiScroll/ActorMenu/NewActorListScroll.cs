@@ -178,6 +178,7 @@ namespace GuiScroll
                     GameObject go = childData.gameObject;
                     if (idx < m_data.Length)
                     {
+                        go.transform.parent.gameObject.SetActive(true);
                         if (!go.activeSelf)
                         {
                             go.SetActive(true);
@@ -231,6 +232,8 @@ namespace GuiScroll
                                 component.SetInTeamIcon(true);
                                 component.SetInBuildingIcon(false);
                                 component.RestMoodFace();
+                                component.listActorFavorText.text = "";
+                                component.listActorSamsaraText.text = "";
                             }
                             else if (DateFile.instance.acotrTeamDate.Contains(num2))
                             {
@@ -278,6 +281,7 @@ namespace GuiScroll
                     }
                     if (i == 0 && !go.transform.parent.gameObject.activeSelf)
                         go.transform.parent.gameObject.SetActive(true);
+
                 }
                 else
                 {

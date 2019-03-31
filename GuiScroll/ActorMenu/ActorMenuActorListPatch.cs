@@ -9,16 +9,27 @@ using static GuiScroll.NewActorListScroll;
 
 namespace GuiScroll
 {
-
     public static class ActorMenuActorListPatch
     {
         public static IEnumeratorActorMenuOpend updateActorMenu;
         public static void Init(UnityModManager.ModEntry modEntry)
         {
-
             GameObject updateActorMenu = new GameObject();
             GameObject.DontDestroyOnLoad(updateActorMenu);
             ActorMenuActorListPatch.updateActorMenu = updateActorMenu.AddComponent<IEnumeratorActorMenuOpend>();
+
+            //增加点击事件
+            GameObject health = ActorMenu.instance.healthText.gameObject;
+            Button btn = health.GetComponent<Button>();
+            if (!btn)
+            {
+                btn = health.AddComponent<Button>();
+            }
+            var onclick = btn.onClick;
+            onclick.RemoveAllListeners();
+            onclick.AddListener(delegate {
+                ActorMenuInjuryPatch.AddHealth();
+            });
         }
 
         public static bool isShowActorMenu
@@ -99,12 +110,32 @@ namespace GuiScroll
         }
         public static int giveActorId = 0;
 
-        public static NewActorListScroll m_listActorsHolder;
+        private static NewActorListScroll mm;
+        public static NewActorListScroll m_listActorsHolder
+        {
+            get
+            {
+                // Main.Logger.Log("获取 NewActor");
+                if (mm == null)
+                {
+                    InitGuiUI();
+                }
+                // Main.Logger.Log("获取 NewActor = " + mm.ToString());
+                return mm;
+            }
+            set
+            {
+                // Main.Logger.Log("设置 NewActor mm");
+                mm = value;
+            }
+        }
         private static void InitGuiUI()
         {
+            // Main.Logger.Log("初始化 NewActor mm begin");
             ActorMenu.instance.listActorsHolder.gameObject.SetActive(false);
-            m_listActorsHolder = ActorMenu.instance.listActorsHolder.parent.parent.gameObject.AddComponent<NewActorListScroll>();
-            m_listActorsHolder.Init();
+            mm = ActorMenu.instance.listActorsHolder.parent.parent.gameObject.AddComponent<NewActorListScroll>();
+            mm.Init();
+            // Main.Logger.Log("初始化 NewActor mm end");
         }
 
 
@@ -113,8 +144,6 @@ namespace GuiScroll
         [HarmonyPatch(typeof(ActorMenu), "ShowActorMenu")]
         public static class ActorMenu_ShowActorMenu_Patch
         {
-
-
 
             public static bool Prefix(bool enemy)
             {

@@ -41,12 +41,10 @@ namespace GuiScroll
             #endregion
             //ActorPatch.Init(modEntry);
 
-
             ActorMenuActorListPatch.Init(modEntry);
 
             HarmonyInstance harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-
 
             return true;
         }
