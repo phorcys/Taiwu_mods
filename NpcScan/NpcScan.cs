@@ -9,11 +9,11 @@ namespace NpcScan
 
     public class Settings : UnityModManager.ModSettings
     {
-        public KeyCode key = KeyCode.F12;
         public override void Save(UnityModManager.ModEntry modEntry)
         {
-            Save(this, modEntry);
+            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
+        public KeyCode key = KeyCode.F12;
     }
 
     public static class Main
@@ -70,18 +70,20 @@ namespace NpcScan
             { "<color=#EDA723FF>",20011},
         };
 
-        //static KeyCode last_key_code = KeyCode.None;
-
         public static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            Logger = modEntry.Logger;
-            modEntry.OnToggle = OnToggle;
-            settings = Settings.Load<Settings>(modEntry);
-            modEntry.OnGUI = OnGUI;
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+            Logger = modEntry.Logger;
+            settings = Settings.Load<Settings>(modEntry);
+
+            modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
+            modEntry.OnSaveGUI = OnSaveGUI;
+
             if (!Main.uiIsShow)
             {
                 UI.Load(modEntry);
@@ -113,7 +115,7 @@ namespace NpcScan
                         || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
                         )
                     {
-                        settings.key = e.keyCode;
+                        Main.settings.key = e.keyCode;
                     }
                     bindingKey = false;
                 }
@@ -128,7 +130,6 @@ namespace NpcScan
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
             GUILayout.EndHorizontal();
         }
-
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {

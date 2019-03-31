@@ -13,78 +13,59 @@ namespace NpcScan
     public class UI : MonoBehaviour
     {
         public static UnityModManager.ModEntry.ModLogger logger;
-        int minage = 0;
-        int maxage = 0;
-        int strValue = 0;
-        int conValue = 0;
-        int agiValue = 0;
-        int bonValue = 0;
-        int intValue = 0;
-        int patValue = 0;
-        int genderValue = 0;
-        int charmValue = 0;
-        int samsaraCount = 0;
-        int healthValue = 1;
-        bool desc = true;
-        int sortIndex = 0;
-        int page = 1;
-        bool getreal = true;
-        bool rankmode = false;
-        bool rankcolumnadded = false;
-        bool showlistshrinked = false;
-        bool showlistadded = false;
-        //从属gangText
-        string gangValue = "";
-        //身份gangLevelText
-        string gangLevelValue = "";
+
+        private bool desc = true;
+        private int sortIndex = 0;
+        private int page = 1;
+        private bool rankcolumnadded = false;
+        private bool showlistshrinked = false;
+        private bool showlistadded = false;
         //立场goodnessText
-        bool[] goodness = new bool[] { true, false, false, false, false, false };
-        string[] goodnessValue = new string[] { "全部", "刚正", "仁善", "中庸", "叛逆", "唯我" };
-        string goodnessText = "";
-        //内功
-        //身法
-        //绝技
-        //拳掌
-        //指法
-        //腿法
-        //暗器
-        //剑法
-        //刀法
-        //长兵
-        //奇门
-        //软兵
-        //御射
-        //乐器
-        int[] gongfa = new int[14];
+        private bool[] goodness = new bool[] { true, false, false, false, false, false };
+        private string[] goodnessValue = new string[] { "全部", "刚正", "仁善", "中庸", "叛逆", "唯我" };
+
+        public int minage = 0;
+        public int maxage = 0;
+        public int strValue = 0;
+        public int conValue = 0;
+        public int agiValue = 0;
+        public int bonValue = 0;
+        public int intValue = 0;
+        public int patValue = 0;
+        public int genderValue = 0;
+        public int charmValue = 0;
+        public int samsaraCount = 0;
+        public int healthValue = 1;
+        public bool getreal = true;
+        public bool rankmode = false;
+        //从属gangText
+        public string gangValue = "";
+        //身份gangLevelText
+        public string gangLevelValue = "";
+        public string goodnessText = "";
+        //商会
+        public string aShopName = "";
+
+        /// <summary>
+        /// 0:内功;1:身法;2:绝技;3:拳掌;4:指法;5:腿法;6:暗器;7:剑法;8:刀法;9:长兵;10:奇门;11:软兵;12:御射;13:乐器;
+        /// </summary>
+        public int[] gongfa = new int[14];
         public static KeyCode key;
-        //音律
-        //弈棋
-        //诗书
-        //绘画
-        //术数
-        //品鉴
-        //锻造
-        //制木
-        //医术
-        //毒术
-        //织锦
-        //巧匠
-        //道法
-        //佛学
-        //厨艺
-        //杂学
-        int[] life = new int[16];
-        string actorFeatureText = "";
-        bool tarFeature = false;
-        bool tarFeatureOr = false;
 
+        /// <summary>
+        /// 0:音律;1:弈棋;2:诗书;3:绘画;4:术数;5:品鉴;6:锻造;7:制木;8:医术;9:毒术;10:织锦;11:巧匠;12:道法;13:佛学;14:厨艺;15:杂学;
+        /// </summary>
+        public int[] life = new int[16];
+        public string actorFeatureText = "";
+        public bool tarFeature = false;
+        public bool tarFeatureOr = false;
 
-        string actorGongFaText = "";
-        bool tarGongFaOr = false;
+        public string actorGongFaText = "";
+        public bool tarGongFaOr = false;
 
-        int highestLevel = 1;
-        bool tarIsGang = false;
-        bool isGang = false;
+        public int highestLevel = 1;
+        public bool tarIsGang = false;
+        public bool isGang = false;
 
         float windowWidth()
         {
@@ -95,7 +76,7 @@ namespace NpcScan
             return (DateFile.instance.screenWidth);
         }
 
-        string aName = "";
+        public string aName = "";
 
         List<string[]> actorList = new List<string[]>();
 
@@ -139,7 +120,6 @@ namespace NpcScan
         private static GUIStyle www = null;
         private static GUIStyle updates = null;
         private GUIStyle featureStyle = null;
-
 
         private bool mInit = false;
 
@@ -277,6 +257,7 @@ namespace NpcScan
                 new Column {name = "魅力", width = 70},
                 new Column {name = "从属", width = 60},//从属gangText
                 new Column {name = "身份", width = 70},//身份gangLevelText
+                new Column {name = "商会", width = 70},//商会
                 new Column {name = "立场", width = 30},//立场goodnessText
                 new Column {name = "婚姻", width = 30},//
                 new Column {name = "技能成长", width = 70},
@@ -318,6 +299,7 @@ namespace NpcScan
                 new Column {name = "佛学", width = 30},
                 new Column {name = "厨艺", width = 30},
                 new Column {name = "杂学", width = 30},
+                new Column {name = "银钱", width = 60},
                 //七元
                 new Column {name = "细腻", width = 30},
                 new Column {name = "聪颖", width = 30},
@@ -335,631 +317,30 @@ namespace NpcScan
 
         private void CalculateWindowPos()
         {
-            logger.Log(screenWidth().ToString()+" "+ windowWidth().ToString());
-            mWindowRect = new Rect(screenWidth()*0.05f, 50f, windowWidth(), 0);
+            logger.Log(screenWidth().ToString() + " " + windowWidth().ToString());
+            mWindowRect = new Rect(screenWidth() * 0.05f, 50f, windowWidth(), 0);
         }
 
+        /// <summary>
+        ///  搜索条件窗口
+        /// </summary>
+        /// <param name="windowId">没用</param>
         private void WindowFunction(int windowId)
         {
             if (Input.GetKey(KeyCode.LeftControl))
+            {
                 GUI.DragWindow(mWindowRect);
+            }
 
             GUILayout.BeginVertical("box");
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("NPC查找器");
-            if (GUILayout.Button("关闭", GUILayout.Width(150)))
-            {
-                ToggleWindow();
-            }
-            GUILayout.EndHorizontal();
-            int currentwidth = 0;
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("年龄:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(minage.ToString(), 3, GUILayout.Width(30)), out minage);
-            GUILayout.Label("--", GUILayout.Width(10));
-            int.TryParse(GUILayout.TextField(maxage.ToString(), 3, GUILayout.Width(30)), out maxage);
-            GUILayout.Space(10);
-            currentwidth += 110;
-            currentwidth += 150;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 150;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("性别:", GUILayout.Width(30));
-            GUILayout.Space(5);
-            isall = GUILayout.Toggle(isall, "全部", GUILayout.Width(45));
-            if (isall)
-            {
-                iswoman = false;
-                isman = false;
-                genderValue = 0;
-            }
 
-            isman = GUILayout.Toggle(isman, "男", GUILayout.Width(30));
-            if (isman)
-            {
-                isall = false;
-                iswoman = false;
-                genderValue = 1;
-            }
-            iswoman = GUILayout.Toggle(iswoman, "女", GUILayout.Width(30));
-            if (iswoman)
-            {
-                isall = false;
-                isman = false;
-                genderValue = 2;
-            }
-            GUILayout.Space(10);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("膂力:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(strValue.ToString(), 10, GUILayout.Width(30)), out strValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("体质:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(conValue.ToString(), 10, GUILayout.Width(30)), out conValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("灵敏:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(agiValue.ToString(), 10, GUILayout.Width(30)), out agiValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("根骨:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(bonValue.ToString(), 10, GUILayout.Width(30)), out bonValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("悟性:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(intValue.ToString(), 10, GUILayout.Width(30)), out intValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("定力:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(patValue.ToString(), 10, GUILayout.Width(30)), out patValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("魅力:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(charmValue.ToString(), 10, GUILayout.Width(30)), out charmValue);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("健康:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(healthValue.ToString(), 10, GUILayout.Width(30)), out healthValue);
-            GUILayout.Space(5);
-            currentwidth += 130;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("轮回次数:", GUILayout.Width(60));
-            int.TryParse(GUILayout.TextField(samsaraCount.ToString(), 10, GUILayout.Width(30)), out samsaraCount);
-            GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / 50d)), GUILayout.Width(40));
-            currentwidth += 60;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            if (GUILayout.Button("上页", GUILayout.Width(60)))
-            {
-                if (page > 1)
-                    page = page - 1;
-            }
-            currentwidth += 60;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 60;
-                GUILayout.BeginHorizontal("box");
-            }
-            if (GUILayout.Button("下页", GUILayout.Width(60)))
-            {
-                if (actorList.Count > page * 50)
-                    page = page + 1;
-            }
-            GUILayout.EndHorizontal();
-            currentwidth = 0;
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("内功:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[0].ToString(), 10, GUILayout.Width(30)), out gongfa[0]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("身法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[1].ToString(), 10, GUILayout.Width(30)), out gongfa[1]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("绝技:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[2].ToString(), 10, GUILayout.Width(30)), out gongfa[2]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("拳掌:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[3].ToString(), 10, GUILayout.Width(30)), out gongfa[3]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("指法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[4].ToString(), 10, GUILayout.Width(30)), out gongfa[4]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("腿法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[5].ToString(), 10, GUILayout.Width(30)), out gongfa[5]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("暗器:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[6].ToString(), 10, GUILayout.Width(30)), out gongfa[6]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("剑法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[7].ToString(), 10, GUILayout.Width(30)), out gongfa[7]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("刀法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[8].ToString(), 10, GUILayout.Width(30)), out gongfa[8]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("长兵:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[9].ToString(), 10, GUILayout.Width(30)), out gongfa[9]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("奇门:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[10].ToString(), 10, GUILayout.Width(30)), out gongfa[10]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("软兵:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[11].ToString(), 10, GUILayout.Width(30)), out gongfa[11]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("御射:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[12].ToString(), 10, GUILayout.Width(30)), out gongfa[12]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("乐器:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(gongfa[13].ToString(), 10, GUILayout.Width(30)), out gongfa[13]);
-            GUILayout.Space(10);
-            currentwidth += 160;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 160;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("取值:", GUILayout.Width(30));
-	        GUILayout.Space(5);
-	        getreal = GUILayout.Toggle(getreal, "基础值", GUILayout.Width(55));
-            GUILayout.Space(5);
-            rankmode = GUILayout.Toggle(rankmode, "排行模式", GUILayout.Width(65));
-            GUILayout.EndHorizontal();
-            currentwidth = 0;
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("音律:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[0].ToString(), 10, GUILayout.Width(30)), out life[0]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("弈棋:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[1].ToString(), 10, GUILayout.Width(30)), out life[1]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("诗书:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[2].ToString(), 10, GUILayout.Width(30)), out life[2]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("绘画:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[3].ToString(), 10, GUILayout.Width(30)), out life[3]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("术数:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[4].ToString(), 10, GUILayout.Width(30)), out life[4]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("品鉴:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[5].ToString(), 10, GUILayout.Width(30)), out life[5]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("锻造:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[6].ToString(), 10, GUILayout.Width(30)), out life[6]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("制木:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[7].ToString(), 10, GUILayout.Width(30)), out life[7]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("医术:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[8].ToString(), 10, GUILayout.Width(30)), out life[8]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("毒术:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[9].ToString(), 10, GUILayout.Width(30)), out life[9]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("织锦:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[10].ToString(), 10, GUILayout.Width(30)), out life[10]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("巧匠:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[11].ToString(), 10, GUILayout.Width(30)), out life[11]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("道法:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[12].ToString(), 10, GUILayout.Width(30)), out life[12]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("佛学:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[13].ToString(), 10, GUILayout.Width(30)), out life[13]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("厨艺:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[14].ToString(), 10, GUILayout.Width(30)), out life[14]);
-            GUILayout.Space(5);
-            currentwidth += 65;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 65;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("杂学:", GUILayout.Width(30));
-            int.TryParse(GUILayout.TextField(life[15].ToString(), 10, GUILayout.Width(30)), out life[15]);
-            GUILayout.EndHorizontal();
-            currentwidth = 0;
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("姓名（包括前世）:", GUILayout.Width(120));
-            aName = GUILayout.TextField(aName, 10, GUILayout.Width(80));
-            currentwidth += 200;
-            currentwidth += 110;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 110;
-                GUILayout.BeginHorizontal("box");
-            }
-            //从属gangText
-            GUILayout.Label("从属:", GUILayout.Width(50));
-            gangValue = GUILayout.TextField(gangValue, 10, GUILayout.Width(60));
-            currentwidth += 110;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 110;
-                GUILayout.BeginHorizontal("box");
-            }
-            //身份gangLevelText
-            GUILayout.Label("身份:", GUILayout.Width(50));
-            gangLevelValue = GUILayout.TextField(gangLevelValue, 10, GUILayout.Width(60));
-            currentwidth += 300;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 300;
-                GUILayout.BeginHorizontal("box");
-            }
-            //立场goodnessText
-            GUILayout.Label("立场:", GUILayout.Width(30));
-            for (int i = 0; i < goodness.Length; i++)
-            {
-                goodness[i] = GUILayout.Toggle(goodness[i], goodnessValue[i].ToString(), GUILayout.Width(45));
-                if (goodness[i])
-                {
-                    for (int j = 0; j < goodness.Length; j++)
-                    {
-                        if (i != j)
-                        {
-                            goodness[j] = false;
-                            goodnessText = goodnessValue[i].ToString();
-                        }
-                    }
-                }
-            }
-            currentwidth += 255;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 255;
-                GUILayout.BeginHorizontal("box");
-            }
-            GUILayout.Label("人物特性:", GUILayout.Width(60));
-            actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
-            tarFeature = GUILayout.Toggle(tarFeature, "精确特性", GUILayout.Width(75));//是否精确查找,精确查找的情况下,特性用'|'分隔
-            tarFeatureOr = GUILayout.Toggle(tarFeatureOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
-            GUILayout.EndHorizontal();
+            _setNo1Windows();
+            _setNo2Windows();
+            _setNo3Windows();
+            _setNo4Windows();
+            _setNo5Windows();
+            _setNo6Windows();
 
-
-            GUILayout.BeginHorizontal("box");
-            GUILayout.Label("可教功法:", GUILayout.Width(60));
-            actorGongFaText = GUILayout.TextField(actorGongFaText, 60, GUILayout.Width(120));
-            tarGongFaOr = GUILayout.Toggle(tarGongFaOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
-            currentwidth += 180;
-            currentwidth += 210;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 180;
-                GUILayout.BeginHorizontal("box");
-            }
-
-            GUILayout.Label("最高查询品级:", GUILayout.Width(120));
-            int.TryParse(GUILayout.TextField(highestLevel.ToString(), 1, GUILayout.Width(60)), out highestLevel);
-            tarIsGang = GUILayout.Toggle(tarIsGang, "是否开启识别门派", new GUILayoutOption[0]);
-            isGang = GUILayout.Toggle(isGang, "仅搜索门派", new GUILayoutOption[0]);
-
-            //Main.Logger.Log(tarFeature.ToString());
-            GUILayout.Space(30);
-            currentwidth += 150;
-            if (currentwidth >= windowWidth())
-            {
-                GUILayout.EndHorizontal();
-                currentwidth = 150;
-                GUILayout.BeginHorizontal("box");
-            }
-            if (GUILayout.Button("查找", GUILayout.Width(150)))
-            {
-                page = 1;
-                string s = Main.featuresList.Count.ToString();
-                //Main.Logger.Log("测试对象字典长度:" + s);
-                if (Main.featuresList.Count == 0)
-                {
-                    Features aFeature = new Features();
-                    foreach (int i in DateFile.instance.actorFeaturesDate.Keys)
-                    {
-                        aFeature = new Features(i);
-                        Main.featuresList.Add(aFeature.Key, aFeature);
-                        Main.fNameList.Add(aFeature.Name, aFeature.Key);
-                    }
-                }
-                s = Main.findList.Count.ToString();
-                //Main.Logger.Log("测试查找列表:" + s);
-                if (actorFeatureText != "")
-                {
-                    Main.findList = GetFeatureKey(actorFeatureText, tarFeature);
-                }
-
-                if (Main.gNameList.Count == 0)
-                {
-                    foreach (int i in DateFile.instance.gongFaDate.Keys)
-                    {
-                        //logger.Log(DateFile.instance.gongFaDate[i][0]);
-                        if (DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1 > 0)
-                        {
-                            String tem = DateFile.instance.gongFaDate[i][0].Substring(DateFile.instance.gongFaDate[i][0].IndexOf('>') + 1, DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1);
-                            Main.gNameList.Add(tem, i);
-                        }
-                        else
-                        {
-                            Main.gNameList.Add(DateFile.instance.gongFaDate[i][0], i);
-                        }
-                            
-                    }
-                }
-                if (actorGongFaText != "")
-                {
-                    Main.GongFaList = GetGongFaKey(actorGongFaText);
-                }
-                //s = Main.findList.Count.ToString();
-                //Main.Logger.Log("测试查找列表:" + s);
-                if (!rankmode)
-                {
-                    ScanNpc();
-                    showlistshrinked = true;
-                    showlistadded = false;
-                }
-                else
-                {
-                    GetRank();
-                    showlistadded = true;
-                    showlistshrinked = false;
-                }
-            }
             GUILayout.EndHorizontal();
 
 
@@ -1043,640 +424,360 @@ namespace NpcScan
             GUILayout.Space(3);
         }
 
-        internal bool GameCursorLocked { get; set; }
-
-        public void ToggleWindow()
+        /// <summary>
+        /// 设置第一行内容
+        /// </summary>
+        private void _setNo1Windows()
         {
-            ToggleWindow(!mOpened);
-        }
-
-        public void ToggleWindow(bool open)
-        {
-            mOpened = open;
-            BlockGameUI(open);
-            if (!mOpened)
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("NPC查找器");
+            if (GUILayout.Button("关闭", GUILayout.Width(150)))
             {
-                //SaveSettingsAndParams();
+                ToggleWindow();
             }
-            if (open)
+            GUILayout.EndHorizontal();
+        }
+        /// <summary>
+        /// 设置第二行内容
+        /// </summary>
+        private void _setNo2Windows()
+        {
+            int currentwidth = 0;
+
+            GUILayout.BeginHorizontal("box");
+            #region add 年龄 性别
+            GUILayout.Label("年龄:", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(minage.ToString(), 3, GUILayout.Width(30)), out minage);
+            GUILayout.Label("--", GUILayout.Width(10));
+            int.TryParse(GUILayout.TextField(maxage.ToString(), 3, GUILayout.Width(30)), out maxage);
+            GUILayout.Space(10);
+            currentwidth += 110;
+            currentwidth += 150;
+            if (currentwidth >= windowWidth())
             {
-                GameCursorLocked = Cursor.lockState == CursorLockMode.Locked || !Cursor.visible;
-                if (GameCursorLocked)
+                GUILayout.EndHorizontal();
+                currentwidth = 150;
+                GUILayout.BeginHorizontal("box");
+            }
+            GUILayout.Label("性别:", GUILayout.Width(30));
+            GUILayout.Space(5);
+            isall = GUILayout.Toggle(isall, "全部", GUILayout.Width(45));
+            if (isall)
+            {
+                iswoman = false;
+                isman = false;
+                genderValue = 0;
+            }
+
+            isman = GUILayout.Toggle(isman, "男", GUILayout.Width(30));
+            if (isman)
+            {
+                isall = false;
+                iswoman = false;
+                genderValue = 1;
+            }
+            iswoman = GUILayout.Toggle(iswoman, "女", GUILayout.Width(30));
+            if (iswoman)
+            {
+                isall = false;
+                isman = false;
+                genderValue = 2;
+            }
+            GUILayout.Space(10);
+            currentwidth += 65;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 65;
+                GUILayout.BeginHorizontal("box");
+            }
+            #endregion
+
+            #region add 基础属性
+            currentwidth = _addLabelAndTextField("膂力", currentwidth, strValue, out strValue);
+            currentwidth = _addLabelAndTextField("体质", currentwidth, conValue, out conValue);
+            currentwidth = _addLabelAndTextField("灵敏", currentwidth, agiValue, out agiValue);
+            currentwidth = _addLabelAndTextField("根骨", currentwidth, bonValue, out bonValue);
+            currentwidth = _addLabelAndTextField("悟性", currentwidth, intValue, out intValue);
+            currentwidth = _addLabelAndTextField("定力", currentwidth, patValue, out patValue);
+            currentwidth = _addLabelAndTextField("魅力", currentwidth, charmValue, out charmValue);
+            currentwidth = _addLabelAndTextField("健康", currentwidth, healthValue, out healthValue);
+            currentwidth = _addLabelAndTextField("轮回次数", currentwidth, samsaraCount, out samsaraCount);
+            #endregion
+
+            #region add 翻页
+            GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / 50d)), GUILayout.Width(40));
+            if (GUILayout.Button("上页", GUILayout.Width(60)))
+            {
+                if (page > 1)
+                    page = page - 1;
+            }
+            currentwidth += 60;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = 60;
+                GUILayout.BeginHorizontal("box");
+            }
+            if (GUILayout.Button("下页", GUILayout.Width(60)))
+            {
+                if (actorList.Count > page * 50)
+                    page = page + 1;
+            }
+            #endregion
+            GUILayout.EndHorizontal();
+        }
+        /// <summary>
+        /// 设置第三行内容
+        /// </summary>
+        private void _setNo3Windows()
+        {
+            int currentwidth = 0;
+            GUILayout.BeginHorizontal("box");
+
+            #region add 功法属性
+
+            currentwidth = _addLabelAndTextField("内功", currentwidth, gongfa[0], out gongfa[0]);
+            currentwidth = _addLabelAndTextField("身法", currentwidth, gongfa[1], out gongfa[1]);
+            currentwidth = _addLabelAndTextField("绝技", currentwidth, gongfa[2], out gongfa[2]);
+            currentwidth = _addLabelAndTextField("拳掌", currentwidth, gongfa[3], out gongfa[3]);
+            currentwidth = _addLabelAndTextField("指法", currentwidth, gongfa[4], out gongfa[4]);
+            currentwidth = _addLabelAndTextField("腿法", currentwidth, gongfa[5], out gongfa[5]);
+            currentwidth = _addLabelAndTextField("暗器", currentwidth, gongfa[6], out gongfa[6]);
+            currentwidth = _addLabelAndTextField("剑法", currentwidth, gongfa[7], out gongfa[7]);
+            currentwidth = _addLabelAndTextField("刀法", currentwidth, gongfa[8], out gongfa[8]);
+            currentwidth = _addLabelAndTextField("长兵", currentwidth, gongfa[9], out gongfa[9]);
+            currentwidth = _addLabelAndTextField("奇门", currentwidth, gongfa[10], out gongfa[10]);
+            currentwidth = _addLabelAndTextField("软兵", currentwidth, gongfa[11], out gongfa[11]);
+            currentwidth = _addLabelAndTextField("御射", currentwidth, gongfa[12], out gongfa[12]);
+            currentwidth = _addLabelAndTextField("乐器", currentwidth, gongfa[13], out gongfa[13]);
+
+            #endregion
+
+            GUILayout.Label("取值:", GUILayout.Width(30));
+            GUILayout.Space(5);
+            getreal = GUILayout.Toggle(getreal, "基础值", GUILayout.Width(55));
+            GUILayout.Space(5);
+            rankmode = GUILayout.Toggle(rankmode, "排行模式", GUILayout.Width(65));
+
+            GUILayout.EndHorizontal();
+        }
+        /// <summary>
+        /// 设置第四行内容
+        /// </summary>
+        private void _setNo4Windows()
+        {
+            int currentwidth = 0;
+            GUILayout.BeginHorizontal("box");
+
+            #region add 功法属性
+
+            currentwidth = _addLabelAndTextField("音律", currentwidth, life[0], out life[0]);
+            currentwidth = _addLabelAndTextField("弈棋", currentwidth, life[1], out life[1]);
+            currentwidth = _addLabelAndTextField("诗书", currentwidth, life[2], out life[2]);
+            currentwidth = _addLabelAndTextField("绘画", currentwidth, life[3], out life[3]);
+            currentwidth = _addLabelAndTextField("术数", currentwidth, life[4], out life[4]);
+            currentwidth = _addLabelAndTextField("品鉴", currentwidth, life[5], out life[5]);
+            currentwidth = _addLabelAndTextField("锻造", currentwidth, life[6], out life[6]);
+            currentwidth = _addLabelAndTextField("制木", currentwidth, life[7], out life[7]);
+            currentwidth = _addLabelAndTextField("医术", currentwidth, life[8], out life[8]);
+            currentwidth = _addLabelAndTextField("毒术", currentwidth, life[9], out life[9]);
+            currentwidth = _addLabelAndTextField("织锦", currentwidth, life[10], out life[10]);
+            currentwidth = _addLabelAndTextField("巧匠", currentwidth, life[11], out life[11]);
+            currentwidth = _addLabelAndTextField("道法", currentwidth, life[12], out life[12]);
+            currentwidth = _addLabelAndTextField("佛学", currentwidth, life[13], out life[13]);
+            currentwidth = _addLabelAndTextField("厨艺", currentwidth, life[14], out life[14]);
+            currentwidth = _addLabelAndTextField("杂学", currentwidth, life[15], out life[15]);
+
+            #endregion
+
+            GUILayout.EndHorizontal();
+        }
+        /// <summary>
+        /// 设置第五行内容
+        /// </summary>
+        private void _setNo5Windows()
+        {
+            int currentwidth = 0;
+            GUILayout.BeginHorizontal("box");
+
+            currentwidth = _addLabelAndTextField("姓名（包括前世）", currentwidth, 110, 120, 80, aName, out aName);
+
+            //从属gangText
+            currentwidth = _addLabelAndTextField("从属", currentwidth, 110, 50, 60, gangValue, out gangValue);
+            //身份gangLevelText
+            currentwidth = _addLabelAndTextField("身份", currentwidth, 300, 50, 60, gangLevelValue, out gangLevelValue);
+            //商会
+            currentwidth = _addLabelAndTextField("商会", currentwidth, 110, 50, 60, aShopName, out aShopName);
+            //立场goodnessText
+            GUILayout.Label("立场:", GUILayout.Width(30));
+            for (int i = 0; i < goodness.Length; i++)
+            {
+                goodness[i] = GUILayout.Toggle(goodness[i], goodnessValue[i].ToString(), GUILayout.Width(45));
+                if (goodness[i])
                 {
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
+                    for (int j = 0; j < goodness.Length; j++)
+                    {
+                        if (i != j)
+                        {
+                            goodness[j] = false;
+                            goodnessText = goodnessValue[i].ToString();
+                        }
+                    }
                 }
             }
-            else
+            _addHorizontal(currentwidth, 255);
+            GUILayout.Label("人物特性:", GUILayout.Width(60));
+            actorFeatureText = GUILayout.TextField(actorFeatureText, 60, GUILayout.Width(120));
+            tarFeature = GUILayout.Toggle(tarFeature, "精确特性", GUILayout.Width(75));//是否精确查找,精确查找的情况下,特性用'|'分隔
+            tarFeatureOr = GUILayout.Toggle(tarFeatureOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
+            GUILayout.EndHorizontal();
+        }
+        /// <summary>
+        /// 设置第六行内容
+        /// </summary>
+        private void _setNo6Windows()
+        {
+            int currentwidth = 0;
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("可教功法:", GUILayout.Width(60));
+            actorGongFaText = GUILayout.TextField(actorGongFaText, 60, GUILayout.Width(120));
+            tarGongFaOr = GUILayout.Toggle(tarGongFaOr, "OR查询", new GUILayoutOption[0]);//默认AND查询方式
+            currentwidth += 180;
+            currentwidth = _addHorizontal(currentwidth, 210);
+
+            GUILayout.Label("最高查询品级:", GUILayout.Width(120));
+            int.TryParse(GUILayout.TextField(highestLevel.ToString(), 1, GUILayout.Width(60)), out highestLevel);
+            tarIsGang = GUILayout.Toggle(tarIsGang, "是否开启识别门派", new GUILayoutOption[0]);
+            isGang = GUILayout.Toggle(isGang, "仅搜索门派", new GUILayoutOption[0]);
+
+            //Main.Logger.Log(tarFeature.ToString());
+            GUILayout.Space(30);
+            currentwidth = _addHorizontal(currentwidth, 150);
+            if (GUILayout.Button("查找", GUILayout.Width(150)))
             {
-                if (GameCursorLocked)
+                page = 1;
+                string s = Main.featuresList.Count.ToString();
+                //Main.Logger.Log("测试对象字典长度:" + s);
+                if (Main.featuresList.Count == 0)
                 {
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
-                }
-            }
-        }
-
-        private GameObject mCanvas = null;
-
-        private void BlockGameUI(bool value)
-        {
-            if (value)
-            {
-                mCanvas = new GameObject("", typeof(Canvas), typeof(GraphicRaycaster));
-                mCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-                mCanvas.GetComponent<Canvas>().sortingOrder = Int16.MaxValue;
-                DontDestroyOnLoad(mCanvas);
-                var panel = new GameObject("", typeof(Image));
-                panel.transform.SetParent(mCanvas.transform);
-                panel.GetComponent<RectTransform>().anchorMin = new Vector2(1, 0);
-                panel.GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
-                panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
-                panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
-            }
-            else
-            {
-                Destroy(mCanvas);
-            }
-        }
-
-        private static RectOffset RectOffset(int value)
-        {
-            return new RectOffset(value, value, value, value);
-        }
-
-        private static RectOffset RectOffset(int x, int y)
-        {
-            return new RectOffset(x, x, y, y);
-        }
-
-        private int GetLevelValue(int id, int index, int gongfa)
-        {
-            int num;
-            if (getreal)
-            {
-                num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, false));
-                int age = int.Parse(DateFile.instance.GetActorDate(id, 11, false));
-                if (age < 14 && age > 0)
-                {
-                    num = num * (1400 / age) / 100;
-                }
-            }
-            else
-            {
-                num = int.Parse(DateFile.instance.GetActorDate(id, 501 + index + 100 * gongfa, true));
-            }
-            return num;
-        }
-
-        private string GetLevel(int id, int index, int gongfa)
-        {
-            int colorCorrect = 40;
-            int num = GetLevelValue(id, index, gongfa);
-            string text = DateFile.instance.SetColoer(20002 + Mathf.Clamp((num - colorCorrect) / 10, 0, 8), num.ToString(), false);
-            return text;
-        }
-
-
-        static string GetHealth(int key, int value = 0)
-        {
-            int num = ActorMenu.instance.Health(key);
-            int num2 = ActorMenu.instance.MaxHealth(key);
-            if (value > 0 && num2 - num > value)
-            {
-                value = Mathf.Max(value / 5, 1);
-            }
-            int num3 = Mathf.Clamp(num + value, 0, num2);
-            if (int.Parse(DateFile.instance.GetActorDate(key, 26, false)) != 0)
-            {
-                num2 = num3 = 0;
-            }
-            DateFile.instance.actorsDate[key][12] = num3.ToString();
-            if (int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1)
-            {
-                return "??? / ???";
-            }
-            else
-            {
-                return string.Format("{0}{1}</color> / {2}", ActorMenu.instance.Color3(num3, num2), num3, num2);
-            }
-        }
-        private int SortList(string[] a, string[] b)
-        {
-            int m = 0;
-            int n = 0;
-            string s1 = a[sortIndex];
-            string s2 = b[sortIndex];
-            if (sortIndex != 6)
-            {
-                if (s1.Contains("color"))
-                {
-                    if (s1.Contains("("))
+                    Features aFeature = new Features();
+                    foreach (int i in DateFile.instance.actorFeaturesDate.Keys)
                     {
-                        s1 = System.Text.RegularExpressions.Regex.Replace(s1, "\\(.*?\\)", "");
-                        s2 = System.Text.RegularExpressions.Regex.Replace(s2, "\\(.*?\\)", "");
-                    }
-                    else
-                    {
-                        s1 = System.Text.RegularExpressions.Regex.Replace(s1, "<.*?>", "");
-                        s2 = System.Text.RegularExpressions.Regex.Replace(s2, "<.*?>", "");
+                        aFeature = new Features(i);
+                        Main.featuresList.Add(aFeature.Key, aFeature);
+                        Main.fNameList.Add(aFeature.Name, aFeature.Key);
                     }
                 }
-                int.TryParse(s1, out m);
-                int.TryParse(s2, out n);
-                if (desc)
+                s = Main.findList.Count.ToString();
+                //Main.Logger.Log("测试查找列表:" + s);
+                if (actorFeatureText != "")
                 {
-                    if (m > n)
+                    Main.findList = GetFeatureKey(actorFeatureText, tarFeature);
+                }
+
+                if (Main.gNameList.Count == 0)
+                {
+                    foreach (int i in DateFile.instance.gongFaDate.Keys)
                     {
-                        return -1;
+                        //logger.Log(DateFile.instance.gongFaDate[i][0]);
+                        if (DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1 > 0)
+                        {
+                            String tem = DateFile.instance.gongFaDate[i][0].Substring(DateFile.instance.gongFaDate[i][0].IndexOf('>') + 1, DateFile.instance.gongFaDate[i][0].LastIndexOf('<') - DateFile.instance.gongFaDate[i][0].IndexOf('>') - 1);
+                            Main.gNameList.Add(tem, i);
+                        }
+                        else
+                        {
+                            Main.gNameList.Add(DateFile.instance.gongFaDate[i][0], i);
+                        }
+
                     }
-                    else if (m < n)
-                    {
-                        return 1;
-                    }
+                }
+                if (actorGongFaText != "")
+                {
+                    Main.GongFaList = GetGongFaKey(actorGongFaText);
+                }
+                //s = Main.findList.Count.ToString();
+                //Main.Logger.Log("测试查找列表:" + s);
+                ScanNpc();
+                if (!rankmode)
+                {
+                    showlistshrinked = true;
+                    showlistadded = false;
                 }
                 else
                 {
-                    if (m > n)
-                    {
-                        return 1;
-                    }
-                    else if (m < n)
-                    {
-                        return -1;
-                    }
+                    showlistadded = true;
+                    showlistshrinked = false;
                 }
-                if (desc)
-                {
-                    return -s1.CompareTo(s2);
-                }
-                else
-                {
-                    return s1.CompareTo(s2);
-                }
-            }
-            else
-            {
-                Regex reg = new Regex("<(.+?)>");
-                Match m1 = reg.Match(s1);
-                Match m2 = reg.Match(s2);
-                s1 = m1.Groups[0].Value;
-                s2 = m2.Groups[0].Value;
-                Main.Logger.Log(s1 + "," + s2);
-                m = Main.colorText[s1];
-                n = Main.colorText[s2];
-                if (desc)
-                {
-                    if (m > n)
-                    {
-                        return -1;
-                    }
-                    else if (m < n)
-                    {
-                        return 1;
-                    }
-                }
-                else
-                {
-                    if (m > n)
-                    {
-                        return 1;
-                    }
-                    else if (m < n)
-                    {
-                        return -1;
-                    }
-                }
-                return 0;
             }
         }
 
-        void ScanNpc()
+        /// <summary>
+        /// 同时添加一个laber和一个textbox
+        /// </summary>
+        /// <param name="labelName">laber名字</param>
+        /// <param name="currentwidth">当前行宽度</param>
+        /// <param name="settingName">textbox的名字</param>
+        /// <param name="settingValue">textbox的内容</param>
+        /// <returns></returns>
+        private int _addLabelAndTextField(string labelName, int currentwidth, int settingName, out int settingValue)
+        {
+            GUILayout.Label(labelName + ":", GUILayout.Width(30));
+            int.TryParse(GUILayout.TextField(settingName.ToString(), 10, GUILayout.Width(30)), out settingValue);
+            GUILayout.Space(5);
+            currentwidth = _addHorizontal(currentwidth, 65);
+            return currentwidth;
+        }
+
+        /// <summary>
+        /// 同时添加一个laber和一个textbox
+        /// </summary>
+        /// <param name="labelName">laber名字</param>
+        /// <param name="currentwidth">当前行宽度</param>
+        /// <param name="settingName">textbox的名字</param>
+        /// <param name="add">添加的宽度</param>
+        /// <param name="outString">textbox的内容</param>
+        /// <returns></returns>
+        private int _addLabelAndTextField(string labelName, int currentwidth, int addwidth, int labelWidth, int textWidth, string settingName, out string outString)
+        {
+            GUILayout.Label(labelName + ":", GUILayout.Width(labelWidth));
+            outString = GUILayout.TextField(settingName, 10, GUILayout.Width(textWidth));
+            currentwidth = _addHorizontal(currentwidth, addwidth);
+            return currentwidth;
+        }
+
+        /// <summary>
+        /// 是否换行判断
+        /// </summary>
+        /// <param name="currentwidth">当前宽</param>
+        /// <param name="addWidth">添加宽</param>
+        /// <returns>当前宽</returns>
+        private int _addHorizontal(int currentwidth, int addWidth)
+        {
+            currentwidth += addWidth;
+            if (currentwidth >= windowWidth())
+            {
+                GUILayout.EndHorizontal();
+                currentwidth = addWidth;
+                GUILayout.BeginHorizontal("box");
+            }
+            return currentwidth;
+        }
+
+        private void ScanNpc()
         {
             actorList.Clear();
             DateFile dateFile = DateFile.instance;
             Dictionary<int, Dictionary<int, string>> actors = dateFile.actorsDate;
             foreach (int index in actors.Keys)
             {
-                Dictionary<int, string> actor = actors[index];
-                int str = int.Parse(DateFile.instance.GetActorDate(index, 61, !getreal)); //dateFile.BaseAttr(index, 0, 0);
-                int con = int.Parse(DateFile.instance.GetActorDate(index, 62, !getreal)); //dateFile.BaseAttr(index, 1, 0);
-                int agi = int.Parse(DateFile.instance.GetActorDate(index, 63, !getreal)); //dateFile.BaseAttr(index, 2, 0);
-                int bon = int.Parse(DateFile.instance.GetActorDate(index, 64, !getreal)); //dateFile.BaseAttr(index, 3, 0);
-                int inv = int.Parse(DateFile.instance.GetActorDate(index, 65, !getreal)); //dateFile.BaseAttr(index, 4, 0);
-                int pat = int.Parse(DateFile.instance.GetActorDate(index, 66, !getreal)); //dateFile.BaseAttr(index, 5, 0);
-
-                int age = int.Parse(dateFile.GetActorDate(index, 11, false));
-                int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
-                int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
-                int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
-                int health = int.Parse(DateFile.instance.GetActorDate(index, 26, false)) == 0 ? ActorMenu.instance.Health(index) : 0;
-                int cv = charmValue;
-                if (charmValue == 0)
+                ActorItem addItem = new ActorItem(index, this);
+                if (addItem.isNeedAdd)
                 {
-                    cv = -999;
-                }
-
-                if (inv >= intValue
-                    && str >= strValue
-                    && con >= conValue
-                    && agi >= agiValue
-                    && bon >= bonValue
-                    && pat >= patValue
-                    && charm >= cv
-                    && age >= minage
-                    && health >= healthValue
-                    && samsara >= samsaraCount
-                    && (maxage == 0 || age <= maxage)
-                    && (genderValue == 0 || gender == genderValue)
-                    )
-                {
-                    string genderText;
-                    if (gender == 1)
-                    {
-                        genderText = "男";
-                    }
-                    else
-                    {
-                        genderText = "女";
-
-                    }
-                    string place;
-                    if (int.Parse(dateFile.GetActorDate(index, 8, false)) != 1)
-                    {
-                        place = dateFile.massageDate[8010][3].Split(new char[] { '|' })[1];
-                    }
-                    else
-                    {
-                        List<int> list = new List<int>(dateFile.GetActorAtPlace(index));
-                        place = string.Format("{0}{1}", new object[]
-                        {
-                            dateFile.GetNewMapDate(list[0], list[1], 98),
-                            dateFile.GetNewMapDate(list[0], list[1], 0)
-                        });
-                    }
-
-                    string actorName = dateFile.GetActorName(index);
-
-                    string charmText = ((int.Parse(DateFile.instance.GetActorDate(index, 11, false)) > 14) ? ((int.Parse(DateFile.instance.GetActorDate(index, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(index, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(index, 14, false)) - 1].Split(new char[]
-                    {
-                            '|'
-                    })[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(index, 15, true)) / 100, 0, 9)] : DateFile.instance.massageDate[25][5].Split(new char[]
-                    {
-                            '|'
-                    })[1]) : DateFile.instance.massageDate[25][5].Split(new char[]
-                    {
-                            '|'
-                    })[0]);
-
-                    List<int> samsaraList = dateFile.GetLifeDateList(index, 801, false);
-                    string samsaraNames = "";
-                    foreach (int samsaraId in samsaraList)
-                    {
-                        samsaraNames = samsaraNames + " " + dateFile.GetActorName(samsaraId);
-                    }
-
-                    int[] actorResources = ActorMenu.instance.GetActorResources(index);
-
-                    if (GetLevelValue(index, 0, 1) >= gongfa[0]
-                        && GetLevelValue(index, 1, 1) >= gongfa[1]
-                        && GetLevelValue(index, 1, 1) >= gongfa[1]
-                        && GetLevelValue(index, 2, 1) >= gongfa[2]
-                        && GetLevelValue(index, 3, 1) >= gongfa[3]
-                        && GetLevelValue(index, 4, 1) >= gongfa[4]
-                        && GetLevelValue(index, 5, 1) >= gongfa[5]
-                        && GetLevelValue(index, 6, 1) >= gongfa[6]
-                        && GetLevelValue(index, 7, 1) >= gongfa[7]
-                        && GetLevelValue(index, 8, 1) >= gongfa[8]
-                        && GetLevelValue(index, 9, 1) >= gongfa[9]
-                        && GetLevelValue(index, 10, 1) >= gongfa[10]
-                        && GetLevelValue(index, 11, 1) >= gongfa[11]
-                        && GetLevelValue(index, 12, 1) >= gongfa[12]
-                        && GetLevelValue(index, 13, 1) >= gongfa[13]
-                        && GetLevelValue(index, 0, 0) >= life[0]
-                        && GetLevelValue(index, 1, 0) >= life[1]
-                        && GetLevelValue(index, 2, 0) >= life[2]
-                        && GetLevelValue(index, 3, 0) >= life[3]
-                        && GetLevelValue(index, 4, 0) >= life[4]
-                        && GetLevelValue(index, 5, 0) >= life[5]
-                        && GetLevelValue(index, 6, 0) >= life[6]
-                        && GetLevelValue(index, 7, 0) >= life[7]
-                        && GetLevelValue(index, 8, 0) >= life[8]
-                        && GetLevelValue(index, 9, 0) >= life[9]
-                        && GetLevelValue(index, 10, 0) >= life[10]
-                        && GetLevelValue(index, 11, 0) >= life[11]
-                        && GetLevelValue(index, 12, 0) >= life[12]
-                        && GetLevelValue(index, 13, 0) >= life[13]
-                        && GetLevelValue(index, 14, 0) >= life[14]
-                        && GetLevelValue(index, 15, 0) >= life[15]
-                        )
-                    {
-                        string gn = dateFile.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(index)];
-                        int groupid = int.Parse(DateFile.instance.GetActorDate(index, 19, false));//身份组ID
-                        int gangLevel = int.Parse(DateFile.instance.GetActorDate(index, 20, false));//身份等级
-                        int gangValueId = DateFile.instance.GetGangValueId(groupid, gangLevel);
-                        int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
-                        string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
-
-                        if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
-                        {
-                            if (ScanGongFa(index, Main.GongFaList, tarGongFaOr) || actorGongFaText == "")
-                            {
-                                if (gangLevel >= highestLevel)
-                                {
-                                    if ((!tarIsGang || (isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)
-                                    {
-                                        if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
-                                        {
-                                            if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
-                                            {
-                                                actorList.Add(new string[] { actorName ,age.ToString(), genderText, place,
-                                charm + "(" + charmText + ")" ,//魅力
-                                dateFile.GetGangDate(groupid, 0),//从属gangText
-                                gangLevelText,//身份gangLevelText
-                                gn,//立场goodnessText
-                                GetSpouse(index),//
-                                GetSkillDevelopText(index),
-                                GetGongFaDevelopText(index),
-                                GetHealth(index),//健康
-                                str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
-                                GetLevel(index, 0, 1),
-                                GetLevel(index, 1, 1) ,
-                                GetLevel(index, 2, 1),
-                                GetLevel(index, 3, 1) ,
-                                GetLevel(index, 4, 1) ,
-                                GetLevel(index, 5, 1) ,
-                                GetLevel(index, 6, 1) ,
-                                GetLevel(index, 7, 1) ,
-                                GetLevel(index, 8, 1) ,
-                                GetLevel(index, 9, 1) ,
-                                GetLevel(index, 10, 1) ,
-                                GetLevel(index, 11, 1) ,
-                                GetLevel(index, 12, 1) ,
-                                GetLevel(index, 13, 1),
-                                GetLevel(index, 0, 0),
-                                GetLevel(index, 1, 0) ,
-                                GetLevel(index, 2, 0),
-                                GetLevel(index, 3, 0) ,
-                                GetLevel(index, 4, 0) ,
-                                GetLevel(index, 5, 0) ,
-                                GetLevel(index, 6, 0) ,
-                                GetLevel(index, 7, 0) ,
-                                GetLevel(index, 8, 0) ,
-                                GetLevel(index, 9, 0) ,
-                                GetLevel(index, 10, 0) ,
-                                GetLevel(index, 11, 0) ,
-                                GetLevel(index, 12, 0) ,
-                                GetLevel(index, 13, 0),
-                                GetLevel(index, 14, 0),
-                                GetLevel(index, 15, 0),
-                                actorResources[0].ToString(),
-                                actorResources[1].ToString(),
-                                actorResources[2].ToString(),
-                                actorResources[3].ToString(),
-                                actorResources[4].ToString(),
-                                actorResources[5].ToString(),
-                                actorResources[6].ToString(),
-                                GetGongFaListText(index),
-                                samsaraNames,
-                                GetActorFeatureNameText(index, tarFeature)});
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    actorList.Add(addItem.GetAddItem());
                 }
             }
-        }
-
-        void GetRank()
-        {
-            actorList.Clear();
-            DateFile dateFile = DateFile.instance;
-            Dictionary<int, Dictionary<int, string>> actors = dateFile.actorsDate;
-            foreach (int index in actors.Keys)
-            {
-                Dictionary<int, string> actor = actors[index];
-                int age = int.Parse(dateFile.GetActorDate(index, 11, false));
-                int gender = int.Parse(dateFile.GetActorDate(index, 14, false));
-                int samsara = dateFile.GetLifeDateList(index, 801, false).Count;
-                int health = ActorMenu.instance.Health(index);
-                if (age >= minage
-                    && health >= healthValue
-                    && samsara >= samsaraCount
-                    && (maxage == 0 || age <= maxage)
-                    && (genderValue == 0 || gender == genderValue)
-                    )
-                {
-                    int str = int.Parse(DateFile.instance.GetActorDate(index, 61, !getreal)); //dateFile.BaseAttr(index, 0, 0);
-                    int con = int.Parse(DateFile.instance.GetActorDate(index, 62, !getreal)); //dateFile.BaseAttr(index, 1, 0);
-                    int agi = int.Parse(DateFile.instance.GetActorDate(index, 63, !getreal)); //dateFile.BaseAttr(index, 2, 0);
-                    int bon = int.Parse(DateFile.instance.GetActorDate(index, 64, !getreal)); //dateFile.BaseAttr(index, 3, 0);
-                    int inv = int.Parse(DateFile.instance.GetActorDate(index, 65, !getreal)); //dateFile.BaseAttr(index, 4, 0);
-                    int pat = int.Parse(DateFile.instance.GetActorDate(index, 66, !getreal)); //dateFile.BaseAttr(index, 5, 0);
-                    int totalrank = str * strValue + con * conValue + agi * agiValue + bon * bonValue + inv * intValue + pat * patValue;
-                    int charm = int.Parse(DateFile.instance.GetActorDate(index, 15, !getreal));
-                    totalrank += charm * charmValue;
-                    string genderText;
-                    if (gender == 1)
-                    {
-                        genderText = "男";
-                    }
-                    else
-                    {
-                        genderText = "女";
-
-                    }
-                    string place;
-                    if (int.Parse(dateFile.GetActorDate(index, 8, false)) != 1)
-                    {
-                        place = dateFile.massageDate[8010][3].Split(new char[] { '|' })[1];
-                    }
-                    else
-                    {
-                        List<int> list = new List<int>(dateFile.GetActorAtPlace(index));
-                        place = string.Format("{0}{1}", new object[]
-                        {
-                            dateFile.GetNewMapDate(list[0], list[1], 98),
-                            dateFile.GetNewMapDate(list[0], list[1], 0)
-                        });
-                    }
-
-                    string actorName = dateFile.GetActorName(index);
-
-                    string charmText = ((int.Parse(DateFile.instance.GetActorDate(index, 11, false)) > 14) ? ((int.Parse(DateFile.instance.GetActorDate(index, 8, false)) != 1 || int.Parse(DateFile.instance.GetActorDate(index, 305, false)) != 0) ? DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(index, 14, false)) - 1].Split(new char[]
-                    {
-                            '|'
-                    })[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(index, 15, true)) / 100, 0, 9)] : DateFile.instance.massageDate[25][5].Split(new char[]
-                    {
-                            '|'
-                    })[1]) : DateFile.instance.massageDate[25][5].Split(new char[]
-                    {
-                            '|'
-                    })[0]);
-
-                    List<int> samsaraList = dateFile.GetLifeDateList(index, 801, false);
-                    string samsaraNames = "";
-                    foreach (int samsaraId in samsaraList)
-                    {
-                        samsaraNames = samsaraNames + " " + dateFile.GetActorName(samsaraId);
-                    }
-
-                    int[] actorResources = ActorMenu.instance.GetActorResources(index);
-                    for (int tmpi = 0; tmpi < 14; tmpi++)
-                        totalrank += GetLevelValue(index, tmpi, 1) * gongfa[tmpi];
-                    for (int tmpi = 0; tmpi < 16; tmpi++)
-                        totalrank += GetLevelValue(index, tmpi, 0) * life[tmpi];
-                    string gn = dateFile.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(index)];
-                    int groupid = int.Parse(DateFile.instance.GetActorDate(index, 19, false));//身份组ID
-                    int gangLevel = int.Parse(DateFile.instance.GetActorDate(index, 20, false));//身份等级
-                    int gangValueId = DateFile.instance.GetGangValueId(groupid, gangLevel);
-                    int key2 = (gangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(index, 14, false)));//性别标识
-                    string gangLevelText = dateFile.SetColoer((gangValueId != 0) ? (20011 - Mathf.Abs(gangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false);//身份gangLevelText
-
-                    if (ScanFeature(index, Main.findList, tarFeature, tarFeatureOr) || actorFeatureText == "")
-                    {
-                        if (ScanGongFa(index, Main.GongFaList, tarGongFaOr) || actorGongFaText == "")
-                        {
-                            if (gangLevel >= highestLevel)
-                            {
-                                if ((!tarIsGang || (isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)
-                                {
-                                    if (goodnessText.Equals("全部") || gn.Contains(goodnessText))
-                                    {
-                                        if ((actorName.Contains(aName) || samsaraNames.Contains(aName)) && (dateFile.GetGangDate(groupid, 0).Contains(gangValue)) && (gangLevelText.Contains(gangLevelValue)))
-                                        {
-                                            actorList.Add(new string[] { totalrank.ToString(), actorName ,age.ToString(), genderText, place,
-                                charm + "(" + charmText + ")" ,//魅力
-                                dateFile.GetGangDate(groupid, 0),//从属gangText
-                                gangLevelText,//身份gangLevelText
-                                gn,//立场goodnessText
-                                GetSpouse(index),//
-                                GetSkillDevelopText(index),
-                                GetGongFaDevelopText(index),
-                                GetHealth(index),//健康
-                                str.ToString(), con.ToString(), agi.ToString(), bon.ToString(), inv.ToString(), pat.ToString(),
-                                GetLevel(index, 0, 1),
-                                GetLevel(index, 1, 1) ,
-                                GetLevel(index, 2, 1),
-                                GetLevel(index, 3, 1) ,
-                                GetLevel(index, 4, 1) ,
-                                GetLevel(index, 5, 1) ,
-                                GetLevel(index, 6, 1) ,
-                                GetLevel(index, 7, 1) ,
-                                GetLevel(index, 8, 1) ,
-                                GetLevel(index, 9, 1) ,
-                                GetLevel(index, 10, 1) ,
-                                GetLevel(index, 11, 1) ,
-                                GetLevel(index, 12, 1) ,
-                                GetLevel(index, 13, 1),
-                                GetLevel(index, 0, 0),
-                                GetLevel(index, 1, 0) ,
-                                GetLevel(index, 2, 0),
-                                GetLevel(index, 3, 0) ,
-                                GetLevel(index, 4, 0) ,
-                                GetLevel(index, 5, 0) ,
-                                GetLevel(index, 6, 0) ,
-                                GetLevel(index, 7, 0) ,
-                                GetLevel(index, 8, 0) ,
-                                GetLevel(index, 9, 0) ,
-                                GetLevel(index, 10, 0) ,
-                                GetLevel(index, 11, 0) ,
-                                GetLevel(index, 12, 0) ,
-                                GetLevel(index, 13, 0),
-                                GetLevel(index, 14, 0),
-                                GetLevel(index, 15, 0),
-                                actorResources[0].ToString(),
-                                actorResources[1].ToString(),
-                                actorResources[2].ToString(),
-                                actorResources[3].ToString(),
-                                actorResources[4].ToString(),
-                                actorResources[5].ToString(),
-                                actorResources[6].ToString(),
-                                GetGongFaListText(index),
-                                samsaraNames,
-                                GetActorFeatureNameText(index, tarFeature) });
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        //婚姻状况
-        public static string GetSpouse(int id)
-        {
-            List<int> actorSocial = DateFile.instance.GetActorSocial(id, 309, false, false);
-            List<int> actorSocial2 = DateFile.instance.GetActorSocial(id, 309, true, false);
-            bool flag = actorSocial2.Count == 0;
-            string result;
-            if (flag)
-            {
-                result = DateFile.instance.SetColoer(20004, "未婚", false);
-            }
-            else
-            {
-                bool flag2 = actorSocial.Count == 0;
-                if (flag2)
-                {
-                    result = DateFile.instance.SetColoer(20007, "丧偶", false);
-                }
-                else
-                {
-                    result = DateFile.instance.SetColoer(20010, "已婚", false);
-                }
-            }
-
-            return result;
-        }
-
-        private static string GetSkillDevelopText(int key)
-        {
-            int num = DateFile.instance.MianActorID();
-            int num2 = Mathf.Max(int.Parse(DateFile.instance.GetActorDate(key, 551, false)), 2);
-            int num3 = int.Parse(DateFile.instance.ageDate[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(key, 11, false)), 0, 100)][num2]);
-            string text = ((num2 == 0) ? DateFile.instance.massageDate[7006][0] : string.Format("{0} {1}", DateFile.instance.massageDate[2002][2].Split(new char[]
-            {
-            '|'
-            })[num2], (num3 <= 0) ? ((num3 != 0) ? DateFile.instance.SetColoer(20010, "-" + Mathf.Abs(num3), false) : DateFile.instance.SetColoer(20002, "+" + num3, false)) : DateFile.instance.SetColoer(20005, "+" + num3, false)));
-            return text;
-        }
-        private static string GetGongFaDevelopText(int key)
-        {
-            int num = DateFile.instance.MianActorID();
-            int num2 = Mathf.Max(int.Parse(DateFile.instance.GetActorDate(key, 651, false)), 2);
-            int num3 = int.Parse(DateFile.instance.ageDate[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(key, 11, false)), 0, 100)][num2 + 3]);
-            string text = ((num2 == 0) ? DateFile.instance.massageDate[7006][0] : string.Format("{0} {1}", DateFile.instance.massageDate[2002][2].Split(new char[]
-            {
-            '|'
-            })[num2], (num3 <= 0) ? ((num3 != 0) ? DateFile.instance.SetColoer(20010, "-" + Mathf.Abs(num3), false) : DateFile.instance.SetColoer(20002, "+" + num3, false)) : DateFile.instance.SetColoer(20005, "+" + num3, false)));
-            return text;
-        }
-        private static string GetActorFeatureNameText(int key, bool tarFeature)
-        {
-            List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
-            string text = "";
-            for (int i = 0; i < list.Count; i++)
-            {
-                int j = list[i];
-                Features f = Main.featuresList[j];
-                if (f.Group == 2001 || f.Group == 3024) continue;
-                string s = f.Level.ToString();
-                if (tarFeature)
-                {
-                    text += (Main.findList.Contains(f) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
-                }
-                else
-                {
-                    text += (Main.findList.Contains(Main.featuresList[f.Group]) ? f.tarColor : f.Color) + f.Name + "(" + s + ")</color>";
-                }             
-            }
-            //Main.Logger.Log(text);
-            return text;
         }
 
         private static List<Features> GetFeatureKey(string str, bool flag)
@@ -1736,6 +837,7 @@ namespace NpcScan
             //}
             return list;
         }
+
         private static bool ScanFeature(int key, List<Features> slist, bool tarFeature, bool tarFeatureOr)
         {
             List<int> list = new List<int>(DateFile.instance.GetActorFeature(key));
@@ -1760,7 +862,7 @@ namespace NpcScan
             }
 
             if (!tarFeatureOr)   //与查找
-            {              
+            {
                 if (slist.All(t => actorFeature.Any(b => b.Key == t.Key)))
                 {
                     result = true;
@@ -1795,63 +897,126 @@ namespace NpcScan
             return list;
         }
 
-        private static bool ScanGongFa(int key, List<int> slist, bool tarGongFaOr)
+        public void ToggleWindow()
         {
-            List<int> list = new List<int>(DateFile.instance.actorGongFas[key].Keys);
-            bool result = false;
-            if (slist.Count == 0)
-            {
-                return true;
-            }
-            //List<int> actorGongFa = new List<int>();
-            //foreach (int i in list)
-            //{
-               // actorGongFa.Add(Main.GongFaList[i]);
-            //}
-
-            if (!tarGongFaOr)   //与查找
-            {
-                if (slist.All(t => list.Any(b => b == t)))
-                {
-                    result = true;
-                }
-            }
-            else                //或查找
-            {
-                foreach (int i in list)
-                {
-                    if (slist.Contains(i))
-                    {
-                        result = true;
-                        break;
-                    }
-                }
-            }
-            return result;
+            ToggleWindow(!mOpened);
         }
 
-        private static String GetGongFaListText(int key)
+        public void ToggleWindow(bool open)
         {
-            String result = "";
-            List<int> myList = new List<int>(DateFile.instance.actorGongFas[DateFile.instance.MianActorID()].Keys);
-            List<int> list = new List<int>(DateFile.instance.actorGongFas[key].Keys);
-            int[] resultList = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-            foreach(int i in list)
+            mOpened = open;
+            BlockGameUI(open);
+            if (!mOpened)
             {
-                if(myList.All(t => t != i))
+                //SaveSettingsAndParams();
+            }
+            if (open)
+            {
+                GameCursorLocked = Cursor.lockState == CursorLockMode.Locked || !Cursor.visible;
+                if (GameCursorLocked)
                 {
-                    resultList[9 - int.Parse(DateFile.instance.gongFaDate[i][2])]++;
+                    Cursor.visible = true;
+                    Cursor.lockState = CursorLockMode.None;
                 }
             }
-            for(int i = 0; i < 9; i++)
+            else
             {
-                result += DateFile.instance.SetColoer(20010 - i, String.Format("{0:D2}", resultList[i]));
-                if (i != 8)
-                    result += " | ";
+                if (GameCursorLocked)
+                {
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
             }
-            return result;
         }
 
+        private GameObject mCanvas = null;
+        private void BlockGameUI(bool value)
+        {
+            if (value)
+            {
+                mCanvas = new GameObject("", typeof(Canvas), typeof(GraphicRaycaster));
+                mCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+                mCanvas.GetComponent<Canvas>().sortingOrder = Int16.MaxValue;
+                DontDestroyOnLoad(mCanvas);
+                var panel = new GameObject("", typeof(Image));
+                panel.transform.SetParent(mCanvas.transform);
+                panel.GetComponent<RectTransform>().anchorMin = new Vector2(1, 0);
+                panel.GetComponent<RectTransform>().anchorMax = new Vector2(0, 1);
+                panel.GetComponent<RectTransform>().offsetMin = Vector2.zero;
+                panel.GetComponent<RectTransform>().offsetMax = Vector2.zero;
+            }
+            else
+            {
+                Destroy(mCanvas);
+            }
+        }
+
+        private static RectOffset RectOffset(int value)
+        {
+            return new RectOffset(value, value, value, value);
+        }
+
+        private static RectOffset RectOffset(int x, int y)
+        {
+            return new RectOffset(x, x, y, y);
+        }
+
+        private int SortList(string[] a, string[] b)
+        {
+            int m = 0;
+            int n = 0;
+            string s1 = a[sortIndex];
+            string s2 = b[sortIndex];
+            if (sortIndex != 6)
+            {
+                if (s1.Contains("color"))
+                {
+                    string check = s1.Contains("(") ? "\\(.*?\\)" : "<.*?>";
+
+                    s1 = System.Text.RegularExpressions.Regex.Replace(s1, check, "");
+                    s2 = System.Text.RegularExpressions.Regex.Replace(s2, check, "");
+                }
+                int.TryParse(s1, out m);
+                int.TryParse(s2, out n);
+
+                if (m != n)
+                {
+                    return CheckMN(m, n, desc);
+                }
+                else
+                {
+                    return desc ? -s1.CompareTo(s2) : s1.CompareTo(s2);
+                }
+            }
+            else
+            {
+                Regex reg = new Regex("<(.+?)>");
+
+                Main.Logger.Log(reg.Match(s1).Groups[0].Value + "," + reg.Match(s2).Groups[0].Value);
+                m = Main.colorText[reg.Match(s1).Groups[0].Value];
+                n = Main.colorText[reg.Match(s2).Groups[0].Value];
+                return CheckMN(m, n, desc);
+            }
+        }
+
+        private int CheckMN(int m, int n, bool desc)
+        {
+            int rtn = desc ? -1 : 1;
+            if (m > n)
+            {
+                return rtn;
+            }
+            else if (m < n)
+            {
+                return -1 * rtn;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        internal bool GameCursorLocked { get; set; }
         //        [HarmonyPatch(typeof(Screen), "lockCursor", MethodType.Setter)]
         static class Screen_lockCursor_Patch
         {
@@ -1868,6 +1033,5 @@ namespace NpcScan
                 return true;
             }
         }
-
     }
 }
