@@ -1,0 +1,8 @@
+﻿{
+  "Id": "TaiwuEditor",
+  "DisplayName": "太吾修改器",
+  "Version": "1.0.9.5",
+  "author": "babel92"
+  "AssemblyName": "TaiwuEditor.dll",
+  "EntryMethod": "TaiwuEditor.Main.Load"
+}
