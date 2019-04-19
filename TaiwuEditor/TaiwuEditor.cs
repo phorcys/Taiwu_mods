@@ -160,8 +160,8 @@ namespace TaiwuEditor
             }
             else
             {
-                Dictionary<int, string> dictionary = instance.actorsDate[instance.mianActorId];
-                instance.actorsDate[instance.mianActorId][resId] = GUILayout.TextField(instance.actorsDate[instance.mianActorId][resId], new GUILayoutOption[0]);
+                //Dictionary<int, string> dictionary = instance.actorsDate[instance.mianActorId];
+                instance.actorsDate[instance.mianActorId][resId] = GUILayout.TextField(instance.GetActorDate(instance.mianActorId, resId, false), new GUILayoutOption[0]);
             }
             GUILayout.EndHorizontal();
         }
@@ -179,7 +179,7 @@ namespace TaiwuEditor
             }
             else
             {
-                Dictionary<int, string> dictionary = instance.actorsDate[instance.mianActorId];
+                //Dictionary<int, string> dictionary = instance.actorsDate[instance.mianActorId];
                 field = DateFile.instance.ParseInt(GUILayout.TextField(field.ToString(), new GUILayoutOption[0]));
             }
             GUILayout.EndHorizontal();
