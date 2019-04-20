@@ -23,7 +23,7 @@ namespace Sth4nothing.SLManager
         private static string[] dlls = {
             "I18N.dll",
             "I18N.West.dll",
-            "Ionic.Zip.dll"
+            "DotNetZip.dll",
         };
 
         public static Settings settings;
