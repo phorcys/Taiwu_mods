@@ -23,7 +23,7 @@ namespace Sth4nothing.SLManager
         {
             if (!Main.Enabled || codepage != 437)
                 return true;
-            
+
             __result = new I18N.West.CP437();
             return false;
         }
@@ -672,25 +672,8 @@ namespace Sth4nothing.SLManager
                     __instance.saveSaveDate = false;
                     return;
                 }
-            }
-        }
-    }
-
-    /// <summary>
-    /// 存档后备份当前存档
-    /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "EnsureFiles")]
-    public class SaveDateFile_EnsureFiles_Patch
-    {
-        static void Postfix()
-        {
-            try
-            {
+                // 保存存档前备份
                 SaveManager.Backup(SaveManager.AFTER_SAVE_BACKUP);
-            }
-            catch (Exception e)
-            {
-                Debug.Log(e);
             }
         }
     }
@@ -706,7 +689,7 @@ namespace Sth4nothing.SLManager
             if (!Main.Enabled) return;
 
             var df = DateFile.instance;
-            var savedate = new SaveData(df.GetActorName(), df.year, df.samsara, df.dayTrun,
+            var savedate = new SaveData(df.GetActorName(0, false, false), df.year, df.samsara, df.dayTrun,
                 df.playerSeatName, DateTime.Now);
 
             var dirpath = typeof(SaveDateFile)
