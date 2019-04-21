@@ -177,17 +177,27 @@ namespace NpcScan
             additem.Add(GetLevel(npcId, 13, 0));
             additem.Add(GetLevel(npcId, 14, 0));
             additem.Add(GetLevel(npcId, 15, 0));
-            //银钱
+            // 银钱
             additem.Add(ActorMenu.instance.ActorResource(npcId)[5].ToString());
+            // 细腻
             additem.Add(actorResources[0].ToString());
+            // 聪颖
             additem.Add(actorResources[1].ToString());
+            // 水性
             additem.Add(actorResources[2].ToString());
+            // 勇壮
             additem.Add(actorResources[3].ToString());
+            // 坚毅
             additem.Add(actorResources[4].ToString());
+            // 冷静
             additem.Add(actorResources[5].ToString());
+            // 福源
             additem.Add(actorResources[6].ToString());
+            // 可学功法
             additem.Add(GetGongFaListText(npcId));
+            // 前世
             additem.Add(samsaraNames);
+            // 特性
             additem.Add(GetActorFeatureNameText(npcId, _ui.tarFeature));
 
             return additem.ToArray();
@@ -262,7 +272,7 @@ namespace NpcScan
             // (groupid >= 1 && groupid <= 15)结果为门派中人
             // _ui.isGang = true 仅搜索门派：(groupid >= 1 && groupid <= 15)=false 排除
             // _ui.isGang = false 仅搜索非门派：(groupid >= 1 && groupid <= 15)=true 排除
-            if (_ui.tarIsGang || (_ui.isGang != (groupid > 0 && groupid < 16)))
+            if (_ui.tarIsGang && (_ui.isGang != (groupid > 0 && groupid < 16)))
                 return;
 
             if (!_ui.goodnessText.Equals("全部") && !gn.Contains(_ui.goodnessText))
