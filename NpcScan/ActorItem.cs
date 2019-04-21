@@ -85,7 +85,7 @@ namespace NpcScan
             this.samsaraNames = _getSamsaraNames(npcId);
 
             this.gn = DateFile.instance.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(npcId)];
-            //身份组ID
+            //门派ID
             this.groupid = int.Parse(DateFile.instance.GetActorDate(npcId, 19, false));
             //身份等级
             this.gangLevel = int.Parse(DateFile.instance.GetActorDate(npcId, 20, false));
@@ -120,7 +120,7 @@ namespace NpcScan
             List<string> additem = new List<string>();
 
             if (isRank) { additem.Add(totalrank.ToString()); }
-            additem.Add(actorName);
+            additem.Add(actorName+ "(" + npcId + ")");
             additem.Add(age.ToString());
             additem.Add(genderText);
             additem.Add(place);
@@ -201,14 +201,13 @@ namespace NpcScan
             if (this.age < _ui.minage) return;
             if (this.health < _ui.healthValue) return;
             if (this.samsara < _ui.samsaraCount) return;
-            if ((_ui.maxage != 0 && this.age > _ui.maxage)) return;
-            if ((_ui.genderValue != 0 && this.gender != _ui.genderValue)) return;
+            if (_ui.maxage != 0 && this.age > _ui.maxage) return;
+            if (_ui.genderValue != 0 && this.gender != _ui.genderValue) return;
 
             // 排行榜模式以下搜索条件无效
             // 我至今不知道排行榜模式有啥用？都能排序了都。
             if (!isRank)
             {
-
                 if (this.inv < _ui.intValue) return;
                 if (this.str < _ui.strValue) return;
                 if (this.con < _ui.conValue) return;
@@ -216,7 +215,6 @@ namespace NpcScan
                 if (this.bon < _ui.bonValue) return;
                 if (this.pat < _ui.patValue) return;
                 if (this.charm < this.cv) return;
-
 
                 if (GetLevelValue(this.npcId, 0, 1) < _ui.gongfa[0]) return;
                 if (GetLevelValue(this.npcId, 1, 1) < _ui.gongfa[1]) return;
@@ -251,20 +249,34 @@ namespace NpcScan
                 if (GetLevelValue(this.npcId, 15, 0) < _ui.life[15]) return;
             }
 
-            if (_ui.actorFeatureText != "" && !ScanFeature(this.npcId, Main.findList, _ui.tarFeature, _ui.tarFeatureOr)) return;
-            if (_ui.actorGongFaText != "" && !ScanGongFa(this.npcId, Main.GongFaList, _ui.tarGongFaOr)) return;
-            if (gangLevel < _ui.highestLevel) return;
+            if (_ui.actorFeatureText != "" && !ScanFeature(this.npcId, Main.findList, _ui.tarFeature, _ui.tarFeatureOr))
+                return;
+            if (_ui.actorGongFaText != "" && !ScanGongFa(this.npcId, Main.GongFaList, _ui.tarGongFaOr))
+                return;
+
+            // gangLevel 门派地位 若为负 则地位由婚姻带来的。
+            if (Mathf.Abs(gangLevel) < _ui.highestLevel)
+                return;
+
+            // 如果未开启门派搜索 直接通过
+            // (groupid >= 1 && groupid <= 15)结果为门派中人
+            // _ui.isGang = true 仅搜索门派：(groupid >= 1 && groupid <= 15)=false 排除
+            // _ui.isGang = false 仅搜索非门派：(groupid >= 1 && groupid <= 15)=true 排除
+            if (_ui.tarIsGang || (_ui.isGang != (groupid > 0 && groupid < 16)))
+                return;
+
+            if (!_ui.goodnessText.Equals("全部") && !gn.Contains(_ui.goodnessText))
+                return;
+
             // 懒
-            if (!((!_ui.tarIsGang || (_ui.isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)) return;
-            if (!_ui.goodnessText.Equals("全部") && !gn.Contains(_ui.goodnessText)) return;
-            // 懒
-            if (!((actorName.Contains(_ui.aName) || samsaraNames.Contains(_ui.aName)) && (DateFile.instance.GetGangDate(groupid, 0).Contains(_ui.gangValue)) && (gangLevelText.Contains(_ui.gangLevelValue)))) return;
+            if (!((actorName.Contains(_ui.aName) || samsaraNames.Contains(_ui.aName)) && (DateFile.instance.GetGangDate(groupid, 0).Contains(_ui.gangValue)) && (gangLevelText.Contains(_ui.gangLevelValue))))
+                return;
 
             // 商会
-            if (_ui.aShopName != "" && !shopName.Contains(_ui.aShopName)) return;
+            if (_ui.aShopName != "" && !shopName.Contains(_ui.aShopName))
+                return;
 
             this.isNeedAdd = true;
-
         }
 
         /// <summary>
@@ -534,10 +546,13 @@ namespace NpcScan
                 List<int> list = DateFile.instance.GetActorAtPlace(index);
                 if (list != null && list.Count >= 2)
                 {
-                    place = string.Format("{0}{1}", new object[]
+                    int num = int.Parse(DateFile.instance.partWorldMapDate[list[0]][98]);
+                    place = string.Format("{0}{1}({2},{3})", new object[]
                     {
                             DateFile.instance.GetNewMapDate(list[0], list[1], 98),
-                            DateFile.instance.GetNewMapDate(list[0], list[1], 0)
+                            DateFile.instance.GetNewMapDate(list[0], list[1], 0),
+                            list[1]% num,
+                            list[1]/ num
                     });
                 }
                 else
