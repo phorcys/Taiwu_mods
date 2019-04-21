@@ -67,17 +67,20 @@ namespace ShowBiographyOfTheDead
         }
     }
 
-   
+
     [HarmonyPatch(typeof(DateFile), "RemoveActor")]
     public static class DateFile_RemoveActor_Patch
     {
         public static int index = 0;
-        public static List<string> actorMessages=new List<string>();//Qu式传参法:设成静态成员
+        public static List<string> actorMessages = new List<string>();//Qu式传参法:设成静态成员
         public const string outputDir = ".\\Revenge\\";
         public const int minBlurLength = 3;
         public const int maxBlurLength = 10;
 
-        static void Prefix(DateFile __instance, List<int> actorId, bool die, bool showRemove)
+        //Modify by inpay start
+        //static void Prefix(DateFile __instance, List<int> actorId, bool die, bool showRemove, bool make9Level = true)
+        static void Prefix(List<int> actorId, bool die, bool showRemove = true)
+        //Modify by inpay end
         {
             if (!Main.enabled)
                 return;
@@ -85,11 +88,11 @@ namespace ShowBiographyOfTheDead
                 return;
             List<int> deadFollower = new List<int>();//死亡村民id
             foreach (var id in actorId)
-                if(id >= 0)//负的为临时对象
+                if (id >= 0)//负的为临时对象
                 {
                     if (DateFile.instance.actorsDate.ContainsKey(id))
-                       if (GetGangLevelText(id) == "村民")
-                           deadFollower.Add(id);
+                        if (GetGangLevelText(id) == "村民")
+                            deadFollower.Add(id);
                 }
             if (deadFollower.Count() <= 0)
                 return;
@@ -115,11 +118,11 @@ namespace ShowBiographyOfTheDead
                         length -= start;
                         start = 0;
                     }
-                    actorMessages[i] = actorMessages[i].Substring(0, start) 
+                    actorMessages[i] = actorMessages[i].Substring(0, start)
                                     + new String('?', length)
-                                    + (start+length<actorMessages[i].Count()?
-                                                actorMessages[i].Substring(start + length, actorMessages[i].Count()-start-length)
-                                                :"");
+                                    + (start + length < actorMessages[i].Count() ?
+                                                actorMessages[i].Substring(start + length, actorMessages[i].Count() - start - length)
+                                                : "");
                 }
                 PrintToLog(id);
                 SaveToFile(id);
@@ -137,8 +140,8 @@ namespace ShowBiographyOfTheDead
         private static void PrintToLog(int id)
         {
             Main.Logger.Log(DateFile.instance.GetActorName(id) + ":");
-            for (int i = Math.Max(actorMessages.Count()- Main.settings.logCount,0); i < actorMessages.Count(); ++i)
-                Main.Logger.Log(actorMessages[i]);                
+            for (int i = Math.Max(actorMessages.Count() - Main.settings.logCount, 0); i < actorMessages.Count(); ++i)
+                Main.Logger.Log(actorMessages[i]);
         }
         private static void SaveToFile(int id)
         {
@@ -153,103 +156,49 @@ namespace ShowBiographyOfTheDead
             {
                 foreach (var str in actorMessages)
                 {
-                    byte[] data = System.Text.Encoding.Default.GetBytes(str+"\r\n");
+                    byte[] data = System.Text.Encoding.Default.GetBytes(str + "\r\n");
                     file.Write(data, 0, data.Length);
                 }
                 file.Flush();
                 file.Close();
             }
         }
-        private static void GetAllMessage(int id)//下面是从showActorMassage抄的
+
+        /// <summary>
+        /// copy from ActorMenu.ShowActorMassage(int key)
+        /// </summary>
+        /// <param name="id">npcId</param>
+        private static void GetAllMessage(int id)
         {
             actorMessages.Clear();
-            int mainActorId = DateFile.instance.MianActorID();
-            //出生？
-            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·", false) + " {0}{1}{2}{3}{4}\n", new object[]
-            {
-            DateFile.instance.massageDate[8010][1].Split(new char[]
-            {
-                '|'
-            })[0],
-            DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(id, 25, false))][102], false),
-            DateFile.instance.massageDate[8010][1].Split(new char[]
-            {
-                '|'
-            })[1],
-            DateFile.instance.GetActorName(id, false, true),
-            DateFile.instance.massageDate[8010][1].Split(new char[]
-            {
-                '|'
-            })[2]
-            }));
+            int mianActorId = DateFile.instance.MianActorID();
+            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n", DateFile.instance.massageDate[8010][1].Split('|')[0], DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[DateFile.instance.ParseInt(DateFile.instance.GetActorDate(id, 25, addValue: false))][102]), DateFile.instance.massageDate[8010][1].Split('|')[1], DateFile.instance.GetActorName(id, realName: false, baseName: true), DateFile.instance.massageDate[8010][1].Split('|')[2]));
             if (DateFile.instance.actorLifeMassage.ContainsKey(id))
             {
+                int num2 = Mathf.Max(DateFile.instance.GetActorFavor(false, mianActorId, id), 0);
                 for (int i = 0; i < DateFile.instance.actorLifeMassage[id].Count; i++)
                 {
                     int[] array = DateFile.instance.actorLifeMassage[id][i];
                     int key2 = array[0];
-                    string[] array2 = DateFile.instance.actorMassageDate[key2][2].Split(new char[]
+                    if (DateFile.instance.actorMassageDate.ContainsKey(key2))
                     {
-                    '|'
-                    });
-                    string[] array3 = DateFile.instance.actorMassageDate[key2][99].Split(new char[]
-                    {
-                    '|'
-                    });
-                    List<string> list = new List<string>
-                {
-                    DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString(), false) + DateFile.instance.massageDate[16][3],
-                    DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0], false)
-                };                    
-                    {
-                        list.Add(DateFile.instance.SetColoer(10001, DateFile.instance.GetNewMapDate(array[3], array[4], 98) + DateFile.instance.GetNewMapDate(array[3], array[4], 0), false));
-                        for (int j = 0; j < array3.Length; j++)
+                        if (id != mianActorId && num2 < 30000 * DateFile.instance.ParseInt(DateFile.instance.actorMassageDate[key2][4]) / 100)
                         {
-                            list.Add(array3[j]);
+                            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n", DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString()) + DateFile.instance.massageDate[16][3], DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0]), DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
                         }
-                        for (int k = 5; k < array.Length; k++)
+                        else
                         {
-                            switch (int.Parse(array2[k - 5]))
-                            {
-                                case 0:
-                                    list.Add(DateFile.instance.SetColoer((int.Parse(DateFile.instance.GetActorDate(array[k], 26, false)) <= 0) ? 10002 : 20010, DateFile.instance.GetActorName(array[k], false, false), false));
-                                    break;
-                                case 1:
-                                    list.Add(DateFile.instance.massageDate[10][0].Split(new char[]
-                                    {
-                                '|'
-                                    })[0] + DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(array[k], 8, true)), DateFile.instance.GetItemDate(array[k], 0, false), false) + DateFile.instance.massageDate[10][0].Split(new char[]
-                                    {
-                                '|'
-                                    })[1]);
-                                    break;
-                                case 2:
-                                    list.Add(DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.gongFaDate[array[k]][2]), DateFile.instance.massageDate[10][0].Split(new char[]
-                                    {
-                                '|'
-                                    })[0] + DateFile.instance.gongFaDate[array[k]][0] + DateFile.instance.massageDate[10][0].Split(new char[]
-                                    {
-                                '|'
-                                    })[1], false));
-                                    break;
-                                case 3:
-                                    list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.resourceDate[array[k]][0], false));
-                                    break;
-                                case 4:
-                                    list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.GetGangDate(array[k], 0), false));
-                                    break;
-                                case 5:
-                                    list.Add(DateFile.instance.SetColoer(20011 - Mathf.Abs(int.Parse(DateFile.instance.GetActorDate(id, 20, false))), DateFile.instance.presetGangGroupDateValue[array[k]][(array[k] <= 0) ? (1001 + int.Parse(DateFile.instance.GetActorDate(id, 14, false))) : 1001], false));
-                                    break;
-                            }
+                            List<string> list = actorMessages;
+                            string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：" + DateFile.instance.actorMassageDate[key2][1] + "\n";
+                            object[] args = ActorMenu.instance.SetMassageText(id, array).ToArray();
+                            list.Add(string.Format(format, args));
                         }
-                        actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·", false) + " {0}{1}：" + DateFile.instance.actorMassageDate[key2][1] + "\n", list.ToArray()));
                     }
                 }
             }
             //死亡
-            int num2 = int.Parse(DateFile.instance.GetActorDate(id, 26, false));
-            if (num2 > 0)
+            int num3 = int.Parse(DateFile.instance.GetActorDate(id, 26, false));
+            if (num3 > 0)
             {
                 actorMessages.Add(string.Format("■ {0}{1}{2}\n", DateFile.instance.massageDate[8010][2].Split(new char[]
                 {
