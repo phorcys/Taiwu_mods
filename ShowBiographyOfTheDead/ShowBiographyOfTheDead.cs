@@ -171,18 +171,18 @@ namespace ShowBiographyOfTheDead
         private static void GetAllMessage(int id)
         {
             actorMessages.Clear();
-            int num = DateFile.instance.MianActorID();
+            int mianActorId = DateFile.instance.MianActorID();
             actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n", DateFile.instance.massageDate[8010][1].Split('|')[0], DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[DateFile.instance.ParseInt(DateFile.instance.GetActorDate(id, 25, addValue: false))][102]), DateFile.instance.massageDate[8010][1].Split('|')[1], DateFile.instance.GetActorName(id, realName: false, baseName: true), DateFile.instance.massageDate[8010][1].Split('|')[2]));
             if (DateFile.instance.actorLifeMassage.ContainsKey(id))
             {
-                int num2 = Mathf.Max(DateFile.instance.GetActorFavor(false, num, id), 0);
+                int num2 = Mathf.Max(DateFile.instance.GetActorFavor(false, mianActorId, id), 0);
                 for (int i = 0; i < DateFile.instance.actorLifeMassage[id].Count; i++)
                 {
                     int[] array = DateFile.instance.actorLifeMassage[id][i];
                     int key2 = array[0];
                     if (DateFile.instance.actorMassageDate.ContainsKey(key2))
                     {
-                        if (id != num && num2 < 30000 * DateFile.instance.ParseInt(DateFile.instance.actorMassageDate[key2][4]) / 100)
+                        if (id != mianActorId && num2 < 30000 * DateFile.instance.ParseInt(DateFile.instance.actorMassageDate[key2][4]) / 100)
                         {
                             actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n", DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString()) + DateFile.instance.massageDate[16][3], DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0]), DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
                         }
@@ -190,11 +190,23 @@ namespace ShowBiographyOfTheDead
                         {
                             List<string> list = actorMessages;
                             string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：" + DateFile.instance.actorMassageDate[key2][1] + "\n";
-                            object[] args =ActorMenu.instance.SetMassageText(id, array).ToArray();
+                            object[] args = ActorMenu.instance.SetMassageText(id, array).ToArray();
                             list.Add(string.Format(format, args));
                         }
                     }
                 }
+            }
+            //死亡
+            int num3 = int.Parse(DateFile.instance.GetActorDate(id, 26, false));
+            if (num3 > 0)
+            {
+                actorMessages.Add(string.Format("■ {0}{1}{2}\n", DateFile.instance.massageDate[8010][2].Split(new char[]
+                {
+                '|'
+                })[0], DateFile.instance.SetColoer(10002, DateFile.instance.GetActorDate(id, 11, false), false), DateFile.instance.massageDate[8010][2].Split(new char[]
+                {
+                '|'
+                })[1]));
             }
         }
 

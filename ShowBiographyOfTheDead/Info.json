@@ -4,5 +4,5 @@
   "Author": "xyzkljl1/inpayh",
   "Version": "1.0.5",
   "AssemblyName": "ShowBiographyOfTheDead.dll",
-  "EntryMethod": "ShowBiographyOfTheDead.Main.Load",
+  "EntryMethod": "ShowBiographyOfTheDead.Main.Load"
 }
