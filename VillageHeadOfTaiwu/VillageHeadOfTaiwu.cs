@@ -637,7 +637,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         {
             Logger = modEntry.Logger;
             Setting = Settings.Load<Settings>(modEntry);
-            modEntry.OnToggle = new Func<UnityModManager.ModEntry, bool, bool>(OnToggle);
+            modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
