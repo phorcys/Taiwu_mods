@@ -201,7 +201,7 @@ IF(WIN32)
 
 
 #下载编译用dlls zip包
-set(DLLPACK_VERSION "190213")
+set(DLLPACK_VERSION "190421")
 set(DLLPACK_NAME "dlls")
 set(DLLPACK_DIR "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}")
 set(DLLPACK_URL "https://github.com/phorcys/Taiwu_mods/releases/download/dll${DLLPACK_VERSION}/dlls-${DLLPACK_VERSION}.zip")
