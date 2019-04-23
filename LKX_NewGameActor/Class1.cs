@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using Harmony12;
 using UnityEngine;
 using UnityModManagerNet;
@@ -276,6 +277,59 @@ namespace LKX_NewGameActor
     }
 
     /// <summary>
+    /// 反射类，从blob/master/SLManager/Main.cs中拷贝而来。
+    /// 作者:sth4nothing
+    /// 日期:2019-04-22
+    /// </summary>
+    public class ReflectionMethod
+    {
+        private const BindingFlags Flags = BindingFlags.Instance
+                                           | BindingFlags.Static
+                                           | BindingFlags.NonPublic
+                                           | BindingFlags.Public;
+
+        public static T2 Invoke<T1, T2>(T1 instance, string method, params object[] args)
+        {
+            return (T2)typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+        }
+
+        public static void Invoke<T1>(T1 instance, string method, params object[] args)
+        {
+            typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+        }
+
+        public static object Invoke<T>(T instance, string method, System.Type[] argTypes, params object[] args)
+        {
+            argTypes = argTypes ?? new System.Type[0];
+            var methods = typeof(T).GetMethods(Flags).Where(m =>
+            {
+                if (m.Name != method)
+                    return false;
+                return m.GetParameters()
+                    .Select(p => p.ParameterType)
+                    .SequenceEqual(argTypes);
+            });
+
+            if (methods.Count() != 1)
+            {
+                throw new AmbiguousMatchException("cannot find method to invoke");
+            }
+
+            return methods.First()?.Invoke(instance, args);
+        }
+
+        public static T2 GetValue<T1, T2>(T1 instance, string field)
+        {
+            return (T2)typeof(T1).GetField(field, Flags)?.GetValue(instance);
+        }
+
+        public static object GetValue<T>(T instance, string field)
+        {
+            return typeof(T).GetField(field, Flags)?.GetValue(instance);
+        }
+    }
+
+    /// <summary>
     /// 加入见经识经这个特质
     /// 点击开始新游戏的时候可以用，根据字面意思理解就是被点击的时候才会执行。
     /// </summary>
@@ -298,7 +352,56 @@ namespace LKX_NewGameActor
             }
         }
     }
-    
+
+    /// <summary>
+    /// 下面的postfix换到这里Patch
+    /// </summary>
+    [HarmonyPatch(typeof(Loading), "LoadEnd")]
+    public static class FeatureType_For_Loading_LoadEnd
+    {
+
+        static void Postfix(int sceneId, bool newGame)
+        {
+            if (Main.enabled && newGame)
+            {
+                List<int> att = ReflectionMethod.GetValue<NewGame, List<int>>(NewGame.instance, "chooseAbility");
+                //处理特性
+                if (Main.settings.featureType != 0)
+                {
+                    string file = Main.settings.featureType == 1 ? "" : Path.Combine(Main.path, Main.settings.file);
+
+                    //chooseAbility是开始游戏选择的特性，key 6就是谷中密友
+                    if (Main.settings.friend && att.Count > 0 && att.Contains(6)) FeatureType_For_NewGame_SetNewGameDate.ProcessingFeatureDate(10003, file);
+
+                    FeatureType_For_NewGame_SetNewGameDate.ProcessingFeatureDate(10001, file);
+                }
+
+                //处理自己添加的特质“见经识经”，处理后就删除
+                if (att.Contains(1001))
+                {
+                    FeatureType_For_NewGame_SetNewGameDate.ProcessingAbilityDate(10001);
+                    if (att.Contains(6)) FeatureType_For_NewGame_SetNewGameDate.ProcessingAbilityDate(10003);
+
+                    DateFile.instance.abilityDate.Remove(1001);
+                }
+
+                //处理成长
+                if (Main.settings.developmentActor != 0)
+                {
+                    FeatureType_For_NewGame_SetNewGameDate.ProcessingDevelopmentDate(10001);
+                    if (att.Contains(6)) FeatureType_For_NewGame_SetNewGameDate.ProcessingDevelopmentDate(10003);
+                }
+
+                //处理传家宝
+                if (Main.settings.itemsType != 0)
+                {
+                    FeatureType_For_NewGame_SetNewGameDate.ProcessingItemsDate(10001);
+                    if (att.Contains(6) && Main.settings.friendItemCreate) FeatureType_For_NewGame_SetNewGameDate.ProcessingItemsDate(10003);
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// 开始新游戏创建人物后执行
     /// </summary>
@@ -312,50 +415,51 @@ namespace LKX_NewGameActor
         /// <param name="___chooseAbility">NewGame的私有变量，三个下划线取得。</param>
         static void Postfix(ref List<int> ___chooseAbility)
         {
-            if (!Main.enabled) return;
-
-            //处理特性
-            if (Main.settings.featureType != 0)
+            if (Main.enabled && false)
             {
-                string file = Main.settings.featureType == 1 ? "" : Path.Combine(Main.path, Main.settings.file);
 
-                //chooseAbility是开始游戏选择的特性，key 6就是谷中密友
-                if (Main.settings.friend && ___chooseAbility.Count > 0 && ___chooseAbility.Contains(6)) ProcessingFeatureDate(10003, file);
+                //处理特性
+                if (Main.settings.featureType != 0)
+                {
+                    string file = Main.settings.featureType == 1 ? "" : Path.Combine(Main.path, Main.settings.file);
 
-                ProcessingFeatureDate(10001, file);
+                    //chooseAbility是开始游戏选择的特性，key 6就是谷中密友
+                    if (Main.settings.friend && ___chooseAbility.Count > 0 && ___chooseAbility.Contains(6)) ProcessingFeatureDate(10003, file);
+
+                    ProcessingFeatureDate(10001, file);
+                }
+
+                //处理自己添加的特质“见经识经”，处理后就删除
+                if (___chooseAbility.Contains(1001))
+                {
+                    ProcessingAbilityDate(10001);
+                    if (___chooseAbility.Contains(6)) ProcessingAbilityDate(10003);
+
+                    DateFile.instance.abilityDate.Remove(1001);
+                }
+
+                //处理成长
+                if (Main.settings.developmentActor != 0)
+                {
+                    ProcessingDevelopmentDate(10001);
+                    if (___chooseAbility.Contains(6)) ProcessingDevelopmentDate(10003);
+                }
+
+                //处理传家宝
+                if (Main.settings.itemsType != 0)
+                {
+                    ProcessingItemsDate(10001);
+                    if (___chooseAbility.Contains(6) && Main.settings.friendItemCreate) ProcessingItemsDate(10003);
+                }
             }
 
-            //处理自己添加的特质“见经识经”，处理后就删除
-            if (___chooseAbility.Contains(1001))
-            {
-                ProcessingAbilityDate(10001);
-                if (___chooseAbility.Contains(6)) ProcessingAbilityDate(10003);
-
-                DateFile.instance.abilityDate.Remove(1001);
-            }
-
-            //处理成长
-            if (Main.settings.developmentActor != 0)
-            {
-                ProcessingDevelopmentDate(10001);
-                if (___chooseAbility.Contains(6)) ProcessingDevelopmentDate(10003);
-            }
-
-            //处理传家宝
-            if (Main.settings.itemsType != 0)
-            {
-                ProcessingItemsDate(10001);
-                if (___chooseAbility.Contains(6) && Main.settings.friendItemCreate) ProcessingItemsDate(10003);
-            }
-
-            return;
         }
 
         /// <summary>
         /// 处理传家宝
         /// </summary>
         /// <param name="actorId">游戏人物的ID</param>
-        static void ProcessingItemsDate(int actorId)
+        public static void ProcessingItemsDate(int actorId)
         {
             if (Main.settings.itemsType == 1)
             {
@@ -409,7 +513,7 @@ namespace LKX_NewGameActor
         /// 成长类型指定
         /// </summary>
         /// <param name="actorId">游戏人物的ID</param>
-        static void ProcessingDevelopmentDate(int actorId)
+        public static void ProcessingDevelopmentDate(int actorId)
         {
             Dictionary<int, string> actor;
             //551是技艺，651是武学
@@ -426,14 +530,14 @@ namespace LKX_NewGameActor
         /// 悟性100
         /// </summary>
         /// <param name="actorId">游戏人物的ID</param>
-        static void ProcessingAbilityDate(int actorId)
+        public static void ProcessingAbilityDate(int actorId)
         {
             Dictionary<int, string> actor;
             
             if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
             {
                 //先天悟性100
-                actor[65] = "100";
+                actor[65] = "500";
             }
 
         }
@@ -443,13 +547,14 @@ namespace LKX_NewGameActor
         /// </summary>
         /// <param name="actorId">游戏人物的ID，10001是初代主角，10003如果有伙伴就是伙伴ID否则的话就是其他人物</param>
         /// <param name="file">自定义特性文件路径</param>
-        static void ProcessingFeatureDate(int actorId, string file = "")
+        public static void ProcessingFeatureDate(int actorId, string file = "")
         {
             Dictionary<int, string> actor, array = new Dictionary<int, string>();
             array = file == "" ? GetAllFeature() : GetFileValue(file);
-
+            
             if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
             {
+                
                 string[] features = actor[101].Split('|');
                 foreach (string feature in features)
                 {
@@ -463,9 +568,10 @@ namespace LKX_NewGameActor
             array.Remove(10011);
             foreach (int item in array.Keys)
             {
+                Main.logger.Log("查找到的：" + item.ToString());
                 actor[101] += "|" + item.ToString();
             }
-
+            Main.logger.Log("人物id：" + actorId.ToString() + "结束");
             //刷新特性缓存，要不然游戏不生效
             DateFile.instance.actorsFeatureCache.Remove(actorId);
             
@@ -476,7 +582,7 @@ namespace LKX_NewGameActor
         /// </summary>
         /// <param name="file">文件路径默认为该mod文件夹目录下的Feature目录里</param>
         /// <returns></returns>
-        static Dictionary<int, string> GetFileValue(string file)
+        public static Dictionary<int, string> GetFileValue(string file)
         {
             Dictionary<int, string> array = new Dictionary<int, string>();
             if (!File.Exists(file)) return array;
@@ -499,7 +605,7 @@ namespace LKX_NewGameActor
         /// 获得系统内的3级特性，如添加过特性文件且为3级特性同样会获得。
         /// </summary>
         /// <returns></returns>
-        static Dictionary<int, string> GetAllFeature()
+        public static Dictionary<int, string> GetAllFeature()
         {
             Dictionary<int, string> array = new Dictionary<int, string>();
             foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.actorFeaturesDate)
