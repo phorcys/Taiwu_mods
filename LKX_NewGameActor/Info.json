@@ -2,7 +2,7 @@
     "Id": "LKX_NewGameActor",
     "DisplayName": "开始新游戏锁定和自定义特质MOD",
     "Author": "小枫泡泡",
-    "Version": "1.0.5",
+    "Version": "1.0.6",
     "AssemblyName": "LKX_NewGameActor.dll",
     "EntryMethod": "LKX_NewGameActor.Main.Load"
 }
