@@ -184,14 +184,22 @@ namespace Majordomo
 
 
         /// <summary>
+        /// 新建存档时初始化当前数据
+        /// </summary>
+        public void InitData()
+        {
+            this.history.Clear();
+        }
+
+
+        /// <summary>
         /// 从 DateFile.modDate 中载入已保存的数据
+        /// 载入之前先重置当前数据
         /// </summary>
         public void LoadSavedData()
         {
-            // 载入之前先清空原有数据
-            this.history.Clear();
+            this.InitData();
 
-            //
             if (!DateFile.instance.modDate.ContainsKey(Main.MOD_ID)) return;
             var savedData = DateFile.instance.modDate[Main.MOD_ID];
 

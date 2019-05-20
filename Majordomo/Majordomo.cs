@@ -69,6 +69,7 @@ namespace Majordomo
         }
     }
 
+
     public static class Main
     {
         public static bool enabled = true;
@@ -76,14 +77,14 @@ namespace Majordomo
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
         public const string MOD_ID = "Majordomo";
-        private static Dictionary<string, FloatField> dict;
+
+        private static readonly Dictionary<string, FloatField> floatFields = new Dictionary<string, FloatField>();
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
-            dict = new Dictionary<string, FloatField>();
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
             Main.Logger = modEntry.Logger;
 
@@ -226,11 +227,11 @@ namespace Majordomo
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("建筑类型优先级因子：");
-            ShowBuildingTypePriorityFactor("医疗类", BuildingType.Hospital, 1.50f);
-            ShowBuildingTypePriorityFactor("招募类", BuildingType.Recruitment, 1.25f);
-            ShowBuildingTypePriorityFactor("资源类", BuildingType.GettingResource, 1.00f);
-            ShowBuildingTypePriorityFactor("物品类", BuildingType.GettingItem, 0.75f);
-            ShowBuildingTypePriorityFactor("蛐蛐类", BuildingType.GettingCricket, 0.50f);
+            ShowBuildingTypePriorityFactor("医疗类", BuildingType.Hospital, Main.settings.buildingTypePriorityFactors[BuildingType.Hospital]);
+            ShowBuildingTypePriorityFactor("招募类", BuildingType.Recruitment, Main.settings.buildingTypePriorityFactors[BuildingType.Recruitment]);
+            ShowBuildingTypePriorityFactor("资源类", BuildingType.GettingResource, Main.settings.buildingTypePriorityFactors[BuildingType.GettingResource]);
+            ShowBuildingTypePriorityFactor("物品类", BuildingType.GettingItem, Main.settings.buildingTypePriorityFactors[BuildingType.GettingItem]);
+            ShowBuildingTypePriorityFactor("蛐蛐类", BuildingType.GettingCricket, Main.settings.buildingTypePriorityFactors[BuildingType.GettingCricket]);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -248,14 +249,13 @@ namespace Majordomo
             GUILayout.Space(10);
             GUILayout.Label(label);
 
-            if (!dict.ContainsKey(label))
-            {
-                dict[label] = new FloatField(defaultValue);
-            }
-            float val = dict[label].GetFloat(4, GUILayout.Width(40));
+            if (!Main.floatFields.ContainsKey(label))
+                Main.floatFields[label] = new FloatField(defaultValue);
+
+            float factor = Main.floatFields[label].GetFloat(4, GUILayout.Width(40));
             if (!GUI.changed) return;
 
-            Main.settings.buildingTypePriorityFactors[buildingType] = val;
+            Main.settings.buildingTypePriorityFactors[buildingType] = factor;
         }
 
 
@@ -423,7 +423,23 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 载入已保存数据
+    /// Patch: 新建存档时初始化数据
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "NewDate")]
+    public static class DateFile_NewDate_InitData
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+
+            if (MajordomoWindow.instance == null) MajordomoWindow.instance = new MajordomoWindow();
+            MajordomoWindow.instance.InitData();
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 载入存档时载入已保存数据
     /// </summary>
     [HarmonyPatch(typeof(DateFile), "LoadDate")]
     public static class DateFile_LoadDate_LoadSavedData
@@ -439,7 +455,7 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 保存数据
+    /// Patch: 保存存档时保存数据
     /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
     public static class SaveDateFile_SaveSaveDate_SaveData

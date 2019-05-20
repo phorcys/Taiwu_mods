@@ -1,0 +1,7 @@
+﻿{
+  "Id": "GuiHandle",
+  "DisplayName": "鬼之手",
+  "Version": "1.0.0",
+  "AssemblyName": "GuiHandle.dll",
+  "EntryMethod": "GuiHandle.Main.Load"
+}
