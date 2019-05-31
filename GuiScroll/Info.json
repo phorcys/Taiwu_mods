@@ -1,0 +1,8 @@
+﻿{
+  "Id": "GuiScroll",
+  "DisplayName": "鬼的滑动优化",
+  "Version": "2.1.0",
+  "AssemblyName": "GuiScroll.dll",
+  "EntryMethod": "GuiScroll.Main.Load",
+  "Requirements":["GuiBaseUI"]
+}

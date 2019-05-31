@@ -245,11 +245,11 @@ namespace GuiWarehouse
                 }
                 if (changTyp == "ActorItem")
                 {
-                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1, 0, 0);
+                    DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1);
                 }
                 else
                 {
-                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1, 0, 0);
+                    DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1);
                 }
                 Main.OnChangeItem = true;
                 Warehouse_UpdateActorItems_Patch.Prefix(true, Warehouse.instance.actorItemTyp);
@@ -393,7 +393,8 @@ namespace GuiWarehouse
                     {
                         actorItemHolder[typ].Init(actor,typ);
                     }
-                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0, false).Keys));
+                    //List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2, 0, false).Keys));
+                    List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num2).Keys)));
                     int[] data = Select(list, typ, actor);
                     actorItemHolder[typ].data = data;
                 }
@@ -433,7 +434,8 @@ namespace GuiWarehouse
                     {
                         warehouseItemHolder[typ].Init(actor, typ);
                     }
-                    List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0, false).Keys));
+                    //List<int> list = DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4, 0, false).Keys));
+                    List<int> list = new List<int>(DateFile.instance.GetItemSort(new List<int>(ActorMenu.instance.GetActorItems(num4).Keys)));
                     int[] data = Select(list, typ, actor);
                     warehouseItemHolder[typ].data = data;
 
