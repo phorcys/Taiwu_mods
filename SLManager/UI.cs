@@ -122,16 +122,16 @@ namespace Sth4nothing.SLManager
             GUILayout.BeginVertical();
 
 
-            foreach (var key in LoadFile.SavedFiles)
+            foreach (var key in LoadFile.savedFiles)
             {
-                if (!LoadFile.SavedInfos.ContainsKey(key) || LoadFile.SavedInfos[key] == null)
+                if (!LoadFile.savedInfos.ContainsKey(key) || LoadFile.savedInfos[key] == null)
                     continue;
-                var info = LoadFile.SavedInfos[key];
+                var info = LoadFile.savedInfos[key];
                 if (GUILayout.Toggle(state[key],
                     $"{info.name}\n{info.year}年 {info.GetTurn()}时节 {info.samsara}轮回\n{info.playtime}\n{info.position}",
                     itemStyle) && GUI.changed)
                 {
-                    foreach (var key2 in LoadFile.SavedFiles)
+                    foreach (var key2 in LoadFile.savedFiles)
                     {
                         state[key2] = key == key2;
                     }
@@ -158,7 +158,7 @@ namespace Sth4nothing.SLManager
         public void ShowData()
         {
             state = new Dictionary<string, bool>();
-            foreach (var key in LoadFile.SavedFiles)
+            foreach (var key in LoadFile.savedFiles)
             {
                 state[key] = false;
             }

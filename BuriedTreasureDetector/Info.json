@@ -1,8 +1,0 @@
-﻿{
-  "Id": "BuriedTreasureDetector",
-  "DisplayName": "寻宝",
-  "Author": "Eiffel2018/koketsu/jmswzyk/inpayh",
-  "Version": "1.1.0",
-  "AssemblyName": "BuriedTreasureDetector.dll",
-  "EntryMethod": "BuriedTreasureDetector.Main.Load"
-}

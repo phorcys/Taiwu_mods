@@ -227,11 +227,11 @@ namespace Majordomo
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("建筑类型优先级因子：");
-            ShowBuildingTypePriorityFactor("医疗类", BuildingType.Hospital, Main.settings.buildingTypePriorityFactors[BuildingType.Hospital]);
-            ShowBuildingTypePriorityFactor("招募类", BuildingType.Recruitment, Main.settings.buildingTypePriorityFactors[BuildingType.Recruitment]);
-            ShowBuildingTypePriorityFactor("资源类", BuildingType.GettingResource, Main.settings.buildingTypePriorityFactors[BuildingType.GettingResource]);
-            ShowBuildingTypePriorityFactor("物品类", BuildingType.GettingItem, Main.settings.buildingTypePriorityFactors[BuildingType.GettingItem]);
-            ShowBuildingTypePriorityFactor("蛐蛐类", BuildingType.GettingCricket, Main.settings.buildingTypePriorityFactors[BuildingType.GettingCricket]);
+            ShowBuildingTypePriorityFactor("医疗类", BuildingType.Hospital, 1.50f);
+            ShowBuildingTypePriorityFactor("招募类", BuildingType.Recruitment, 1.25f);
+            ShowBuildingTypePriorityFactor("资源类", BuildingType.GettingResource, 1.00f);
+            ShowBuildingTypePriorityFactor("物品类", BuildingType.GettingItem, 0.75f);
+            ShowBuildingTypePriorityFactor("蛐蛐类", BuildingType.GettingCricket, 0.50f);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 

@@ -74,19 +74,29 @@ namespace GuiWorldNpc
             GUILayout.Label("<color=#F63333>如果出现BUG影响正常使用请在游戏目录Mods文件夹下删除GuiWorldNpc然后等待更新</color>");
         }
 
+
+        [HarmonyPatch(typeof(SetPlaceActor), "ShowEventMassage")]
+        public static class SetPlaceActor_ShowEventMassage_Patch
+        {
+            public static bool Prefix()
+            {
+                if (!Main.enabled)
+                    return true;
+                //Main.Logger.Log("点击了NPC");
+                //var t = WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.transform;
+                //GuiBaseUI.Main.LogAllChild(t, true);
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(WorldMapSystem), "RemoveActor")]
         public static class WorldMapSystem_RemoveActor_Patch1
         {
             public static bool Prefix()
             {
-                //Logger.Log("删除人物");
-
-
                 if (!Main.enabled)
                     return true;
                 //Main.Logger.Log("移除NPC");
-
-
                 WorldMapSystem_UpdatePlaceActor_Patch.actorHolder.data = new int[0];
                 return false;
             }
@@ -97,8 +107,6 @@ namespace GuiWorldNpc
         {
             public static bool Prefix(int key)
             {
-                //Logger.Log("更新地方人物A key:" + key);
-
                 if (!Main.enabled)
                     return true;
                 //Main.Logger.Log("更新NPC");
@@ -124,20 +132,20 @@ namespace GuiWorldNpc
         }
 
 
-        [HarmonyPatch(typeof(WorldMapSystem), "UpdatePlaceActor", new Type[] { typeof(int), typeof(int) })]
+            [HarmonyPatch(typeof(WorldMapSystem), "UpdatePlaceActor", new Type[] { typeof(int), typeof(int) })]
         public static class WorldMapSystem_UpdatePlaceActor_Patch
         {
             public static NewWorldNpc actorHolder;
 
-            //static FieldInfo m_showPlaceActorTyp;
+            static FieldInfo m_showPlaceActorTyp;
             // 反射私有字段
             public static int showPlaceActorTyp
             {
                 get {
-                    //if(m_showPlaceActorTyp == null)
-                    //{
-                    FieldInfo m_showPlaceActorTyp = typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance);
-                    //}
+                    if(m_showPlaceActorTyp == null)
+                    {
+                        m_showPlaceActorTyp = typeof(WorldMapSystem).GetField("showPlaceActorTyp", BindingFlags.NonPublic | BindingFlags.Instance);
+                    }
                     int value = 1;
                     try
                     {
@@ -203,23 +211,6 @@ namespace GuiWorldNpc
                     }
                     UIMove.instance.PlaceActorUimove(false);
                 }
-
-                //Main.Logger.Log("设置NPC数据begin");
-                //for (int i = 0; i < list2.Count; i++)
-                //{
-                //    int key = list2[i];
-                //    int num3 = int.Parse(DateFile.instance.GetActorDate(key, 19, false));
-                //    int num2 = int.Parse(DateFile.instance.GetActorDate(key, 20, false));
-                //    int key2 = (num2 < 0) ? (1001 + int.Parse(DateFile.instance.GetActorDate(key, 14, false))) : 1001;
-                //    int gangValueId = DateFile.instance.GetGangValueId(num3, num2);
-                //    int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key, false, false);
-                //    string des = "======" + ((actorFavor != -1) ? ActorMenu.instance.Color5(actorFavor, true, -1) : DateFile.instance.SetColoer(20002, DateFile.instance.massageDate[303][2], false));
-                //    des += "\n======" + ((int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1) ? DateFile.instance.SetColoer((int.Parse(DateFile.instance.GetActorDate(key, 19, false)) == 18) ? 20005 : 20010, DateFile.instance.GetActorName(key, false, false), false) : DateFile.instance.GetActorName(key, false, false));
-                //    des += "\n======" + DateFile.instance.SetColoer(10003, DateFile.instance.GetGangDate(num3, 0), false) + ((num3 == 0) ? "" : DateFile.instance.SetColoer(20011 - Mathf.Abs(num2), DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false));
-                //    Main.Logger.Log("第" + (i + 1) + "个NPC\n" + des);
-                //}
-                //Main.Logger.Log("设置NPC数据end");
-
                 actorHolder.data = list2.ToArray();
             }
 
@@ -232,18 +223,13 @@ namespace GuiWorldNpc
 
             public static bool Prefix(int partId, int placeId)
             {
-                //Logger.Log("更新地方人物 partId:" + partId + "   placeId:" + placeId);
-
-
                 if (!Main.enabled)
-                {
-                    if (actorHolder != null && actorHolder.gameObject.activeSelf)
-                        actorHolder.gameObject.SetActive(false);
                     return true;
-                }
-                if (actorHolder != null && !actorHolder.gameObject.activeSelf)
-                    actorHolder.gameObject.SetActive(true);
-
+                //Main.Logger.Log("刷新npc行动者");
+                //if (!Main.settings.open)
+                //{
+                //    return true;
+                //}
                 if (actorHolder == null)
                 {
                     InitUI(partId, placeId);
@@ -252,8 +238,6 @@ namespace GuiWorldNpc
 
                 return false;
             }
-
-            
         }
     }
 }

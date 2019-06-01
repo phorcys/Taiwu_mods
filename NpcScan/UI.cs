@@ -63,17 +63,8 @@ namespace NpcScan
         public string actorGongFaText = "";
         public bool tarGongFaOr = false;
 
-        /// <summary>
-        /// 最高查询品级
-        /// </summary>
         public int highestLevel = 1;
-        /// <summary>
-        /// 是否开启门派识别
-        /// </summary>
         public bool tarIsGang = false;
-        /// <summary>
-        /// 仅搜索门派
-        /// </summary>
         public bool isGang = false;
 
         float windowWidth()
@@ -259,10 +250,10 @@ namespace NpcScan
 
         private List<Column> mColumns = new List<Column>    //remove readonly as the skip value may change
             {
-                new Column {name = "姓名", width = 90},
+                new Column {name = "姓名", width = 60},
                 new Column {name = "年龄", width = 30},
                 new Column {name = "性别", width = 30},
-                new Column {name = "位置", width = 165},
+                new Column {name = "位置", width = 130},
                 new Column {name = "魅力", width = 70},
                 new Column {name = "从属", width = 60},//从属gangText
                 new Column {name = "身份", width = 70},//身份gangLevelText
@@ -779,9 +770,9 @@ namespace NpcScan
             actorList.Clear();
             DateFile dateFile = DateFile.instance;
             Dictionary<int, Dictionary<int, string>> actors = dateFile.actorsDate;
-            foreach (int npcId in actors.Keys)
+            foreach (int index in actors.Keys)
             {
-                ActorItem addItem = new ActorItem(npcId, this);
+                ActorItem addItem = new ActorItem(index, this);
                 if (addItem.isNeedAdd)
                 {
                     actorList.Add(addItem.GetAddItem());
@@ -970,23 +961,14 @@ namespace NpcScan
             return new RectOffset(x, x, y, y);
         }
 
-        /// <summary>
-        /// 排序
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
         private int SortList(string[] a, string[] b)
         {
             int m = 0;
             int n = 0;
             string s1 = a[sortIndex];
             string s2 = b[sortIndex];
-            // 2种排序模式。 界面选择排序模式 则身份为第7列 非排序模式身份为第6列。
-            if (sortIndex != (rankmode ? 7 : 6))
+            if (sortIndex != 6)
             {
-                // 取其中数字排序
-                // 若其中数字相等 或非数字情况下 字符串排序
                 if (s1.Contains("color"))
                 {
                     string check = s1.Contains("(") ? "\\(.*?\\)" : "<.*?>";
@@ -997,7 +979,7 @@ namespace NpcScan
                 int.TryParse(s1, out m);
                 int.TryParse(s2, out n);
 
-                if (m != 0 || n != 0)
+                if (m != n)
                 {
                     return CheckMN(m, n, desc);
                 }
@@ -1008,10 +990,9 @@ namespace NpcScan
             }
             else
             {
-                // 颜色排序模式
                 Regex reg = new Regex("<(.+?)>");
 
-                //Main.Logger.Log(reg.Match(s1).Groups[0].Value + "," + reg.Match(s2).Groups[0].Value);
+                Main.Logger.Log(reg.Match(s1).Groups[0].Value + "," + reg.Match(s2).Groups[0].Value);
                 m = Main.colorText[reg.Match(s1).Groups[0].Value];
                 n = Main.colorText[reg.Match(s2).Groups[0].Value];
                 return CheckMN(m, n, desc);

@@ -658,11 +658,11 @@ namespace GuiWarehouse
             }
             if (actor)
             {
-                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1);
+                DateFile.instance.ChangeTwoActorItem(DateFile.instance.MianActorID(), -999, itemId, num, -1, 0, 0);
             }
             else
             {
-                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1);
+                DateFile.instance.ChangeTwoActorItem(-999, DateFile.instance.MianActorID(), itemId, num, -1, 0, 0);
             }
             lockPack = true;
             SelectTitle(true, title2 );

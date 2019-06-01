@@ -183,10 +183,7 @@ namespace GuiWarehouse
                                 go.SetActive(true);
                             }
                             go.name = "ActorItem," + num3;
-                            //childData.setItem.SetWarehouseItemIcon(num2, num3, int.Parse(DateFile.instance.GetItemDate(num3, 3, true)) != 1 || flag);
-                            childData.setItem.SetWarehouseItemIcon(num2, num3, (DateFile.instance.ParseInt(
-                                DateFile.instance.GetItemDate(num3, 3)) != 1 
-                                || DateFile.instance.ParseInt(DateFile.instance.GetItemDate(num3, 5)) == 42) | flag, Warehouse.instance.warehouseItemDes, 201);
+                            childData.setItem.SetWarehouseItemIcon(num2, num3, int.Parse(DateFile.instance.GetItemDate(num3, 3, true)) != 1 || flag);
                         }
                         else
                         {
@@ -220,7 +217,7 @@ namespace GuiWarehouse
                 ChildData[] childDatas = item.childDatas;
                 for (int i = 0; i < Main.settings.numberOfColumns; i++)
                 {
-                    int idx = (index - 1) * Main.settings.numberOfColumns  + i;
+                    int idx = (index - 1) * Main.settings.numberOfColumns + index - 1 + i;
                     if (i < childDatas.Length)
                     {
                         ChildData childData = childDatas[i];

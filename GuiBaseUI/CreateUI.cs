@@ -119,7 +119,7 @@ namespace GuiBaseUI
                     tf4.anchorMin = new Vector2(1, 0);
                     tf4.anchorMax = new Vector2(1, 1);
                     tf4.anchoredPosition = new Vector2(0, 0);
-                    tf4.sizeDelta = new Vector2(Main.settings.handWidth, 0);
+                    tf4.sizeDelta = new Vector2(20, 0);
                     tf4.pivot = new Vector2(1, 1);
                     Image image4 = go4.GetComponent<Image>();
                     image4.sprite = default(Sprite);
@@ -157,8 +157,6 @@ namespace GuiBaseUI
                     scrollRect.verticalScrollbar = scrollbar;
                     scrollRect.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
                     scrollRect.verticalScrollbarSpacing = -3;
-
-                    Main.hands.Add(new Main.HandData(image4, image6, tf4, tf6));
                     break;
                 default:
                     break;

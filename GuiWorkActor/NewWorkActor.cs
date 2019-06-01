@@ -9,8 +9,8 @@ namespace GuiWorkActor
 {
     public class NewWorkActor : MonoBehaviour
     {
-        public bool favorChange;
-        public int skillTyp;
+        private bool favorChange;
+        private int skillTyp;
         BigDataScroll bigDataScroll;
         public ScrollRect scrollRect;
         private int[] m_data;
