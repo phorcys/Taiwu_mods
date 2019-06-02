@@ -463,7 +463,7 @@ namespace CharacterFloatInfo
                 }
 
                 ___itemLevelText.text = SetLevelText(id);
-                ___itemMoneyText.text = SetMoneyText(id);
+                ___itemMoneyText.text = SetFavorText(id);
 
                 ___informationName.text = SetInfoName(id);
                 ___informationMassage.text = SetInfoMessage(id, ref ___tipsW) + (___informationMassage.text.Length > 100 ? "" : "\n" + ___informationMassage.text);
@@ -492,7 +492,7 @@ namespace CharacterFloatInfo
         }
 
         //标题栏右侧侧小字号文本
-        public static string SetMoneyText(int actorId)
+        public static string SetFavorText(int actorId)
         {
             string text = "";
             if (actorId != DateFile.instance.MianActorID())
@@ -501,17 +501,23 @@ namespace CharacterFloatInfo
                 Transform actorFavorHolder = favourHolder.Find("ActorFavor1");
                 Image actorFavorBar1 = actorFavorHolder.Find("ActorFavorBar1").GetComponent<Image>();
                 Image actorFavorBar2 = actorFavorHolder.Find("ActorFavorBar2").GetComponent<Image>();
-                Image actorWarinessBar1 = favourHolder.Find("wariness").Find("WarinessFavorBar").GetComponent<Image>();
-
+                var warness = favourHolder.Find("wariness");
+                var warnessBar = warness.Find("WarinessFavorBar");
+                Image actorWarinessBar1 = warnessBar.GetComponent<Image>();
+                favourHolder.gameObject.SetActive(true);
+                actorFavorHolder.gameObject.SetActive(true);
+                warness.gameObject.SetActive(true);
+                warnessBar.gameObject.SetActive(true);
                 int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false);
                 actorFavorBar1.fillAmount = (float)actorFavor / 30000f;
-                actorFavorBar2.fillAmount = (float)(actorFavor - 0x7530) / 60000f;
+                actorFavorBar2.fillAmount = (float)(actorFavor - 30000) / 30000f;
                 actorWarinessBar1.fillAmount = (float)DateFile.instance.GetActorWariness(actorId) / 400f;
             }
             else
             {
                 ClearFavourHolder();
-                text += string.Format("{0}{1}{2}", DateFile.instance.massageDate[16][1], DateFile.instance.samsara, DateFile.instance.massageDate[16][2]); // 第X代太吾
+                //text += string.Format("{0}{1}{2}", DateFile.instance.massageDate[16][1], DateFile.instance.samsara, DateFile.instance.massageDate[16][2]); // 第X代太吾
+                text += $"促织福缘 <color>{DateFile.instance.getQuquTrun}</color>";
                 text += string.Format("\n生平遗惠 <color>{0}</color>", GetActorScore(actorId));
             }
             return text;
@@ -574,7 +580,7 @@ namespace CharacterFloatInfo
         {
             if(Main.settings.showActorId)
             {
-                return "(" + id + ")";
+                return $"(No.{id})";
             }
             else
             {
@@ -645,7 +651,7 @@ namespace CharacterFloatInfo
                 }
             }
 
-
+            if (windowType == WindowType.BuildingWindow || windowType == WindowType.WorkingActor) return text;
             if (GetGangLevelText(id) == "商人")
             {
                 text += seperator + DateFile.instance.SetColoer(20006, GetShopName(id));
@@ -657,7 +663,7 @@ namespace CharacterFloatInfo
                     text += seperator + DateFile.instance.SetColoer(20002, GetShopName(id));
                 }
             }
-
+            text += seperator + "战" + DateFile.instance.GetActorDate(id, 993, true);
             return text;
         }
 
@@ -669,10 +675,11 @@ namespace CharacterFloatInfo
         {
             string text = "";
             text += "魅力:" + GetChame(id);
-            text += "\t\t立场:" + GetGoodness(id);
-            text += "\t\t名誉:" + GetFame(id);
-            text += "\t\t心情:" + GetMood(id);
-            text += "\t\t印象:" + GetLifeFace(id);
+            text += "\t立场:" + GetGoodness(id);
+            text += "\t名誉:" + GetFame(id);
+            text += "\t心情:" + GetMood(id);
+            text += "\t印象:" + GetLifeFace(id);
+            text += "\t入魔:"+ DateFile.instance.GetLifeDate(id, 501, 0);
             text += "\n\n";
 
             if (!smallerWindow)
@@ -682,28 +689,31 @@ namespace CharacterFloatInfo
                 text += GetSamsara(id) != "0" ? string.Format(" ◆ 前世:<color=white>{0}</color>", GetSamsaraName(id)) : "";
 
                 string item = Gethobby(id, 0);
-                text += string.Format("\t\t喜好:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
+                text += string.Format("\t喜好:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
                 item = Gethobby(id, 1);
-                text += string.Format("\t\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
+                text += string.Format("\t厌恶:<color={1}>{0}</color>", item, item == "未知" ? "gray" : "white");
 
                 if (Main.settings.showIV)
                 {
                     int result1 = GetFertility(id, true);
                     int result2 = GetFertility(id, false);
-                    text += string.Format("\t\t生育:<color={1}>{0}%</color>", result1, (result2 > 0 ? "+" : "") + result2, result1 <= 0 ? "red" : "white");
+                    text += string.Format("\t生育:<color={1}>{0}%</color>", result1, (result2 > 0 ? "+" : "") + result2, result1 <= 0 ? "red" : "white");
                     if (Main.settings.addonInfo && result2 != 0) text += string.Format("\t<color=#606060FF>{0}%</color>", (result2 > 0 ? "+" : "") + result2);
                 }
 
                 if (GetAge(id) > ConstValue.actorMinAge)
-                    text += string.Format("\t\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false, false).Count);    // todo: 改為顯示所有孩子名
+                    text += string.Format("\t子嗣:<color=white>{0}</color>", DateFile.instance.GetActorSocial(id, 310, false, false).Count);    // todo: 改為顯示所有孩子名
 
-                text += string.Format("\t\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));
+                text += string.Format("\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));
+
+                text += string.Format("\t银钱:<color=white>{0}</color>", ActorMenu.instance.ActorResource(id)[5]); 
             }
             else if (windowType == WindowType.BuildingWindow || windowType == WindowType.WorkingActor)
             {
                 if (HomeSystem.instance == null) return null;
                 if (!HomeSystem.instance.buildingWindowOpend) return null;
                 int partId, placeId, buildingIndex;
+                var date = DateFile.instance.actorsWorkingDate;
 
                 text += "工作岗位:";
 
@@ -716,6 +726,8 @@ namespace CharacterFloatInfo
                 {
                     partId = city[0];
                     placeId = city[1];
+                    if (!date.ContainsKey(partId)) return null;
+                    if (!date[partId].ContainsKey(placeId)) return null;
                     var aBuilding = DateFile.instance.actorsWorkingDate[partId][placeId].FirstOrDefault(t => t.Value == id);
                     if (aBuilding.Equals(default(KeyValuePair<int, int>)))
                     {
@@ -730,6 +742,8 @@ namespace CharacterFloatInfo
                 }
                 partId = HomeSystem.instance.homeMapPartId;
                 placeId = HomeSystem.instance.homeMapPlaceId;
+                if (!date.ContainsKey(partId)) return null;
+                if (!date[partId].ContainsKey(placeId)) return null;
                 buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
                 if (!DateFile.instance.actorsWorkingDate[partId][placeId].TryGetValue(buildingIndex, out int workerId) || workerId != id)
                     text += string.Format("\n村民派遣，预期效率:<color=white>{0}</color>", GetExpectEfficient(id, partId, placeId, buildingIndex));
@@ -984,7 +998,6 @@ namespace CharacterFloatInfo
                 text += "\n" + GetShopMassage(id);
                 text += "\n" + GetEquipments(id);
                 text += "\n" + GetBestItems(id);
-                text = text + "\n" + GetMoney(id);
                 if (DateFile.instance.actorGongFas.ContainsKey(id))
                 {
                     text += "\n" + GetBestGongfa(id);
@@ -996,41 +1009,6 @@ namespace CharacterFloatInfo
 
             }
             return text;
-        }
-
-        // 添加 钱 蛐蛐 入魔
-        public static string GetMoney(int id)
-        {
-            int num = DateFile.instance.MianActorID();
-            int lifeDate = DateFile.instance.GetLifeDate(id, 501, 0);
-            bool flag = id == num;
-            string result;
-            if (flag)
-            {
-                string text = DateFile.instance.getQuquTrun.ToString();
-                result = string.Concat(new object[]
-                {
-                    "拥有银钱: ",
-                    ActorMenu.instance.ActorResource(id)[5].ToString(),
-                    "   蛐蛐福缘积累: ",
-                    text,
-                    "%  入魔程度: ",
-                    lifeDate,
-                    "\n"
-                });
-            }
-            else
-            {
-                result = string.Concat(new object[]
-                {
-                    "拥有银钱: ",
-                    ActorMenu.instance.ActorResource(id)[5].ToString(),
-                    "   入魔程度: ",
-                    lifeDate,
-                    "\n"
-                });
-            }
-            return result;
         }
 
         // 近期事件
@@ -1174,14 +1152,17 @@ namespace CharacterFloatInfo
                 // 商队好感基数（剑冢相关）
                 int storyShopLevel = DateFile.instance.storyShopLevel[shopTyp];
 
+                var bestLevel = Mathf.Clamp((storyShopLevel + level) / 625 + 1, 1, 9);
+                var bestText = DateFile.instance.massageDate[8001][2].Split('|')[bestLevel - 1];
+                bestText = DateFile.instance.SetColoer(20001 + bestLevel, bestText);
                 // 商人详细信息：
-                text += "商人详细信息: MaxLv:" + (9 - Mathf.Min((storyShopLevel + level) / 625, 8));
+                text += "商人信息:  " + $"可售{bestText}";
                 //// 好感:40%（2000）+
                 //text += " 好感:" + storyShopLevel / 50 + "%(" + DateFile.instance.storyShopLevel[shopTyp].ToString() + ")+";
                 //// 60%(3000),
                 //text += level / 50 + "%(" + level + ")，";
-                text += " 好感:" + ((storyShopLevel + level) / 50).ToString() + "%";
-                text += " 买价:" + shopSystemCost.ToString() + "% 卖价:" + shopSellCost.ToString() + "%";
+                text += $"  好感:<color>{storyShopLevel / 50}%+{level / 50}%</color>";
+                text += $"  买卖价格:<color>{shopSystemCost}%/{shopSellCost}%</color>";
                 text += "\n";
             }
             return text;
@@ -1561,7 +1542,7 @@ namespace CharacterFloatInfo
             string text = "";
             int maxItemSize = ActorMenu.instance.GetMaxItemSize(key);
             int useItemSize = ActorMenu.instance.GetUseItemSize(key);
-            text += string.Format("{0}{3}{1} / {2}</color>", new object[] {
+            text += string.Format("{3}{0}{1} / {2}</color>", new object[] {
                 ActorMenu.instance.Color8(useItemSize, maxItemSize),
                 ((float)useItemSize / 100f).ToString("f1"),
                 ((float)maxItemSize / 100f).ToString("f1"),
