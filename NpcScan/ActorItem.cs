@@ -40,7 +40,7 @@ namespace NpcScan
         private int charm;
         private int samsara;
         private int health;
-        private int cv;
+        //private int cv;
 
         private string place;
         private string actorName;
@@ -77,7 +77,7 @@ namespace NpcScan
             this.charm = int.Parse(DateFile.instance.GetActorDate(npcId, 15, !_ui.getreal));
             this.samsara = DateFile.instance.GetLifeDateList(npcId, 801, false).Count;
             this.health = int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? ActorMenu.instance.Health(npcId) : 0;
-            this.cv = ui.charmValue == 0 ? 0 : -999;
+            //this.cv = ui.charmValue == 0 ? 0 : -999;
 
             this.place = _getPlace(npcId);
             this.actorName = DateFile.instance.GetActorName(npcId);
@@ -228,7 +228,8 @@ namespace NpcScan
                 if (this.agi < _ui.agiValue) return;
                 if (this.bon < _ui.bonValue) return;
                 if (this.pat < _ui.patValue) return;
-                if (this.charm < this.cv) return;
+                //if (this.charm < this.cv) return;
+                if (this.charm < _ui.charmValue) return;
 
                 if (GetLevelValue(this.npcId, 0, 1) < _ui.gongfa[0]) return;
                 if (GetLevelValue(this.npcId, 1, 1) < _ui.gongfa[1]) return;

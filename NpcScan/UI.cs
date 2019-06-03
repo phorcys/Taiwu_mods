@@ -27,7 +27,7 @@ namespace NpcScan
         /// <summary>
         /// 每页显示条数
         /// </summary>
-        private int countPerPage;
+        private int countPerPage = 0;
 
         public int minage = 0;
         public int maxage = 0;
@@ -528,7 +528,7 @@ namespace NpcScan
             #endregion
 
             #region add 翻页
-            GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / (double)countPerPage)), GUILayout.Width(40));
+            GUILayout.Label(string.Format("{0}/{1}:", page, Mathf.Max((int)Math.Ceiling((double)actorList.Count / (double)countPerPage), 1)), GUILayout.Width(40));
             if (GUILayout.Button("上页", GUILayout.Width(60)))
             {
                 if (page > 1)

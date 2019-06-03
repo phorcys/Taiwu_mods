@@ -3,6 +3,7 @@ by inpayh/ciwei100000
 
 1.修正搜索出boss/boss分身。(我错了。)
 2.UMM设置界面添加每页条数设定。
+3.修复魅力搜索无效问题。
 
 v1.7.4
 by inpayh
