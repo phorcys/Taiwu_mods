@@ -13,6 +13,7 @@ namespace NpcScan
     public class UI : MonoBehaviour
     {
         public static UnityModManager.ModEntry.ModLogger logger;
+        public int countPerPage = 8;
 
         private bool desc = true;
         private int sortIndex = 0;
@@ -151,7 +152,11 @@ namespace NpcScan
         private void Update()
         {
             if (mOpened)
+            {
                 mLogTimer += Time.unscaledDeltaTime;
+                // 自适应游戏窗口变化
+                mWindowRect.width = windowWidth();
+            }
             if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
                 && Input.GetKeyUp(Main.settings.key))
             {
@@ -402,8 +407,8 @@ namespace NpcScan
                 scrollPosition = new Vector2(scrollPosition2.x, 0);
                 GUILayout.BeginVertical("box");
                 int c = mods.Count;
-                c = c > 50 * page ? 50 * page : c;
-                for (int i = (page - 1) * 50; i < c; i++)
+                c = c > countPerPage * page ? countPerPage * page : c;
+                for (int i = (page - 1) * countPerPage; i < c; i++)
                 {
                     GUILayout.BeginVertical("box");
                     GUILayout.BeginHorizontal();
@@ -515,7 +520,7 @@ namespace NpcScan
             #endregion
 
             #region add 翻页
-            GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / 50d)), GUILayout.Width(40));
+            GUILayout.Label(string.Format("{0}/{1}:", page, (int)Math.Ceiling((double)actorList.Count / (double)countPerPage)), GUILayout.Width(40));
             if (GUILayout.Button("上页", GUILayout.Width(60)))
             {
                 if (page > 1)
@@ -530,7 +535,7 @@ namespace NpcScan
             }
             if (GUILayout.Button("下页", GUILayout.Width(60)))
             {
-                if (actorList.Count > page * 50)
+                if (actorList.Count > page * countPerPage)
                     page = page + 1;
             }
             #endregion
