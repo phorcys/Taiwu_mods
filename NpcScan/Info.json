@@ -1,8 +1,8 @@
 ﻿{
   "Id": "NpcScan",
   "DisplayName": "NpcScan",
-  "Author": "撒哈拉来的企鹅/沉浮山水/UnQ/inpayh",
-  "Version": "1.7.4.1",
+  "Author": "撒哈拉来的企鹅/沉浮山水/UnQ/inpayh/ciwei100000",
+  "Version": "1.7.5",
   "AssemblyName": "NpcScan.dll",
   "EntryMethod": "NpcScan.Main.Load"
 }

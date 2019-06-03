@@ -208,6 +208,10 @@ namespace NpcScan
         /// </summary>
         private void AddCheck()
         {
+            // 997真实值判断。 如果是boss（相枢分身）直接返回
+            // 真实ID为200开头 则为boss PS: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
+            if (DateFile.instance.actorsDate[this.npcId][997].StartsWith("200")) return;
+
             if (this.age < _ui.minage) return;
             if (this.health < _ui.healthValue) return;
             if (this.samsara < _ui.samsaraCount) return;

@@ -13,7 +13,6 @@ namespace NpcScan
     public class UI : MonoBehaviour
     {
         public static UnityModManager.ModEntry.ModLogger logger;
-        public int countPerPage = 8;
 
         private bool desc = true;
         private int sortIndex = 0;
@@ -24,6 +23,11 @@ namespace NpcScan
         //立场goodnessText
         private bool[] goodness = new bool[] { true, false, false, false, false, false };
         private string[] goodnessValue = new string[] { "全部", "刚正", "仁善", "中庸", "叛逆", "唯我" };
+
+        /// <summary>
+        /// 每页显示条数
+        /// </summary>
+        private int countPerPage;
 
         public int minage = 0;
         public int maxage = 0;
@@ -51,7 +55,6 @@ namespace NpcScan
         /// 0:内功;1:身法;2:绝技;3:拳掌;4:指法;5:腿法;6:暗器;7:剑法;8:刀法;9:长兵;10:奇门;11:软兵;12:御射;13:乐器;
         /// </summary>
         public int[] gongfa = new int[14];
-        public static KeyCode key;
 
         /// <summary>
         /// 0:音律;1:弈棋;2:诗书;3:绘画;4:术数;5:品鉴;6:锻造;7:制木;8:医术;9:毒术;10:织锦;11:巧匠;12:道法;13:佛学;14:厨艺;15:杂学;
@@ -63,6 +66,11 @@ namespace NpcScan
 
         public string actorGongFaText = "";
         public bool tarGongFaOr = false;
+
+        /// <summary>
+        /// 启动窗口按键
+        /// </summary>
+        public static KeyCode key;
 
         /// <summary>
         /// 最高查询品级
@@ -670,6 +678,9 @@ namespace NpcScan
             currentwidth = _addHorizontal(currentwidth, 150);
             if (GUILayout.Button("查找", GUILayout.Width(150)))
             {
+                // 每次点击查找。获取当前每页显示页数。
+                countPerPage = Main.settings.countPerPage;
+
                 page = 1;
                 string s = Main.featuresList.Count.ToString();
                 //Main.Logger.Log("测试对象字典长度:" + s);
