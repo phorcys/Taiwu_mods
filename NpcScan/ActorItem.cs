@@ -40,7 +40,7 @@ namespace NpcScan
         private int charm;
         private int samsara;
         private int health;
-        private int cv;
+        //private int cv;
 
         private string place;
         private string actorName;
@@ -77,7 +77,7 @@ namespace NpcScan
             this.charm = int.Parse(DateFile.instance.GetActorDate(npcId, 15, !_ui.getreal));
             this.samsara = DateFile.instance.GetLifeDateList(npcId, 801, false).Count;
             this.health = int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? ActorMenu.instance.Health(npcId) : 0;
-            this.cv = ui.charmValue == 0 ? 0 : -999;
+            //this.cv = ui.charmValue == 0 ? 0 : -999;
 
             this.place = _getPlace(npcId);
             this.actorName = DateFile.instance.GetActorName(npcId);
@@ -85,7 +85,7 @@ namespace NpcScan
             this.samsaraNames = _getSamsaraNames(npcId);
 
             this.gn = DateFile.instance.massageDate[9][0].Split(new char[] { '|' })[DateFile.instance.GetActorGoodness(npcId)];
-            //身份组ID
+            //门派ID
             this.groupid = int.Parse(DateFile.instance.GetActorDate(npcId, 19, false));
             //身份等级
             this.gangLevel = int.Parse(DateFile.instance.GetActorDate(npcId, 20, false));
@@ -120,7 +120,7 @@ namespace NpcScan
             List<string> additem = new List<string>();
 
             if (isRank) { additem.Add(totalrank.ToString()); }
-            additem.Add(actorName);
+            additem.Add(actorName+ "(" + npcId + ")");
             additem.Add(age.ToString());
             additem.Add(genderText);
             additem.Add(place);
@@ -177,17 +177,27 @@ namespace NpcScan
             additem.Add(GetLevel(npcId, 13, 0));
             additem.Add(GetLevel(npcId, 14, 0));
             additem.Add(GetLevel(npcId, 15, 0));
-            //银钱
+            // 银钱
             additem.Add(ActorMenu.instance.ActorResource(npcId)[5].ToString());
+            // 细腻
             additem.Add(actorResources[0].ToString());
+            // 聪颖
             additem.Add(actorResources[1].ToString());
+            // 水性
             additem.Add(actorResources[2].ToString());
+            // 勇壮
             additem.Add(actorResources[3].ToString());
+            // 坚毅
             additem.Add(actorResources[4].ToString());
+            // 冷静
             additem.Add(actorResources[5].ToString());
+            // 福源
             additem.Add(actorResources[6].ToString());
+            // 可学功法
             additem.Add(GetGongFaListText(npcId));
+            // 前世
             additem.Add(samsaraNames);
+            // 特性
             additem.Add(GetActorFeatureNameText(npcId, _ui.tarFeature));
 
             return additem.ToArray();
@@ -198,25 +208,28 @@ namespace NpcScan
         /// </summary>
         private void AddCheck()
         {
+            // 997真实值判断。 如果是boss（相枢分身）直接返回
+            // 真实ID为200开头 则为boss PS: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
+            if (DateFile.instance.actorsDate[this.npcId][997].StartsWith("200")) return;
+
             if (this.age < _ui.minage) return;
             if (this.health < _ui.healthValue) return;
             if (this.samsara < _ui.samsaraCount) return;
-            if ((_ui.maxage != 0 && this.age > _ui.maxage)) return;
-            if ((_ui.genderValue != 0 && this.gender != _ui.genderValue)) return;
+            if (_ui.maxage != 0 && this.age > _ui.maxage) return;
+            if (_ui.genderValue != 0 && this.gender != _ui.genderValue) return;
 
             // 排行榜模式以下搜索条件无效
             // 我至今不知道排行榜模式有啥用？都能排序了都。
             if (!isRank)
             {
-
                 if (this.inv < _ui.intValue) return;
                 if (this.str < _ui.strValue) return;
                 if (this.con < _ui.conValue) return;
                 if (this.agi < _ui.agiValue) return;
                 if (this.bon < _ui.bonValue) return;
                 if (this.pat < _ui.patValue) return;
-                if (this.charm < this.cv) return;
-
+                //if (this.charm < this.cv) return;
+                if (this.charm < _ui.charmValue && _ui.charmValue != 0) return;
 
                 if (GetLevelValue(this.npcId, 0, 1) < _ui.gongfa[0]) return;
                 if (GetLevelValue(this.npcId, 1, 1) < _ui.gongfa[1]) return;
@@ -251,20 +264,34 @@ namespace NpcScan
                 if (GetLevelValue(this.npcId, 15, 0) < _ui.life[15]) return;
             }
 
-            if (_ui.actorFeatureText != "" && !ScanFeature(this.npcId, Main.findList, _ui.tarFeature, _ui.tarFeatureOr)) return;
-            if (_ui.actorGongFaText != "" && !ScanGongFa(this.npcId, Main.GongFaList, _ui.tarGongFaOr)) return;
-            if (gangLevel < _ui.highestLevel) return;
+            if (_ui.actorFeatureText != "" && !ScanFeature(this.npcId, Main.findList, _ui.tarFeature, _ui.tarFeatureOr))
+                return;
+            if (_ui.actorGongFaText != "" && !ScanGongFa(this.npcId, Main.GongFaList, _ui.tarGongFaOr))
+                return;
+
+            // gangLevel 门派地位 若为负 则地位由婚姻带来的。
+            if (Mathf.Abs(gangLevel) < _ui.highestLevel)
+                return;
+
+            // 如果未开启门派搜索 直接通过
+            // (groupid >= 1 && groupid <= 15)结果为门派中人
+            // _ui.isGang = true 仅搜索门派：(groupid >= 1 && groupid <= 15)=false 排除
+            // _ui.isGang = false 仅搜索非门派：(groupid >= 1 && groupid <= 15)=true 排除
+            if (_ui.tarIsGang && (_ui.isGang != (groupid > 0 && groupid < 16)))
+                return;
+
+            if (!_ui.goodnessText.Equals("全部") && !gn.Contains(_ui.goodnessText))
+                return;
+
             // 懒
-            if (!((!_ui.tarIsGang || (_ui.isGang == (groupid >= 1 && groupid <= 15))) && gangValueId != 0)) return;
-            if (!_ui.goodnessText.Equals("全部") && !gn.Contains(_ui.goodnessText)) return;
-            // 懒
-            if (!((actorName.Contains(_ui.aName) || samsaraNames.Contains(_ui.aName)) && (DateFile.instance.GetGangDate(groupid, 0).Contains(_ui.gangValue)) && (gangLevelText.Contains(_ui.gangLevelValue)))) return;
+            if (!((actorName.Contains(_ui.aName) || samsaraNames.Contains(_ui.aName)) && (DateFile.instance.GetGangDate(groupid, 0).Contains(_ui.gangValue)) && (gangLevelText.Contains(_ui.gangLevelValue))))
+                return;
 
             // 商会
-            if (_ui.aShopName != "" && !shopName.Contains(_ui.aShopName)) return;
+            if (_ui.aShopName != "" && !shopName.Contains(_ui.aShopName))
+                return;
 
             this.isNeedAdd = true;
-
         }
 
         /// <summary>
@@ -534,10 +561,13 @@ namespace NpcScan
                 List<int> list = DateFile.instance.GetActorAtPlace(index);
                 if (list != null && list.Count >= 2)
                 {
-                    place = string.Format("{0}{1}", new object[]
+                    int num = int.Parse(DateFile.instance.partWorldMapDate[list[0]][98]);
+                    place = string.Format("{0}{1}({2},{3})", new object[]
                     {
                             DateFile.instance.GetNewMapDate(list[0], list[1], 98),
-                            DateFile.instance.GetNewMapDate(list[0], list[1], 0)
+                            DateFile.instance.GetNewMapDate(list[0], list[1], 0),
+                            list[1]% num,
+                            list[1]/ num
                     });
                 }
                 else
