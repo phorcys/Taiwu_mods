@@ -556,19 +556,7 @@ namespace Sth4nothing.SLManager
             // 保存备份
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
             Main.Logger.Log("备份路径:" + targetFile);
-            var dataPath = Directory.GetParent(SavePath).FullName;
-            var path = Path.Combine(dataPath, $"Date_{DateId}.backup");
-            Main.Logger.Log("系统自动备份路径:" + path);
-            if (File.Exists(path))
-            {
-                Main.Logger.Log(path + "已存在");
-                File.Copy(path, targetFile);
-            }
-            else
-            {
-                Main.Logger.Log(path + "不存在");
-                BackupFolderToFile(SavePath, targetFile);
-            }
+            BackupFolderToFile(SavePath, targetFile);
         }
 
         /// <summary>
@@ -681,9 +669,11 @@ namespace Sth4nothing.SLManager
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
     public class SaveDateFile_LateUpdate_Patch
     {
-        private static void Prefix(SaveDateFile __instance)
+        private static bool Prefix(SaveDateFile __instance)
         {
-            if (!Main.Enabled || UIDate.instance == null) return;
+            if (!Main.Enabled || UIDate.instance == null) return true;
+
+
 
             if (__instance.saveSaveDate)
             {
@@ -696,13 +686,67 @@ namespace Sth4nothing.SLManager
                 {
                     UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
                     __instance.saveSaveDate = false;
-                    return;
+                    return true;
                 }
-
-                Main.DoBackup = true;
                 // 写入date.json
                 WriteSaveSummary();
             }
+            if (ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK1")
+                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK2")
+                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK3"))
+            {
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK1", false);
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK2", false);
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK3", false);
+
+                Task.Run(new Action(EnsureFiles));
+
+                return false;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 替换原本的SaveDateFile.EnsureFiles
+        /// </summary>
+        /// <returns></returns>
+        private static void EnsureFiles()
+        {
+            string[] fileNames = new string[9]
+            {
+                SaveDateFile.instance.GameSettingName,
+                SaveDateFile.instance.WorldDateName2,
+                SaveDateFile.instance.WorldDateName4,
+                SaveDateFile.instance.saveDateName,
+                SaveDateFile.instance.homeBuildingName,
+                SaveDateFile.instance.WorldDateName3,
+                SaveDateFile.instance.PlaceResourceName,
+                SaveDateFile.instance.actorLifeName,
+                SaveDateFile.instance.legendBookName
+            };
+            string path = SaveManager.SavePath;
+            int num;
+            for (int i = 0; i < fileNames.Length; i = num)
+            {
+                string tmpFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}~";
+                string dstFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}";
+                if (!File.Exists(tmpFile))
+                {
+                    Debug.Log("存档异常");
+                    break;
+                }
+                if (File.Exists(dstFile))
+                {
+                    File.Replace(tmpFile, dstFile, null);
+                }
+                else
+                {
+                    File.Move(tmpFile, dstFile);
+                }
+                num = i + 1;
+            }
+            Debug.Log("完成保存存档操作,开始执行随档备份...");
+            
+            SaveManager.Backup(SaveManager.AfterSaveBackup);
         }
 
         /// <summary>
@@ -722,50 +766,6 @@ namespace Sth4nothing.SLManager
             File.WriteAllText(
                 Path.Combine(SaveManager.SavePath, "date.json"),
                 JsonConvert.SerializeObject(data));
-        }
-    }
-
-    /// <summary>
-    /// 不让date.json被清除
-    /// </summary>
-    [HarmonyPatch(typeof(SaveDateBackuper), "ClearSaveDataDirectory")]
-    public class SaveDateBackuper_ClearSaveDataDirectory_Patch
-    {
-        private static bool Prefix(string ___currentActorSaveDataPath)
-        {
-            if (!Main.Enabled)
-            {
-                return true;
-            }
-
-            if (!Directory.Exists(___currentActorSaveDataPath))
-            {
-                Directory.CreateDirectory(___currentActorSaveDataPath);
-            }
-
-            string[] files = Directory.GetFiles(___currentActorSaveDataPath);
-            foreach (string text in files)
-            {
-                if (!text.EndsWith(SaveDateFile.instance.saveVersionName) && !text.EndsWith("date.json"))
-                {
-                    File.Delete(text);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(SaveDateBackuper), "DoBackup")]
-    public class SaveDateBackuper_DoBackup_Patch
-    {
-        private static void Postfix()
-        {
-            if (!Main.Enabled || !Main.DoBackup)
-                return;
-
-            SaveManager.Backup(SaveManager.AfterSaveBackup);
-            Main.DoBackup = false;
         }
     }
 }

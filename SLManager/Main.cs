@@ -24,7 +24,6 @@ namespace Sth4nothing.SLManager
     {
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;
-        public static bool DoBackup = false;
 
         private static string logPath;
         private static readonly string[] AutoSaveState = {"关闭", "启用"};
@@ -199,6 +198,10 @@ namespace Sth4nothing.SLManager
         public static object GetValue<T>(T instance, string field)
         {
             return typeof(T).GetField(field, Flags)?.GetValue(instance);
+        }
+        public static void SetValue<T>(T instance, string field, object value)
+        {
+            typeof(T).GetField(field, Flags)?.SetValue(instance, value);
         }
     }
 }
