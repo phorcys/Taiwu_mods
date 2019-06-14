@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,7 +40,7 @@ namespace NpcScan
         private int charm;
         private int samsara;
         private int health;
-        private int cv;
+        //private int cv;
 
         private string place;
         private string actorName;
@@ -77,7 +77,7 @@ namespace NpcScan
             this.charm = int.Parse(DateFile.instance.GetActorDate(npcId, 15, !_ui.getreal));
             this.samsara = DateFile.instance.GetLifeDateList(npcId, 801, false).Count;
             this.health = int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? ActorMenu.instance.Health(npcId) : 0;
-            this.cv = ui.charmValue == 0 ? 0 : -999;
+            //this.cv = ui.charmValue == 0 ? 0 : -999;
 
             this.place = _getPlace(npcId);
             this.actorName = DateFile.instance.GetActorName(npcId);
@@ -208,6 +208,10 @@ namespace NpcScan
         /// </summary>
         private void AddCheck()
         {
+            // 997真实值判断。 如果是boss（相枢分身）直接返回
+            // 真实ID为200开头 则为boss PS: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
+            if (DateFile.instance.actorsDate[this.npcId][997].StartsWith("200")) return;
+
             if (this.age < _ui.minage) return;
             if (this.health < _ui.healthValue) return;
             if (this.samsara < _ui.samsaraCount) return;
@@ -224,7 +228,8 @@ namespace NpcScan
                 if (this.agi < _ui.agiValue) return;
                 if (this.bon < _ui.bonValue) return;
                 if (this.pat < _ui.patValue) return;
-                if (this.charm < this.cv) return;
+                //if (this.charm < this.cv) return;
+                if (this.charm < _ui.charmValue && _ui.charmValue != 0) return;
 
                 if (GetLevelValue(this.npcId, 0, 1) < _ui.gongfa[0]) return;
                 if (GetLevelValue(this.npcId, 1, 1) < _ui.gongfa[1]) return;
