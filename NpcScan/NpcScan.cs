@@ -14,8 +14,9 @@ namespace NpcScan
             UnityModManager.ModSettings.Save<Settings>(this, modEntry);
         }
         public KeyCode key = KeyCode.F12;
+
         // 每页最多显示的npc数目
-        public string countPerPage = "8";
+        public int countPerPage = 8;
     }
 
     public static class Main
@@ -136,23 +137,12 @@ namespace NpcScan
             }
             GUILayout.Label("（支持0-9,A-Z,F1-F12）");
             GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
 
+            GUILayout.BeginHorizontal();
             // 设置每页最多显示npc的数目
             GUILayout.Label("每页最大显示NPC数量(范围1-50, 数字过大会影响游戏帧率)：",GUILayout.Width(370));
-            settings.countPerPage = GUILayout.TextField(settings.countPerPage, GUILayout.Width(40));
-            if (GUILayout.Button("确定",GUILayout.Width(40)))
-            {
-                if(int.TryParse(settings.countPerPage, out int tmpValue) && tmpValue > 0 && tmpValue < 50)
-                {
-                    UI.Instance.countPerPage = tmpValue;
-                }
-                else
-                {
-                    // 如果输入的不是正整数则恢复原值
-                    settings.countPerPage = UI.Instance.countPerPage.ToString();
-                }
-            }
+            int.TryParse(GUILayout.TextArea(Main.settings.countPerPage.ToString(), GUILayout.Width(60)), out Main.settings.countPerPage);
+            Main.settings.countPerPage = Main.settings.countPerPage > 0 && Main.settings.countPerPage < 51 ? Main.settings.countPerPage : 8;
             GUILayout.EndHorizontal();
         }
 
