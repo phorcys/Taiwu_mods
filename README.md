@@ -5,13 +5,13 @@
 
 ****
 ## 编译依赖
-*  Visual Studio 2017 (Community版)
-*  .NET Framework 3.5
+*  Visual Studio 2017/2019
+*  .NET Framework 3.5/4.x
 *  游戏本体
-*  修改genvsproj.cmd ，将里面的 STEAMDIR 设置为本机 太吾绘卷 安装目录
-*  如果没有cmake，安装cmake  3.12或以上版本 并将cmake加入环境变量PATH ( 编写此说明时，使用 3.12.3 版本测试ok)
-*  命令行运行 genvsproj.cmd, 会自动下载依赖的dlls，并生成Visual Studio的解决方案到build目录下
-*  mod目录下的.cs会自动加入工程,.dll会自动作为依赖，其他的文件如 .md，.txt等会自动拷贝到游戏的Mod路径
+*  修改*genvsproj.cmd*，将里面的**STEAMDIR**设置为本机**太吾绘卷**安装目录
+*  如果没有cmake，安装 cmake最新版本 (若要支持VS2019请下载cmake 3.14.3或更新版本)并将cmake加入环境变量*PATH*
+*  命令行运行 genvsproj.cmd, 会自动下载依赖的dlls，并生成Visual Studio的解决方案*Taiwu_Mods.sln*到build目录下
+*  mod目录下的.cs会自动加入工程,.dll会自动作为依赖，其他的文件如 .md，.txt等会自动拷贝到游戏的Mod路径(如果不想复制，则在.modignore中添加忽略)
 *  cmake会自动为工程添加post build事件，build成功后，如果游戏mod目录下存在mod同名文件夹，则自动复制dll到 游戏mods目录下对应mod目录内
 
 ****

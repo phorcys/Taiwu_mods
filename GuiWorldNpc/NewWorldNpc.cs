@@ -168,36 +168,37 @@ namespace GuiWorldNpc
             if (bigDataScroll != null && m_data != null && isInit)
             {
                 int count = m_data.Length / Main.settings.numberOfColumns + 1;
+                //Main.Logger.Log("=======！！！！！=======数据数量"+count);
 
                 bigDataScroll.cellCount = count;
-                if (!Main.OnChangeList)
-                {
-                    scrollRect.verticalNormalizedPosition = 1;
-                }
+                //if (!Main.OnChangeList)
+                //{
+                //    scrollRect.verticalNormalizedPosition = 1;
+                //}
             }
         }
 
         private void SetCell(ItemCell itemCell, int index)
         {
-            // Main.Logger.Log(index.ToString() + "设置 itemCell。。。" + itemCell.ToString() + " pos=" + scrollRect.verticalNormalizedPosition.ToString());
+            //Main.Logger.Log(index.ToString() + "设置 itemCell。。。" + itemCell.ToString() + " pos=" + scrollRect.verticalNormalizedPosition.ToString());
             NpcItem item = itemCell as NpcItem;
             if (item == null)
             {
-                // Main.Logger.Log("WarehouseItem出错。。。");
+                //Main.Logger.Log("WarehouseItem出错。。。");
                 return;
             }
             ChildData[] childDatas = item.childDatas;
             for (int i = 0; i < Main.settings.numberOfColumns; i++)
             {
                 int idx = (index - 1) * Main.settings.numberOfColumns + i;
-                // Main.Logger.Log("获取第几个元素的数据" + idx.ToString());
+                //Main.Logger.Log("循环"+i+"获取第几个元素的数据" + idx.ToString());
                 if (i < childDatas.Length)
                 {
                     ChildData childData = childDatas[i];
+                    GameObject go = childData.gameObject;
                     if (idx < m_data.Length)
                     {
                         int num4 = m_data[idx];
-                        GameObject go = childData.gameObject;
                         if (!go.activeSelf)
                         {
                             go.SetActive(true);
@@ -208,23 +209,36 @@ namespace GuiWorldNpc
                             itemCell.transform.GetChild(0).name = "Actor," + num4;
                         }
                         childData.setPlaceActor.SetActor(num4, Main.showNpcInfo);
+
+                        //int key = num4;
+                        //int num3 = int.Parse(DateFile.instance.GetActorDate(key, 19, false));
+                        //int num2 = int.Parse(DateFile.instance.GetActorDate(key, 20, false));
+                        //int key2 = (num2 < 0) ? (1001 + int.Parse(DateFile.instance.GetActorDate(key, 14, false))) : 1001;
+                        //int gangValueId = DateFile.instance.GetGangValueId(num3, num2);
+                        //int actorFavor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), key, false, false);
+                        //string des = "======"+((actorFavor != -1) ? ActorMenu.instance.Color5(actorFavor, true, -1) : DateFile.instance.SetColoer(20002, DateFile.instance.massageDate[303][2], false));
+                        //des += "\n======" + ((int.Parse(DateFile.instance.GetActorDate(key, 8, false)) != 1) ? DateFile.instance.SetColoer((int.Parse(DateFile.instance.GetActorDate(key, 19, false)) == 18) ? 20005 : 20010, DateFile.instance.GetActorName(key, false, false), false) : DateFile.instance.GetActorName(key, false, false));
+                        //des += "\n======" + DateFile.instance.SetColoer(10003, DateFile.instance.GetGangDate(num3, 0), false) + ((num3 == 0) ? "" : DateFile.instance.SetColoer(20011 - Mathf.Abs(num2), DateFile.instance.presetGangGroupDateValue[gangValueId][key2], false));
+                        //Main.Logger.Log(des);
                     }
                     else
                     {
-                        GameObject go = childData.gameObject;
                         if (go.activeSelf)
                         {
                             go.SetActive(false);
                         }
                     }
+                    if (i == 0 && !go.transform.parent.gameObject.activeSelf)
+                        go.transform.parent.gameObject.SetActive(true);
+
+
                 }
                 else
                 {
-                    // Main.Logger.Log("数据出错。。。");
+                    Main.Logger.Log("数据出错。。。");
                 }
             }
         }
-
         private void Update()
         {
             if (!gameObject.activeInHierarchy | m_data == null | scrollRect == null)
@@ -244,6 +258,34 @@ namespace GuiWorldNpc
                 }
             }
         }
+
+        //private bool late_update;
+        //private void LateUpdate()
+        //{
+        //    if (!late_update)
+        //        return;
+
+        //    late_update = false;
+        //    if (bigDataScroll != null && m_data != null && isInit)
+        //    {
+        //        int count = m_data.Length / Main.settings.numberOfColumns + 1;
+        //        Main.Logger.Log("数量"+count);
+
+        //        bigDataScroll.cellCount = count;
+        //        if (!Main.OnChangeList)
+        //        {
+        //            scrollRect.verticalNormalizedPosition = 1;
+        //        }
+        //    }
+        //}
+
+        //void OnGUI()
+        //{
+        //    if (GUILayout.Button("Test"))
+        //    {
+        //        GuiBaseUI.Main.LogAllChild(transform);
+        //    }
+        //}
     }
 
 }

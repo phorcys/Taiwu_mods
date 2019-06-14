@@ -90,10 +90,10 @@ namespace BuriedTreasureDetector
             // 更新物品
             if (getItemId != 0)
             {
-                DateFile.instance.GetItem(DateFile.instance.MianActorID(), getItemId, 1, newItem: true, 0);
+                DateFile.instance.GetItem(DateFile.instance.MianActorID(), getItemId, 1, true, 0);
             }
             //更新地块信息
-            UIDate.instance.ChangePlaceResource(random: false, -25, choosePartId, choosePlaceId, chooseWorkTyp);
+            UIDate.instance.ChangePlaceResource(false, -25, choosePartId, choosePlaceId, chooseWorkTyp);
             int num = (DateFile.instance.worldResource == 0) ? 10 : 5;
             int num2 = (DateFile.instance.worldResource == 0) ? 4 : 2;
             // 更新太吾资源

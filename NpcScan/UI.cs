@@ -13,6 +13,7 @@ namespace NpcScan
     public class UI : MonoBehaviour
     {
         public static UnityModManager.ModEntry.ModLogger logger;
+        public int countPerPage = 8;
 
         private bool desc = true;
         private int sortIndex = 0;

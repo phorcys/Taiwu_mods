@@ -91,6 +91,11 @@ namespace NpcScan
             {
                 UI.Load(modEntry);
                 UI.key = settings.key;
+                // 设置每页最多显示npc的数目
+                if(int.TryParse(settings.countPerPage, out int tmpValue) && tmpValue > 0)
+                {
+                    UI.Instance.countPerPage = tmpValue;
+                }
                 Main.uiIsShow = true;
                 //Logger.Log("scan测试");
             }
@@ -143,6 +148,8 @@ namespace NpcScan
 
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
+            // 退出时UMM时恢复countPerPage的值
+            settings.countPerPage = UI.Instance.countPerPage.ToString();
             settings.Save(modEntry);
         }
     }

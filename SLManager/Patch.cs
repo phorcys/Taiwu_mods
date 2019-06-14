@@ -2,16 +2,15 @@ using Harmony12;
 using Ionic.Zip;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityModManagerNet;
 
 
 namespace Sth4nothing.SLManager
@@ -23,11 +22,12 @@ namespace Sth4nothing.SLManager
         {
             if (!Main.Enabled || codepage != 437)
                 return true;
-            
+
             __result = new I18N.West.CP437();
             return false;
         }
     }
+
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
     public static class WorldMapSystem_Start_Patch
     {
@@ -38,63 +38,131 @@ namespace Sth4nothing.SLManager
                 UI.Load();
 
                 Transform parent = GameObject.Find("ResourceBack").transform;
+                //
+                float startX = 1520f;
+                float size = 38f;
+                Vector2 iconSize = new Vector2(size, size);
 
-                GameObject loadBtn = UnityEngine.Object.Instantiate(
-                    GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(1620f, -30f, 0), Quaternion.identity);
-                loadBtn.name = "LoadButton2";
-                loadBtn.tag = "SystemIcon";
-                loadBtn.transform.SetParent(parent, false);
-                loadBtn.transform.localPosition = new Vector3(1620f, -30f, 0);
-                Selectable loadButton = loadBtn.GetComponent<Selectable>();
-                ((Image)loadButton.targetGraphic).sprite =
-                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn.AddComponent<MyPointerClick>();
-
+                //快速存档
+                startX += size;
                 GameObject saveBtn = UnityEngine.Object.Instantiate(
                     GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(1570f, -30f, 0), Quaternion.identity);
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
                 saveBtn.name = "SaveButton";
                 saveBtn.tag = "SystemIcon";
                 saveBtn.transform.SetParent(parent, false);
-                saveBtn.transform.localPosition = new Vector3(1570f, -30f, 0);
+                saveBtn.transform.localPosition = new Vector3(startX, -30f, 0);
                 Selectable saveButton = saveBtn.GetComponent<Selectable>();
-                ((Image)saveButton.targetGraphic).sprite =
+                ((Image) saveButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
+                saveBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
                 saveBtn.AddComponent<MyPointerClick>();
 
-                GameObject loadBtn2 = GameObject.Find("EncyclopediaButton,609");
-                loadBtn2.name = "LoadButton";
-                Selectable loadButton2 = loadBtn2.GetComponent<Selectable>();
-                ((Image)loadButton2.targetGraphic).sprite =
+                // 快速载入
+                startX += size;
+                GameObject loadBtn = UnityEngine.Object.Instantiate(
+                    GameObject.Find("EncyclopediaButton,609"),
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
+                loadBtn.name = "LoadButton";
+                loadBtn.tag = "SystemIcon";
+                loadBtn.transform.SetParent(parent, false);
+                loadBtn.transform.localPosition = new Vector3(startX, -30f, 0);
+                Selectable loadButton = loadBtn.GetComponent<Selectable>();
+                ((Image) loadButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn2.AddComponent<MyPointerClick>();
+                loadBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
+                loadBtn.AddComponent<MyPointerClick>();
+
+                // 列表载入
+                startX += size;
+                GameObject loadBtnForList = UnityEngine.Object.Instantiate(
+                    GameObject.Find("EncyclopediaButton,609"),
+                    new Vector3(startX, -30f, 0), Quaternion.identity);
+                loadBtnForList.name = "LoadButtonList";
+                loadBtnForList.tag = "SystemIcon";
+                loadBtnForList.transform.SetParent(parent, false);
+                loadBtnForList.transform.localPosition = new Vector3(startX, -30f, 0);
+                Selectable loadBtnForListSelectable = loadBtnForList.GetComponent<Selectable>();
+                ((Image) loadBtnForListSelectable.targetGraphic).sprite =
+                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
+                loadBtnForList.GetComponent<RectTransform>().sizeDelta = iconSize;
+                loadBtnForList.AddComponent<MyPointerClick>();
+
+                //解读奇书
+                //LegendBook,724
+                startX += size;
+                GameObject legendBookButton = MissionSystem.instance.legendBookBtn.gameObject;
+                legendBookButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                legendBookButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
+                //产业视图
+                //HomeButton,612
+                startX += size;
+                GameObject homeButton = GameObject.Find("HomeButton,612");
+                homeButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                homeButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //时节回顾
+                //ReShowTrunEventButton,822
+                startX += size;
+                GameObject reShowTrunEventButton = GameObject.Find("ReShowTrunEventButton,822");
+                reShowTrunEventButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                reShowTrunEventButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //太吾传承
+                //ScrollButton,607
+                startX += size;
+                GameObject scrollButton = GameObject.Find("ScrollButton,607");
+                scrollButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                scrollButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //太吾百晓册
+                //EncyclopediaButton,609
+                startX += size;
+                GameObject encyclopediaButton = GameObject.Find("EncyclopediaButton,609");
+                encyclopediaButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                encyclopediaButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //铭刻
+                //SaveActorsButton,723
+                startX += size;
+                GameObject saveActorsButton = GameObject.Find("SaveActorsButton,723");
+                saveActorsButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                saveActorsButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                //系统设置
+                //SystemButton,608
+                startX += size;
+                GameObject systemButton = GameObject.Find("SystemButton,608");
+                systemButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                systemButton.transform.localPosition = new Vector3(startX, -30f, 0);
             }
         }
     }
 
+    /// <summary>
+    /// 添加的按钮的点击事件
+    /// </summary>
     public class MyPointerClick : MonoBehaviour, IPointerClickHandler
     {
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!Main.Enabled) return;
-            if (gameObject.name == "LoadButton")
+            switch (gameObject.name)
             {
-                LoadFiles();
-            }
-            else if (gameObject.name == "LoadButton2")
-            {
-                YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入",
-                    DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧存档")
-                    .Replace("返回到游戏的主菜单…\n", ""), false, true);
-            }
-            else if (gameObject.name == "SaveButton")
-            {
-                Main.forceSave = true;
-                SaveDateFile.instance.SaveGameDate();
+                case "LoadButtonList":
+                    LoadFiles();
+                    break;
+                case "LoadButton":
+                    YesOrNoWindow.instance.SetYesOrNoWindow(4646, "快速载入",
+                        DateFile.instance.massageDate[701][2].Replace("返回主菜单", "载入旧存档")
+                            .Replace("返回到游戏的主菜单…\n", ""), false, true);
+                    break;
+                case "SaveButton":
+                    Main.ForceSave = true;
+                    SaveDateFile.instance.SaveGameDate();
+                    break;
             }
         }
 
+        /// <summary>
+        /// 加载所有存档
+        /// </summary>
         public static void LoadFiles()
         {
             var files = Directory.GetFiles(SaveManager.BackPath,
@@ -102,22 +170,16 @@ namespace Sth4nothing.SLManager
                 SearchOption.TopDirectoryOnly);
             Array.Sort(files, StringComparer.InvariantCulture);
 
-            LoadFile.savedFiles = new List<string>();
+            LoadFile.SavedFiles = new List<string>();
 
-            //var saveZip = Path.Combine(SaveManager.BackPath,
-            //    $"Date_{SaveManager.DateId}.save.zip");
             if (File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.twV0"))
                 || File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.tw")))
-                LoadFile.savedFiles.Add(SaveManager.SavePath);
+                LoadFile.SavedFiles.Add(SaveManager.SavePath);
 
-            if (Main.settings.maxBackupToLoad > 0)
-            {
-                LoadFile.savedFiles.AddRange(files.Reverse().Take(Main.settings.maxBackupToLoad));
-            }
-            else
-            {
-                LoadFile.savedFiles.AddRange(files);
-            }
+            LoadFile.SavedFiles.AddRange(
+                Main.settings.maxBackupToLoad > 0
+                    ? files.Reverse().Take(Main.settings.maxBackupToLoad)
+                    : files);
 
             LoadFile.ParseFiles();
 
@@ -125,23 +187,82 @@ namespace Sth4nothing.SLManager
         }
     }
 
+    /// <summary>
+    /// 读档
+    /// </summary>
     [HarmonyPatch(typeof(OnClick), "Index")]
     public static class OnClick_Index_Patch
     {
         public static void Postfix()
         {
             if (!Main.Enabled) return;
-            if (OnClick.instance.ID == 4646)
+            switch (OnClick.instance.ID)
             {
-                DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
-                DateFile.instance.Initialize(SaveDateFile.instance.dateId);
-                YesOrNoWindow.instance.CloseYesOrNoWindow();
-                YesOrNoWindow.instance.yesOrNoWindow.sizeDelta = new Vector2(720f, 280f);
-                OnClick.instance.Over = true;
+                case 4646:
+                    LoadFile.DoLoad(SaveDateFile.instance.dateId);
+                    break;
             }
         }
     }
 
+    /// <summary>
+    /// 读档
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "LoadLegendBook")]
+    public static class DateFile_LoadLegendBook_Patch
+    {
+        /// <summary>
+        /// 需要清除的实例
+        /// </summary>
+        // 游戏内载入存档时很多游戏实例依然存在，它们会不停调用SingletonObject.getInstance<T>()。
+        // 若T的实例未创建，则getInstance<T>方法在第一次被调用时会创建T的实例。这导致尽管在载入存
+        // 档前执行SingletonObject.ClearInstances()清除所有实例，载入存档时还会存在冲突的实例。
+        // 所以在DateFile.LoadLegendBook()方法前将有可能还存在的冲突实例清除掉以便正常载入存档。
+        private static readonly string[] instancesToRemove =
+        {
+            "JuniorXiangshuSystem",
+            "LegendBookSystem",
+            "TaichiDiscSystem",
+            "SpecialEffectSystem" // 目前(游戏版本：V0.2.2.2)只有这个类的实例会有残留，UIDate gameObject 设置为inactive解决
+        };
+
+        private static bool Prefix(DateFile.LegendBook loadDate)
+        {
+            if (Main.onLoad)
+            {
+                Main.onLoad = false;
+                Dictionary<string, object> m_SingletonMap = ReflectionMethod.GetValue<SingletonObject, Dictionary<string, object>>("m_SingletonMap");
+                List<Type> dontClearList = ReflectionMethod.GetValue<SingletonObject, List<Type>>("dontClearList");
+#if DEBUG
+                GameObject m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>("m_Container");
+                Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
+                foreach(string key in m_SingletonMap.Keys)
+                {
+                    Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
+                }
+#endif
+                // 清除需要清除的实例
+                for (int i = 0; i < instancesToRemove.Length; i++)
+                {
+                    if (m_SingletonMap.TryGetValue(instancesToRemove[i], out object item) && !dontClearList.Contains(item))
+                    {
+                        (item as IDisposable)?.Dispose();
+                        if (item.GetType().IsSubclassOf(typeof(Component)))
+                        {
+                            UnityEngine.Object.Destroy(item as Component);
+                        }
+                        m_SingletonMap.Remove(instancesToRemove[i]);
+                    }
+                }
+            }
+            return true;
+        }
+
+    }
+
+    /// <summary>
+    /// 存档的摘要信息
+    /// </summary>
     public class SaveData
     {
         public string name;
@@ -151,11 +272,16 @@ namespace Sth4nothing.SLManager
         public string position;
         public string playtime;
 
-        public SaveData() : this(null, -1, -1, -1, null, null)
-        { }
+        [Obsolete]
+        public SaveData()
+        {
+        }
+
         public SaveData(string name, int year, int samsara, int turn, string position, DateTime playtime) :
             this(name, year, samsara, turn, position, playtime.ToString("yyyy - MM - dd   [ HH : mm ]"))
-        { }
+        {
+        }
+
         public SaveData(string name, int year, int samsara, int turn, string position,
             string playtime)
         {
@@ -178,68 +304,50 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 需要解析的压缩存档路径
         /// </summary>
-        public static List<string> savedFiles;
+        public static List<string> SavedFiles;
+
         /// <summary>
         /// 解析了的存档
         /// </summary>
-        public static Dictionary<string, SaveData> savedInfos;
+        public static ConcurrentDictionary<string, SaveData> SavedInfos;
 
-        public const string format = "yyyy - MM - dd   [ HH : mm ]";
-
-        private static object lockObj = new object();
+        public const string Format = "yyyy - MM - dd   [ HH : mm ]";
 
         /// <summary>
         /// 解析压缩存档列表
         /// </summary>
         public static void ParseFiles()
         {
-            savedInfos = new Dictionary<string, SaveData>();
-            var threads = new Queue<System.Threading.Thread>();
-            foreach (var file in savedFiles)
-            {
-                var thread = new System.Threading.Thread(
-                    new System.Threading.ParameterizedThreadStart(ParseThread))
-                {
-                    IsBackground = true
-                };
-                threads.Enqueue(thread);
-                thread.Start(file);
-            }
-            while (threads.Count > 0)
-            {
-                threads.Dequeue().Join();
-            }
+            SavedInfos = new ConcurrentDictionary<string, SaveData>();
 
-            savedFiles.Sort((f1, f2) =>
+            Parallel.ForEach(SavedFiles, ParseThread);
+
+            SavedFiles.Sort((f1, f2) =>
             {
-                if (!savedInfos.ContainsKey(f1))
+                if (!SavedInfos.ContainsKey(f1))
                     return -1;
-                if (!savedInfos.ContainsKey(f2))
+                if (!SavedInfos.ContainsKey(f2))
                     return 1;
-                var t1 = DateTime.ParseExact(savedInfos[f1].playtime, format, null);
-                var t2 = DateTime.ParseExact(savedInfos[f2].playtime, format, null);
+                var t1 = DateTime.ParseExact(SavedInfos[f1].playtime, Format, null);
+                var t2 = DateTime.ParseExact(SavedInfos[f2].playtime, Format, null);
                 return -t1.CompareTo(t2);
             });
         }
-
-        public static void ParseThread(object file)
+        /// <summary>
+        /// 解析存档
+        /// </summary>
+        /// <param name="file"></param>
+        public static void ParseThread(string path)
         {
-            var path = file as string;
             try
             {
-                Debug.Log("Parse: " + file);
+                Debug.Log("Parse: " + path);
                 var data = Parse(path);
-                if (data == null)
-                    throw new Exception();
-
-                lock (lockObj)
-                {
-                    savedInfos.Add(path, data);
-                }
+                SavedInfos[path] = data ?? throw new Exception("未能解析存档");
             }
             catch (Exception e)
             {
-                Debug.Log("[ERROR]" + e.ToString());
+                Debug.Log("[ERROR]" + e);
             }
         }
 
@@ -260,38 +368,29 @@ namespace Sth4nothing.SLManager
         /// <returns></returns>
         public static SaveData ParseDirectory(string path)
         {
-            SaveData data = null;
+            SaveData data;
             if (File.Exists(Path.Combine(path, "date.json")))
             {
                 var content = File.ReadAllText(Path.Combine(path, "date.json"));
                 data = JsonConvert.DeserializeObject(content, typeof(SaveData)) as SaveData;
             }
             else if (!File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0"))
-                      && !File.Exists(Path.Combine(path, "TW_Save_Date_0.tw")))
+                     && !File.Exists(Path.Combine(path, "TW_Save_Date_0.tw")))
             {
                 throw new Exception(path);
             }
             else
             {
-                string file = null;
-                bool rijndeal = true;
-                if (File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0")))
-                {
-                    file = Path.Combine(path, "TW_Save_Date_0.twV0");
-                    rijndeal = false;
-                }
-                else
-                {
-                    file = Path.Combine(path, "TW_Save_Date_0.tw");
-                    rijndeal = true;
-                }
-                DateFile.SaveDate date = ReadSaveDate(file, rijndeal);
+                var date = File.Exists(Path.Combine(path, "TW_Save_Date_0.twV0"))
+                    ? ReadSaveDate(Path.Combine(path, "TW_Save_Date_0.twV0"), false)
+                    : ReadSaveDate(Path.Combine(path, "TW_Save_Date_0.tw"), true);
 
                 data = new SaveData(date._mainActorName, date._year, date._samsara,
                     date._dayTrun, date._playerSeatName, date._playTime);
                 File.WriteAllText(Path.Combine(path, "date.json"),
                     JsonConvert.SerializeObject(data));
             }
+
             return data;
         }
 
@@ -302,7 +401,7 @@ namespace Sth4nothing.SLManager
         /// <returns></returns>
         public static SaveData ParseZip(string path)
         {
-            SaveData data = null;
+            SaveData data;
             using (var zip = new ZipFile(path))
             {
                 if (zip.ContainsEntry("date.json"))
@@ -320,7 +419,7 @@ namespace Sth4nothing.SLManager
                     }
                 }
                 else if (!zip.ContainsEntry("TW_Save_Date_0.twV0")
-                      && !zip.ContainsEntry("TW_Save_Date_0.tw"))
+                         && !zip.ContainsEntry("TW_Save_Date_0.tw"))
                 {
                     throw new Exception(path); // 错误存档
                 }
@@ -328,7 +427,7 @@ namespace Sth4nothing.SLManager
                 {
                     var tmp = Path.Combine(
                         Environment.GetEnvironmentVariable("TEMP"),
-                        Guid.NewGuid().ToString() + ".tw");
+                        Guid.NewGuid() + ".tw");
 
                     bool rijndeal = true;
                     using (var stream = File.OpenWrite(tmp))
@@ -344,7 +443,8 @@ namespace Sth4nothing.SLManager
                             rijndeal = true;
                         }
                     }
-                    DateFile.SaveDate date = ReadSaveDate(tmp, rijndeal);
+
+                    var date = ReadSaveDate(tmp, rijndeal);
 
                     File.Delete(tmp);
 
@@ -355,6 +455,7 @@ namespace Sth4nothing.SLManager
                     zip.Save();
                 }
             }
+
             return data;
         }
 
@@ -366,20 +467,16 @@ namespace Sth4nothing.SLManager
         /// <returns></returns>
         private static DateFile.SaveDate ReadSaveDate(string path, bool rijndeal)
         {
-            var method = (typeof(SaveDateFile)
-                .GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance));
-            try
+            if (!File.Exists(path))
             {
-                return method.Invoke(SaveDateFile.instance,
-                        new object[] { path, typeof(DateFile.SaveDate), rijndeal })
-                    as DateFile.SaveDate;
+                return null;
             }
-            catch (AmbiguousMatchException)
-            {
-                return method.Invoke(SaveDateFile.instance,
-                        new object[] { path, typeof(DateFile.SaveDate) })
-                    as DateFile.SaveDate;
-            }
+
+            return ReflectionMethod.Invoke<SaveDateFile, DateFile.SaveDate>(
+                SaveDateFile.instance,
+                "GetData",
+                path, typeof(DateFile.SaveDate), rijndeal // 参数
+            );
         }
 
         /// <summary>
@@ -391,10 +488,20 @@ namespace Sth4nothing.SLManager
             yield return new WaitForSeconds(0.01f);
             if (file.EndsWith(".zip"))
                 Unzip(file);
-
-            DateFile.instance.SetEvent(new int[] { 0, -1, 1001 }, true, true);
-            DateFile.instance.Initialize(SaveManager.DateId);
+            DoLoad(SaveManager.DateId);
         }
+
+        /// <summary>
+        /// 执行存档读取操作
+        /// </summary>
+        public static void DoLoad(int dataId)
+        {
+            Main.onLoad = true;
+            UIDate.instance.gameObject.SetActive(false);
+            MainMenu.instance.SetLoadIndex(dataId);
+        }
+
+
 
         /// <summary>
         /// 解压存档到游戏存档目录
@@ -415,8 +522,8 @@ namespace Sth4nothing.SLManager
 
     public static class SaveManager
     {
-        public const int AFTER_SAVE_BACKUP = 0,
-                         BEFORE_LOADING_BACKUP = 1;
+        public const int AfterSaveBackup = 0,
+            BeforeLoadingBackup = 1;
 
         /// <summary>
         /// 当前系统存档路径
@@ -424,9 +531,10 @@ namespace Sth4nothing.SLManager
 
         public static string SavePath
         {
-            get => (typeof(SaveDateFile)
-                        .GetMethod("Dirpath", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .Invoke(SaveDateFile.instance, new object[] { -1 }) as string)
+            get => ReflectionMethod.Invoke<SaveDateFile, string>(
+                    SaveDateFile.instance,
+                    "Dirpath",
+                    -1)
                 .Replace('/', '\\');
         }
 
@@ -441,18 +549,18 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 当前存档槽位置
         /// </summary>
-        public static int DateId { get => SaveDateFile.instance.dateId; }
+        public static int DateId => SaveDateFile.instance.dateId;
 
         public static void Backup(int backupType)
         {
             switch (backupType)
             {
-                case AFTER_SAVE_BACKUP:
-                    BackupBeforeSave();
+                case AfterSaveBackup:
+                    BackupAfterSave();
                     return;
 
-                case BEFORE_LOADING_BACKUP:
-                    BackupBeforerLoad();
+                case BeforeLoadingBackup:
+                    BackupBeforeLoad();
                     return;
 
                 default:
@@ -463,12 +571,13 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 执行存档后备份
         /// </summary>
-        private static void BackupBeforeSave()
+        private static void BackupAfterSave()
         {
             if (Main.settings.maxBackupsToKeep == 0)
             {
                 return;
             }
+
             Main.Logger.Log("开始备份存档");
 
             int backupIndex;
@@ -478,10 +587,10 @@ namespace Sth4nothing.SLManager
                 SearchOption.TopDirectoryOnly);
             Main.Logger.Log("当前存档数:" + backupFiles.Count());
 
-            if (backupFiles.Count() < Main.settings.maxBackupsToKeep)
+            if (backupFiles.Length < Main.settings.maxBackupsToKeep)
             {
                 // 若数量未超上限，则直接累加计数
-                backupIndex = backupFiles.Count();
+                backupIndex = backupFiles.Length;
             }
             else
             {
@@ -491,15 +600,21 @@ namespace Sth4nothing.SLManager
                 {
                     File.Delete(backupFiles[0]);
                 }
-                catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
 
-                for (int i = 1; i < backupFiles.Count(); i++)
+                for (int i = 1; i < backupFiles.Length; i++)
                 {
                     try
                     {
                         File.Move(backupFiles[i], backupFiles[i - 1]);
                     }
-                    catch (Exception ex) { Console.WriteLine(ex.ToString()); }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
                 }
 
                 backupIndex = Main.settings.maxBackupsToKeep - 1;
@@ -507,13 +622,14 @@ namespace Sth4nothing.SLManager
 
             // 保存备份
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
+            Main.Logger.Log("备份路径:" + targetFile);
             BackupFolderToFile(SavePath, targetFile);
         }
 
         /// <summary>
         /// 执行读档前备份
         /// </summary>
-        private static void BackupBeforerLoad()
+        private static void BackupBeforeLoad()
         {
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.load.zip");
             BackupFolderToFile(SavePath, targetFile);
@@ -526,26 +642,37 @@ namespace Sth4nothing.SLManager
         /// <param name="targetFile"></param>
         internal static void BackupFolderToFile(string pathToBackup, string targetFile)
         {
-            using (var zip = new ZipFile())
+            Task.Run(() =>
             {
-                zip.AddFiles(GetFilesToBackup(pathToBackup), "/");
-                zip.Save(targetFile);
-            }
+                var preDir = Environment.CurrentDirectory;
+                Environment.CurrentDirectory = pathToBackup;
+                var files = GetFilesToBackup();
+                using (var zip = new ZipFile())
+                {
+                    zip.AddFiles(files, true, "\\");
+                    zip.Save(targetFile);
+                }
+
+                Environment.CurrentDirectory = preDir;
+            });
         }
 
         /// <summary>
         /// 获取备份文件列表
         /// </summary>
-        /// <param name="pathToBackup"></param>
         /// <returns></returns>
-        internal static List<string> GetFilesToBackup(string pathToBackup)
+        internal static List<string> GetFilesToBackup()
         {
             var files = new List<string>();
-            if (File.Exists(Path.Combine(pathToBackup, "date.json")))
+            if (File.Exists(Path.Combine(".", "date.json")))
             {
-                files.Add(Path.Combine(pathToBackup, "date.json"));
+                files.Add(Path.Combine(".", "date.json"));
             }
-            files.AddRange(Directory.GetFiles(pathToBackup, "TW_Save_Date_?.tw*"));
+
+            files.AddRange(Directory.GetFiles(
+                ".",
+                "*.tw*",
+                SearchOption.AllDirectories));
             return files;
         }
 
@@ -558,22 +685,27 @@ namespace Sth4nothing.SLManager
         {
             string path = Path.Combine(Directory.GetParent(pathToBackup).FullName, "SaveBackup");
 
-            if (!Directory.Exists(path)) { Directory.CreateDirectory(path); }
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
 
             return path;
         }
     }
 
+    /// <summary>
+    /// 按钮的提示信息
+    /// </summary>
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
-        [HarmonyBefore(new string[] { "CharacterFloatInfo" })]
+        [HarmonyBefore(new[] { "CharacterFloatInfo" })]
         public static void Postfix(bool on, GameObject tips,
             ref Text ___informationMassage, ref Text ___informationName,
             ref int ___tipsW, ref bool ___anTips)
         {
-            if (tips == null) return;
-            if (!Main.Enabled) return;
+            if (!Main.Enabled || tips == null) return;
             if (tips.name == "SaveButton")
             {
                 ___informationName.text = "立即储存";
@@ -581,14 +713,14 @@ namespace Sth4nothing.SLManager
                 ___tipsW = 230;
                 ___anTips = true;
             }
-            else if (tips.name == "LoadButton")
+            else if (tips.name == "LoadButtonList")
             {
                 ___informationName.text = "载入";
                 ___informationMassage.text = "显示存档列表，选择存档读取\n";
                 ___tipsW = 260;
                 ___anTips = true;
             }
-            else if (tips.name == "LoadButton2")
+            else if (tips.name == "LoadButton")
             {
                 ___informationName.text = "快速载入";
                 ___informationMassage.text = "放弃当前进度, 重新读档\n";
@@ -598,87 +730,109 @@ namespace Sth4nothing.SLManager
         }
     }
 
+    /// <summary>
+    /// 判断是否需要存档，同时写入date.json
+    /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
     public class SaveDateFile_LateUpdate_Patch
     {
-        static void Prefix(SaveDateFile __instance)
+        private static bool Prefix(SaveDateFile __instance)
         {
-            if (!Main.Enabled || UIDate.instance == null) return;
+            if (!Main.Enabled || UIDate.instance == null) return true;
+
+
 
             if (__instance.saveSaveDate)
             {
-                if (Main.forceSave)
+                if (Main.ForceSave)
                 {
-                    Main.forceSave = false;
+                    Main.ForceSave = false;
                     UIDate.instance.trunSaveText.text = "手动存档";
                 }
                 else if (Main.settings.blockAutoSave)
                 {
                     UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
                     __instance.saveSaveDate = false;
-                    return;
+                    return true;
                 }
+                // 写入date.json
+                WriteSaveSummary();
             }
-        }
-    }
-
-    /// <summary>
-    /// 存档后备份当前存档
-    /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "EnsureFiles")]
-    public class SaveDateFile_EnsureFiles_Patch
-    {
-        static void Postfix()
-        {
-            try
+            if (ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK1")
+                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK2")
+                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK3"))
             {
-                SaveManager.Backup(SaveManager.AFTER_SAVE_BACKUP);
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK1", false);
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK2", false);
+                ReflectionMethod.SetValue(__instance, "saveSaveDateOK3", false);
+
+                Task.Run(new Action(EnsureFiles));
+
+                return false;
             }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
+            return true;
         }
-    }
-
-    /// <summary>
-    /// 加速文件解析，添加额外文件date.json
-    /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
-    public class SaveDateFile_SaveSaveDate_Patch
-    {
-        static void Prefix(SaveDateFile __instance)
+        /// <summary>
+        /// 替换原本的SaveDateFile.EnsureFiles
+        /// </summary>
+        /// <returns></returns>
+        private static void EnsureFiles()
         {
-            if (!Main.Enabled) return;
+            string[] fileNames = new string[9]
+            {
+                SaveDateFile.instance.GameSettingName,
+                SaveDateFile.instance.WorldDateName2,
+                SaveDateFile.instance.WorldDateName4,
+                SaveDateFile.instance.saveDateName,
+                SaveDateFile.instance.homeBuildingName,
+                SaveDateFile.instance.WorldDateName3,
+                SaveDateFile.instance.PlaceResourceName,
+                SaveDateFile.instance.actorLifeName,
+                SaveDateFile.instance.legendBookName
+            };
+            string path = SaveManager.SavePath;
+            int num;
+            for (int i = 0; i < fileNames.Length; i = num)
+            {
+                string tmpFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}~";
+                string dstFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}";
+                if (!File.Exists(tmpFile))
+                {
+                    Debug.Log("存档异常");
+                    break;
+                }
+                if (File.Exists(dstFile))
+                {
+                    File.Replace(tmpFile, dstFile, null);
+                }
+                else
+                {
+                    File.Move(tmpFile, dstFile);
+                }
+                num = i + 1;
+            }
+            Debug.Log("完成保存存档操作,开始执行随档备份...");
 
+            SaveManager.Backup(SaveManager.AfterSaveBackup);
+        }
+
+        /// <summary>
+        /// 保存当前摘要到date.json
+        /// </summary>
+        private static void WriteSaveSummary()
+        {
             var df = DateFile.instance;
-            var savedate = new SaveData(df.GetActorName(), df.year, df.samsara, df.dayTrun,
-                df.playerSeatName, DateTime.Now);
+            var data = new SaveData(
+                df.GetActorName(0, false, false),
+                df.year,
+                df.samsara,
+                df.dayTrun,
+                df.playerSeatName,
+                DateTime.Now);
 
-            var dirpath = typeof(SaveDateFile)
-                .GetMethod("Dirpath", BindingFlags.NonPublic | BindingFlags.Instance)
-                .Invoke(__instance, new object[] { -1 }) as string;
-            var fpath = Path.Combine(dirpath, "date.json");
-
-            File.WriteAllText(fpath, JsonConvert.SerializeObject(savedate));
+            File.WriteAllText(
+                Path.Combine(SaveManager.SavePath, "date.json"),
+                JsonConvert.SerializeObject(data));
         }
     }
-
-#if false
-    /// <summary>
-    ///  成功读档后自动备份游戏存档
-    /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadingScene")]
-    public static class Loading_LoadingScene_Patch
-    {
-
-        private static void Prefix(bool newGame, int teachingId, int loadingDateId)
-        {
-            if (!Main.Enabled) { return; }
-
-            if ((teachingId == -1 && !newGame && loadingDateId != 0))
-                SaveManager.Backup(SaveManager.BEFORE_LOADING_BACKUP);
-        }
-    }
-#endif
 }
