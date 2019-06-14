@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Sth4nothing.SLManager
 {
-    [HarmonyPatch(typeof(Encoding), "GetEncoding", new Type[] {typeof(int)})]
+    [HarmonyPatch(typeof(Encoding), "GetEncoding", new Type[] { typeof(int) })]
     public static class Encoding_GetEncoding_Path
     {
         public static bool Prefix(int codepage, ref Encoding __result)
@@ -41,7 +40,7 @@ namespace Sth4nothing.SLManager
                 Transform parent = GameObject.Find("ResourceBack").transform;
                 //
                 float startX = 1520f;
-                float size = 40f;
+                float size = 38f;
                 Vector2 iconSize = new Vector2(size, size);
 
                 //快速存档
@@ -88,6 +87,13 @@ namespace Sth4nothing.SLManager
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
                 loadBtnForList.GetComponent<RectTransform>().sizeDelta = iconSize;
                 loadBtnForList.AddComponent<MyPointerClick>();
+
+                //解读奇书
+                //LegendBook,724
+                startX += size;
+                GameObject legendBookButton = MissionSystem.instance.legendBookBtn.gameObject;
+                legendBookButton.GetComponent<RectTransform>().sizeDelta = iconSize;
+                legendBookButton.transform.localPosition = new Vector3(startX, -30f, 0);
 
                 //产业视图
                 //HomeButton,612
@@ -193,14 +199,65 @@ namespace Sth4nothing.SLManager
             switch (OnClick.instance.ID)
             {
                 case 4646:
-                    DateFile.instance.SetEvent(new[] {0, -1, 1001}, true, true);
-                    DateFile.instance.Initialize(SaveDateFile.instance.dateId);
-                    YesOrNoWindow.instance.CloseYesOrNoWindow();
-                    YesOrNoWindow.instance.yesOrNoWindow.sizeDelta = new Vector2(720f, 280f);
-                    OnClick.instance.Over = true;
+                    LoadFile.DoLoad(SaveDateFile.instance.dateId);
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// 读档
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "LoadLegendBook")]
+    public static class DateFile_LoadLegendBook_Patch
+    {
+        /// <summary>
+        /// 需要清除的实例
+        /// </summary>
+        // 游戏内载入存档时很多游戏实例依然存在，它们会不停调用SingletonObject.getInstance<T>()。
+        // 若T的实例未创建，则getInstance<T>方法在第一次被调用时会创建T的实例。这导致尽管在载入存
+        // 档前执行SingletonObject.ClearInstances()清除所有实例，载入存档时还会存在冲突的实例。
+        // 所以在DateFile.LoadLegendBook()方法前将有可能还存在的冲突实例清除掉以便正常载入存档。
+        private static readonly string[] instancesToRemove =
+        {
+            "JuniorXiangshuSystem",
+            "LegendBookSystem",
+            "TaichiDiscSystem",
+            "SpecialEffectSystem" // 目前(游戏版本：V0.2.2.2)只有这个类的实例会有残留，UIDate gameObject 设置为inactive解决
+        };
+
+        private static bool Prefix(DateFile.LegendBook loadDate)
+        {
+            if (Main.onLoad)
+            {
+                Main.onLoad = false;
+                Dictionary<string, object> m_SingletonMap = ReflectionMethod.GetValue<SingletonObject, Dictionary<string, object>>("m_SingletonMap");
+                List<Type> dontClearList = ReflectionMethod.GetValue<SingletonObject, List<Type>>("dontClearList");
+#if DEBUG
+                GameObject m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>("m_Container");
+                Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
+                foreach(string key in m_SingletonMap.Keys)
+                {
+                    Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
+                }
+#endif
+                // 清除需要清除的实例
+                for (int i = 0; i < instancesToRemove.Length; i++)
+                {
+                    if (m_SingletonMap.TryGetValue(instancesToRemove[i], out object item) && !dontClearList.Contains(item))
+                    {
+                        (item as IDisposable)?.Dispose();
+                        if (item.GetType().IsSubclassOf(typeof(Component)))
+                        {
+                            UnityEngine.Object.Destroy(item as Component);
+                        }
+                        m_SingletonMap.Remove(instancesToRemove[i]);
+                    }
+                }
+            }
+            return true;
+        }
+
     }
 
     /// <summary>
@@ -431,10 +488,20 @@ namespace Sth4nothing.SLManager
             yield return new WaitForSeconds(0.01f);
             if (file.EndsWith(".zip"))
                 Unzip(file);
-
-            DateFile.instance.SetEvent(new int[] {0, -1, 1001}, true, true);
-            DateFile.instance.Initialize(SaveManager.DateId);
+            DoLoad(SaveManager.DateId);
         }
+
+        /// <summary>
+        /// 执行存档读取操作
+        /// </summary>
+        public static void DoLoad(int dataId)
+        {
+            Main.onLoad = true;
+            UIDate.instance.gameObject.SetActive(false);
+            MainMenu.instance.SetLoadIndex(dataId);
+        }
+
+
 
         /// <summary>
         /// 解压存档到游戏存档目录
@@ -633,7 +700,7 @@ namespace Sth4nothing.SLManager
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
-        [HarmonyBefore(new[] {"CharacterFloatInfo"})]
+        [HarmonyBefore(new[] { "CharacterFloatInfo" })]
         public static void Postfix(bool on, GameObject tips,
             ref Text ___informationMassage, ref Text ___informationName,
             ref int ___tipsW, ref bool ___anTips)
@@ -745,7 +812,7 @@ namespace Sth4nothing.SLManager
                 num = i + 1;
             }
             Debug.Log("完成保存存档操作,开始执行随档备份...");
-            
+
             SaveManager.Backup(SaveManager.AfterSaveBackup);
         }
 
