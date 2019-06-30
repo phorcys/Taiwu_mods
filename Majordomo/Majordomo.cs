@@ -76,10 +76,10 @@ namespace Majordomo
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static string resBasePath;
+        public static GetSpritesInfoAsset getSpritesInfoAsset;
         public const string MOD_ID = "Majordomo";
 
         private static readonly Dictionary<string, FloatField> floatFields = new Dictionary<string, FloatField>();
-
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -94,6 +94,9 @@ namespace Majordomo
             Main.settings = Settings.Load<Settings>(modEntry);
 
             resBasePath = System.IO.Path.Combine(modEntry.Path, "resources");
+
+            var dynamicSetSprite = SingletonObject.getInstance<DynamicSetSprite>();
+            getSpritesInfoAsset = (GetSpritesInfoAsset) Traverse.Create(dynamicSetSprite).Field("gsInfoAsset").GetValue();
 
             modEntry.OnToggle = Main.OnToggle;
             modEntry.OnGUI = Main.OnGUI;
@@ -283,7 +286,7 @@ namespace Majordomo
             if (TurnEvent.IsResourcesRegistered()) return;
 
             string eventImagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"{TurnEvent.IMAGE_NAME}.png");
-            bool isSuccess = ResourceLoader.AppendSprite(ref GetSprites.instance.trunEventImage, eventImagePath);
+            bool isSuccess = ResourceLoader.AppendSprite("trunEventImage", eventImagePath);
             if (!isSuccess) throw new Exception($"Failed to append sprite: {eventImagePath}");
 
             TurnEvent.eventId = ResourceLoader.AppendRow(DateFile.instance.trunEventDate,
@@ -311,10 +314,10 @@ namespace Majordomo
             var data = DateFile.instance.trunEventDate[TurnEvent.eventId];
             int spriteId = int.Parse(data[98]);
 
-            if (GetSprites.instance.trunEventImage.Length <= spriteId) return false;
+            if (Main.getSpritesInfoAsset.trunEventImage.Length <= spriteId) return false;
 
-            var sprite = GetSprites.instance.trunEventImage[spriteId];
-            if (sprite.name != TurnEvent.IMAGE_NAME) return false;
+            var spriteName = Main.getSpritesInfoAsset.trunEventImage[spriteId];
+            if (spriteName != TurnEvent.IMAGE_NAME) return false;
 
             return true;
         }

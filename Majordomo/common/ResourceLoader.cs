@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Majordomo
 {
@@ -16,34 +17,40 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 往指定的 Sprite 数组中添加新图片，并保存 ID 到资源库中
+        /// 往指定的 Sprite 组中添加新图片，并保存 ID 到资源库中
         /// </summary>
-        /// <param name="sprites"></param>
+        /// <param name="spriteGroupName"></param>
         /// <param name="filePath"></param>
         /// <returns>图片是否添加成功</returns>
-        public static bool AppendSprite(ref Sprite[] sprites, string filePath)
+        public static bool AppendSprite(string spriteGroupName, string filePath)
         {
-            if (sprites == null || sprites.Length == 0)
+            var commonNameGroup = (Dictionary<string, string[]>)
+                Traverse.Create(Main.getSpritesInfoAsset).Field("commonNameGroup").GetValue();
+
+            if (!commonNameGroup.ContainsKey(spriteGroupName) || commonNameGroup[spriteGroupName].Length == 0)
             {
                 Main.Logger.Log("Sprites not loaded yet, cannot append new one.");
                 return false;
             }
 
-            var sprite = ResourceLoader.CreateSpriteFromImage(filePath);
-            if (sprite == null)
-            {
-                Main.Logger.Log($"Failed to create sprite from {filePath}.");
-                return false;
-            }
+            var spriteGroup = commonNameGroup[spriteGroupName];
+            var spriteName = Path.GetFileNameWithoutExtension(filePath);
 
-            sprite.name = Path.GetFileNameWithoutExtension(filePath);
+            // 把图片信息加入单张图片信息集合
+            Main.getSpritesInfoAsset.singleSpritePathInfos.Add(
+                new GetSpritesInfoAsset.SingleSpritePathInfo() { name = spriteName, path = filePath });
+            // 再次初始化单张图片信息集合
+            Traverse.Create(Main.getSpritesInfoAsset).Method("InitSingleSpritePathes").GetValue();
 
-            sprites = sprites.AddToArray(sprite);
+            // 把图片名称加入名称数组，系统会在需要的时候通过 ID 获取图片名称，然后加载
+            spriteGroup = spriteGroup.AddToArray(spriteName);
+            Traverse.Create(Main.getSpritesInfoAsset).Field(spriteGroupName).SetValue(spriteGroup);
+            commonNameGroup[spriteGroupName] = spriteGroup;
 
-            var spriteId = sprites.Length - 1;
-            resources[sprite.name] = spriteId.ToString();
+            var spriteId = spriteGroup.Length - 1;
+            resources[spriteName] = spriteId.ToString();
 
-            Main.Logger.Log($"Appended sprite {sprite.name}, Id: {spriteId}.");
+            Main.Logger.Log($"Appended sprite {spriteName}, Id: {spriteId}.");
             return true;
         }
 
@@ -114,6 +121,27 @@ namespace Majordomo
 
             Main.Logger.Log(string.Format("New texture file loaded: {0}, texture size: {1}, {2}.", path, texture.width, texture.height));
             return sprite;
+        }
+    }
+
+
+    /// <summary>
+    /// 对于外部图片，需要通过其他方式加载
+    /// </summary>
+    [HarmonyPatch(typeof(DynamicSetSprite), "SetImageSprite", typeof(Image), typeof(string))]
+    public static class DynamicSetSprite_SetImageSprite_SetExternalSprite
+    {
+        static bool Prefix(Image image, string spriteName = "")
+        {
+            if (!Main.enabled) return true;
+
+            string spritePath = Main.getSpritesInfoAsset.GetSingleSpritePath(spriteName);
+            if (!File.Exists(spritePath)) return true;
+
+            image.sprite = ResourceLoader.CreateSpriteFromImage(spritePath);
+            image.enabled = true;
+
+            return false;
         }
     }
 }
