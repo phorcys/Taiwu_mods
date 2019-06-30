@@ -451,7 +451,7 @@ namespace Majordomo
             outline.useGraphicAlpha = true;
 
             var textTransform = textGO.GetComponent<RectTransform>();
-            textTransform.localPosition = new Vector3(-9.0f, -18.0f, 0.0f);
+            textTransform.localPosition = new Vector3(35.0f, -18.0f, 0.0f);
             textTransform.sizeDelta = new Vector2(110.0f, 30.0f);
 
             ResourceMaintainer.resIdealHoldingText[resourceId] = text;
