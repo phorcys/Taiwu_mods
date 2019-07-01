@@ -10,6 +10,99 @@ using UnityModManagerNet;
 
 namespace Sth4nothing.VillageHeadOfTaiwu
 {
+    public class ReflectionMethod
+    {
+        private const BindingFlags Flags = BindingFlags.Instance
+                                           | BindingFlags.Static
+                                           | BindingFlags.NonPublic
+                                           | BindingFlags.Public;
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns></returns>
+        public static T2 Invoke<T1, T2>(T1 instance, string method, params object[] args)
+        {
+            return (T2)typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+        }
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
+        public static void Invoke<T1>(T1 instance, string method, params object[] args)
+        {
+            typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+        }
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="argTypes">方法的参数类型列表</param>
+        /// <param name="args">参数</param>
+        /// <typeparam name="T">类</typeparam>
+        /// <returns>函数的返回值(void则返回null)</returns>
+        public static object Invoke<T>(T instance, string method, System.Type[] argTypes, params object[] args)
+        {
+            argTypes = argTypes ?? new System.Type[0];
+            var methods = typeof(T).GetMethods(Flags).Where(m =>
+            {
+                if (m.Name != method)
+                    return false;
+                return m.GetParameters()
+                    .Select(p => p.ParameterType)
+                    .SequenceEqual(argTypes);
+            });
+
+            if (methods.Count() != 1)
+            {
+                throw new AmbiguousMatchException("cannot find method to invoke");
+            }
+
+            return methods.First()?.Invoke(instance, args);
+        }
+        /// <summary>
+        /// 反射获取类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns>字段的值</returns>
+        public static T2 GetValue<T1, T2>(T1 instance, string field)
+        {
+            return (T2)typeof(T1).GetField(field, Flags)?.GetValue(instance);
+        }
+        /// <summary>
+        /// 反射获取类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <typeparam name="T">类</typeparam>
+        /// <returns>字段的值</returns>
+        public static object GetValue<T>(T instance, string field)
+        {
+            return typeof(T).GetField(field, Flags)?.GetValue(instance);
+        }
+        /// <summary>
+        /// 反射设置类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <param name="value">设置的字段的值</param>
+        /// <typeparam name="T">类</typeparam>
+        public static void SetValue<T>(T instance, string field, object value)
+        {
+            typeof(T).GetField(field, Flags)?.SetValue(instance, value);
+        }
+    }
     class Worker
     {
         /// <summary>
@@ -53,7 +146,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
     class VillagersList : MonoBehaviour
     {
-        readonly string[] workStr = {
+        private readonly string[] workStr = {
             "食材",
             "木材",
             "金石",
@@ -62,11 +155,10 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             "银钱"
         };
 
-        public const float designWidth = 1600;
-        public const float designHeight = 900;
+        private const float designWidth = 1600f, designHeight = 900f;
 
         public static VillagersList Instance { get; private set; }
-        static GameObject obj;
+        private static GameObject obj;
 
         GameObject canvas;
 
@@ -371,7 +463,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
             var maxPart = -1;
             var maxPlace = -1;
-            var maxRes = 0;
+            var maxRes = 0f;
             var manNeed = 0x7fffffff;
             var manPool = UIDate.instance.GetUseManPower();
 
@@ -399,8 +491,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                         && !df.PlaceIsBad(part, place)
                         && !df.HaveWork(part, place))
                     {
-                        var res = UIDate.instance.GetWorkPower((int)workType, part, place);
-                        var man = int.Parse(df.GetNewMapDate(part, place, 12));
+                        var man = df.GetMarkNeedManPower(part, place);
+                        var res = man == 0 ? 0f : UIDate.instance.GetWorkPower((int)workType, part, place) / (float)man;
                         if (res > maxRes && manPool >= man)
                         {
                             if (man <= 1 || !Main.Setting.skipTown)
@@ -418,18 +510,9 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 if (manPool >= manNeed)
                 {
-                    var choosePartId = wms.choosePartId;
-                    var choosePlaceId = wms.choosePlaceId;
-                    var chooseWorkTyp = wms.chooseWorkTyp;
-
-                    wms.choosePartId = maxPart;
-                    wms.choosePlaceId = maxPlace;
-                    wms.chooseWorkTyp = (int)workType;
-                    wms.DoManpowerWork();
-
-                    wms.choosePartId = choosePartId;
-                    wms.choosePlaceId = choosePlaceId;
-                    wms.chooseWorkTyp = chooseWorkTyp;
+                    Debug.Log($"开始在{maxPart},{maxPlace}采集{workStr[(int)workType]}");
+                    wms.SetPlaceWork(maxPart, maxPlace, (int)workType);
+                    UpdateUiManpower();
                 }
             }
             else
@@ -449,16 +532,18 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             if (manpowerList.ContainsKey(worker.part) &&
                 manpowerList[worker.part].ContainsKey(worker.place))
             {
-                var choosePartId = wms.choosePartId;
-                var choosePlaceId = wms.choosePlaceId;
-
-                wms.choosePartId = worker.part;
-                wms.choosePlaceId = worker.place;
-                wms.RemoveWorkingDate();
-
-                wms.choosePartId = choosePartId;
-                wms.choosePlaceId = choosePlaceId;
+                Debug.Log($"移除{worker.part},{worker.place}的采集{workStr[worker.type]}({worker.resource}/{worker.manpower}人力/时节)");
+                wms.RemovePlaceWork(worker.part, worker.place);
+                DateFile.instance.MarkPlace(worker.part, worker.place, false);
+                UpdateUiManpower();
             }
+        }
+        private void UpdateUiManpower()
+        {
+            var mpg = GameObject.FindObjectOfType<ui_ManPowerManage>();
+            if (mpg == null) return;
+            ReflectionMethod.Invoke(mpg, "UpdateTotalManPower");
+            ReflectionMethod.Invoke(mpg, "UpdateMarkedPlace");
         }
 
         /// <summary>
@@ -528,9 +613,26 @@ namespace Sth4nothing.VillageHeadOfTaiwu
     [HarmonyPatch(typeof(UIDate), "AddBackManpower")]
     public class UIDate_AddBackManpower_Patch
     {
-        public static bool Prefix(int partId, int placeId, int menpower, int time)
+        public static bool Prefix(int partId, int placeId, int menpower)
         {
             var df = DateFile.instance;
+            int time = 0;
+            if (placeId != df.mianPlaceId)
+            {
+                time++;
+            }
+            if (partId != int.Parse(df.GetGangDate(16, 3)))
+            {
+                time++;
+            }
+            if (WorldMapSystem.instance.GetWorldId(partId) != int.Parse(df.GetGangDate(16, 11)))
+            {
+                time++;
+            }
+            if (time <= 0)
+            {
+                return false;
+            }
             if (!df.backManpowerList.ContainsKey(partId))
             {
                 df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
@@ -598,7 +700,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         /// <summary>
         /// 是否跳过城镇
         /// </summary>
-        public bool skipTown = true;
+        public bool skipTown = false;
         /// <summary>
         /// 热键 ctrl + ？
         /// </summary>
