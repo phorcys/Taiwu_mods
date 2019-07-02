@@ -31,106 +31,68 @@ namespace Sth4nothing.SLManager
     [HarmonyPatch(typeof(WorldMapSystem), "Start")]
     public static class WorldMapSystem_Start_Patch
     {
+        private static readonly string[] btns = 
+        {
+            "SystemButton,608",//系统设置
+            "SaveActorsButton,723",//铭刻
+            "EncyclopediaButton,609",//太吾百晓册
+            "ScrollButton,607",//太吾传承
+            "ReShowTrunEventButton,822",//时节回顾
+            "HomeButton,612",//产业视图
+            "ManageManPower,778",// 
+            "LegendBook,724",//解读奇书
+        };
+
+        private static readonly Tuple<string, string>[] extraBtns = 
+        {
+            Tuple.Create("SaveButton", "Graphics/Buttons/StartGameButton"),//快速存档
+            Tuple.Create("LoadButton", "Graphics/Buttons/StartGameButton_NoColor"),//快速读档
+            Tuple.Create("LoadButtonList", "Graphics/Buttons/StartGameButton_NoColor"),//列表读档
+        };
+
+        private const float Size = 44f;
+        private const float StartX = 1920f;
+
         public static void Postfix()
         {
             if (Main.Enabled)
             {
                 UI.Load();
 
+                float startX = StartX;
+                Vector2 iconSize = new Vector2(Size, Size);
                 Transform parent = GameObject.Find("ResourceBack").transform;
-                //
-                float startX = 1520f;
-                float size = 38f;
-                Vector2 iconSize = new Vector2(size, size);
 
-                //快速存档
-                startX += size;
-                GameObject saveBtn = UnityEngine.Object.Instantiate(
-                    GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(startX, -30f, 0), Quaternion.identity);
-                saveBtn.name = "SaveButton";
-                saveBtn.tag = "SystemIcon";
-                saveBtn.transform.SetParent(parent, false);
-                saveBtn.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable saveButton = saveBtn.GetComponent<Selectable>();
-                ((Image) saveButton.targetGraphic).sprite =
-                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
-                saveBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
-                saveBtn.AddComponent<MyPointerClick>();
-
-                // 快速载入
-                startX += size;
-                GameObject loadBtn = UnityEngine.Object.Instantiate(
-                    GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(startX, -30f, 0), Quaternion.identity);
-                loadBtn.name = "LoadButton";
-                loadBtn.tag = "SystemIcon";
-                loadBtn.transform.SetParent(parent, false);
-                loadBtn.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable loadButton = loadBtn.GetComponent<Selectable>();
-                ((Image) loadButton.targetGraphic).sprite =
-                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
-                loadBtn.AddComponent<MyPointerClick>();
-
-                // 列表载入
-                startX += size;
-                GameObject loadBtnForList = UnityEngine.Object.Instantiate(
-                    GameObject.Find("EncyclopediaButton,609"),
-                    new Vector3(startX, -30f, 0), Quaternion.identity);
-                loadBtnForList.name = "LoadButtonList";
-                loadBtnForList.tag = "SystemIcon";
-                loadBtnForList.transform.SetParent(parent, false);
-                loadBtnForList.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable loadBtnForListSelectable = loadBtnForList.GetComponent<Selectable>();
-                ((Image) loadBtnForListSelectable.targetGraphic).sprite =
-                    Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
-                loadBtnForList.GetComponent<RectTransform>().sizeDelta = iconSize;
-                loadBtnForList.AddComponent<MyPointerClick>();
-
-                //解读奇书
-                //LegendBook,724
-                startX += size;
-                GameObject legendBookButton = MissionSystem.instance.legendBookBtn.gameObject;
-                legendBookButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                legendBookButton.transform.localPosition = new Vector3(startX, -30f, 0);
-
-                //产业视图
-                //HomeButton,612
-                startX += size;
-                GameObject homeButton = GameObject.Find("HomeButton,612");
-                homeButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                homeButton.transform.localPosition = new Vector3(startX, -30f, 0);
-                //时节回顾
-                //ReShowTrunEventButton,822
-                startX += size;
-                GameObject reShowTrunEventButton = GameObject.Find("ReShowTrunEventButton,822");
-                reShowTrunEventButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                reShowTrunEventButton.transform.localPosition = new Vector3(startX, -30f, 0);
-                //太吾传承
-                //ScrollButton,607
-                startX += size;
-                GameObject scrollButton = GameObject.Find("ScrollButton,607");
-                scrollButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                scrollButton.transform.localPosition = new Vector3(startX, -30f, 0);
-                //太吾百晓册
-                //EncyclopediaButton,609
-                startX += size;
-                GameObject encyclopediaButton = GameObject.Find("EncyclopediaButton,609");
-                encyclopediaButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                encyclopediaButton.transform.localPosition = new Vector3(startX, -30f, 0);
-                //铭刻
-                //SaveActorsButton,723
-                startX += size;
-                GameObject saveActorsButton = GameObject.Find("SaveActorsButton,723");
-                saveActorsButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                saveActorsButton.transform.localPosition = new Vector3(startX, -30f, 0);
-                //系统设置
-                //SystemButton,608
-                startX += size;
-                GameObject systemButton = GameObject.Find("SystemButton,608");
-                systemButton.GetComponent<RectTransform>().sizeDelta = iconSize;
-                systemButton.transform.localPosition = new Vector3(startX, -30f, 0);
+                // 调整其他按钮的位置、大小
+                foreach (var btn in btns)
+                {
+                    var button = GameObject.Find(btn);
+                    if (button == null)
+                    {
+                        Debug.LogWarning(btn + " not exist");
+                        continue;
+                    }
+                    startX -= Size;
+                    button.GetComponent<RectTransform>().sizeDelta = iconSize;
+                    button.transform.localPosition = new Vector3(startX, -30f, 0f);
+                }
+                // 添加按钮
+                foreach (var btn in extraBtns)
+                {
+                    startX -= Size;
+                    var obj = UnityEngine.Object.Instantiate(
+                        GameObject.Find("EncyclopediaButton,609"),
+                        new Vector3(startX, -30f, 0),
+                        Quaternion.identity);
+                    obj.name = btn.Item1;
+                    obj.tag = "SystemIcon";
+                    obj.transform.SetParent(parent, false);
+                    obj.transform.localPosition = new Vector3(startX, -30f, 0);
+                    ((Image)obj.GetComponent<Selectable>().targetGraphic).sprite = Resources.Load<Sprite>(btn.Item2);
+                    obj.GetComponent<RectTransform>().sizeDelta = iconSize;
+                    obj.AddComponent<MyPointerClick>();
+                    UnityEngine.Object.Destroy(obj.GetComponent<PointerClick>());
+                }
             }
         }
     }
@@ -231,10 +193,10 @@ namespace Sth4nothing.SLManager
             if (Main.onLoad)
             {
                 Main.onLoad = false;
-                Dictionary<string, object> m_SingletonMap = ReflectionMethod.GetValue<SingletonObject, Dictionary<string, object>>("m_SingletonMap");
-                List<Type> dontClearList = ReflectionMethod.GetValue<SingletonObject, List<Type>>("dontClearList");
+                var m_SingletonMap = ReflectionMethod.GetValue<SingletonObject, Dictionary<string, object>>(null, "m_SingletonMap");
+                var dontClearList = ReflectionMethod.GetValue<SingletonObject, List<Type>>(null, "dontClearList");
 #if DEBUG
-                GameObject m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>("m_Container");
+                var m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>(null, "m_Container");
                 Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
                 foreach(string key in m_SingletonMap.Keys)
                 {
@@ -522,6 +484,12 @@ namespace Sth4nothing.SLManager
 
     public static class SaveManager
     {
+        public static SaveDateBackuper backup { get => SaveDateBackuper.GetInstance(); }
+        public static int autoBackupRemain
+        {
+            get => ReflectionMethod.GetValue<SaveDateBackuper, int>(backup, "autoBackupRemain");
+            set => ReflectionMethod.SetValue<SaveDateBackuper>(backup, "autoBackupRemain", value);
+        }
         public const int AfterSaveBackup = 0,
             BeforeLoadingBackup = 1;
 
@@ -531,10 +499,11 @@ namespace Sth4nothing.SLManager
 
         public static string SavePath
         {
-            get => ReflectionMethod.Invoke<SaveDateFile, string>(
+            get => (ReflectionMethod.Invoke<SaveDateFile>(
                     SaveDateFile.instance,
                     "Dirpath",
-                    -1)
+                    new[] { typeof(int) },
+                    -1) as string)
                 .Replace('/', '\\');
         }
 
@@ -551,17 +520,20 @@ namespace Sth4nothing.SLManager
         /// </summary>
         public static int DateId => SaveDateFile.instance.dateId;
 
-        public static void Backup(int backupType)
+        public static string Backup(int backupType)
         {
+            if (!backup.CheckAllSaveFileExist(DateId))
+            {
+                Debug.Log("存档文件不全");
+                return null;
+            }
             switch (backupType)
             {
                 case AfterSaveBackup:
-                    BackupAfterSave();
-                    return;
+                    return BackupAfterSave();
 
                 case BeforeLoadingBackup:
-                    BackupBeforeLoad();
-                    return;
+                    return BackupBeforeLoad();
 
                 default:
                     throw new ArgumentException("invalid backupType");
@@ -571,11 +543,11 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 执行存档后备份
         /// </summary>
-        private static void BackupAfterSave()
+        private static string BackupAfterSave()
         {
             if (Main.settings.maxBackupsToKeep == 0)
             {
-                return;
+                return null;
             }
 
             Main.Logger.Log("开始备份存档");
@@ -624,15 +596,17 @@ namespace Sth4nothing.SLManager
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
             Main.Logger.Log("备份路径:" + targetFile);
             BackupFolderToFile(SavePath, targetFile);
+            return targetFile;
         }
 
         /// <summary>
         /// 执行读档前备份
         /// </summary>
-        private static void BackupBeforeLoad()
+        private static string BackupBeforeLoad()
         {
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.load.zip");
             BackupFolderToFile(SavePath, targetFile);
+            return targetFile;
         }
 
         /// <summary>
@@ -740,8 +714,6 @@ namespace Sth4nothing.SLManager
         {
             if (!Main.Enabled || UIDate.instance == null) return true;
 
-
-
             if (__instance.saveSaveDate)
             {
                 if (Main.ForceSave)
@@ -813,7 +785,75 @@ namespace Sth4nothing.SLManager
             }
             Debug.Log("完成保存存档操作,开始执行随档备份...");
 
-            SaveManager.Backup(SaveManager.AfterSaveBackup);
+            string file = SaveManager.Backup(SaveManager.AfterSaveBackup);
+
+            DoDefaultBackup(SaveManager.DateId, file);
+        }
+        private static bool DoDefaultBackup(int dateId, string file)
+        {
+            if (!SaveManager.backup.IsOn)
+            {
+                Debug.Log("过时节备份已禁用!");
+                return false;
+            }
+            if (SaveManager.autoBackupRemain > 1)
+            {
+                SaveManager.autoBackupRemain--;
+                Debug.Log($"未到设定的自动备份时间,等待时节剩余:{SaveManager.autoBackupRemain}");
+                return false;
+            }
+            var dataPathForId = ReflectionMethod.Invoke<SaveDateBackuper, string>(SaveManager.backup, "GetDataPathForId", dateId);
+            if (!dataPathForId.CheckDirectory())
+            {
+                Debug.Log("当前存档位置不存在!");
+                return false;
+            }
+            if (!SaveManager.backup.CheckAllSaveFileExist(dateId))
+            {
+                Debug.Log("当前存档不完整,不进行备份操作!");
+                return false;
+            }
+            var dir = new DirectoryInfo(
+                Path.Combine(Application.dataPath,
+                "SaveFiles" + SaveDateFile.instance.GetSaveFilesSuffix(),
+                "Backup",
+                $"Date_{dateId}"));
+            if (!dir.Exists)
+            {
+                dir.Create();
+            }
+            var array = ReflectionMethod.Invoke<SaveDateBackuper, byte[]>(SaveManager.backup, "BackupItemToBytes");
+            var path = Path.Combine(dir.FullName,
+                DateTime.Now.ToString("yyyyMMddhhmmss") + array.Length + "." + ReflectionMethod.GetValue<SaveDateBackuper, string>(SaveManager.backup, "_extension"));
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                Debug.Log("写入备份描述!");
+                fs.Write(array, 0, array.Length);
+                if (File.Exists(file))
+                {
+                    using (var zip = File.OpenRead(file))
+                    {
+                        var buff = new byte[1024];
+                        while (zip.Position < zip.Length)
+                        {
+                            var len = zip.Read(buff, 0, buff.Length);
+                            fs.Write(buff, 0, len);
+                        }
+                    }
+                }
+                else
+                {
+                    using (var zip = new ZipFile())
+                    {
+                        zip.AddDirectory(dataPathForId);
+                        zip.Save(fs);
+                    }
+                }
+                Debug.Log($"Date_{dateId}备份完成!");
+            }
+            SaveManager.autoBackupRemain = SaveManager.backup.TickInterval;
+            ReflectionMethod.Invoke(SaveManager.backup, "CheckBackupCount", dateId);
+            return true;
         }
 
         /// <summary>
