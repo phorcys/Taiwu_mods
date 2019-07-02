@@ -32,11 +32,11 @@ namespace Sth4nothing.UseStorageBook
             gameObject.name = "Item," + bookId;
             gameObject.GetComponent<Toggle>().group = HomeSystem.instance.bookHolder.GetComponent<ToggleGroup>();
             Image component = gameObject.transform.Find("ItemBack").GetComponent<Image>();
-            component.sprite = GetSprites.instance.itemBackSprites[int.Parse(DateFile.instance.GetItemDate(bookId, 4, true))];
+            SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(component, "itemBackSprites", int.Parse(DateFile.instance.GetItemDate(bookId, 4)));
             component.color = ActorMenu.instance.LevelColor(int.Parse(DateFile.instance.GetItemDate(bookId, 8, true)));
             GameObject gameObject2 = gameObject.transform.GetChild(2).gameObject;
             gameObject2.name = "ItemIcon," + bookId;
-            gameObject2.GetComponent<Image>().sprite = GetSprites.instance.itemSprites[int.Parse(DateFile.instance.GetItemDate(bookId, 98, true))];
+            SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(gameObject2.GetComponent<Image>(), "itemSprites", int.Parse(DateFile.instance.GetItemDate(bookId, 98)));
             int num2 = int.Parse(DateFile.instance.GetItemDate(bookId, 901, true));
             int num3 = int.Parse(DateFile.instance.GetItemDate(bookId, 902, true));
             var df = DateFile.instance;
