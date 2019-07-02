@@ -160,17 +160,39 @@ namespace Sth4nothing.SLManager
                                            | BindingFlags.Static
                                            | BindingFlags.NonPublic
                                            | BindingFlags.Public;
-
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns></returns>
         public static T2 Invoke<T1, T2>(T1 instance, string method, params object[] args)
         {
             return (T2) typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
-
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
         public static void Invoke<T1>(T1 instance, string method, params object[] args)
         {
             typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
-
+        /// <summary>
+        /// 反射执行方法
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="argTypes">方法的参数类型列表</param>
+        /// <param name="args">参数</param>
+        /// <typeparam name="T">类</typeparam>
+        /// <returns>函数的返回值(void则返回null)</returns>
         public static object Invoke<T>(T instance, string method, System.Type[] argTypes, params object[] args)
         {
             argTypes = argTypes ?? new System.Type[0];
@@ -190,25 +212,39 @@ namespace Sth4nothing.SLManager
 
             return methods.First()?.Invoke(instance, args);
         }
-
+        /// <summary>
+        /// 反射获取类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns>字段的值</returns>
         public static T2 GetValue<T1, T2>(T1 instance, string field)
         {
             return (T2) typeof(T1).GetField(field, Flags)?.GetValue(instance);
         }
-
+        /// <summary>
+        /// 反射获取类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <typeparam name="T">类</typeparam>
+        /// <returns>字段的值</returns>
         public static object GetValue<T>(T instance, string field)
         {
             return typeof(T).GetField(field, Flags)?.GetValue(instance);
         }
+        /// <summary>
+        /// 反射设置类字段的值
+        /// </summary>
+        /// <param name="instance">类实例(静态字段则为null)</param>
+        /// <param name="field">字段名</param>
+        /// <param name="value">设置的字段的值</param>
+        /// <typeparam name="T">类</typeparam>
         public static void SetValue<T>(T instance, string field, object value)
         {
             typeof(T).GetField(field, Flags)?.SetValue(instance, value);
         }
-
-        public static T2 GetValue<T1, T2>(string field)
-        {
-            return (T2) typeof(T1).GetField(field, Flags)?.GetValue(null);
-        }
-
     }
 }
