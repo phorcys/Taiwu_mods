@@ -1,7 +1,7 @@
 ﻿{
   "Id": "GuiBaseUI",
   "DisplayName": "鬼的UI框架",
-  "Version": "2.2",
+  "Version": "2.2.0",
   "AssemblyName": "GuiBaseUI.dll",
   "EntryMethod": "GuiBaseUI.Main.Load"
 }
