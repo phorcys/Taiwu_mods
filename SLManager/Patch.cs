@@ -39,8 +39,8 @@ namespace Sth4nothing.SLManager
 
                 Transform parent = GameObject.Find("ResourceBack").transform;
                 //
-                float startX = 1520f;
-                float size = 38f;
+                float startX = 1450f;
+                float size = 40f;
                 Vector2 iconSize = new Vector2(size, size);
 
                 //快速存档
@@ -52,9 +52,11 @@ namespace Sth4nothing.SLManager
                 saveBtn.tag = "SystemIcon";
                 saveBtn.transform.SetParent(parent, false);
                 saveBtn.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable saveButton = saveBtn.GetComponent<Selectable>();
-                ((Image) saveButton.targetGraphic).sprite =
+                Button saveButton = saveBtn.GetComponent<Button>();
+                ((Image)saveButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton");
+                // 以备日后游戏实装太吾百晓册
+                saveButton.onClick.RemoveAllListeners();
                 saveBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
                 saveBtn.AddComponent<MyPointerClick>();
 
@@ -67,9 +69,11 @@ namespace Sth4nothing.SLManager
                 loadBtn.tag = "SystemIcon";
                 loadBtn.transform.SetParent(parent, false);
                 loadBtn.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable loadButton = loadBtn.GetComponent<Selectable>();
-                ((Image) loadButton.targetGraphic).sprite =
+                Button loadButton = loadBtn.GetComponent<Button>();
+                ((Image)loadButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
+                // 以备日后游戏实装太吾百晓册
+                loadButton.onClick.RemoveAllListeners();
                 loadBtn.GetComponent<RectTransform>().sizeDelta = iconSize;
                 loadBtn.AddComponent<MyPointerClick>();
 
@@ -82,9 +86,11 @@ namespace Sth4nothing.SLManager
                 loadBtnForList.tag = "SystemIcon";
                 loadBtnForList.transform.SetParent(parent, false);
                 loadBtnForList.transform.localPosition = new Vector3(startX, -30f, 0);
-                Selectable loadBtnForListSelectable = loadBtnForList.GetComponent<Selectable>();
-                ((Image) loadBtnForListSelectable.targetGraphic).sprite =
+                Button loadBtnForListButton = loadBtnForList.GetComponent<Button>();
+                ((Image)loadBtnForListButton.targetGraphic).sprite =
                     Resources.Load<Sprite>("Graphics/Buttons/StartGameButton_NoColor");
+                // 以备日后游戏实装太吾百晓册
+                loadBtnForListButton.onClick.RemoveAllListeners();
                 loadBtnForList.GetComponent<RectTransform>().sizeDelta = iconSize;
                 loadBtnForList.AddComponent<MyPointerClick>();
 
@@ -95,36 +101,47 @@ namespace Sth4nothing.SLManager
                 legendBookButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 legendBookButton.transform.localPosition = new Vector3(startX, -30f, 0);
 
+                //人力调度
+                startX += size;
+                GameObject manageManPower = GameObject.Find("ManageManPower,778");
+                manageManPower.GetComponent<RectTransform>().sizeDelta = iconSize;
+                manageManPower.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //产业视图
                 //HomeButton,612
                 startX += size;
                 GameObject homeButton = GameObject.Find("HomeButton,612");
                 homeButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 homeButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //时节回顾
                 //ReShowTrunEventButton,822
                 startX += size;
                 GameObject reShowTrunEventButton = GameObject.Find("ReShowTrunEventButton,822");
                 reShowTrunEventButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 reShowTrunEventButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //太吾传承
                 //ScrollButton,607
                 startX += size;
                 GameObject scrollButton = GameObject.Find("ScrollButton,607");
                 scrollButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 scrollButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //太吾百晓册
                 //EncyclopediaButton,609
                 startX += size;
                 GameObject encyclopediaButton = GameObject.Find("EncyclopediaButton,609");
                 encyclopediaButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 encyclopediaButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //铭刻
                 //SaveActorsButton,723
                 startX += size;
                 GameObject saveActorsButton = GameObject.Find("SaveActorsButton,723");
                 saveActorsButton.GetComponent<RectTransform>().sizeDelta = iconSize;
                 saveActorsButton.transform.localPosition = new Vector3(startX, -30f, 0);
+
                 //系统设置
                 //SystemButton,608
                 startX += size;
@@ -182,7 +199,6 @@ namespace Sth4nothing.SLManager
                     : files);
 
             LoadFile.ParseFiles();
-
             UI.Instance.ShowData();
         }
     }
@@ -208,25 +224,29 @@ namespace Sth4nothing.SLManager
     /// <summary>
     /// 读档
     /// </summary>
-    [HarmonyPatch(typeof(DateFile), "LoadLegendBook")]
+    //[HarmonyPatch(typeof(DateFile), "LoadLegendBook")]
     public static class DateFile_LoadLegendBook_Patch
     {
         /// <summary>
         /// 需要清除的实例
         /// </summary>
-        // 游戏内载入存档时很多游戏实例依然存在，它们会不停调用SingletonObject.getInstance<T>()。
-        // 若T的实例未创建，则getInstance<T>方法在第一次被调用时会创建T的实例。这导致尽管在载入存
-        // 档前执行SingletonObject.ClearInstances()清除所有实例，载入存档时还会存在冲突的实例。
-        // 所以在DateFile.LoadLegendBook()方法前将有可能还存在的冲突实例清除掉以便正常载入存档。
+        // 不同于从主菜单载入，在游戏内载入存档时很多游戏实例依然存在，它们会不停调用SingletonObject.getInstance<T>()。
+        // 若T的实例未创建，则getInstance<T>方法在第一次被调用时会创建T的实例。这导致尽管在载入存档前执行
+        // SingletonObject.ClearInstances()清除所有实例，载入存档时还会存在冲突的实例。所以在DateFile.LoadLegendBook()
+        // 方法前将有可能还存在的冲突实例清除掉以便正常载入存档。
         private static readonly string[] instancesToRemove =
         {
             "JuniorXiangshuSystem",
             "LegendBookSystem",
             "TaichiDiscSystem",
-            "SpecialEffectSystem" // 目前(游戏版本：V0.2.2.2)只有这个类的实例会有残留，UIDate gameObject 设置为inactive解决
+            //"SpecialEffectSystem"  //游戏V0.2.3.x：不再由Singleton载入，改由Subsystem载入
         };
 
-        private static bool Prefix(DateFile.LegendBook loadDate)
+        /// <summary>
+        /// 清除可能会冲突的实例(尽管禁用UIDate后再载入存档一般可以顺利进行，但游戏特殊情况仍会卡读档，在游戏开发稳定之前双保险)
+        /// </summary>
+        /// <returns></returns>
+        private static bool Prefix()
         {
             if (Main.onLoad)
             {
@@ -241,7 +261,7 @@ namespace Sth4nothing.SLManager
                     Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
                 }
 #endif
-                // 清除需要清除的实例
+                // 清除需要清除的实例（仿自 SingletonObject.ClearInstances）
                 for (int i = 0; i < instancesToRemove.Length; i++)
                 {
                     if (m_SingletonMap.TryGetValue(instancesToRemove[i], out object item) && !dontClearList.Contains(item))
@@ -254,10 +274,11 @@ namespace Sth4nothing.SLManager
                         m_SingletonMap.Remove(instancesToRemove[i]);
                     }
                 }
+                // 清除Subsystem中可能存在冲突的实例
+                SubSystems.OnUnloadGameData();
             }
             return true;
         }
-
     }
 
     /// <summary>
@@ -497,11 +518,13 @@ namespace Sth4nothing.SLManager
         public static void DoLoad(int dataId)
         {
             Main.onLoad = true;
+            // 防止UI活动生成新的SingletonObject Instance
             UIDate.instance.gameObject.SetActive(false);
+            // 来自DateFile.BackToStartMenu方法，载入存档前清空，防止载入存档时载入奇书数据时卡档
+            SingletonObject.ClearInstances();
+            SubSystems.OnUnloadGameData();
             MainMenu.instance.SetLoadIndex(dataId);
         }
-
-
 
         /// <summary>
         /// 解压存档到游戏存档目录
@@ -517,7 +540,6 @@ namespace Sth4nothing.SLManager
                 zip.ExtractAll(SaveManager.SavePath, ExtractExistingFileAction.OverwriteSilently);
             }
         }
-
     }
 
     public static class SaveManager
@@ -528,13 +550,13 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 当前系统存档路径
         /// </summary>
-
         public static string SavePath
         {
             get => ReflectionMethod.Invoke<SaveDateFile, string>(
                     SaveDateFile.instance,
                     "Dirpath",
-                    -1)
+                    new Type[] { typeof(int) },
+                    new object[] { -1 })
                 .Replace('/', '\\');
         }
 
@@ -739,9 +761,6 @@ namespace Sth4nothing.SLManager
         private static bool Prefix(SaveDateFile __instance)
         {
             if (!Main.Enabled || UIDate.instance == null) return true;
-
-
-
             if (__instance.saveSaveDate)
             {
                 if (Main.ForceSave)
@@ -755,65 +774,11 @@ namespace Sth4nothing.SLManager
                     __instance.saveSaveDate = false;
                     return true;
                 }
+                Main.DoBackup = true;
                 // 写入date.json
                 WriteSaveSummary();
             }
-            if (ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK1")
-                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK2")
-                && ReflectionMethod.GetValue<SaveDateFile, bool>(__instance, "saveSaveDateOK3"))
-            {
-                ReflectionMethod.SetValue(__instance, "saveSaveDateOK1", false);
-                ReflectionMethod.SetValue(__instance, "saveSaveDateOK2", false);
-                ReflectionMethod.SetValue(__instance, "saveSaveDateOK3", false);
-
-                Task.Run(new Action(EnsureFiles));
-
-                return false;
-            }
             return true;
-        }
-        /// <summary>
-        /// 替换原本的SaveDateFile.EnsureFiles
-        /// </summary>
-        /// <returns></returns>
-        private static void EnsureFiles()
-        {
-            string[] fileNames = new string[9]
-            {
-                SaveDateFile.instance.GameSettingName,
-                SaveDateFile.instance.WorldDateName2,
-                SaveDateFile.instance.WorldDateName4,
-                SaveDateFile.instance.saveDateName,
-                SaveDateFile.instance.homeBuildingName,
-                SaveDateFile.instance.WorldDateName3,
-                SaveDateFile.instance.PlaceResourceName,
-                SaveDateFile.instance.actorLifeName,
-                SaveDateFile.instance.legendBookName
-            };
-            string path = SaveManager.SavePath;
-            int num;
-            for (int i = 0; i < fileNames.Length; i = num)
-            {
-                string tmpFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}~";
-                string dstFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}";
-                if (!File.Exists(tmpFile))
-                {
-                    Debug.Log("存档异常");
-                    break;
-                }
-                if (File.Exists(dstFile))
-                {
-                    File.Replace(tmpFile, dstFile, null);
-                }
-                else
-                {
-                    File.Move(tmpFile, dstFile);
-                }
-                num = i + 1;
-            }
-            Debug.Log("完成保存存档操作,开始执行随档备份...");
-
-            SaveManager.Backup(SaveManager.AfterSaveBackup);
         }
 
         /// <summary>
@@ -835,4 +800,21 @@ namespace Sth4nothing.SLManager
                 JsonConvert.SerializeObject(data));
         }
     }
+
+    /// <summary>
+    /// 游戏自带存档备份后备份
+    /// </summary>
+    [HarmonyPatch(typeof(SaveDateBackuper), "DoBackup")]
+    public class SaveDateBackuper_DoBackup_Patch
+    {
+        private static void Postfix()
+        {
+            if (!Main.Enabled || !Main.DoBackup)
+                return;
+
+            SaveManager.Backup(SaveManager.AfterSaveBackup);
+            Main.DoBackup = false;
+        }
+    }
+
 }

@@ -2,7 +2,6 @@ using Harmony12;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -24,10 +23,11 @@ namespace Sth4nothing.SLManager
     {
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;
+        public static bool DoBackup = false;
         public static bool onLoad = false;
 
         private static string logPath;
-        private static readonly string[] AutoSaveState = {"关闭", "启用"};
+        private static readonly string[] AutoSaveState = { "关闭", "启用" };
 
         public static Settings settings;
 
@@ -163,7 +163,7 @@ namespace Sth4nothing.SLManager
 
         public static T2 Invoke<T1, T2>(T1 instance, string method, params object[] args)
         {
-            return (T2) typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+            return (T2)typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
 
         public static void Invoke<T1>(T1 instance, string method, params object[] args)
@@ -171,29 +171,15 @@ namespace Sth4nothing.SLManager
             typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
 
-        public static object Invoke<T>(T instance, string method, System.Type[] argTypes, params object[] args)
+        public static TResult Invoke<TSource, TResult>(TSource instance, string method, System.Type[] argTypes, params object[] args)
         {
             argTypes = argTypes ?? new System.Type[0];
-            var methods = typeof(T).GetMethods(Flags).Where(m =>
-            {
-                if (m.Name != method)
-                    return false;
-                return m.GetParameters()
-                    .Select(p => p.ParameterType)
-                    .SequenceEqual(argTypes);
-            });
-
-            if (methods.Count() != 1)
-            {
-                throw new AmbiguousMatchException("cannot find method to invoke");
-            }
-
-            return methods.First()?.Invoke(instance, args);
+            return (TResult)typeof(TSource).GetMethod(method, Flags, null, CallingConventions.Any, argTypes, null).Invoke(instance, args);
         }
 
         public static T2 GetValue<T1, T2>(T1 instance, string field)
         {
-            return (T2) typeof(T1).GetField(field, Flags)?.GetValue(instance);
+            return (T2)typeof(T1).GetField(field, Flags)?.GetValue(instance);
         }
 
         public static object GetValue<T>(T instance, string field)
@@ -207,7 +193,7 @@ namespace Sth4nothing.SLManager
 
         public static T2 GetValue<T1, T2>(string field)
         {
-            return (T2) typeof(T1).GetField(field, Flags)?.GetValue(null);
+            return (T2)typeof(T1).GetField(field, Flags)?.GetValue(null);
         }
 
     }
