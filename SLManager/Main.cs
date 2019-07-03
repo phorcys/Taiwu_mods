@@ -2,7 +2,6 @@ using Harmony12;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -27,7 +26,7 @@ namespace Sth4nothing.SLManager
         public static bool onLoad = false;
 
         private static string logPath;
-        private static readonly string[] AutoSaveState = {"关闭", "启用"};
+        private static readonly string[] AutoSaveState = { "关闭", "启用" };
 
         public static Settings settings;
 
@@ -89,7 +88,6 @@ namespace Sth4nothing.SLManager
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
             {
                 Log();
-
             }
 
             if (GUILayout.Button("显示log路径", GUILayout.Width(100)))
@@ -102,7 +100,6 @@ namespace Sth4nothing.SLManager
                     p.Start();
                 }
             }
-
             GUILayout.EndHorizontal();
         }
 
@@ -160,6 +157,28 @@ namespace Sth4nothing.SLManager
                                            | BindingFlags.Static
                                            | BindingFlags.NonPublic
                                            | BindingFlags.Public;
+
+        /// <summary>
+        /// 反射获取方法
+        /// </summary>
+        /// <typeparam name="T">类</typeparam>
+        /// <param name="method">方法名</param>
+        /// <returns>方法信息</returns>
+        public static MethodInfo GetMethod<T>(string method)
+        {
+            return typeof(T).GetMethod(method, Flags);
+        }
+        /// <summary>
+        /// 反射获取方法
+        /// </summary>
+        /// <typeparam name="T">类</typeparam>
+        /// <param name="method">方法名</param>
+        /// <param name="argTypes">方法的参数类型列表</param>
+        /// <returns>方法信息</returns>
+        public static MethodInfo GetMethod<T>(string method, System.Type[] argTypes)
+        {
+            return typeof(T).GetMethod(method, Flags, null, CallingConventions.Any, argTypes, null);
+        }
         /// <summary>
         /// 反射执行方法
         /// </summary>
@@ -171,7 +190,7 @@ namespace Sth4nothing.SLManager
         /// <returns></returns>
         public static T2 Invoke<T1, T2>(T1 instance, string method, params object[] args)
         {
-            return (T2) typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
+            return (T2)typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
         /// <summary>
         /// 反射执行方法
@@ -196,21 +215,7 @@ namespace Sth4nothing.SLManager
         public static object Invoke<T>(T instance, string method, System.Type[] argTypes, params object[] args)
         {
             argTypes = argTypes ?? new System.Type[0];
-            var methods = typeof(T).GetMethods(Flags).Where(m =>
-            {
-                if (m.Name != method)
-                    return false;
-                return m.GetParameters()
-                    .Select(p => p.ParameterType)
-                    .SequenceEqual(argTypes);
-            });
-
-            if (methods.Count() != 1)
-            {
-                throw new AmbiguousMatchException("cannot find method to invoke");
-            }
-
-            return methods.First()?.Invoke(instance, args);
+            return typeof(T).GetMethod(method, Flags, null, CallingConventions.Any, argTypes, null).Invoke(instance, args);
         }
         /// <summary>
         /// 反射获取类字段的值
@@ -222,7 +227,7 @@ namespace Sth4nothing.SLManager
         /// <returns>字段的值</returns>
         public static T2 GetValue<T1, T2>(T1 instance, string field)
         {
-            return (T2) typeof(T1).GetField(field, Flags)?.GetValue(instance);
+            return (T2)typeof(T1).GetField(field, Flags)?.GetValue(instance);
         }
         /// <summary>
         /// 反射获取类字段的值
