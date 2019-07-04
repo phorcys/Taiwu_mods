@@ -460,6 +460,9 @@ namespace Sth4nothing.SLManager
         {
             Main.onLoad = true;
             UIDate.instance.gameObject.SetActive(false);
+            // 释放资源
+            SubSystems.OnUnloadGameData();
+
             MainMenu.instance.SetLoadIndex(dataId);
         }
 
