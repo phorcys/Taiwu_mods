@@ -1,19 +1,10 @@
-﻿using System;
+﻿using Harmony12;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using Harmony12;
-using UnityModManagerNet;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using System.IO;
-using System.Security.Cryptography;
-using Newtonsoft.Json;
-using System.Reflection.Emit;
-using System.Text.RegularExpressions;
-using LumenWorks.Framework.IO.Csv;
+using System.Reflection;
+using UnityEngine;
+using UnityModManagerNet;
 
 namespace BaseResourceMod
 {
@@ -21,7 +12,7 @@ namespace BaseResourceMod
     {
         public bool save_config = false;
         public bool load_custom_config = true;
-        public bool save_sprite = false;
+        public bool save_common_sprite = false;
         public bool save_ququ = false;
         public bool save_avatar = false;
         public bool save_maptile = false;
@@ -34,16 +25,25 @@ namespace BaseResourceMod
     }
     public static class Main
     {
-        public static bool enabled;
-        public static Settings settings;
-        public static UnityModManager.ModEntry.ModLogger Logger;
-        public static string backupdir = "./Backup/txt/";
-        public static string backupimgdir = "./Backup/Texture/";
-        public static string resdir = "./Data/";
-        public static string imgresdir = "./Texture/";
+        internal static bool enabled;
+        internal static Settings settings;
+        internal static UnityModManager.ModEntry.ModLogger Logger;
+        /// <summary>数据导出路径</summary>
+        public const string backupdir = "./Backup/txt/";
+        /// <summary>贴图导出路径</summary>
+        public const string backupimgdir = "./Backup/Texture/";
+        /// <summary>自定义数据导入路径</summary>
+        public const string resdir = "./Data/";
+        /// <summary>自定义贴图导入路径</summary>
+        public const string imgresdir = "./Texture/";
 
-        public static Dictionary<string, string> mods_res_dict = new Dictionary<string, string>();
-        public static Dictionary<string, string> mods_sprite_dict = new Dictionary<string, string>();
+        internal static readonly Dictionary<string, string> mods_res_dict = new Dictionary<string, string>();
+        internal static readonly Dictionary<string, string> mods_sprite_dict = new Dictionary<string, string>();
+        internal static GetSpritesInfoAsset getSpritesInfoAsset;
+        /// <summary>保存自定义的sprite路径信息</summary>
+        internal static readonly Dictionary<string, string> customSpritePathInfosDic = new Dictionary<string, string>();
+        /// <summary>待导出的sprite数目</summary>
+        internal static int spriteCounter;
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -54,26 +54,43 @@ namespace BaseResourceMod
             }
 
             Logger = modEntry.Logger;
-            settings = Settings.Load<Settings>(modEntry);
+            settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
+            // 动态加载贴图类
+            DynamicSetSprite dynamicSetSprites = SingletonObject.getInstance<DynamicSetSprite>();
+            // 游戏贴图信息类
+            getSpritesInfoAsset = (GetSpritesInfoAsset)Traverse.Create(dynamicSetSprites).Field("gsInfoAsset").GetValue();
 
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
 
             return true;
         }
-
+        /// <summary>
+        /// 从基础资源框架MOD中导入自定义数据
+        /// </summary>
+        /// <param name="modEntry"></param>
+        /// <param name="respath">外部数据路径</param>
         public static void registModResDir(UnityModManager.ModEntry modEntry, string respath)
         {
             mods_res_dict[modEntry.Info.DisplayName] = respath;
         }
-
+        /// <summary>
+        /// 从基础资源框架MOD中导入自定义贴图
+        /// </summary>
+        /// <param name="modEntry"></param>
+        /// <param name="spritepath">外部贴图路径</param>
         public static void registModSpriteDir(UnityModManager.ModEntry modEntry, string spritepath)
         {
             mods_sprite_dict[modEntry.Info.DisplayName] = spritepath;
         }
-
+        /// <summary>
+        /// 从基础资源框架MOD中导入自定义数据和贴图
+        /// </summary>
+        /// <param name="modEntry"></param>
+        /// <param name="respath">外部数据路径</param>
+        /// <param name="spritepath">外部贴图路径</param>
         public static void registModResourceDir(UnityModManager.ModEntry modEntry, string respath, string spritepath)
         {
             mods_res_dict[modEntry.Info.DisplayName] = respath;
@@ -83,37 +100,87 @@ namespace BaseResourceMod
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             if (!value)
+            {
                 return false;
+            }
 
             enabled = value;
 
             return true;
         }
 
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.BeginVertical("Box");
             GUILayout.Label("基础资源框架：");
-            settings.load_custom_config = GUILayout.Toggle(settings.load_custom_config, "启动时增量载入 游戏 根目录下 Data/txt 内的配置文件");
-            GUILayout.Label("自定义配置文件命名方式形如 Item_date.txt.001.txt  其中数字如 001 为加载顺序，从001 开始 顺序加载，最后加载 不带数字后缀的文件");
+            GUILayout.Label($"当前的<color=#F28234>游戏根目录:\n{Environment.CurrentDirectory}</color>");
+            settings.load_custom_config = GUILayout.Toggle(settings.load_custom_config, $"启动时增量载入 游戏 根目录下 <color=#8FBAE7>{resdir}</color> 内的配置文件");
+            GUILayout.Label("自定义配置文件命名方式形如 Item_date.txt.001.txt  其中数字如 001 为加载顺序，从001开始顺序加载，最后加载不带数字后缀的文件");
             GUILayout.Label("更多信息参见 https://github.com/phorcys/Taiwu_mods");
-            GUILayout.Label("以下为调试开发选项，正常游戏请关闭");
-            settings.save_config = GUILayout.Toggle(settings.save_config, "启动时保存原始配置文件到游戏 根目录下的 Backup/txt 目录下");
-            GUILayout.Label("开启后启动时，mod会保存当前版本游戏配置文件到 Backup/txt 目录下，txt为原始csv文件，json为解析后的游戏内配置数据");
-            settings.save_sprite = GUILayout.Toggle(settings.save_sprite, "启动时保存基础Sprite 到游戏 根目录下的 Backup/Graphics 目录下");
-            GUILayout.Label("开启后启动时，mod会保存当前版本 基础Sprite 到游戏 根目录下的 Backup/Graphics 目录下，格式为PNG图片");
-            settings.save_ququ = GUILayout.Toggle(settings.save_ququ, "是否Dump 蛐蛐图像 （注意，很大，很慢）");
-            settings.save_avatar = GUILayout.Toggle(settings.save_avatar, "是否Dump 人物纸娃娃图像 （注意，很大，很慢）");
-            settings.save_maptile = GUILayout.Toggle(settings.save_maptile, "是否Dump 各类地形图像 （注意，很大，很慢）");
+            GUILayout.BeginVertical("Box");
+            GUILayout.Label("<color=#F28234>以下为调试开发选项，正常游戏请不要使用</color>");
+            GUILayout.BeginVertical("Box");
+            settings.save_config = GUILayout.Toggle(settings.save_config, $"<color=#F28234>游戏启动时</color>保存原始配置文件到游戏 根目录下的 <color=#8FBAE7>{backupdir}</color> 目录下");
+            GUILayout.Label("开启后游戏启动时(<color=#8FBAE7>跟下面的保存按钮无关</color>)，mod会保存当前版本游戏配置文件到 Backup/txt 目录下，txt为原始csv文件，json为解析后的游戏内配置数据");
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("导出游戏贴图(Sprites)：");
+            GUILayout.Label($"将游戏中当前版本的Sprite保存到游戏根目录下的<color=#8FBAE7>{backupimgdir}</color>目录下，格式为PNG图片。\n<color=#F28234>注意: 会删除该目录下的所有文件!</color>");
+            settings.save_common_sprite = GUILayout.Toggle(settings.save_common_sprite, $"是否保存基础Sprite");
+            settings.save_ququ = GUILayout.Toggle(settings.save_ququ, "是否保存 蛐蛐图像 （注意，很大，很慢）");
+            settings.save_avatar = GUILayout.Toggle(settings.save_avatar, "是否保存 人物纸娃娃图像 （注意，很大，很慢）");
+            settings.save_maptile = GUILayout.Toggle(settings.save_maptile, "是否保存 各类地形图像 （注意，很大，很慢）");
+            StartSaveSprites();
+            GUILayout.Label($"剩余<color=#F28234>{spriteCounter}</color>个sprite等待导出");
+            GUILayout.EndVertical();
+            GUILayout.EndVertical();
             GUILayout.EndVertical();
         }
 
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             settings.Save(modEntry);
         }
 
-        public static Dictionary<int, string> textcolor = new Dictionary<int, string>()
+        private static void StartSaveSprites()
+        {
+            // 游戏载入成功后再允许导出，否则会造成游戏UI NullReferenceException
+            if (!DateFile.instance.openGame)
+            {
+                GUILayout.Label("请稍等游戏加载完成即可保存......");
+            }
+            else
+            {
+                if (spriteCounter == 0)
+                {
+                    if (GUILayout.Button("点击开始导出Sprites", GUILayout.Width(150f)))
+                    {
+                        try
+                        {
+                            // 删除备份目录中的文件并导出贴图
+                            if (Directory.Exists(backupimgdir))
+                            {
+                                Directory.Delete(backupimgdir, true);
+                            }
+                            Directory.CreateDirectory(backupimgdir);
+                            SpriteLoadHelper.GetInstance().DumpCommonSprite();
+                            SpriteLoadHelper.GetInstance().DumpSpecialSprite();
+                            SpriteLoadHelper.ClearInstance();
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Log($"保存Sprite:\n{e.ToString()}");
+                        }
+                    }
+                }
+                else
+                {
+                    GUILayout.Label("正在导出...", GUILayout.Width(150f));
+                }
+            }
+        }
+
+        internal static Dictionary<int, string> textcolor = new Dictionary<int, string>()
         {
             { 10000,"<color=#323232FF>"},
             { 10001,"<color=#4B4B4BFF>"},
@@ -135,7 +202,7 @@ namespace BaseResourceMod
             { 20011,"<color=#EDA723FF>"},
         };
 
-        static public Dictionary<string, string> date_instance_dict = new Dictionary<string, string>()
+        internal static Dictionary<string, string> date_instance_dict = new Dictionary<string, string>()
         {
             {
                 "ability_date",
@@ -358,9 +425,11 @@ namespace BaseResourceMod
             }
         };
 
-        public static Dictionary<string, string> sprite_instance_dict = new Dictionary<string, string>()
+        internal static Dictionary<string, string> sprite_instance_dict = new Dictionary<string, string>()
         {
+            {"EventBackground", "eventSprites"}, // 对话窗口背景
             {"TrunEventImage", "trunEventImage"},
+            {"HomeMap/HomeBuildingIcon", "buildingSprites"},
             {"HomeMap/ReadBookIcon", "readStateIcon"},
             {"HomeMap/StudyStateImage", "studyStateImage"},
             {"HomeMap/StudyBookPage", "bookPageIcon"},
@@ -369,12 +438,18 @@ namespace BaseResourceMod
             {"ItemIcon/ItemIconBack", "itemBackSprites"},
             {"GongFaImage/GongFaIcon", "gongFaSprites"},
             {"GongFaImage/GongFaCostIcon", "gongFaCostSprites"},
-            {"HomeMap/HomeMapBack", "homeMapSprites"},
+            {"GongFaImage/BigGongFaImage", "bigGongFaImage"},
+            {"GangPowerIcon", "gangPowerIcon"},
+            {"GoodnessIcon", "goodnessIcon"},
+            {"HomeMap/HomeMapSprites", "homeMapSprites"},
+            {"HomeMap/HomeMapBack", "homeMapBack"},
             {"StoryMap/StoryTerrain", "storyMapTerrain"},
             {"StoryMap/StoryMapBase", "storyMapBase"},
             {"StoryMap/StoryMapArrow", "storyMapArrow"},
             {"NewGame/CityIcon", "mapPlaceIcon"},
             {"SkillImage/AllSkillIcon", "baseSkillIcon"},
+            {"SkillImage/BigSkillImage", "bigSkillImage"},
+            {"SkillImage/SkillImage", "baseSkillIcon"},
             {"HomeMap/HomeMapTypIcon", "homeTypIcon"},
             {"Cricket/CricketPlaceImage", "cricketPlaceImage"},
             {"Cricket/CricketBox", "cricketBox"},
@@ -385,22 +460,36 @@ namespace BaseResourceMod
             {"BattleEndTyp", "battleEndTypImage"},
             {"BattleTeamActionIcon", "battleTeamActionIcon"},
             {"BattleFirstText", "battleFristSprite"},
+            {"BattleUseImage", "battleUseImage"},
+            {"BattlerDangerIcon", "battlerDangerIcon"},
+            {"MakeResourceIcon", "makeResourceIcon"},
+            {"PartIcon", "partIcon"},
+            {"WorldMapPLayerIcon", "worldMapPlayerIcon"},
+            {"PoisonSprites", "poisonSprites"},
+            {"TimePaseSprite", "timePaseSprite"},
+            {"TimeWorkImage", "timeWorkImage"},
         };
 
         public static T GetFieldValue<T>(object obj, string fieldName)
         {
             if (obj == null)
+            {
                 throw new ArgumentNullException("obj");
+            }
 
             var field = obj.GetType().GetField(fieldName, BindingFlags.Public |
                                                           BindingFlags.NonPublic |
                                                           BindingFlags.Instance);
 
             if (field == null)
+            {
                 throw new ArgumentException("fieldName", "No such field was found.");
+            }
 
             if (!typeof(T).IsAssignableFrom(field.FieldType))
+            {
                 throw new InvalidOperationException("Field type and requested type are not compatible.");
+            }
 
             return (T)field.GetValue(obj);
         }
@@ -408,22 +497,28 @@ namespace BaseResourceMod
         public static void SetFieldValue<T>(object obj, string fieldName, T value)
         {
             if (obj == null)
+            {
                 throw new ArgumentNullException("obj");
+            }
 
             var field = obj.GetType().GetField(fieldName, BindingFlags.Public |
                                                           BindingFlags.NonPublic |
                                                           BindingFlags.Instance);
 
             if (field == null)
+            {
                 throw new ArgumentException("fieldName", "No such field was found.");
+            }
 
             if (!field.FieldType.IsAssignableFrom(typeof(T)))
+            {
                 throw new InvalidOperationException("Field type and requested type are not compatible.");
+            }
 
             field.SetValue(obj, value);
         }
 
-        static public Dictionary<int, Dictionary<int, string>> getCSVDictRef(string cate)
+        internal static Dictionary<int, Dictionary<int, string>> GetCSVDictRef(string cate)
         {
             if (cate == "ActorFace_Date")
             {
@@ -435,25 +530,5 @@ namespace BaseResourceMod
             }
             return null;
         }
-
-        static public T getSpriteRef<T>(string cate)
-        {
-            if (sprite_instance_dict.ContainsKey(cate))
-            {
-                return GetFieldValue<T>(GetSprites.instance, sprite_instance_dict[cate]);
-            }
-            return default(T);
-        }
-
-        static public void SetSprite<T>(string cate, T value)
-        {
-            if (sprite_instance_dict.ContainsKey(cate))
-            {
-                SetFieldValue(GetSprites.instance, sprite_instance_dict[cate], value);
-            }
-        }
     }
-
-
-
 }
