@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Harmony12;
-using UnityEngine;
-using System.IO;
-using System.Text.RegularExpressions;
+﻿using Harmony12;
 using LumenWorks.Framework.IO.Csv;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 namespace BaseResourceMod
 {
     public static class CSVPatch

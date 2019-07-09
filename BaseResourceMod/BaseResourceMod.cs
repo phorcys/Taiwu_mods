@@ -41,7 +41,8 @@ namespace BaseResourceMod
         internal static readonly Dictionary<string, string> mods_sprite_dict = new Dictionary<string, string>();
         internal static GetSpritesInfoAsset getSpritesInfoAsset;
         /// <summary>保存自定义的sprite路径信息</summary>
-        internal static readonly Dictionary<string, string> customSpritePathInfosDic = new Dictionary<string, string>();
+        // 使用ValueTuple避免创建过多小Object, 需要注意ValueTuple是value type
+        internal static readonly Dictionary<string, ValueTuple<string, Sprite>> customSpriteInfosDic = new Dictionary<string, ValueTuple<string, Sprite>>();
         /// <summary>待导出的sprite数目</summary>
         internal static int spriteCounter;
 

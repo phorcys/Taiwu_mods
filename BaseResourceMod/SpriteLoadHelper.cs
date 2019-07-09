@@ -128,7 +128,7 @@ namespace BaseResourceMod
                     spriteNamesCache[index] = spriteName;
                 }
                 // 将路径加入自定义数据路径库
-                Main.customSpritePathInfosDic[spriteName] = filePath;
+                Main.customSpriteInfosDic[spriteName] = (filePath, null);
                 Main.Logger.Log($"[Texture] Injected sprite from {filePath} to spriteGroup {spriteGroupName} sprite name {spriteName}");
             }
             // 同步缓存编辑结果
@@ -158,12 +158,12 @@ namespace BaseResourceMod
                     continue;
                 }
                 // 若sprite名字存在则替换路径
-                if (spriteNameGroup != null && spriteNameGroup.TryGetValue(cateid, out string[] spriteGroup) 
+                if (spriteNameGroup != null && spriteNameGroup.TryGetValue(cateid, out string[] spriteGroup)
                     && spriteGroup != null && spriteGroup.Length > 0)
                 {
                     if (Array.FindIndex(spriteGroup, name => name == spriteName) >= 0)
                     {
-                        Main.customSpritePathInfosDic[spriteName] = filePath;
+                        Main.customSpriteInfosDic[spriteName] = (filePath, null);
                         Main.Logger.Log($"[Texture] Injected sprite from {filePath} to spriteGroup {spriteTyp} sprite name {spriteName}");
                     }
                 }
@@ -195,14 +195,14 @@ namespace BaseResourceMod
                     continue;
                 }
                 // 存在就替换路径
-                if (spriteNameGroup != null 
-                    && spriteNameGroup.TryGetValue(cates[0], out Dictionary<int, string[]> dict1) 
-                    && dict1.TryGetValue(cates[1], out string[] spriteGroup) 
+                if (spriteNameGroup != null
+                    && spriteNameGroup.TryGetValue(cates[0], out Dictionary<int, string[]> dict1)
+                    && dict1.TryGetValue(cates[1], out string[] spriteGroup)
                     && spriteGroup != null && spriteGroup.Length > 0)
                 {
                     if (Array.FindIndex(spriteGroup, name => name == spriteName) >= 0)
                     {
-                        Main.customSpritePathInfosDic[spriteName] = filePath;
+                        Main.customSpriteInfosDic[spriteName] = (filePath, null);
                         Main.Logger.Log($"[Texture] Injected sprite from {filePath} to spriteGroup {spriteTyp} sprite name {spriteName}");
                     }
                 }
@@ -237,12 +237,12 @@ namespace BaseResourceMod
                 }
                 // 存在就替换路径
                 if (spriteNameGroup != null && spriteNameGroup.TryGetValue(cates[0], out Dictionary<int, List<string[]>> dict1)
-                    && dict1.TryGetValue(cates[1], out List<string[]> list) && list.Count() > cates[2] 
+                    && dict1.TryGetValue(cates[1], out List<string[]> list) && list.Count() > cates[2]
                     && list[cates[2]] != null && list[cates[2]].Length > 0)
                 {
                     if (Array.FindIndex(list[cates[2]], name => name == spriteName) >= 0)
                     {
-                        Main.customSpritePathInfosDic[spriteName] = filePath;
+                        Main.customSpriteInfosDic[spriteName] = (filePath, null);
                         Main.Logger.Log($"[Texture] Injected sprite from {filePath} to spriteGroup {spriteTyp} sprite name {spriteName}");
                     }
                 }
@@ -340,7 +340,7 @@ namespace BaseResourceMod
                 {
                     dirStack.Push(dir);
                 }
-                
+
                 string[] files;
                 try
                 {
@@ -356,7 +356,7 @@ namespace BaseResourceMod
                 if (files.Length != 0)
                 {
                     // 输出当前目录及其中png文件路径
-                    yield return ValueTuple.Create(currentDir, files);
+                    yield return (currentDir, files);
                 }
             }
         }
@@ -559,7 +559,7 @@ namespace BaseResourceMod
                         {
                             foreach (var spriteNameGroup in kvl.Value)
                             {
-                                DoDumpSprite(spriteNameGroup, "ActorFace"); 
+                                DoDumpSprite(spriteNameGroup, "ActorFace");
                             }
                         }
                     }
@@ -579,7 +579,7 @@ namespace BaseResourceMod
                     {
                         foreach (var kvl in kvk.Value)
                         {
-                            DoDumpSprite(kvl.Value, "ChildFace"); 
+                            DoDumpSprite(kvl.Value, "ChildFace");
                         }
                     }
                     //Child脸 k_l_m_n_<sprite序号> , n 在 GetSprites LoadScene读取时候合并了
@@ -587,7 +587,7 @@ namespace BaseResourceMod
                     {
                         foreach (var kvl in kvk.Value)
                         {
-                            DoDumpSprite(kvl.Value, "ChildFaceSmall"); 
+                            DoDumpSprite(kvl.Value, "ChildFaceSmall");
                         }
                     }
                 }

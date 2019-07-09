@@ -30,11 +30,9 @@ BaseResourceMod 的功能：
 
 	   `序号` 为想要插入的位置（从零算起），需要大于对应的导出的目录中的文件数，否则会替换掉已有的文件
 
-	   **注意**：游戏里已经存在的贴图文件，文件名中的 `序号` 不一定反映真正的位置，比如 `HomeMap\HomeBuildingIcon` 中的文件名中的 `序号` 就不一定代表其真实位置。但是这并不妨碍自定义图片。替换时我们可以命名成同名文件，增加新图片时，只要 `序号` 大于已有的图标数量即可。
-
 	   `其他内容` 可以是任意内容
 
-	   例如，我想加入新的物品图标，在导出的目录中发现`...\The Scroll Of Taiwu\Backup\Texture\ItemIcon`目录放置所有物品图标，共有193个文件。但是我想要在第200号位置加入新贴图，则将创建的新图片命名为`ItemIcon_199.png`，放入`...\The Scroll Of Taiwu\Texture\testmod\ItemIcon` 目录下，testmod 是你自己随便起的 mod 名称。 **不要通过序号来替换贴图，见前面** `序号` **的说明**
+	   例如，我想加入新的物品图标，在导出的目录中发现`...\The Scroll Of Taiwu\Backup\Texture\ItemIcon`目录放置所有物品图标，共有193个文件。但是我想要在第200号位置加入新贴图，则将创建的新图片命名为`ItemIcon_200.png`，放入`...\The Scroll Of Taiwu\Texture\testmod\ItemIcon` 目录下，testmod 是你自己随便起的 mod 名称。 **不要通过序号来替换贴图，见前面** `序号` **的说明**
 
 	   **目录名和文件名全部大小写敏感。**
 
@@ -50,6 +48,8 @@ BaseResourceMod 的功能：
    ```
 
 # Changelog
+## 1.0.14
+- 解决内存泄露问题，加快外部贴图载入速度
 ## 1.0.13
 - 修复: 兼容游戏版本 0.2.3.1
 - 新增: 现在HomeMap/HomeBuildingIcon也支持新增
