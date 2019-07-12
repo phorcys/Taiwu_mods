@@ -121,7 +121,6 @@ namespace Sth4nothing.SLManager
                 GUILayout.MaxHeight(windowRect.height - h1.fixedHeight - btnStyle.fixedHeight));
             GUILayout.BeginVertical();
 
-
             foreach (var key in LoadFile.SavedFiles)
             {
                 if (!LoadFile.SavedInfos.ContainsKey(key) || LoadFile.SavedInfos[key] == null)
