@@ -58,7 +58,6 @@ namespace MoreInfo
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
-
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             Logger = modEntry.Logger;
@@ -132,7 +131,7 @@ namespace MoreInfo
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("\n<color=#87CEEB>经历筛选</color>");
+            GUILayout.Label("\n<color=#87CEEB>经历筛选(不要在查看人物经历时存档)</color>");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
 
@@ -182,17 +181,17 @@ namespace MoreInfo
         /// 经历筛选
         /// </summary>
         private static List<int[]> massageBackup = new List<int[]> { };
-        private static readonly List<int[]> massageFilter = new List<int[]>() {
-            new int[]{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
+        private static readonly List<HashSet<int>> messageFilter = new List<HashSet<int>>() {
+            new HashSet<int>{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
                 77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125},
-            new int[]{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
-            new int[]{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
-            new int[]{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107},//物品
-            new int[]{84,112,114},//身份
-            new int[]{40,41,42,45,46,50,51,52,54,56,57,66,69,72,73,76,90,91,92,96,97,98,99,100,109,125},//情爱
-            new int[]{31,32,33,34,35,36,37},//战斗
-            new int[]{5,6,7,18,19,20,61,62,63,108,109,110,111,122},//伤病
-            new int[]{53,54,55,56,57,58},//跟随
+            new HashSet<int>{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
+            new HashSet<int>{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
+            new HashSet<int>{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107},//物品
+            new HashSet<int>{84,112,114},//身份
+            new HashSet<int>{40,41,42,45,46,50,51,52,54,56,57,66,69,72,73,76,90,91,92,96,97,98,99,100,109,125},//情爱
+            new HashSet<int>{31,32,33,34,35,36,37},//战斗
+            new HashSet<int>{5,6,7,18,19,20,61,62,63,108,109,110,111,122},//伤病
+            new HashSet<int>{53,54,55,56,57,58},//跟随
         };
 
         private static int backupId = 0;
@@ -210,24 +209,18 @@ namespace MoreInfo
         public static int GetBackupId() => backupId;
 
         //获取需要显示的经历id列表
-        public static List<int> GetTypeList()
+        public static bool MessageTypToShow(int messageTyp)
         {
-            //Main.Logger.Log("getTypeList");
-            List<int> tlist = new List<int>();
             for (int i = 0; i < Main.settings.showMassageType.Length; i++)
             {
                 bool show = Main.settings.showMassageType[i];
                 //Main.Logger.Log("getTypeList.step2" + "show:" + show + "index:" + i + "count:" + massageFilter.Count);
-
-                if (show && i < massageFilter.Count)
+                if (show && i < messageFilter.Count() && messageFilter[i].Contains(messageTyp))
                 {
-                    for (int j = 0; j < massageFilter[i].Length; j++)
-                    {
-                        tlist.Add(massageFilter[i][j]);
-                    }
+                    return true;
                 }
             }
-            return tlist.Distinct().ToList();
+            return false;
         }
 
         //50061-50066 膂力- 定力
@@ -312,7 +305,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="gongFaId"></param>
         /// <returns></returns>
-        public static int GetGangId(int gongFaId) => DateFile.instance.ParseInt(DateFile.instance.gongFaDate[gongFaId][3]);
+        public static int GetGangId(int gongFaId) => int.Parse(DateFile.instance.gongFaDate[gongFaId][3]);
         /// <summary>
         /// 获取功法所属门派名称
         /// </summary>
@@ -331,7 +324,7 @@ namespace MoreInfo
         /// <returns></returns>
         public static int GetGongFaId(int itemId)
         {
-            int bookTyp = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 999, false));
+            int bookTyp = int.Parse(DateFile.instance.GetItemDate(itemId, 999, false));
             //500000以上为普通秘籍，700000以上为手抄
             return IsOriginalBook(itemId) ? (bookTyp - 500000) : (bookTyp - 700000);
         }
@@ -343,28 +336,28 @@ namespace MoreInfo
         /// <returns></returns>
         public static bool IsOriginalBook(int itemId) =>
             //序列35 0为普通,1为手抄本
-            DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 35, false)) == 0;
+            int.Parse(DateFile.instance.GetItemDate(itemId, 35, false)) == 0;
 
         /// <summary>
         /// 获取物品大类
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemType(int itemId) => DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 4, false));
+        public static int GetItemType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 4, false));
 
         /// <summary>
         /// 获取物品小类
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemSecondType(int itemId) => DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 5, false));
+        public static int GetItemSecondType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 5, false));
 
         /// <summary>
         /// 获取物品细类
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemThirdType(int itemId) => DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 506, false));
+        public static int GetItemThirdType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 506, false));
 
         /// <summary>
         /// 物品制作类型
@@ -373,7 +366,7 @@ namespace MoreInfo
         /// <returns></returns>
         public static int GetMakeType(int itemId) =>
             //0为材料包，7铁8木9药10毒11布12玉15食材
-            DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 41, false));
+            int.Parse(DateFile.instance.GetItemDate(itemId, 41, false));
 
         /// <summary>
         /// 物品制作成品方向
@@ -382,7 +375,7 @@ namespace MoreInfo
         /// <returns></returns>
         public static int GetProductType(int itemId) =>
             //0无法制作-装备类1硬2软
-            DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, 48, false));
+            int.Parse(DateFile.instance.GetItemDate(itemId, 48, false));
 
         //获取物品名称
         public static string GetItemName(int itemId) => DateFile.instance.GetItemDate(itemId, 0, false);
@@ -397,7 +390,7 @@ namespace MoreInfo
             string value = "";
             foreach (var item in itemExtraAttrType1)
             {
-                int val = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, item.Key, false));
+                int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
                 if (val > 0)
                 {
                     //使用/n换行后无法显示耐久，直接接属性名后方则耐久显示不全，暂时只显示属性
@@ -418,7 +411,7 @@ namespace MoreInfo
             string value = "";
             foreach (var item in itemExtraAttrType2)
             {
-                int val = DateFile.instance.ParseInt(DateFile.instance.GetItemDate(itemId, item.Key, false));
+                int val = int.Parse(DateFile.instance.GetItemDate(itemId, item.Key, false));
                 if (val > 0)
                 {
                     value = item.Value;
@@ -621,7 +614,7 @@ namespace MoreInfo
                 GameObject gameObject = __Holder.GetChild(i).gameObject;
                 var gameText = gameObject.transform.Find(textName).GetComponent<Text>();
                 string[] tmpArray = gameObject.name.Split(new char[] { ',' });
-                ChangeItemName(gameText, DateFile.instance.ParseInt(tmpArray[1]));
+                ChangeItemName(gameText, int.Parse(tmpArray[1]));
             }
         }
 
@@ -784,9 +777,9 @@ namespace MoreInfo
         {
             if (!Main.enabled || !Main.settings.showInEquuipBag)
                 return;
-            for(int i=0; i < ___equipIcons.Length; i++)
+            for (int i = 0; i < ___equipIcons.Length; i++)
             {
-                int equipId = DateFile.instance.ParseInt(DateFile.instance.GetActorDate(key, 301 + i, addValue: false));
+                int equipId = int.Parse(DateFile.instance.GetActorDate(key, 301 + i, addValue: false));
                 Changer.ChangeItemName(___equipHpText[i], equipId);
             }
         }
@@ -858,7 +851,7 @@ namespace MoreInfo
             foreach (var item in DateFile.instance.gongFaDate)
             {
                 var GData = item.Value;
-                int lv = DateFile.instance.ParseInt(GData[2]);
+                int lv = int.Parse(GData[2]);
 
                 GData[0] = DateFile.instance.SetColoer(20001 + lv, GData[0]);
             }
@@ -883,7 +876,7 @@ namespace MoreInfo
                 return;
             int storyId = DateFile.instance.worldMapState[DateFile.instance.mianPartId][___placeId][0];
             string level = DateFile.instance.baseStoryDate[storyId][3];
-            if (DateFile.instance.ParseInt(level) < 1)
+            if (int.Parse(level) < 1)
                 return;
             int storyTime = DateFile.instance.worldMapState[DateFile.instance.mianPartId][___placeId][1];
             __instance.storyTime.text = storyTime > 0 ? string.Format("难度:{0}时间{1}", level, storyTime) : $"难度:{level}";
@@ -894,14 +887,14 @@ namespace MoreInfo
     [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
     public static class ActorMenu_ShowActorMassage_Patch
     {
-        static void Prefix(ActorMenu __instance, int key)
+        static bool Prefix(ActorMenu __instance, int key)
         {
             if (!Main.enabled || Main.settings.showAllMassage)
-                return;
-            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
+                return true;
+            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return true;
             int backupId = Changer.GetBackupId();
             //Main.Logger.Log("Pre-----" + changer.getActorName(key));
-            if (backupId == key) return;
+            if (backupId == key) return true;
             if (backupId != 0)
             {
                 //Main.Logger.Log("reset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
@@ -914,26 +907,23 @@ namespace MoreInfo
             Changer.BackupMassage(key);
 
             //Main.Logger.Log("setp1" + changer.getActorName(key));
-            List<int> tlist = Changer.GetTypeList();
             int count = DateFile.instance.actorLifeMassage[key].Count;
             //Main.Logger.Log("setp2:MaxCount:" + count);
             //Main.Logger.Log("setp3:showCount:" + tlist.Count);
             for (int i = 0; i < count; i++)
             {
                 //Main.Logger.Log("setp4:" + i);
-                int[] array = DateFile.instance.actorLifeMassage[key][i];
-                int key2 = array[0];//根据经历类型ID进行筛选
-                for (int j = 0; j < tlist.Count; j++)
+                int messageTyp = DateFile.instance.actorLifeMassage[key][i][0];
+                //Main.Logger.Log($"messageTyp: {messageTyp}");
+                //根据经历类型ID进行筛选
+                if (Changer.MessageTypToShow(messageTyp))
                 {
-                    if (tlist[j] == key2)
-                    {
-                        newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
-                        //Main.Logger.Log("setp6:" + tlist[j]);
-                        break;
-                    }
+                    newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
+                    //Main.Logger.Log("setp6:" + tlist[j]);
                 }
             }
             DateFile.instance.actorLifeMassage[key] = newLifeMassage;
+            return true;
         }
     }
 
@@ -953,7 +943,6 @@ namespace MoreInfo
                 //Main.Logger.Log("ExitReset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
                 Changer.ResetBackup();
             }
-
         }
     }
 }
