@@ -2,7 +2,7 @@ using Harmony12;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using JetBrains.Annotations;
+using System;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -24,8 +24,7 @@ namespace Sth4nothing.SLManager
     {
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;
-        public static bool onLoad = false;
-
+        public static bool isBackuping = false;
         private static string logPath;
         private static readonly string[] AutoSaveState = {"关闭", "启用"};
 
@@ -246,5 +245,106 @@ namespace Sth4nothing.SLManager
         {
             typeof(T).GetField(field, Flags)?.SetValue(instance, value);
         }
+        public static void SetProperty<T>(T instance, string property, object value)
+        {
+            typeof(T).GetProperty(property, Flags)?.SetValue(instance, value);
+        }
+        public static T2 GetProperty<T1, T2>(T1 instance, string property)
+        {
+            return (T2) typeof(T1).GetProperty(property, Flags)?.GetValue(instance);
+        }
+    }
+
+    /// <summary>
+    /// 修正Ionic.Zip.OffsetStream的错误
+    /// </summary>
+    internal class OffsetStream : Stream, IDisposable
+    {
+        public OffsetStream(Stream s)
+        {
+            this._originalPosition = s.Position;
+            this._innerStream = s;
+        }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return this._innerStream.Read(buffer, offset, count);
+        }
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+        public override bool CanRead
+        {
+            get
+            {
+                return this._innerStream.CanRead;
+            }
+        }
+        public override bool CanSeek
+        {
+            get
+            {
+                return this._innerStream.CanSeek;
+            }
+        }
+        public override bool CanWrite
+        {
+            get
+            {
+                return false;
+            }
+        }
+        public override void Flush()
+        {
+            this._innerStream.Flush();
+        }
+        /// <summary>
+        /// error 1
+        /// </summary>
+        /// <value></value>
+        public override long Length
+        {
+            get
+            {
+                return this._innerStream.Length - this._originalPosition;
+            }
+        }
+        public override long Position
+        {
+            get
+            {
+                return this._innerStream.Position - this._originalPosition;
+            }
+            set
+            {
+                this._innerStream.Position = this._originalPosition + value;
+            }
+        }
+        /// <summary>
+        /// error 2
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="origin"></param>
+        /// <returns></returns>
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return this._innerStream.Seek(offset + (origin == SeekOrigin.Begin ? this._originalPosition : 0), origin) - this._originalPosition;
+        }
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IDisposable.Dispose()
+        {
+            this.Close();
+        }
+        public override void Close()
+        {
+            base.Close();
+        }
+
+        private readonly long _originalPosition;
+        private readonly Stream _innerStream;
     }
 }
