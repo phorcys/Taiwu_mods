@@ -1,6 +1,6 @@
+using Harmony12;
 using System.Collections.Generic;
 using System.Reflection;
-using Harmony12;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -9,10 +9,7 @@ namespace NpcScan
 
     public class Settings : UnityModManager.ModSettings
     {
-        public override void Save(UnityModManager.ModEntry modEntry)
-        {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
-        }
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
         public KeyCode key = KeyCode.F12;
 
         // 每页最多显示的npc数目
@@ -21,16 +18,32 @@ namespace NpcScan
 
     public static class Main
     {
-        public static bool enabled;
-        public static Settings settings;
-        public static bool uiIsShow = false;
-        public static bool bindingKey = false;
-        public static Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
-        public static List<Features> findList = new List<Features>();
-        public static Dictionary<string, int> fNameList = new Dictionary<string, int>();
-        public static List<int> GongFaList = new List<int>();
-        public static Dictionary<string, int> gNameList = new Dictionary<string, int>();
-        public static Dictionary<int, string> textColor = new Dictionary<int, string>()
+        /// <summary>是否启用mod</summary>
+        internal static bool enabled;
+        /// <summary>是否正在搜索NPC</summary>
+        internal static bool isScaningNpc;
+        /// <summary>Mod设置</summary>
+        internal static Settings settings;
+        /// <summary>mod的UI是否已加载</summary>
+        internal static bool uiIsShow = false;
+        /// <summary>是否正在修改热键</summary>
+        internal static bool bindingKey = false;
+        /// <summary>角色特性字典</summary>
+        internal static Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
+        /// <summary>特性搜索条件</summary>
+        internal static HashSet<int> findSet = new HashSet<int>();
+        /// <summary>特性名称对应特性ID</summary>
+        internal static Dictionary<string, int> fNameList = new Dictionary<string, int>();
+        /// <summary>功法搜索条件</summary>
+        internal static List<int> gongFaList = new List<int>();
+        /// <summary>功法搜索条件</summary>
+        internal static List<int> skillList = new List<int>();
+        /// <summary>功法名字反查ID</summary>
+        internal static Dictionary<string, int> gNameList = new Dictionary<string, int>();
+        /// <summary>技艺名字反查ID</summary>
+        internal static Dictionary<string, int> bNameList = new Dictionary<string, int>();
+        /// <summary>文字颜色</summary>
+        internal static Dictionary<int, string> textColor = new Dictionary<int, string>()
         {
             { 10000,"<color=#323232FF>"},
             { 10001,"<color=#4B4B4BFF>"},
@@ -51,7 +64,8 @@ namespace NpcScan
             { 20010,"<color=#E4504DFF>"}, //一品红
             { 20011,"<color=#EDA723FF>"},
         };
-        public static Dictionary<string,int> colorText = new Dictionary<string,int>()
+        /// <summary>文字颜色反查</summary>
+        public static Dictionary<string, int> colorText = new Dictionary<string, int>()
         {
             { "<color=#323232FF>",10000},
             { "<color=#4B4B4BFF>",10001},
@@ -73,7 +87,7 @@ namespace NpcScan
             { "<color=#EDA723FF>",20011},
         };
 
-        public static UnityModManager.ModEntry.ModLogger Logger;
+        internal static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -87,22 +101,16 @@ namespace NpcScan
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
 
-            if (!Main.uiIsShow)
+            if (!uiIsShow)
             {
                 UI.Load(modEntry);
                 UI.key = settings.key;
-                // 设置每页最多显示npc的数目
-                if(int.TryParse(settings.countPerPage, out int tmpValue) && tmpValue > 0)
-                {
-                    UI.Instance.countPerPage = tmpValue;
-                }
-                Main.uiIsShow = true;
-                //Logger.Log("scan测试");
+                uiIsShow = true;
             }
             return true;
         }
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             if (!value)
                 return false;
@@ -111,7 +119,7 @@ namespace NpcScan
             return true;
         }
 
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             Event e = Event.current;
             if (e.isKey && Input.anyKeyDown)
@@ -123,7 +131,7 @@ namespace NpcScan
                         || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
                         )
                     {
-                        Main.settings.key = e.keyCode;
+                        settings.key = e.keyCode;
                     }
                     bindingKey = false;
                 }
@@ -140,17 +148,51 @@ namespace NpcScan
 
             GUILayout.BeginHorizontal();
             // 设置每页最多显示npc的数目
-            GUILayout.Label("每页最大显示NPC数量(范围1-50, 数字过大会影响游戏帧率)：",GUILayout.Width(370));
-            int.TryParse(GUILayout.TextArea(Main.settings.countPerPage.ToString(), GUILayout.Width(60)), out Main.settings.countPerPage);
-            Main.settings.countPerPage = Main.settings.countPerPage > 0 && Main.settings.countPerPage < 51 ? Main.settings.countPerPage : 8;
+            GUILayout.Label("每页最大显示NPC数量(大于1)：", GUILayout.Width(370));
+            int.TryParse(GUILayout.TextArea(settings.countPerPage.ToString(), GUILayout.Width(60)), out settings.countPerPage);
+            settings.countPerPage = settings.countPerPage > 0 ? settings.countPerPage : 8;
             GUILayout.EndHorizontal();
         }
 
-        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
+    }
+
+    /// <summary>
+    /// 使<see cref="DateFile.GetActorFeature(int key)"/>显示儿童隐藏特性
+    /// </summary>
+    [HarmonyPatch(typeof(DateFile), "GetActorFeature", typeof(int))]
+    internal static class DateFile_GetActorFeature_Patch
+    {
+        private static bool Prefix(int key, ref List<int> __result)
         {
-            // 退出时UMM时恢复countPerPage的值
-            settings.countPerPage = UI.Instance.countPerPage.ToString();
-            settings.Save(modEntry);
+            if (!Main.enabled || !Main.isScaningNpc)
+                return true;
+
+            var age = int.Parse(DateFile.instance.GetActorDate(key, 11, false));
+            // 游戏中儿童的特性会被隐藏一部分，因此儿童的特性获取不能直接用游戏中的缓存，成年人可以
+            if (age > 14 && DateFile.instance.actorsFeatureCache.TryGetValue(key, out __result))
+            {
+                return false;
+            }
+            var list = new List<int>();
+            string[] actorFeatures = DateFile.instance.GetActorDate(key, 101, addValue: false).Split('|');
+
+            for (int j = 0; j < actorFeatures.Length; j++)
+            {
+                int fetureKey = int.Parse(actorFeatures[j]);
+                if (fetureKey == 0)
+                {
+                    continue;
+                }
+
+                list.Add(fetureKey);
+            }
+            if (age > 14 && DateFile.instance.actorsDate.ContainsKey(key))
+            {
+                DateFile.instance.actorsFeatureCache.Add(key, list);
+            }
+            __result = list;
+            return false;
         }
     }
 }
