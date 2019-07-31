@@ -1,0 +1,9 @@
+﻿{
+    "Id": "RestEquip",
+    "DisplayName": "跨月休息功法裝備",
+    "Author": "litfal",
+    "Version": "0.8.0.0",
+    "AssemblyName": "RestEquip.dll",
+    "EntryMethod": "RestEquip.Main.Load",
+    "HomePage": ""
+}
