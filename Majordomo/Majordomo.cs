@@ -460,8 +460,8 @@ namespace Majordomo
     /// <summary>
     /// Patch: 保存存档时保存数据
     /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
-    public static class SaveDateFile_SaveSaveDate_SaveData
+    [HarmonyPatch(typeof(DateFile.SaveDate), "FillDate")]
+    public static class DateFile_SaveDate_FillDate_SaveData
     {
         static bool Prefix()
         {
