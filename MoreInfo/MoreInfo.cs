@@ -3,53 +3,71 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 
 
-//信息显示增强
+/// <summary>
+/// 信息显示增强
+/// </summary>
 namespace MoreInfo
 {
     public class Settings : UnityModManager.ModSettings
     {
-        public override void Save(UnityModManager.ModEntry modEntry)
-        {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
-        }
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
+        /// <summary>显示特殊词条</summary>
+        public bool showExtraName = true;//
+        /// <summary>显示书籍门派</summary>
+        public bool showBookGang = true;//
+        /// <summary>显示图纸名称</summary>
+        public bool showBlueprintName = true;//
+        /// <summary>显示技艺书对应技艺名称</summary>
+        public bool showOtherBookAbility = true;//
+        /// <summary>显示材料名称</summary>
+        public bool showMagerialName = false;//
+        /// <summary>显示食物特殊词条</summary>
+        public bool showFoodExtraName = true;//
+        /// <summary>包裹中物品显示</summary>
+        public bool showInBag = true;//
+        /// <summary>装备界面包裹中物品显示</summary>
+        public bool showInEquuipBag = true;//
+        /// <summary>仓库中物品显示</summary>
+        public bool showInBank = true;//
+        /// <summary>商店中物品显示</summary>
+        public bool showInShop = true;//
+        /// <summary>奇遇使用物品界面显示</summary>
+        public bool showInStory = false;//
+        /// <summary>战利品界面显示</summary>
+        public bool showInBooty = false;//
+        /// <summary>建筑界面显示</summary>
+        public bool showInBuild = true;//
+        /// <summary>制造界面显示</summary>
+        public bool showInMake = false;//
+        /// <summary>交换藏书界面</summary>
+        public bool showInBookChange = false;//
+        /// <summary>赠送礼物界面</summary>
+        public bool showInGift = false;//
+        /// <summary>读书界面</summary>
+        public bool showInReadBook = false;//
+        /// <summary>在其他界面显示</summary>
+        public bool showInOthers = true;//
+        /// <summary>显示特殊词条加成值</summary>
+        public bool showExtraValue = false;//
+        /// <summary>显示功法等级颜色</summary>
+        public bool showGongFaLevel = true;//
+        /// <summary>显示功法所属门派</summary>
+        public bool showGongFaGang = true;//
+        /// <summary>强化显示功法进度</summary>
+        public bool showGongFaProgress = true;//
 
-        public bool showExtraName = true;//显示特殊词条
-        public bool showBookGang = true;//显示书籍门派
-        public bool showBlueprintName = true;//显示图纸名称
-        public bool showOtherBookAbility = true;//显示技艺书对应技艺名称
-        public bool showMagerialName = false;//显示材料名称
-        public bool showFoodExtraName = true;//显示食物特殊词条
-
-        public bool showInBag = true;//包裹中物品显示
-        public bool showInEquuipBag = true;//装备界面包裹中物品显示
-        public bool showInBank = true;//仓库中物品显示
-        public bool showInShop = true;//商店中物品显示
-        public bool showInStory = false;//奇遇使用物品界面显示
-        public bool showInBooty = false;//战利品界面显示
-        public bool showInBuild = true;//建筑界面显示
-        public bool showInMake = false;//制造界面显示
-        public bool showInBookChange = false;//交换藏书界面
-        public bool showInGift = false;//赠送礼物界面
-        public bool showInReadBook = false;//读书界面
-
-        public bool showInOthers = true;//在其他界面显示        
-        public bool showExtraValue = false;//显示特殊词条加成值
-
-        public bool showGongFaLevel = true;//显示功法等级颜色
-        public bool showGongFaGang = true;//显示功法所属门派
-        public bool showGongFaProgress = true;//强化显示功法进度
-
-        //经历筛选
+        /// <summary>经历筛选全部显示</summary>
         public bool showAllMassage = true;
-
+        /// <summary>经历筛选显示, 0:结怨寻仇 1: 师徒亲子 2: 修习功法 3: 资源物品 4: 身份变更 5: 友情爱情 6: 战斗切磋 7: 伤病毒医 8: 寻访追随</summary>
         public bool[] showMassageType = new bool[] { true, true, true, true, true, true, true, true, true };
-
-        public bool showStroyLevel = true;//显示奇遇等级
+        /// <summary>显示奇遇等级</summary>
+        public bool showStroyLevel = true;//
     }
 
     public static class Main
@@ -76,7 +94,7 @@ namespace MoreInfo
             return true;
         }
 
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
 
             GUILayout.BeginHorizontal();
@@ -123,7 +141,7 @@ namespace MoreInfo
             GUILayout.Label("\n<color=#87CEEB>功法增强(注:门派与心得增强只限人物功法界面)</color>");
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            settings.showGongFaLevel = GUILayout.Toggle(settings.showGongFaLevel, "显示功法等级颜色", GUILayout.Width(120));
+            settings.showGongFaLevel = GUILayout.Toggle(settings.showGongFaLevel, "显示功法等级颜色(需重启游戏生效)", GUILayout.Width(230));
             settings.showGongFaGang = GUILayout.Toggle(settings.showGongFaGang, "显示功法所属门派", GUILayout.Width(120));
             settings.showGongFaProgress = GUILayout.Toggle(settings.showGongFaProgress, "进度心得显示增强", GUILayout.Width(120));
             GUILayout.EndHorizontal();
@@ -157,10 +175,7 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
         }
 
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
-        {
-            settings.Save(modEntry);
-        }
+        private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
     }
 
     /// <summary>
@@ -180,10 +195,10 @@ namespace MoreInfo
         /// <summary>
         /// 经历筛选
         /// </summary>
-        private static List<int[]> massageBackup = new List<int[]> { };
+        private static List<int[]> massageBackup = new List<int[]>();
         private static readonly List<HashSet<int>> messageFilter = new List<HashSet<int>>() {
             new HashSet<int>{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
-                77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125},
+                77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125}, //结怨寻仇
             new HashSet<int>{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
             new HashSet<int>{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
             new HashSet<int>{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107},//物品
@@ -487,7 +502,7 @@ namespace MoreInfo
         /// <param name="text"></param>
         /// <param name="itemid"></param>
         /// <param name="typ3"></param>
-        public static void ChangeAbilityBookName(Text text, int itemid, int typ3)
+        public static void ChangeAbilityBookName(Text text, int typ3)
         {
             if (!Main.settings.showOtherBookAbility) return;
             string abilityName = itemExtraAttrType1[typ3 + 50501 - 4];
@@ -511,7 +526,7 @@ namespace MoreInfo
             {
                 if (typ3 < 20 && typ3 >= 4)
                 {
-                    ChangeAbilityBookName(text, itemId, typ3);
+                    ChangeAbilityBookName(text, typ3);
                 }
             }
         }
@@ -652,7 +667,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
     public static class SetItem_SetActorMenuItemIcon_Patch
     {
-        static void Postfix(SetItem __instance, int itemId)
+        private static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBag)
                 return;
@@ -664,7 +679,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(SetItem), "SetActorEquipIcon")]
     public static class SetItem_SetActorEquipIcon_Patch
     {
-        static void Postfix(SetItem __instance, int itemId)
+        private static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInEquuipBag)
                 return;
@@ -676,7 +691,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]
     public static class SetItem_SetWarehouseItemIcon_Patch
     {
-        static void Postfix(SetItem __instance, int itemId)
+        private static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBank)
                 return;
@@ -688,7 +703,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(SetItem), "SetShopItemIcon")]
     public static class SetItem_SetShopItemIcon_Patch
     {
-        static void Postfix(SetItem __instance, int itemId)
+        private static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInShop)
                 return;
@@ -700,7 +715,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(SetItem), "SetBookShopItemIcon")]
     public static class SetItem_SetBookShopItemIcon_Patch
     {
-        static void Postfix(SetItem __instance, int itemId)
+        private static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBookChange)
                 return;
@@ -712,7 +727,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(StorySystem), "GetItem")]
     public static class StorySystem_GetItem_Patch
     {
-        static void Postfix(StorySystem __instance, int typ)
+        private static void Postfix(StorySystem __instance, int typ)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -720,11 +735,12 @@ namespace MoreInfo
         }
 
     }
+
     //修习图书界面设置物品名称
     [HarmonyPatch(typeof(HomeSystem), "SetBook")]
     public static class HomeSystem_SetBook_Patch
     {
-        static void Postfix(HomeSystem __instance)
+        private static void Postfix(HomeSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInReadBook)
                 return;
@@ -736,7 +752,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(HomeSystem), "GetItem")]
     public static class HomeSystem_GetItem_Patch
     {
-        static void Postfix(HomeSystem __instance)
+        private static void Postfix(HomeSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -749,7 +765,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
     public static class BattleSystem_ShowBattleBooty_Patch
     {
-        static void Postfix(BattleSystem __instance)
+        private static void Postfix(BattleSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -761,7 +777,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(MassageWindow), "GetItem")]
     public static class MassageWindow_GetItem_Patch
     {
-        static void Postfix(MassageWindow __instance)
+        private static void Postfix(MassageWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInGift)
                 return;
@@ -773,7 +789,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(ActorMenu), "UpdateEquips")]
     public static class ActorMenu_UpdateEquips_Patch
     {
-        static void Postfix(Image[] ___equipIcons, Text[] ___equipHpText, int key)
+        private static void Postfix(Image[] ___equipIcons, Text[] ___equipHpText, int key)
         {
             if (!Main.enabled || !Main.settings.showInEquuipBag)
                 return;
@@ -789,7 +805,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(GetItemWindow), "SetGetItem")]
     public static class GetItemWindow_SetGetItem_Patch
     {
-        static void Postfix(GetItemWindow __instance, int index, int itemId)
+        private static void Postfix(GetItemWindow __instance, int index, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInOthers)
                 return;
@@ -801,7 +817,7 @@ namespace MoreInfo
     [HarmonyPatch(typeof(MakeSystem), "SetMianToolItem")]
     public static class MakeSystem_SetMianToolItem_Patch
     {
-        static void Postfix(MakeSystem __instance, int id, GameObject item, Transform holder, Image dragDes, bool showSize)
+        private static void Postfix(int id, Transform holder)
         {
             if (!Main.enabled || !Main.settings.showInMake)
                 return;
@@ -811,24 +827,25 @@ namespace MoreInfo
     }
 
     /// <summary>
-    /// 功法
+    /// 人物功法界面根据功法品级显示颜色、显示功法门派、修习度区分
     /// </summary>
-
-    //人物功法界面根据功法品级显示颜色
     [HarmonyPatch(typeof(SetGongFaIcon), "SetGongFa")]
     public static class SetGongFaIcon_SetGongFa_Patch
     {
-        static void Postfix(SetGongFaIcon __instance, int gongFaId, int actorId)
+        /// <summary>匹配颜色标签</summary>
+        private static readonly Regex regex = new Regex(@"(?>\s+|<color=#[0-9a-fA-F]{6,8}>|</color>)");
+        private static void Postfix(SetGongFaIcon __instance, int gongFaId, int actorId)
         {
             if (!Main.enabled)
                 return;
-            //功法所属门派
+
+            // 功法所属门派
             if (Main.settings.showGongFaGang)
             {
                 string gangName = Changer.GetGangName(gongFaId);
                 __instance.gongFaSizeText.text = $"{gangName}\n{__instance.gongFaSizeText.text}";
             }
-            //根据修习进度与心得变更颜色增加区分度
+            // 根据修习进度与心得变更颜色增加区分度
             if (Main.settings.showGongFaProgress)
             {
                 int level = DateFile.instance.GetGongFaLevel(actorId, gongFaId, 0);
@@ -840,107 +857,117 @@ namespace MoreInfo
         }
     }
 
-    //HOOK掉功法颜色
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
-    public static class Loading_LoadingScene_Patch
+    /// <summary>
+    /// HOOK掉功法颜色, 根据功法品级显示颜色
+    /// </summary>
+    [HarmonyPatch(typeof(ArchiveSystem.GameData.ReadonlyData), "Load", typeof(int))]
+    internal static class ArchiveSystem_GameData_ReadonlyData_Load_Patch
     {
-        static void Postfix()
+        private static void Postfix()
         {
             if (!Main.enabled || !Main.settings.showGongFaLevel)
                 return;
-            foreach (var item in DateFile.instance.gongFaDate)
-            {
-                var GData = item.Value;
-                int lv = int.Parse(GData[2]);
 
-                GData[0] = DateFile.instance.SetColoer(20001 + lv, GData[0]);
+            foreach (var pair in DateFile.instance.gongFaDate)
+            {
+                if (int.TryParse(pair.Value[2], out var lv))
+                {
+                    pair.Value[0] = DateFile.instance.SetColoer(20001 + lv, pair.Value[0]);
+                }
             }
         }
     }
 
     /// <summary>
-    /// 其他
+    /// 奇遇显示等级
     /// </summary>
-    //奇遇显示等级
     [HarmonyPatch(typeof(WorldMapPlace), "UpdatePlaceStory")]
     public static class WorldMapPlace_UpdatePlaceStory_Patch
     {
-        static void Postfix(WorldMapPlace __instance, int ___placeId)
+        private static void Postfix(WorldMapPlace __instance, int ___placeId)
         {
             if (!Main.enabled
                 || !Main.settings.showStroyLevel
                 || __instance.storyTime.text == "99"
                 || DateFile.instance.HaveShow(DateFile.instance.mianPartId, ___placeId) < 1
                 || !DateFile.instance.HaveStory(DateFile.instance.mianPartId, ___placeId)
-                || !DateFile.instance.worldMapState[DateFile.instance.mianPartId].ContainsKey(___placeId))
+                || !DateFile.instance.worldMapState[DateFile.instance.mianPartId].TryGetValue(___placeId, out var storyInfo))
+            {
                 return;
-            int storyId = DateFile.instance.worldMapState[DateFile.instance.mianPartId][___placeId][0];
+            }
+
+            int storyId = storyInfo[0];
             string level = DateFile.instance.baseStoryDate[storyId][3];
             if (int.Parse(level) < 1)
                 return;
-            int storyTime = DateFile.instance.worldMapState[DateFile.instance.mianPartId][___placeId][1];
-            __instance.storyTime.text = storyTime > 0 ? string.Format("难度:{0}时间{1}", level, storyTime) : $"难度:{level}";
+            int storyTime = storyInfo[1];
+            __instance.storyTime.text = storyTime > 0 ? $"难度:{level}时间{storyTime}" : $"难度:{level}";
         }
     }
 
-    //经历筛选
+    /// <summary>
+    /// 经历筛选
+    /// </summary>
     [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
-    public static class ActorMenu_ShowActorMassage_Patch
+    internal static class ActorMenu_ShowActorMassage_Patch
     {
-        static bool Prefix(ActorMenu __instance, int key)
+        /// <summary>
+        /// 经历筛选
+        /// </summary>
+        private static bool Prefix(int key)
         {
             if (!Main.enabled || Main.settings.showAllMassage)
                 return true;
-            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return true;
+
+            if (!DateFile.instance.actorLifeMassage.TryGetValue(key, out var actorLifeMassage))
+                return true;
+
             int backupId = Changer.GetBackupId();
-            //Main.Logger.Log("Pre-----" + changer.getActorName(key));
-            if (backupId == key) return true;
+            //Main.Logger.Log("Pre-----" + Changer.GetActorName(key));
+            if (backupId == key)
+                return true;
             if (backupId != 0)
             {
-                //Main.Logger.Log("reset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
-
+                //Main.Logger.Log("reset-----" + Changer.GetActorName(key) + "Count:" + actorLifeMassage.Count);
                 DateFile.instance.actorLifeMassage[backupId] = Changer.GetBackupMassage();
                 Changer.ResetBackup();
             }
-            List<int[]> newLifeMassage = new List<int[]> { };
 
             Changer.BackupMassage(key);
-
-            //Main.Logger.Log("setp1" + changer.getActorName(key));
-            int count = DateFile.instance.actorLifeMassage[key].Count;
+            //Main.Logger.Log("setp1" + Changer.GetActorName(key));
+            int count = actorLifeMassage.Count;
+            var newLifeMassage = new List<int[]> { };
             //Main.Logger.Log("setp2:MaxCount:" + count);
-            //Main.Logger.Log("setp3:showCount:" + tlist.Count);
             for (int i = 0; i < count; i++)
             {
-                //Main.Logger.Log("setp4:" + i);
-                int messageTyp = DateFile.instance.actorLifeMassage[key][i][0];
+                //Main.Logger.Log("setp3:" + i);
+                int messageTyp = actorLifeMassage[i][0];
                 //Main.Logger.Log($"messageTyp: {messageTyp}");
+
                 //根据经历类型ID进行筛选
                 if (Changer.MessageTypToShow(messageTyp))
                 {
-                    newLifeMassage.Add(DateFile.instance.actorLifeMassage[key][i]);
-                    //Main.Logger.Log("setp6:" + tlist[j]);
+                    newLifeMassage.Add(actorLifeMassage[i]);
                 }
             }
             DateFile.instance.actorLifeMassage[key] = newLifeMassage;
             return true;
         }
-    }
 
-    //恢复备份的经历
-    [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
-    public static class ActorMenu_ShowActorMassage_Patch2
-    {
-        static void Postfix(ActorMenu __instance, int key)
+        /// <summary>
+        /// 恢复备份的经历
+        /// </summary>
+        private static void Postfix(int key)
         {
             if (!Main.enabled || Main.settings.showAllMassage)
                 return;
-            if (!DateFile.instance.actorLifeMassage.ContainsKey(key)) return;
+            if (!DateFile.instance.actorLifeMassage.ContainsKey(key))
+                return;
             if (Changer.GetBackupId() == key)
             {
-                //Main.Logger.Log("Exit-----" + "ID:" + key + "Count:" + changer.getBackupMassage(key).Count);
+                //Main.Logger.Log("Exit-----" + "ID:" + key + "Count:" + Changer.GetBackupMassage().Count);
                 DateFile.instance.actorLifeMassage[key] = Changer.GetBackupMassage();
-                //Main.Logger.Log("ExitReset-----" + changer.getActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
+                //Main.Logger.Log("ExitReset-----" + Changer.GetActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
                 Changer.ResetBackup();
             }
         }
