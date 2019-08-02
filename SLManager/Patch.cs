@@ -697,10 +697,11 @@ namespace Sth4nothing.SLManager
         /// <param name="targetFile"></param>
         internal static void BackupFolderToFile(string pathToBackup, string targetFile)
         {
+            WriteSaveSummary();
             var preDir = Environment.CurrentDirectory;
             Environment.CurrentDirectory = pathToBackup;
             var files = GetFilesToBackup();
-            using (var zip = new ZipFile())
+            using (var zip = new ZipFile(Encoding.UTF8))
             {
                 zip.AddFiles(files, true, "\\");
                 zip.Save(targetFile);
@@ -743,6 +744,27 @@ namespace Sth4nothing.SLManager
 
             return path;
         }
+
+        /// <summary>
+        /// 保存当前摘要到date.json
+        /// </summary>
+        private static void WriteSaveSummary()
+        {
+            string path = Path.Combine(SaveManager.SavePath, "date.json");
+            Main.Logger.Log($"Start WriteSaveSummary to {path}");
+            var df = DateFile.instance;
+            var data = new SaveData(
+                df.GetActorName(0, false, false),
+                df.year,
+                df.samsara,
+                df.dayTrun,
+                df.playerSeatName,
+                DateTime.Now);
+
+            File.WriteAllText(
+                path,
+                JsonConvert.SerializeObject(data));
+        }
     }
 
     /// <summary>
@@ -782,15 +804,14 @@ namespace Sth4nothing.SLManager
     }
 
     /// <summary>
-    /// 判断是否需要存档，同时写入date.json
+    /// 判断是否需要存档
     /// </summary>
     [HarmonyPatch(typeof(SaveDateFile), "LateUpdate")]
-    public class SaveDateFile_LateUpdate_Patch
+    public static class SaveDateFile_LateUpdate_Patch
     {
-        private static bool Prefix(SaveDateFile __instance, ref bool ___saveSaveDateOK1, ref bool ___saveSaveDateOK2, ref bool ___saveSaveDateOK3)
+        private static bool Prefix(SaveDateFile __instance)
         {
             if (!Main.Enabled || UIDate.instance == null) return true;
-
             if (__instance.saveSaveDate)
             {
                 if (Main.ForceSave)
@@ -802,155 +823,32 @@ namespace Sth4nothing.SLManager
                 {
                     UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
                     __instance.saveSaveDate = false;
-                    return true;
                 }
+
+                // 0.2.4.0 新的存檔機制會先建立一個隨機的存檔工作目錄 如 Date_1.new.xxxxxxxx (xxxxxxxx) 為隨機
+                // 像這樣的流程 (偽碼)
+                // currentSaveFolder = Date_1
+                // newSaveFolder = Date_1.new.xxxxxxxx
+                // saveTo newSaveFolder
+                // oldSaveFolder = Date_1.old.xxxxxxxx
+                // rename currentSaveFolder -> oldSaveFolder
+                // rename newSaveFolder -> currentSaveFolder
+                // del oldSaveFolder
+
+                // 在這邊寫入 date.json, 只是寫在 currentSaveFolder, 最後也會被刪除
+                // 故寫入描述移動到 SaveManager.Backup 去做
                 // 写入date.json
-                WriteSaveSummary();
+                // WriteSaveSummary();
+                
             }
-            if (___saveSaveDateOK1 && ___saveSaveDateOK2 && ___saveSaveDateOK3)
-            {
-                ___saveSaveDateOK1 = false;
-                ___saveSaveDateOK2 = false;
-                ___saveSaveDateOK3 = false;
-
-                // Application.dataPath只能在主线程里使用
-                dirInfo = new DirectoryInfo(
-                    Path.Combine(Application.dataPath,
-                    "SaveFiles" + SaveDateFile.instance.GetSaveFilesSuffix(),
-                    "Backup",
-                    $"Date_{SaveManager.DateId}"));
-
-                Task.Run(new Action(EnsureFiles));
-
-                return false;
-            }
+            // 存檔由原始函數處裡, 改攔截 SaveDateBackuper.DoBackup (Prefix)
             return true;
-        }
-        private static DirectoryInfo dirInfo;
-        /// <summary>
-        /// 替换原本的SaveDateFile.EnsureFiles
-        /// </summary>
-        /// <returns></returns>
-        private static void EnsureFiles()
-        {
-            string[] fileNames = new string[9]
-            {
-                SaveDateFile.instance.GameSettingName,
-                SaveDateFile.instance.WorldDateName2,
-                SaveDateFile.instance.WorldDateName4,
-                SaveDateFile.instance.saveDateName,
-                SaveDateFile.instance.homeBuildingName,
-                SaveDateFile.instance.WorldDateName3,
-                SaveDateFile.instance.PlaceResourceName,
-                SaveDateFile.instance.actorLifeName,
-                SaveDateFile.instance.legendBookName
-            };
-            string path = SaveManager.SavePath;
-            int num;
-            for (int i = 0; i < fileNames.Length; i = num)
-            {
-                string tmpFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}~";
-                string dstFile = $"{path}{fileNames[i]}{SaveDateFile.instance.saveVersionName}";
-                if (!File.Exists(tmpFile))
-                {
-                    Debug.Log("存档异常");
-                    break;
-                }
-                if (File.Exists(dstFile))
-                {
-                    File.Replace(tmpFile, dstFile, null);
-                }
-                else
-                {
-                    File.Move(tmpFile, dstFile);
-                }
-                num = i + 1;
-            }
-            Debug.Log("完成保存存档操作,开始执行随档备份...");
-
-            string file = SaveManager.Backup(SaveManager.AfterSaveBackup);
-
-            DoDefaultBackup(SaveManager.DateId, file);
-        }
-        private static bool DoDefaultBackup(int dateId, string file)
-        {
-            if (!SaveManager.Backuper.IsOn)
-            {
-                Debug.Log("过时节备份已禁用!");
-                return false;
-            }
-            if (SaveManager.autoBackupRemain > 1)
-            {
-                SaveManager.autoBackupRemain--;
-                Debug.Log($"未到设定的自动备份时间,等待时节剩余:{SaveManager.autoBackupRemain}");
-                return false;
-            }
-            if (!SaveManager.SavePath.CheckDirectory())
-            {
-                Debug.Log("当前存档位置不存在!");
-                return false;
-            }
-            if (!SaveManager.Backuper.CheckAllSaveFileExist(dateId))
-            {
-                Debug.Log("当前存档不完整,不进行备份操作!");
-                return false;
-            }
-            if (!dirInfo.Exists)
-            {
-                dirInfo.Create();
-            }
-            var array = ReflectionMethod.Invoke<SaveDateBackuper, byte[]>(SaveManager.Backuper, "BackupItemToBytes");
-            var path = Path.Combine(
-                dirInfo.FullName,
-                DateTime.Now.ToString("yyyyMMddHHmmss")
-                    + array.Length
-                    + "."
-                    + ReflectionMethod.GetValue<SaveDateBackuper, string>(SaveManager.Backuper, "_extension"));
-            using (var fs = new FileStream(path, FileMode.OpenOrCreate))
-            {
-                Debug.Log("写入备份描述!");
-                fs.Write(array, 0, array.Length);
-                if (File.Exists(file))
-                {
-                    var buff = File.ReadAllBytes(file);
-                    fs.Write(buff, 0, buff.Length);
-                }
-                else
-                {
-                    using (var zip = new ZipFile())
-                    {
-                        zip.AddDirectory(SaveManager.SavePath);
-                        zip.Save(fs);
-                    }
-                }
-                Debug.Log($"Date_{dateId}备份完成!");
-            }
-            SaveManager.autoBackupRemain = SaveManager.Backuper.TickInterval;
-            ReflectionMethod.Invoke(SaveManager.Backuper, "CheckBackupCount", dateId);
-            return true;
-        }
-
-        /// <summary>
-        /// 保存当前摘要到date.json
-        /// </summary>
-        private static void WriteSaveSummary()
-        {
-            var df = DateFile.instance;
-            var data = new SaveData(
-                df.GetActorName(0, false, false),
-                df.year,
-                df.samsara,
-                df.dayTrun,
-                df.playerSeatName,
-                DateTime.Now);
-
-            File.WriteAllText(
-                Path.Combine(SaveManager.SavePath, "date.json"),
-                JsonConvert.SerializeObject(data));
         }
     }
-    [HarmonyPatch(typeof(SaveDateBackuper), "ExtractBackupToTemp")]
-    public class SaveDateBackuper_ExtractBackupToTemp_Patch
+
+    [HarmonyPatch(typeof(SaveDateBackuper))]
+    [HarmonyPatch("ExtractBackupToTemp", typeof(BackupItem))]
+    public static class SaveDateBackuper_ExtractBackupToTemp_Patch
     {
         private static bool Prefix(SaveDateBackuper __instance, ref BackupItem item, ref string __result)
         {
@@ -978,6 +876,77 @@ namespace Sth4nothing.SLManager
                 }
             }
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(SaveDateBackuper), "DoBackup")]
+    public class SaveDateBackuper_DoBackup_Patch
+    {
+        private static bool Prefix(SaveDateBackuper __instance, ref int dataId, ref bool __result)
+        {
+            string file = SaveManager.Backup(SaveManager.AfterSaveBackup);
+            __result = DoDefaultBackup(__instance, dataId, file);
+            return false;
+        }
+
+        private static bool DoDefaultBackup(SaveDateBackuper __instance, int dataId, string file)
+        {
+            if (!SaveManager.Backuper.IsOn)
+            {
+                Debug.Log("过时节备份已禁用!");
+                return false;
+            }
+            if (SaveManager.autoBackupRemain > 1)
+            {
+                SaveManager.autoBackupRemain--;
+                Debug.Log($"未到设定的自动备份时间,等待时节剩余:{SaveManager.autoBackupRemain}");
+                return false;
+            }
+            if (!SaveManager.SavePath.CheckDirectory())
+            {
+                Debug.Log("当前存档位置不存在!");
+                return false;
+            }
+            if (!SaveManager.Backuper.CheckAllSaveFileExist(dataId))
+            {
+                Debug.Log("当前存档不完整,不进行备份操作!");
+                return false;
+            }
+            DirectoryInfo dirInfo = new DirectoryInfo(ReflectionMethod.Invoke<SaveDateBackuper, string>(__instance, "GetBackupDirectoryPath", dataId));
+            if (!dirInfo.Exists)
+            {
+                dirInfo.Create();
+            }
+            var array = ReflectionMethod.Invoke<SaveDateBackuper, byte[]>(SaveManager.Backuper, "BackupItemToBytes");
+            var path = Path.Combine(
+                dirInfo.FullName,
+                DateTime.Now.ToString("yyyyMMddHHmmss")
+                    + array.Length
+                    + "."
+                    + ReflectionMethod.GetValue<SaveDateBackuper, string>(SaveManager.Backuper, "_extension"));
+            using (var fs = new FileStream(path, FileMode.OpenOrCreate))
+            {
+                Debug.Log("写入备份描述!");
+                fs.Write(array, 0, array.Length);
+                // 主要要改的是這裡, 如果給定的zipfile存在, 則不重新打包一次
+                if (File.Exists(file))
+                {
+                    using (var zipfile_stream = File.OpenRead(file))
+                        zipfile_stream.CopyTo(fs);
+                }
+                else
+                {
+                    using (var zip = new ZipFile())
+                    {
+                        zip.AddDirectory(SaveManager.SavePath);
+                        zip.Save(fs);
+                    }
+                }
+                Debug.Log($"Date_{dataId}备份完成!");
+            }
+            SaveManager.autoBackupRemain = SaveManager.Backuper.TickInterval;
+            ReflectionMethod.Invoke(SaveManager.Backuper, "CheckBackupCount", dataId);
+            return true;
         }
     }
 }
