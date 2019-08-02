@@ -2,7 +2,7 @@
     "Id": "RestEquip",
     "DisplayName": "跨月休息功法裝備",
     "Author": "litfal",
-    "Version": "0.8.0.0",
+    "Version": "0.8.1.0",
     "AssemblyName": "RestEquip.dll",
     "EntryMethod": "RestEquip.Main.Load",
     "HomePage": "https://github.com/Litfal/Taiwu_mods/tree/RestEquip/RestEquip"

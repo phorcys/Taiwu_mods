@@ -120,8 +120,10 @@ namespace RestEquip
 
         private static void changeEquip(int index)
         {
+            // Main.Logger.Log($"changeEquip: {index}");
             int num = DateFile.instance.MianActorID();
-            Dictionary<int, int> dictionary = DateFile.instance.mainActorequipConfig[DateFile.instance.nowEquipConfigIndex];
+            int nowEquipConfigIndex = DateFile.instance.nowEquipConfigIndex;
+            Dictionary<int, int> dictionary = DateFile.instance.mainActorequipConfig[nowEquipConfigIndex];
             foreach (KeyValuePair<int, int> keyValuePair in dictionary)
             {
                 bool flag = keyValuePair.Value != 0 && DateFile.instance.actorsDate[num][keyValuePair.Key] == keyValuePair.Value.ToString();
@@ -160,7 +162,7 @@ namespace RestEquip
         public static void Postfix()
         {
             // change Gougfa back
-            if (_origin_mianActorEquipGongFaIndex > 0)
+            if (_origin_mianActorEquipGongFaIndex >= 0)
             {
                 //Main.Logger.Log($"Change 功法 back to {_origin_mianActorEquipGongFaIndex}");
                 ActorMenu.instance.ChangeEquipGongFa(_origin_mianActorEquipGongFaIndex);
@@ -168,7 +170,7 @@ namespace RestEquip
             }
 
             // change equ back
-            if(_origin_EquipConfigIndex > 0)
+            if(_origin_EquipConfigIndex >= 0)
             {
                 // Main.Logger.Log($"Change 裝備 back to {_origin_EquipConfigIndex}, 內息 = {DateFile.instance.GetActorMianQi(DateFile.instance.MianActorID())}");
                 changeEquip(_origin_EquipConfigIndex);
