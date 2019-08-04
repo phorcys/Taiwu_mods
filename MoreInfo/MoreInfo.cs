@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
@@ -18,63 +17,63 @@ namespace MoreInfo
     {
         public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
         /// <summary>显示特殊词条</summary>
-        public bool showExtraName = true;//
+        public bool showExtraName = true;
         /// <summary>显示书籍门派</summary>
-        public bool showBookGang = true;//
+        public bool showBookGang = true;
         /// <summary>显示图纸名称</summary>
-        public bool showBlueprintName = true;//
+        public bool showBlueprintName = true;
         /// <summary>显示技艺书对应技艺名称</summary>
-        public bool showOtherBookAbility = true;//
+        public bool showOtherBookAbility = true;
         /// <summary>显示材料名称</summary>
-        public bool showMagerialName = false;//
+        public bool showMagerialName = false;
         /// <summary>显示食物特殊词条</summary>
-        public bool showFoodExtraName = true;//
+        public bool showFoodExtraName = true;
         /// <summary>包裹中物品显示</summary>
-        public bool showInBag = true;//
+        public bool showInBag = true;
         /// <summary>装备界面包裹中物品显示</summary>
-        public bool showInEquuipBag = true;//
+        public bool showInEquuipBag = true;
         /// <summary>仓库中物品显示</summary>
-        public bool showInBank = true;//
+        public bool showInBank = true;
         /// <summary>商店中物品显示</summary>
-        public bool showInShop = true;//
+        public bool showInShop = true;
         /// <summary>奇遇使用物品界面显示</summary>
-        public bool showInStory = false;//
+        public bool showInStory = false;
         /// <summary>战利品界面显示</summary>
-        public bool showInBooty = false;//
+        public bool showInBooty = false;
         /// <summary>建筑界面显示</summary>
-        public bool showInBuild = true;//
+        public bool showInBuild = true;
         /// <summary>制造界面显示</summary>
-        public bool showInMake = false;//
+        public bool showInMake = false;
         /// <summary>交换藏书界面</summary>
-        public bool showInBookChange = false;//
+        public bool showInBookChange = false;
         /// <summary>赠送礼物界面</summary>
-        public bool showInGift = false;//
+        public bool showInGift = false;
         /// <summary>读书界面</summary>
-        public bool showInReadBook = false;//
+        public bool showInReadBook = false;
         /// <summary>在其他界面显示</summary>
-        public bool showInOthers = true;//
+        public bool showInOthers = true;
         /// <summary>显示特殊词条加成值</summary>
-        public bool showExtraValue = false;//
+        public bool showExtraValue = false;
         /// <summary>显示功法等级颜色</summary>
-        public bool showGongFaLevel = true;//
+        public bool showGongFaLevel = true;
         /// <summary>显示功法所属门派</summary>
-        public bool showGongFaGang = true;//
+        public bool showGongFaGang = true;
         /// <summary>强化显示功法进度</summary>
-        public bool showGongFaProgress = true;//
+        public bool showGongFaProgress = true;
 
         /// <summary>经历筛选全部显示</summary>
         public bool showAllMassage = true;
         /// <summary>经历筛选显示, 0:结怨寻仇 1: 师徒亲子 2: 修习功法 3: 资源物品 4: 身份变更 5: 友情爱情 6: 战斗切磋 7: 伤病毒医 8: 寻访追随</summary>
         public bool[] showMassageType = new bool[] { true, true, true, true, true, true, true, true, true };
         /// <summary>显示奇遇等级</summary>
-        public bool showStroyLevel = true;//
+        public bool showStroyLevel = true;
     }
 
     public static class Main
     {
-        public static bool enabled;
-        public static Settings settings;
-        public static UnityModManager.ModEntry.ModLogger Logger;
+        internal static bool enabled;
+        internal static Settings settings;
+        internal static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -88,7 +87,7 @@ namespace MoreInfo
             return true;
         }
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             enabled = value;
             return true;
@@ -181,17 +180,8 @@ namespace MoreInfo
     /// <summary>
     /// 定义变更器
     /// </summary>
-    public static class Changer
+    internal static class Changer
     {
-        /// <summary>
-        /// 入魔图标，储存相关地点ID
-        /// </summary>
-        private static string placeIds = "";
-        public static void AddPlaceId(int pid) => placeIds += pid + "|";
-        public static void ResetPlaceIds() => placeIds = "";
-        public static string[] GetSplitPlaceIds() => placeIds.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-        public static string GetPlaceIds() => placeIds;
-
         /// <summary>
         /// 经历筛选
         /// </summary>
@@ -349,7 +339,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static bool IsOriginalBook(int itemId) =>
+        private static bool IsOriginalBook(int itemId) =>
             //序列35 0为普通,1为手抄本
             int.Parse(DateFile.instance.GetItemDate(itemId, 35, false)) == 0;
 
@@ -358,28 +348,28 @@ namespace MoreInfo
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 4, false));
+        private static int GetItemType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 4, false));
 
         /// <summary>
         /// 获取物品小类
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemSecondType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 5, false));
+        private static int GetItemSecondType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 5, false));
 
         /// <summary>
         /// 获取物品细类
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetItemThirdType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 506, false));
+        private static int GetItemThirdType(int itemId) => int.Parse(DateFile.instance.GetItemDate(itemId, 506, false));
 
         /// <summary>
         /// 物品制作类型
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetMakeType(int itemId) =>
+        private static int GetMakeType(int itemId) =>
             //0为材料包，7铁8木9药10毒11布12玉15食材
             int.Parse(DateFile.instance.GetItemDate(itemId, 41, false));
 
@@ -388,19 +378,19 @@ namespace MoreInfo
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static int GetProductType(int itemId) =>
+        private static int GetProductType(int itemId) =>
             //0无法制作-装备类1硬2软
             int.Parse(DateFile.instance.GetItemDate(itemId, 48, false));
 
         //获取物品名称
-        public static string GetItemName(int itemId) => DateFile.instance.GetItemDate(itemId, 0, false);
+        private static string GetItemName(int itemId) => DateFile.instance.GetItemDate(itemId, 0, false);
 
         /// <summary>
         /// 获取一类词条的名称
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static string GetItemExtraNameType1(int itemId)
+        private static string GetItemExtraNameType1(int itemId)
         {
             string value = "";
             foreach (var item in itemExtraAttrType1)
@@ -421,7 +411,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
-        public static string GetItemExtraNameType2(int itemId)
+        private static string GetItemExtraNameType2(int itemId)
         {
             string value = "";
             foreach (var item in itemExtraAttrType2)
@@ -441,7 +431,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="newText"></param>
-        public static void ChangeText(Text text, string newText) => text.text = newText;
+        private static void ChangeText(Text text, string newText) => text.text = newText;
 
         /// <summary>
         /// 按照特殊词条类型1显示名称（功法技艺加成等）
@@ -449,7 +439,7 @@ namespace MoreInfo
         /// <param name="text"></param>
         /// <param name="itemId"></param>
         /// <param name="add">是否同时显示耐久。耐久度大于10的显示不下</param>
-        public static void ChangeDecNameType1(Text text, int itemId, bool add = false)
+        private static void ChangeDecNameType1(Text text, int itemId, bool add = false)
         {
             string extraName = GetItemExtraNameType1(itemId);
             if (extraName != "")
@@ -464,7 +454,7 @@ namespace MoreInfo
         /// <param name="text"></param>
         /// <param name="itemId"></param>
         /// <param name="add"></param>
-        public static void ChangeDecNameType2(Text text, int itemId, bool add = false)
+        private static void ChangeDecNameType2(Text text, int itemId, bool add = false)
         {
             string extraName = GetItemExtraNameType2(itemId);
             if (extraName != "")
@@ -478,7 +468,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeBlueprintName(Text text, int itemId)
+        private static void ChangeBlueprintName(Text text, int itemId)
         {
             if (!Main.settings.showBlueprintName) return;
             ChangeText(text, GetItemName(itemId));
@@ -489,7 +479,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeGongFaBookName(Text text, int itemId)
+        private static void ChangeGongFaBookName(Text text, int itemId)
         {
             if (!Main.settings.showBookGang) return;
             string gangName = GetGangName(GetGongFaId(itemId)).Substring(0, 2);
@@ -502,7 +492,7 @@ namespace MoreInfo
         /// <param name="text"></param>
         /// <param name="itemid"></param>
         /// <param name="typ3"></param>
-        public static void ChangeAbilityBookName(Text text, int typ3)
+        private static void ChangeAbilityBookName(Text text, int typ3)
         {
             if (!Main.settings.showOtherBookAbility) return;
             string abilityName = itemExtraAttrType1[typ3 + 50501 - 4];
@@ -514,7 +504,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeBookName(Text text, int itemId)
+        private static void ChangeBookName(Text text, int itemId)
         {
             int typ3 = GetItemThirdType(itemId);
             //4-19为技艺，20-33为功法
@@ -536,7 +526,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeType1Name(Text text, int itemId)
+        private static void ChangeType1Name(Text text, int itemId)
         {
             if (!Main.settings.showMagerialName) return;
             int mtyp = GetMakeType(itemId);
@@ -564,7 +554,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeType3Name(Text text, int itemId)
+        private static void ChangeType3Name(Text text, int itemId)
         {
             if (!Main.settings.showFoodExtraName) return;
             ChangeDecNameType1(text, itemId, true);
@@ -575,7 +565,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeType5Name(Text text, int itemId)
+        private static void ChangeType5Name(Text text, int itemId)
         {
             int typ2 = GetItemSecondType(itemId);
             switch (typ2)
@@ -594,7 +584,7 @@ namespace MoreInfo
         /// </summary>
         /// <param name="text"></param>
         /// <param name="itemId"></param>
-        public static void ChangeEquipName(Text text, int itemId)
+        private static void ChangeEquipName(Text text, int itemId)
         {
             if (!Main.settings.showExtraName) return;
             int typ2 = GetItemSecondType(itemId);
@@ -665,9 +655,9 @@ namespace MoreInfo
 
     // 将人物包裹中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
-    public static class SetItem_SetActorMenuItemIcon_Patch
+    internal static class SetItem_SetActorMenuItemIcon_Patch
     {
-        private static void Postfix(SetItem __instance, int itemId)
+        public static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBag)
                 return;
@@ -677,9 +667,9 @@ namespace MoreInfo
 
     // 将人物装备界面中物品栏的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetActorEquipIcon")]
-    public static class SetItem_SetActorEquipIcon_Patch
+    internal static class SetItem_SetActorEquipIcon_Patch
     {
-        private static void Postfix(SetItem __instance, int itemId)
+        public static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInEquuipBag)
                 return;
@@ -689,9 +679,9 @@ namespace MoreInfo
 
     //将仓库中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetWarehouseItemIcon")]
-    public static class SetItem_SetWarehouseItemIcon_Patch
+    internal static class SetItem_SetWarehouseItemIcon_Patch
     {
-        private static void Postfix(SetItem __instance, int itemId)
+        public static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBank)
                 return;
@@ -701,9 +691,9 @@ namespace MoreInfo
 
     //将商店中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetShopItemIcon")]
-    public static class SetItem_SetShopItemIcon_Patch
+    internal static class SetItem_SetShopItemIcon_Patch
     {
-        private static void Postfix(SetItem __instance, int itemId)
+        public static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInShop)
                 return;
@@ -713,9 +703,9 @@ namespace MoreInfo
 
     // 将书店中的的物品替换为特殊词条显示
     [HarmonyPatch(typeof(SetItem), "SetBookShopItemIcon")]
-    public static class SetItem_SetBookShopItemIcon_Patch
+    internal static class SetItem_SetBookShopItemIcon_Patch
     {
-        private static void Postfix(SetItem __instance, int itemId)
+        public static void Postfix(SetItem __instance, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInBookChange)
                 return;
@@ -725,9 +715,9 @@ namespace MoreInfo
 
     // 奇遇选择物品界面设置物品名称
     [HarmonyPatch(typeof(StorySystem), "GetItem")]
-    public static class StorySystem_GetItem_Patch
+    internal static class StorySystem_GetItem_Patch
     {
-        private static void Postfix(StorySystem __instance, int typ)
+        public static void Postfix(StorySystem __instance, int typ)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -738,9 +728,9 @@ namespace MoreInfo
 
     //修习图书界面设置物品名称
     [HarmonyPatch(typeof(HomeSystem), "SetBook")]
-    public static class HomeSystem_SetBook_Patch
+    internal static class HomeSystem_SetBook_Patch
     {
-        private static void Postfix(HomeSystem __instance)
+        public static void Postfix(HomeSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInReadBook)
                 return;
@@ -750,9 +740,9 @@ namespace MoreInfo
 
     //修建界面显示
     [HarmonyPatch(typeof(HomeSystem), "GetItem")]
-    public static class HomeSystem_GetItem_Patch
+    internal static class HomeSystem_GetItem_Patch
     {
-        private static void Postfix(HomeSystem __instance)
+        public static void Postfix(HomeSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -763,9 +753,9 @@ namespace MoreInfo
 
     //战利品界面
     [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
-    public static class BattleSystem_ShowBattleBooty_Patch
+    internal static class BattleSystem_ShowBattleBooty_Patch
     {
-        private static void Postfix(BattleSystem __instance)
+        public static void Postfix(BattleSystem __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -775,9 +765,9 @@ namespace MoreInfo
 
     //赠送礼物界面
     [HarmonyPatch(typeof(MassageWindow), "GetItem")]
-    public static class MassageWindow_GetItem_Patch
+    internal static class MassageWindow_GetItem_Patch
     {
-        private static void Postfix(MassageWindow __instance)
+        public static void Postfix(MassageWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInGift)
                 return;
@@ -787,9 +777,9 @@ namespace MoreInfo
 
     //将人物装备界面的人物已装备物品
     [HarmonyPatch(typeof(ActorMenu), "UpdateEquips")]
-    public static class ActorMenu_UpdateEquips_Patch
+    internal static class ActorMenu_UpdateEquips_Patch
     {
-        private static void Postfix(Image[] ___equipIcons, Text[] ___equipHpText, int key)
+        public static void Postfix(Image[] ___equipIcons, Text[] ___equipHpText, int key)
         {
             if (!Main.enabled || !Main.settings.showInEquuipBag)
                 return;
@@ -803,9 +793,9 @@ namespace MoreInfo
 
     // 将获取物品界面设置物品名称??具体是哪个界面未知
     [HarmonyPatch(typeof(GetItemWindow), "SetGetItem")]
-    public static class GetItemWindow_SetGetItem_Patch
+    internal static class GetItemWindow_SetGetItem_Patch
     {
-        private static void Postfix(GetItemWindow __instance, int index, int itemId)
+        public static void Postfix(GetItemWindow __instance, int index, int itemId)
         {
             if (!Main.enabled || !Main.settings.showInOthers)
                 return;
@@ -815,9 +805,9 @@ namespace MoreInfo
 
     // 制造界面右侧物品栏
     [HarmonyPatch(typeof(MakeSystem), "SetMianToolItem")]
-    public static class MakeSystem_SetMianToolItem_Patch
+    internal static class MakeSystem_SetMianToolItem_Patch
     {
-        private static void Postfix(int id, Transform holder)
+        public static void Postfix(int id, Transform holder)
         {
             if (!Main.enabled || !Main.settings.showInMake)
                 return;
@@ -830,11 +820,9 @@ namespace MoreInfo
     /// 人物功法界面根据功法品级显示颜色、显示功法门派、修习度区分
     /// </summary>
     [HarmonyPatch(typeof(SetGongFaIcon), "SetGongFa")]
-    public static class SetGongFaIcon_SetGongFa_Patch
+    internal static class SetGongFaIcon_SetGongFa_Patch
     {
-        /// <summary>匹配颜色标签</summary>
-        private static readonly Regex regex = new Regex(@"(?>\s+|<color=#[0-9a-fA-F]{6,8}>|</color>)");
-        private static void Postfix(SetGongFaIcon __instance, int gongFaId, int actorId)
+        public static void Postfix(SetGongFaIcon __instance, int gongFaId, int actorId)
         {
             if (!Main.enabled)
                 return;
@@ -860,10 +848,11 @@ namespace MoreInfo
     /// <summary>
     /// HOOK掉功法颜色, 根据功法品级显示颜色
     /// </summary>
-    [HarmonyPatch(typeof(ArchiveSystem.GameData.ReadonlyData), "Load", typeof(int))]
+    [HarmonyPatch(typeof(ArchiveSystem.LoadGame), "LoadReadonlyData")]
     internal static class ArchiveSystem_GameData_ReadonlyData_Load_Patch
     {
-        private static void Postfix()
+        [HarmonyAfter("BaseResourceMod")]
+        public static void Postfix()
         {
             if (!Main.enabled || !Main.settings.showGongFaLevel)
                 return;
@@ -882,9 +871,9 @@ namespace MoreInfo
     /// 奇遇显示等级
     /// </summary>
     [HarmonyPatch(typeof(WorldMapPlace), "UpdatePlaceStory")]
-    public static class WorldMapPlace_UpdatePlaceStory_Patch
+    internal static class WorldMapPlace_UpdatePlaceStory_Patch
     {
-        private static void Postfix(WorldMapPlace __instance, int ___placeId)
+        public static void Postfix(WorldMapPlace __instance, int ___placeId)
         {
             if (!Main.enabled
                 || !Main.settings.showStroyLevel
@@ -914,7 +903,7 @@ namespace MoreInfo
         /// <summary>
         /// 经历筛选
         /// </summary>
-        private static bool Prefix(int key)
+        public static bool Prefix(int key)
         {
             if (!Main.enabled || Main.settings.showAllMassage)
                 return true;
@@ -957,7 +946,7 @@ namespace MoreInfo
         /// <summary>
         /// 恢复备份的经历
         /// </summary>
-        private static void Postfix(int key)
+        public static void Postfix(int key)
         {
             if (!Main.enabled || Main.settings.showAllMassage)
                 return;
