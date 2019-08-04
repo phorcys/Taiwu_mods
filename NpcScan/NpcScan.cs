@@ -13,37 +13,35 @@ namespace NpcScan
         public KeyCode key = KeyCode.F12;
 
         // 每页最多显示的npc数目
-        public int countPerPage = 8;
+        public int countPerPage = 200;
     }
 
     public static class Main
     {
         /// <summary>是否启用mod</summary>
         internal static bool enabled;
-        /// <summary>是否正在搜索NPC</summary>
-        internal static bool isScaningNpc;
         /// <summary>Mod设置</summary>
         internal static Settings settings;
         /// <summary>mod的UI是否已加载</summary>
         internal static bool uiIsShow = false;
         /// <summary>是否正在修改热键</summary>
         internal static bool bindingKey = false;
-        /// <summary>角色特性字典</summary>
-        internal static Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
+        /// <summary>特性字典</summary>
+        internal static readonly Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
         /// <summary>特性搜索条件</summary>
-        internal static HashSet<int> findSet = new HashSet<int>();
+        internal static readonly HashSet<int> findSet = new HashSet<int>();
         /// <summary>特性名称对应特性ID</summary>
-        internal static Dictionary<string, int> fNameList = new Dictionary<string, int>();
+        internal static readonly Dictionary<string, int> featureNameList = new Dictionary<string, int>();
         /// <summary>功法搜索条件</summary>
-        internal static List<int> gongFaList = new List<int>();
+        internal static readonly List<int> gongFaList = new List<int>();
         /// <summary>功法搜索条件</summary>
-        internal static List<int> skillList = new List<int>();
+        internal static readonly List<int> skillList = new List<int>();
         /// <summary>功法名字反查ID</summary>
-        internal static Dictionary<string, int> gNameList = new Dictionary<string, int>();
+        internal static readonly Dictionary<string, int> gongFaNameList = new Dictionary<string, int>();
         /// <summary>技艺名字反查ID</summary>
-        internal static Dictionary<string, int> bNameList = new Dictionary<string, int>();
+        internal static readonly Dictionary<string, int> skillNameList = new Dictionary<string, int>();
         /// <summary>文字颜色</summary>
-        internal static Dictionary<int, string> textColor = new Dictionary<int, string>()
+        internal static readonly Dictionary<int, string> textColor = new Dictionary<int, string>()
         {
             { 10000,"<color=#323232FF>"},
             { 10001,"<color=#4B4B4BFF>"},
@@ -65,7 +63,7 @@ namespace NpcScan
             { 20011,"<color=#EDA723FF>"},
         };
         /// <summary>文字颜色反查</summary>
-        public static Dictionary<string, int> colorText = new Dictionary<string, int>()
+        public static readonly Dictionary<string, int> colorText = new Dictionary<string, int>()
         {
             { "<color=#323232FF>",10000},
             { "<color=#4B4B4BFF>",10001},
@@ -103,7 +101,7 @@ namespace NpcScan
 
             if (!uiIsShow)
             {
-                UI.Load(modEntry);
+                UI.Load();
                 UI.key = settings.key;
                 uiIsShow = true;
             }
@@ -148,51 +146,28 @@ namespace NpcScan
 
             GUILayout.BeginHorizontal();
             // 设置每页最多显示npc的数目
-            GUILayout.Label("每页最大显示NPC数量(大于1)：", GUILayout.Width(370));
+            GUILayout.Label("每页最大显示NPC数量(1~300)：", GUILayout.Width(370));
             int.TryParse(GUILayout.TextArea(settings.countPerPage.ToString(), GUILayout.Width(60)), out settings.countPerPage);
-            settings.countPerPage = settings.countPerPage > 0 ? settings.countPerPage : 8;
+            settings.countPerPage = settings.countPerPage > 0 && settings.countPerPage < 301 ? settings.countPerPage : 200;
             GUILayout.EndHorizontal();
         }
 
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
     }
 
-    /// <summary>
-    /// 使<see cref="DateFile.GetActorFeature(int key)"/>显示儿童隐藏特性
-    /// </summary>
-    [HarmonyPatch(typeof(DateFile), "GetActorFeature", typeof(int))]
-    internal static class DateFile_GetActorFeature_Patch
+    internal static class ExtendedArrayAdd
     {
-        private static bool Prefix(int key, ref List<int> __result)
+        /// <summary>
+        /// 在所给序数位置给数组添加成员并将序数加一
+        /// </summary>
+        /// <typeparam name="T">数组成员类型</typeparam>
+        /// <param name="array">操作的数组</param>
+        /// <param name="data">要添加的数据</param>
+        /// <param name="index">要添加的位置</param>
+        public static void Add<T>(this T[] array, T data, ref int index)
         {
-            if (!Main.enabled || !Main.isScaningNpc)
-                return true;
-
-            var age = int.Parse(DateFile.instance.GetActorDate(key, 11, false));
-            // 游戏中儿童的特性会被隐藏一部分，因此儿童的特性获取不能直接用游戏中的缓存，成年人可以
-            if (age > 14 && DateFile.instance.actorsFeatureCache.TryGetValue(key, out __result))
-            {
-                return false;
-            }
-            var list = new List<int>();
-            string[] actorFeatures = DateFile.instance.GetActorDate(key, 101, addValue: false).Split('|');
-
-            for (int j = 0; j < actorFeatures.Length; j++)
-            {
-                int fetureKey = int.Parse(actorFeatures[j]);
-                if (fetureKey == 0)
-                {
-                    continue;
-                }
-
-                list.Add(fetureKey);
-            }
-            if (age > 14 && DateFile.instance.actorsDate.ContainsKey(key))
-            {
-                DateFile.instance.actorsFeatureCache.Add(key, list);
-            }
-            __result = list;
-            return false;
+            array[index] = data;
+            index++;
         }
     }
 }

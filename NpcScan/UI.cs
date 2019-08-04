@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityModManagerNet;
 
 
 namespace NpcScan
@@ -45,7 +47,7 @@ namespace NpcScan
         private Rect mWindowRect = new Rect(0, 0, 0, 0);
         #endregion
 
-        #region Constant
+        #region 常数
         /// <summary>求和时品阶的加权</summary>
         private static readonly long[] power = { (long)1E16, (long)1E14, (long)1E12, (long)1E10, (long)1E8, (long)1E6, (long)1E4, (long)1E2, 1 };
         #endregion
@@ -69,22 +71,30 @@ namespace NpcScan
         private int sortIndex = -1;
         /// <summary>分页</summary>
         private int page = 1;
+        /// <summary>分页</summary>
+        private int Page
+        {
+            get => page;
+            set
+            {
+                OptimizeScrollView.GetInstance("Content").ResetView();
+                page = value;
+            }
+        }
         /// <summary>综合评分列已添加</summary>
         private bool rankcolumnadded = false;
         /// <summary>立场选项</summary>
         private readonly bool[] goodness = new bool[] { true, false, false, false, false, false };
         /// <summary>立场</summary>
-        private readonly string[] goodnessValue = new string[] { "全部", "刚正", "仁善", "中庸", "叛逆", "唯我" };
+        private readonly string[] goodnessValue = new string[] { "全部", "中庸", "仁善", "刚正", "叛逆", "唯我" };
         /// <summary>每页显示条数</summary>
         private int countPerPage = 0;
         /// <summary>每页显示条数的倒数，减少浮点除法的运算次数</summary>
         private float reciprocalCountPerPage;
-        /// <summary>性别选项双性</summary>
-        private bool isall = true;
-        /// <summary>性别选项男</summary>
-        private bool isman = false;
-        /// <summary>性别选项女</summary>
-        private bool iswoman = false;
+        /// <summary>性别选项：0 双性 1 男 2 女 3 男生女相 4 女生男相</summary>
+        private readonly bool[] sexChoice = new[] { true, false, false, false, false };
+        private readonly string[] sexChoiceText = new[] { "全部", "男", "女", "男生女相", "女生男相" };
+        private readonly float[] sexChoiceWidth = new float[] { 45, 30, 30, 65, 65 };
         /// <summary>搜索结果表头</summary>
         private static readonly List<Column> mColumns = new List<Column>
         {
@@ -156,7 +166,7 @@ namespace NpcScan
         /// <summary>NPC搜索结果滚动条, 0: 标题行； 1：结果区域</summary>
         private readonly Vector2[] scrollPosition = new Vector2[2];
         /// <summary>搜索结果</summary>
-        private readonly List<string[]> actorList = new List<string[]>();
+        private readonly List<ActorItem> actorList = new List<ActorItem>();
         #endregion
 
         #region 属性
@@ -193,7 +203,7 @@ namespace NpcScan
         /// <summary>身份gangLevelText</summary>
         public string GangLevelValue { get; private set; } = "";
         /// <summary>立场</summary>
-        public string GoodnessText { get; private set; } = "";
+        public int Goodness { get; private set; } = -1;
         /// <summary>商会</summary>
         public string AShopName { get; private set; } = "";
         /// <summary>
@@ -203,7 +213,7 @@ namespace NpcScan
         /// <summary>
         /// 0:音律;1:弈棋;2:诗书;3:绘画;4:术数;5:品鉴;6:锻造;7:制木;8:医术;9:毒术;10:织锦;11:巧匠;12:道法;13:佛学;14:厨艺;15:杂学;
         /// </summary>
-        public int[] Life { get; private set; } = new int[16];
+        public int[] Skill { get; private set; } = new int[16];
         /// <summary>人物特性(多个特性用'|'分隔)</summary>
         public string ActorFeatureText { get; private set; } = "";
         /// <summary>是否精确查找,精确查找的情况下,特性用'|'分隔</summary>
@@ -227,7 +237,7 @@ namespace NpcScan
         /// <summary>姓名(包括前世)</summary>
         public string AName { get; private set; } = "";
 
-        /// <summary窗口已打开</summary>
+        /// <summary>窗口是否已打开</summary>
         public bool Opened { get; private set; }
         #endregion
 
@@ -238,18 +248,42 @@ namespace NpcScan
             public bool expand = false;
         }
 
-        internal static bool Load(UnityModManager.ModEntry modEntry)
+        internal static bool Load()
         {
             try
             {
-                new GameObject(typeof(UI).FullName, typeof(UI));
-                return true;
+                if (Instance == null)
+                {
+                    new GameObject(typeof(UI).FullName, typeof(UI));
+                    return true;
+                }
             }
             catch (Exception e)
             {
                 UnityEngine.Debug.LogException(e);
             }
             return false;
+        }
+
+        /// <summary>
+        /// 获取搜索结果应有的列数
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetEffectiveColumnCount()
+        {
+            // 排序模式开启，但是还未添加排序表头，此时新产生的结果应比当前表头列数多一
+            if (Rankmode && !rankcolumnadded)
+            {
+                return mColumns.Count + 1;
+            }
+            // 排序模式关闭，但是还未删除排序表头，此时新产生的结果应比当前表头列数少一
+            if (!Rankmode && rankcolumnadded)
+            {
+                return mColumns.Count - 1;
+            }
+            // 其他情况, 新产生的结果列数与表头列数一致
+            return mColumns.Count;
         }
 
         private void Awake()
@@ -336,6 +370,9 @@ namespace NpcScan
             }
         }
 
+        /// <summary>
+        /// 调整窗口规格
+        /// </summary>
         private void CalculateWindowPos()
         {
             mWindowRect = new Rect(ScreenWidth() * 0.05f, 40f, WindowWidth() + 60f, 0);
@@ -423,30 +460,21 @@ namespace NpcScan
             }
             GUILayout.Space(10 * ratio);
             currentwidth += 110 * ratio;
-            currentwidth = AddHorizontal(currentwidth, (30 + 5 + 45 + 30 + 30 + 10) * ratio);
+            currentwidth = AddHorizontal(currentwidth, (30 + 5 + sexChoiceWidth.Sum() + 10) * ratio);
             GUILayout.Label("性别:", labelStyle, GUILayout.Width(30 * ratio));
             GUILayout.Space(5 * ratio);
-            isall = GUILayout.Toggle(isall, "全部", toggleStyle, GUILayout.Width(45 * ratio));
-            if (isall)
+            for (int i = 0; i < sexChoice.Length; i++)
             {
-                iswoman = false;
-                isman = false;
-                GenderValue = 0;
-            }
-
-            isman = GUILayout.Toggle(isman, "男", toggleStyle, GUILayout.Width(30 * ratio));
-            if (isman)
-            {
-                isall = false;
-                iswoman = false;
-                GenderValue = 1;
-            }
-            iswoman = GUILayout.Toggle(iswoman, "女", toggleStyle, GUILayout.Width(30 * ratio));
-            if (iswoman)
-            {
-                isall = false;
-                isman = false;
-                GenderValue = 2;
+                sexChoice[i] = GUILayout.Toggle(sexChoice[i], sexChoiceText[i], toggleStyle, GUILayout.Width(sexChoiceWidth[i] * ratio));
+                if (sexChoice[i])
+                {
+                    GenderValue = i;
+                    for (int j = 0; j < sexChoice.Length; j++)
+                    {
+                        if (i != j)
+                            sexChoice[j] = false;
+                    }
+                }
             }
             GUILayout.Space(10 * ratio);
             #endregion
@@ -474,22 +502,16 @@ namespace NpcScan
             GUILayout.Space(10 * ratio);
             #region add 翻页
             AddHorizontal(currentwidth, (80 + 60 + 60) * ratio);
-            GUILayout.Label($"页码:{page}/{Mathf.Max((int)Math.Ceiling(actorList.Count * reciprocalCountPerPage), 1)}", labelStyle, GUILayout.Width(80 * ratio));
+            GUILayout.Label($"页码:{Page}/{Mathf.Max((int)Math.Ceiling(actorList.Count * reciprocalCountPerPage), 1)}", labelStyle, GUILayout.Width(80 * ratio));
             if (GUILayout.Button("上页", buttonStyle, GUILayout.Width(60 * ratio)))
             {
-                if (page > 1)
-                {
-                    OptimizeScrollView.GetInstance("Content").ResetView();
-                    page--;
-                }
+                if (Page > 1)
+                    Page--;
             }
             if (GUILayout.Button("下页", buttonStyle, GUILayout.Width(60 * ratio)))
             {
-                if (actorList.Count > page * countPerPage)
-                {
-                    OptimizeScrollView.GetInstance("Content").ResetView();
-                    page++;
-                }
+                if (actorList.Count > Page * countPerPage)
+                    Page++;
             }
             #endregion
             GUILayout.EndHorizontal();
@@ -535,22 +557,22 @@ namespace NpcScan
             GUILayout.BeginHorizontal("box");
 
             #region add 技艺属性
-            currentwidth = AddLabelAndTextField("音律", currentwidth, Life[0], out Life[0]);
-            currentwidth = AddLabelAndTextField("弈棋", currentwidth, Life[1], out Life[1]);
-            currentwidth = AddLabelAndTextField("诗书", currentwidth, Life[2], out Life[2]);
-            currentwidth = AddLabelAndTextField("绘画", currentwidth, Life[3], out Life[3]);
-            currentwidth = AddLabelAndTextField("术数", currentwidth, Life[4], out Life[4]);
-            currentwidth = AddLabelAndTextField("品鉴", currentwidth, Life[5], out Life[5]);
-            currentwidth = AddLabelAndTextField("锻造", currentwidth, Life[6], out Life[6]);
-            currentwidth = AddLabelAndTextField("制木", currentwidth, Life[7], out Life[7]);
-            currentwidth = AddLabelAndTextField("医术", currentwidth, Life[8], out Life[8]);
-            currentwidth = AddLabelAndTextField("毒术", currentwidth, Life[9], out Life[9]);
-            currentwidth = AddLabelAndTextField("织锦", currentwidth, Life[10], out Life[10]);
-            currentwidth = AddLabelAndTextField("巧匠", currentwidth, Life[11], out Life[11]);
-            currentwidth = AddLabelAndTextField("道法", currentwidth, Life[12], out Life[12]);
-            currentwidth = AddLabelAndTextField("佛学", currentwidth, Life[13], out Life[13]);
-            currentwidth = AddLabelAndTextField("厨艺", currentwidth, Life[14], out Life[14]);
-            AddLabelAndTextField("杂学", currentwidth, Life[15], out Life[15]);
+            currentwidth = AddLabelAndTextField("音律", currentwidth, Skill[0], out Skill[0]);
+            currentwidth = AddLabelAndTextField("弈棋", currentwidth, Skill[1], out Skill[1]);
+            currentwidth = AddLabelAndTextField("诗书", currentwidth, Skill[2], out Skill[2]);
+            currentwidth = AddLabelAndTextField("绘画", currentwidth, Skill[3], out Skill[3]);
+            currentwidth = AddLabelAndTextField("术数", currentwidth, Skill[4], out Skill[4]);
+            currentwidth = AddLabelAndTextField("品鉴", currentwidth, Skill[5], out Skill[5]);
+            currentwidth = AddLabelAndTextField("锻造", currentwidth, Skill[6], out Skill[6]);
+            currentwidth = AddLabelAndTextField("制木", currentwidth, Skill[7], out Skill[7]);
+            currentwidth = AddLabelAndTextField("医术", currentwidth, Skill[8], out Skill[8]);
+            currentwidth = AddLabelAndTextField("毒术", currentwidth, Skill[9], out Skill[9]);
+            currentwidth = AddLabelAndTextField("织锦", currentwidth, Skill[10], out Skill[10]);
+            currentwidth = AddLabelAndTextField("巧匠", currentwidth, Skill[11], out Skill[11]);
+            currentwidth = AddLabelAndTextField("道法", currentwidth, Skill[12], out Skill[12]);
+            currentwidth = AddLabelAndTextField("佛学", currentwidth, Skill[13], out Skill[13]);
+            currentwidth = AddLabelAndTextField("厨艺", currentwidth, Skill[14], out Skill[14]);
+            AddLabelAndTextField("杂学", currentwidth, Skill[15], out Skill[15]);
             #endregion
 
             GUILayout.EndHorizontal();
@@ -579,15 +601,16 @@ namespace NpcScan
             GUILayout.Label("立场:", labelStyle, GUILayout.Width(30 * ratio));
             for (int i = 0; i < goodness.Length; i++)
             {
+                var tmp = goodness[i];
                 goodness[i] = GUILayout.Toggle(goodness[i], goodnessValue[i].ToString(), toggleStyle, GUILayout.Width(45 * ratio));
-                if (goodness[i])
+                if (tmp != goodness[i] && goodness[i])
                 {
                     for (int j = 0; j < goodness.Length; j++)
                     {
                         if (i != j)
                         {
                             goodness[j] = false;
-                            GoodnessText = goodnessValue[i].ToString();
+                            Goodness = j - 1;
                         }
                     }
                 }
@@ -598,7 +621,7 @@ namespace NpcScan
             GUILayout.Space(10 * ratio);
             AddHorizontal(currentwidth, 250 * ratio);
             TarIsGang = GUILayout.Toggle(TarIsGang, "是否开启识别门派", toggleStyle, GUILayout.Width(120 * ratio));
-            IsGang = GUILayout.Toggle(IsGang, "仅搜索门派", toggleStyle);
+            IsGang = GUILayout.Toggle(IsGang, "仅搜索门派(需要开启识别门派)", toggleStyle);
             GUILayout.EndHorizontal();
         }
 
@@ -636,34 +659,31 @@ namespace NpcScan
                 countPerPage = Main.settings.countPerPage;
                 reciprocalCountPerPage = (float)(1 / (double)countPerPage);
 
-                page = 1;
+                Page = 1;
                 // 首次搜索时，载入特性信息
                 if (Main.featuresList.Count == 0)
                 {
-                    foreach (int key in DateFile.instance.actorFeaturesDate.Keys)
+                    foreach (var pair in DateFile.instance.actorFeaturesDate)
                     {
-                        var feature = new Features(key);
+                        var feature = new Features(pair.Key, pair.Value);
                         Main.featuresList.Add(feature.Key, feature);
-                        Main.fNameList.Add(feature.Name, feature.Key);
+                        Main.featureNameList.Add(feature.Name, feature.Key);
                     }
                 }
+
                 if (ActorFeatureText != "")
                 {
                     GetFeatures(ActorFeatureText, TarFeature);
                 }
 
-                if (Main.gNameList.Count == 0)
+                if (Main.gongFaNameList.Count == 0)
                 {
                     foreach (var pair in DateFile.instance.gongFaDate)
                     {
-                        // 去掉空白
-                        var tem = Regex.Replace(pair.Value[0], @"\s", "");
-                        var index = tem.IndexOf('<');
-                        // 去掉颜色格式
-                        if (index > -1)
-                            tem = colorTagRegex.Replace(tem, "", -1, index);
+                        // 去掉颜色和空白
+                        var tem = colorTagRegex.Replace(pair.Value[0], "");
                         if (tem != "")
-                            Main.gNameList.Add(tem, pair.Key);
+                            Main.gongFaNameList.Add(tem, pair.Key);
                     }
                 }
 
@@ -672,12 +692,12 @@ namespace NpcScan
                     GetGongFaKey(ActorGongFaText);
                 }
 
-                if (Main.bNameList.Count == 0)
+                if (Main.skillNameList.Count == 0)
                 {
                     foreach (var pair in DateFile.instance.baseSkillDate)
                     {
-                        var tem = pair.Value[0].Substring(0, 1);
-                        Main.bNameList.Add(tem, pair.Key);
+                        if (pair.Key < 100)
+                            Main.skillNameList.Add(pair.Value[0].Substring(0, 1), pair.Key);
                     }
                 }
 
@@ -822,7 +842,7 @@ namespace NpcScan
         private void SetSearchResultContent()
         {
             // 分页: 当前页最后一行内容序号
-            int c = actorList.Count > countPerPage * page ? countPerPage * page : actorList.Count;
+            int c = actorList.Count > countPerPage * Page ? countPerPage * Page : actorList.Count;
             float verticalThumbWidth = GUI.skin.verticalScrollbarThumb.fixedWidth;
             float horizonThumbHeight = GUI.skin.horizontalScrollbarThumb.fixedHeight;
             GUI.skin.verticalScrollbarThumb.fixedWidth = verticalThumbWidth * ratio;
@@ -836,12 +856,13 @@ namespace NpcScan
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.BeginVertical("box");
-                for (int i = (page - 1) * countPerPage; i < c; i++)
+                for (int i = (Page - 1) * countPerPage; i < c; i++)
                 {
+                    var additem = actorList[i].GetAddItem();
                     GUILayout.BeginHorizontal("box");
-                    for (int j = 0; j < actorList[i].Length; j++)
+                    for (int j = 0; j < additem.Length; j++)
                     {
-                        GUILayout.Label(actorList[i][j], labelStyle, colWidth[j]);
+                        GUILayout.Label(additem[j], labelStyle, colWidth[j]);
                         if (Event.current.type == EventType.Repaint)
                         {
                             // 记录各列位置和大小
@@ -852,7 +873,7 @@ namespace NpcScan
                     if (Event.current.type == EventType.Repaint)
                     {
                         // 记录各行位置和大小
-                        optInstance3.AddRowRect(i - (page - 1) * countPerPage, GUILayoutUtility.GetLastRect());
+                        optInstance3.AddRowRect(i - (Page - 1) * countPerPage, GUILayoutUtility.GetLastRect());
                     }
                 }
                 GUILayout.EndVertical();
@@ -881,20 +902,21 @@ namespace NpcScan
                     // 用空白填充不能显示的区域
                     GUILayout.Space(optInstance3.GetRowEndPosition(firstRowVisible - 1));
                 }
-                int beginRow = Math.Max((page - 1) * countPerPage + firstRowVisible, 0);
-                int endRow = (page - 1) * countPerPage + lastRowVisible + 1;
+                int beginRow = Math.Max((Page - 1) * countPerPage + firstRowVisible, 0);
+                int endRow = (Page - 1) * countPerPage + lastRowVisible + 1;
                 // 只渲染可以显示的行
                 for (int i = beginRow; i < endRow; i++)
                 {
-                    GUILayout.BeginHorizontal("box", GUILayout.Height(optInstance3.GetRowHeight(i - (page - 1) * countPerPage)));
+                    var additem = actorList[i].GetAddItem();
+                    GUILayout.BeginHorizontal("box", GUILayout.Height(optInstance3.GetRowHeight(i - (Page - 1) * countPerPage)));
                     // 只渲染可以显示的列
                     for (int j = Math.Max(firstColVisible, 0); j <= lastColVisible; j++)
                     {
-                        GUILayout.Label(actorList[i][j], labelStyle, colWidth[j]);
+                        GUILayout.Label(additem[j], labelStyle, colWidth[j]);
                     }
                     GUILayout.EndHorizontal();
                 }
-                int lastRow = (page - 1) * countPerPage + optInstance3.RowCount;
+                int lastRow = (Page - 1) * countPerPage + optInstance3.RowCount;
                 if (endRow < lastRow)
                 {
                     // 用空白填充不能显示的区域
@@ -922,7 +944,6 @@ namespace NpcScan
         /// <param name="settingInput">textbox的当前值</param>
         /// <param name="settingValue">textbox的设定值</param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float AddLabelAndTextField(string labelName, float currentwidth, int settingInput, out int settingValue)
         {
             currentwidth = AddHorizontal(currentwidth, 65 * ratio);
@@ -944,7 +965,6 @@ namespace NpcScan
         /// <param name="addwidth">添加的宽度</param>
         /// <param name="outString">textbox的输入内容</param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float AddLabelAndTextField(string labelName, float currentwidth, float addwidth, float labelWidth, float textWidth, string settingInput, out string outString)
         {
             currentwidth = AddHorizontal(currentwidth, addwidth);
@@ -962,7 +982,6 @@ namespace NpcScan
         /// <param name="addwidth">添加的宽度</param>
         /// <param name="outValue">textbox的输入内容</param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float AddLabelAndTextField(string labelName, float currentwidth, float addwidth, float labelWidth, float textWidth, int settingInput, out int outValue)
         {
 
@@ -979,7 +998,6 @@ namespace NpcScan
         /// <param name="currentwidth">当前宽</param>
         /// <param name="addWidth">添加宽</param>
         /// <returns>当前宽</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float AddHorizontal(float currentwidth, float addWidth)
         {
             currentwidth += addWidth;
@@ -1004,20 +1022,40 @@ namespace NpcScan
 #if debug
             stopwatch.Restart();
 #endif
-            OptimizeScrollView.GetInstance("Content").ResetView();
             actorList.Clear();
             // 重置上一次排序的列为空，这样下次排序时对待所有列都是默认首先降序
             sortIndex = -1;
-            Main.isScaningNpc = true;
-            foreach (var npcId in DateFile.instance.actorsDate.Keys)
+            // 多线程搜索的锁, 只有该方法中使用多线程，因此只需要用本地变量
+            int locker = 0;
+            // 启用线程安全补丁
+            Patch.StartGetFeaturePatch();
+            Parallel.ForEach(DateFile.instance.actorsDate.Keys, (npcId) =>
             {
-                var addItem = new ActorItem(npcId, this);
-                if (addItem.isNeedAdd)
+                try
                 {
-                    actorList.Add(addItem.GetAddItem());
+                    var addItem = new ActorItem(npcId, this);
+                    if (addItem.AddCheck())
+                    {
+                        // 加锁
+                        while (Interlocked.CompareExchange(ref locker, 1, 0) == 1) ;
+                        try
+                        {
+                            actorList.Add(addItem);
+                        }
+                        finally
+                        {
+                            // 解锁，使用try finally避免抛出异常造成死锁
+                            Interlocked.Exchange(ref locker, 0);
+                        }
+                    }
                 }
-            }
-            Main.isScaningNpc = false;
+                catch (Exception ex)
+                {
+                    Main.Logger.Log(ex.ToString());
+                }
+            });
+            // 搜索完毕, 结束关闭线程
+            Patch.StopGetFeaturePatch();
 #if debug
             stopwatch.Stop();
             Main.Logger.Log($"ScanNpc: {stopwatch.Elapsed}");
@@ -1041,12 +1079,7 @@ namespace NpcScan
             sortIndex = colNum;
             actorList.Sort(SortList);
             // 排序完重置到第一页
-            if (page != 1)
-            {
-                page = 1;
-            }
-            // 顺序打乱后需要重新获取个列和行的位置信息
-            OptimizeScrollView.GetInstance("Content").ResetView();
+            Page = 1;
             // 上下滚动条复位
             scrollPosition[1].y = 0;
             desc = !desc;
@@ -1068,7 +1101,7 @@ namespace NpcScan
             var features = str.Split('|');
             foreach (string s in features)
             {
-                if (Main.fNameList.TryGetValue(s, out int key))
+                if (Main.featureNameList.TryGetValue(s, out int key))
                 {
                     if (!TarFeaure)
                     {
@@ -1095,7 +1128,7 @@ namespace NpcScan
             var gongFaTemp = str.Split('|');
             foreach (string s in gongFaTemp)
             {
-                if (Main.gNameList.TryGetValue(s, out int key))
+                if (Main.gongFaNameList.TryGetValue(s, out int key))
                 {
                     Main.gongFaList.Add(key);
                 }
@@ -1112,7 +1145,7 @@ namespace NpcScan
             var skillTemp = str.Split('|');
             foreach (var s in skillTemp)
             {
-                if (Main.bNameList.TryGetValue(s, out int key))
+                if (Main.skillNameList.TryGetValue(s, out int key))
                 {
                     Main.skillList.Add(key);
                 }
@@ -1185,126 +1218,144 @@ namespace NpcScan
         private static RectOffset RectOffset(int value) => new RectOffset(value, value, value, value);
 
         /// <summary>
-        /// 调整margin
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        private static RectOffset RectOffset(int x, int y) => new RectOffset(x, x, y, y);
-
-        /// <summary>
         /// 排序
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        private int SortList(string[] a, string[] b)
+        private int SortList(ActorItem a, ActorItem b)
         {
-            int m, n;
-            string s1 = a[sortIndex];
-            string s2 = b[sortIndex];
-
             int index = Rankmode ? sortIndex - 1 : sortIndex;
             // 分情况讨论，主要是为了使用更专门的Regex，提升排序性能
             switch (index)
             {
+                case -1:
+                    return CheckMN(a.Totalrank, b.Totalrank);
+                case 0:
+                    return CheckMN(a.ActorName, b.ActorName);
+                case 1:
+                    return CheckMN(a.Age, b.Age);
+                case 2:
+                    return CheckMN(a.Gender, b.Gender);
+                case 3:
+                    return CheckMN(a.Place, b.Place);
                 case 4:
-                    // 魅力只保留数值部分
-                    s1 = Regex.Match(s1, @"^(?>\d{1,3})").Value;
-                    s2 = Regex.Match(s2, @"^(?>\d{1,3})").Value;
-                    int.TryParse(s1, out m);
-                    int.TryParse(s2, out n);
-                    return CheckMN(m, n, desc);
+                    return CheckMN(a.Charm, b.Charm);
+                case 5:
+                    return CheckMN(a.Groupid, b.Groupid);
                 case 6:
-                    // 身份按照颜色排序模式
-                    m = Main.colorText[Regex.Match(s1, @"<color=#[0-9a-fA-F]{8}>").Groups[0].Value];
-                    n = Main.colorText[Regex.Match(s2, @"<color=#[0-9a-fA-F]{8}>").Groups[0].Value];
-                    return CheckMN(m, n, desc);
+                    return CheckMN(9 - Math.Abs(a.GangLevel), 9 - Math.Abs(b.GangLevel));
+                case 7:
+                    return CheckMN(a.GetShopName(), b.GetShopName());
+                case 8:
+                    return CheckMN(a.Goodness, b.Goodness);
+                case 9:
+                    return CheckMN(a.GetSpouse(), b.GetSpouse());
+                case 10:
+                    return CheckMN(a.GetSkillDevelopText(), b.GetSkillDevelopText());
+                case 11:
+                    return CheckMN(a.GetGongFaDevelopText(), b.GetGongFaDevelopText());
                 case 12:
-                    // 健康，先比最大健康，若一样再比当前健康
-                    s1 = colorTagRegex.Replace(s1, "");
-                    s2 = colorTagRegex.Replace(s2, "");
-                    var a1 = s1.Split('/');
-                    var a2 = s2.Split('/');
-                    if (a1.Length != 2 && a1.Length != a2.Length)
+                    var array1 = a.GetHealthValue();
+                    var array2 = b.GetHealthValue();
+                    if (array1.Length != 2 || array1.Length != array2.Length)
                         return 0;
-                    for (int i = 1; i >= 0; i--)
+                    for (int i = 1; i > -1; i--)
                     {
-                        int.TryParse(a1[i], out m);
-                        int.TryParse(a2[i], out n);
-
-                        if (m != 0 || n != 0)
-                        {
-                            var result = CheckMN(m, n, desc);
-                            if (result != 0)
-                                return result;
-                        }
+                        var result = CheckMN(array1[i], array2[i]);
+                        if (result != 0)
+                            return result;
                     }
                     return 0;
+                case 13:
+                    return CheckMN(a.Str, b.Str);
+                case 14:
+                    return CheckMN(a.Con, b.Con);
+                case 15:
+                    return CheckMN(a.Agi, b.Agi);
+                case 16:
+                    return CheckMN(a.Bon, b.Bon);
+                case 17:
+                    return CheckMN(a.Inv, b.Inv);
+                case 18:
+                    return CheckMN(a.Pat, b.Pat);
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 25:
+                case 26:
+                case 27:
+                case 28:
+                case 29:
+                case 30:
+                case 31:
+                case 32:
+                    return CheckMN(a.GetLevelValue(index - 19, 1), b.GetLevelValue(index - 19, 1));
+                case 33:
+                case 34:
+                case 35:
+                case 36:
+                case 37:
+                case 38:
+                case 39:
+                case 40:
+                case 41:
+                case 42:
+                case 43:
+                case 44:
+                case 45:
+                case 46:
+                case 47:
+                case 48:
+                    return CheckMN(a.GetLevelValue(index - 33, 0), b.GetLevelValue(index - 33, 0));
+                case 49:
+                    return CheckMN(a.Money, b.Money);
+                case 50:
+                case 51:
+                case 52:
+                case 53:
+                case 54:
+                case 55:
+                case 56:
+                    return CheckMN(a.ActorResources[index - 50], b.ActorResources[index - 50]);
                 case 57:
-                    // 可学功法，从一品到九品数量加权求和转换成一个正整数比较大小
-                    MatchCollection matches;
-                    long ml = 0, nl = 0;
-                    if (s1 != "")
+                    array1 = a.GetGongFaList();
+                    array2 = b.GetGongFaList();
+                    if (array1.Length == 0 || array1.Length != array2.Length)
+                        return 0;
+                    long l1 = 0, l2 = 0;
+                    for (int i = 0; i < array1.Length; i++)
                     {
-                        matches = Regex.Matches(s1, @"(?<=<color=#[0-9a-fA-F]{8}>)\d{2}(?=</color>)");
-                        for (int i = 0; i < matches.Count; i++)
-                        {
-                            var tmp = matches[i].Value;
-                            if (tmp != "00")
-                                ml += int.Parse(tmp) * power[i];
-
-                        }
+                        if (array1[i] != 0)
+                            l1 += array1[i] * power[i];
+                        if (array2[i] != 0)
+                            l2 += array2[i] * power[i];
                     }
-                    if (s2 != "")
-                    {
-                        matches = Regex.Matches(s2, @"(?<=<color=#[0-9a-fA-F]{8}>)\d{2}(?=</color>)");
-                        for (int i = 0; i < matches.Count; i++)
-                        {
-                            var tmp = matches[i].Value;
-                            if (tmp != "00")
-                                nl += int.Parse(tmp) * power[i];
-                        }
-                    }
-                    return CheckMN(ml, nl, desc);
+                    return CheckMN(l1, l2);
                 case 58:
-                    // 可学技艺，将各可学技艺的品阶做(9-品阶)<<(9-品阶)运算后求和，排序
-                    m = n = 0;
-                    if (s1 != "")
-                    {
-                        matches = Regex.Matches(s1, @"\d(?=</color>)");
-                        for (int i = 0; i < matches.Count; i++)
-                        {
-                            var tmp = 10 - int.Parse(matches[i].Value);
-                            m += tmp << tmp;
-                        }
-                    }
-                    if (s2 != "")
-                    {
-                        matches = Regex.Matches(s2, @"\d(?=</color>)");
-                        for (int i = 0; i < matches.Count; i++)
-                        {
-                            var tmp = 10 - int.Parse(matches[i].Value);
-                            n += tmp << tmp;
-                        }
-                    }
-                    return CheckMN(m, n, desc);
+                    return CheckMN(a.GetMaxSkillGrade(), b.GetMaxSkillGrade());
+                case 59:
+                    return CheckMN(a.SamsaraNames, b.SamsaraNames);
                 case 60:
-                    // 特性直接字符串比较
-                    s1 = colorTagRegex.Replace(s1, "");
-                    s2 = colorTagRegex.Replace(s2, "");
-                    return desc ? -s1.CompareTo(s2) : s1.CompareTo(s2);
+                    int count1 = a.ActorFeatures.Count;
+                    int count2 = b.ActorFeatures.Count;
+                    int count = Math.Min(count1, count2);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var result = CheckMN(a.ActorFeatures[i], b.ActorFeatures[i]);
+                        if (result != 0)
+                            return result;
+                    }
+                    if (count1 > count)
+                        return desc ? -1 : 1;
+                    if (count2 > count)
+                        return desc ? 1 : -1;
+                    return 0;
                 default:
-                    // 取其中数字排序
-                    // 若其中数字相等 或非数字情况下 字符串排序
-                    s1 = colorTagRegex.Replace(s1, "");
-                    s2 = colorTagRegex.Replace(s2, "");
-                    int.TryParse(s1, out m);
-                    int.TryParse(s2, out n);
-                    if (m != 0 || n != 0)
-                        return CheckMN(m, n, desc);
-                    else
-                        return desc ? -s1.CompareTo(s2) : s1.CompareTo(s2);
+                    return 0;
             }
         }
 
@@ -1313,19 +1364,9 @@ namespace NpcScan
         /// </summary>
         /// <param name="m"></param>
         /// <param name="n"></param>
-        /// <param name="desc">是否降序</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int CheckMN(long m, long n, bool desc)
-        {
-            int rtn = desc ? -1 : 1;
-            if (m > n)
-                return rtn;
-            else if (m < n)
-                return -1 * rtn;
-            else
-                return 0;
-        }
+        private int CheckMN<T>(T m, T n) where T : IComparable => (desc ? -1 : 1) * m.CompareTo(n);
 
         /// <summary>
         /// 计算每列宽度

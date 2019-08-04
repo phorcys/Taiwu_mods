@@ -1,9 +1,11 @@
 ﻿
+using System.Collections.Generic;
+
 namespace NpcScan
 {
     internal class Features
     {
-        /// <summary>角色ID</summary>
+        /// <summary>特性ID</summary>
         public int Key { get; private set; } = 0;
         /// <summary>特性等级</summary>
         public int Level { get; private set; } = 0;
@@ -18,14 +20,14 @@ namespace NpcScan
         /// <summary>搜索命中的特性颜色</summary>
         public string TarColor { get; private set; } = "";
 
-        public Features(int i)
+        public Features(int i, Dictionary<int,string> featureData)
         {
             Key = i;
             // 特性等级
-            Level = int.Parse(DateFile.instance.actorFeaturesDate[i][4]);
-            Group = int.Parse(DateFile.instance.actorFeaturesDate[i][5]);
-            Name = DateFile.instance.actorFeaturesDate[i][0];
-            Plus = int.Parse(DateFile.instance.actorFeaturesDate[i][8]);
+            Level = int.Parse(featureData[4]);
+            Group = int.Parse(featureData[5]);
+            Name = featureData[0];
+            Plus = int.Parse(featureData[8]);
             switch (Plus)
             {
                 default:
