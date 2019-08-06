@@ -43,7 +43,7 @@ namespace NpcScan
         private List<int> skillMaxCache;
         /// <summary>可教功法数量缓存</summary>
         private int[] gongFaResultCache;
-        /// <summary>搜索结果缓存</summary>
+        /// <summary>搜索结果渲染缓存</summary>
         private string[] addItemCache;
         /*----------------------------------------*/
         /// <summary>线程锁</summary>
@@ -168,13 +168,15 @@ namespace NpcScan
         /// <returns></returns>
         public string[] GetAddItem()
         {
+            // 之前已经处理过则不需要再次处理
             if (addItemCache != null)
                 return addItemCache;
             if (!isNeededAdd)
                 return null;
             int index = 0;
-            var additem = new string[_ui.GetEffectiveColumnCount()];
-
+            // 使用array而非List减少copy次数提升渲染性能
+            var additem = new string[isRank ? 62 : 61];
+            //综合评分
             if (isRank)
                 additem.Add(Totalrank.ToString(), ref index);
             //姓名
@@ -258,9 +260,9 @@ namespace NpcScan
         /// </summary>
         public bool AddCheck()
         {
-            // 997真实值判断。 如果是boss（相枢分身）直接返回
-            // 真实ID为200开头 则为boss PS: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
-            if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 32) return false;
+            // 997为人物模板, 当大于100是特殊剧情人物，跳过不处理, 详见TextAsset中的PresetActor_Date
+            // 如: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
+            if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 100) return false;
 
             if (_ui.Minage > 0)
             {

@@ -265,27 +265,6 @@ namespace NpcScan
             return false;
         }
 
-        /// <summary>
-        /// 获取搜索结果应有的列数
-        /// </summary>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetEffectiveColumnCount()
-        {
-            // 排序模式开启，但是还未添加排序表头，此时新产生的结果应比当前表头列数多一
-            if (Rankmode && !rankcolumnadded)
-            {
-                return mColumns.Count + 1;
-            }
-            // 排序模式关闭，但是还未删除排序表头，此时新产生的结果应比当前表头列数少一
-            if (!Rankmode && rankcolumnadded)
-            {
-                return mColumns.Count - 1;
-            }
-            // 其他情况, 新产生的结果列数与表头列数一致
-            return mColumns.Count;
-        }
-
         private void Awake()
         {
             Instance = this;
@@ -1054,7 +1033,7 @@ namespace NpcScan
                     Main.Logger.Log(ex.ToString());
                 }
             });
-            // 搜索完毕, 结束关闭线程
+            // 搜索完毕, 结束关闭多线程补丁
             Patch.StopGetFeaturePatch();
 #if debug
             stopwatch.Stop();
@@ -1225,7 +1204,7 @@ namespace NpcScan
         /// <returns></returns>
         private int SortList(ActorItem a, ActorItem b)
         {
-            int index = Rankmode ? sortIndex - 1 : sortIndex;
+            int index = rankcolumnadded ? sortIndex - 1 : sortIndex;
             // 分情况讨论，主要是为了使用更专门的Regex，提升排序性能
             switch (index)
             {

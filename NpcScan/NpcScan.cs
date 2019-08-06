@@ -155,7 +155,7 @@ namespace NpcScan
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
     }
 
-    internal static class ExtendedArrayAdd
+    internal static class ExtendedMethod
     {
         /// <summary>
         /// 在所给序数位置给数组添加成员并将序数加一
