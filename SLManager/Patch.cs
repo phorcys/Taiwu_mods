@@ -15,7 +15,8 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
+using ArchiveSystem;
+using ArchiveSystem.GameData;
 
 namespace Sth4nothing.SLManager
 {
@@ -213,6 +214,8 @@ namespace Sth4nothing.SLManager
             switch (OnClick.instance.ID)
             {
                 case 4646:
+                    if (Main.settings.enableHyperQuickLoad)
+                        HyperQuickLoadManager.NextLoadIsQuickLoad = true;
                     LoadFile.DoLoad(SaveDateFile.instance.dateId);
                     break;
             }
@@ -259,7 +262,7 @@ namespace Sth4nothing.SLManager
 #if DEBUG
                 var m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>(null, "m_Container");
                 Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
-                foreach(string key in m_SingletonMap.Keys)
+                foreach(string key in SingletonMap.Keys)
                 {
                     Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
                 }
@@ -514,6 +517,7 @@ namespace Sth4nothing.SLManager
             yield return new WaitForSeconds(0.01f);
             if (file.EndsWith(".zip"))
                 Unzip(file);
+            HyperQuickLoadManager.NextLoadIsQuickLoad = false;
             DoLoad(SaveManager.DateId);
         }
 
@@ -552,6 +556,8 @@ namespace Sth4nothing.SLManager
 
     }
 
+
+
     public static class SaveManager
     {
         public static SaveDateBackuper Backuper { get => SaveDateBackuper.GetInstance(); }
@@ -562,6 +568,7 @@ namespace Sth4nothing.SLManager
         }
         public const int AfterSaveBackup = 0,
             BeforeLoadingBackup = 1;
+
 
         /// <summary>
         /// 当前系统存档路径
@@ -596,6 +603,10 @@ namespace Sth4nothing.SLManager
             {
                 Debug.Log("存档文件不全");
                 return null;
+            }
+            if (Main.settings.enableHyperQuickLoad)
+            {
+                HyperQuickLoadManager.StartPreload();
             }
             switch (backupType)
             {
@@ -707,6 +718,7 @@ namespace Sth4nothing.SLManager
                 zip.Save(targetFile);
             }
             Environment.CurrentDirectory = preDir;
+
         }
 
         /// <summary>
@@ -949,4 +961,197 @@ namespace Sth4nothing.SLManager
             return true;
         }
     }
+
+    static public class HyperQuickLoadManager
+    {
+        private static bool _nextLoadIsQuickLoad = false;
+        internal static bool NextLoadIsQuickLoad {
+            get { return _nextLoadIsQuickLoad; }
+            set {
+#if DEBUG
+                var method = new System.Diagnostics.StackTrace().GetFrame(1).GetMethod();
+                string methodName = method.Name;
+                string className = method.ReflectedType.Name;
+                Main.Logger.Log($"NextLoadIsQuickLoad set to {value} by {className}.{methodName}");
+#endif
+                _nextLoadIsQuickLoad = value;
+            }
+        }
+
+        public static DatePreloader<DefaultData, DateFile.SaveDate> DefaultDataPreloader = new DatePreloader<DefaultData, DateFile.SaveDate>();
+        public static DatePreloader<ActorLives, DateFile.ActorLife> ActorLivesPreloader = new DatePreloader<ActorLives, DateFile.ActorLife>();
+
+        internal static void StartPreload()
+        {
+            NextLoadIsQuickLoad = false;
+            DefaultDataPreloader.StartPreload();
+            ActorLivesPreloader.StartPreload();
+        }
+    }
+
+    public class DatePreloader<T, T2> 
+        where T : GameDataBase 
+        where T2:class
+    {
+        public int DateId { get; private set; } = 0;
+        private Task<object> _preloadTask = null;
+        private string _customSaveRootDir;
+        DeepCopier.DeepCopier<T2> _deepCopier = new DeepCopier.DeepCopier<T2>();
+        private Action<T2, T2> _cloneAction;
+
+        public DatePreloader(string customSaveRootDir = null)
+        {
+            _customSaveRootDir = customSaveRootDir;
+            _deepCopier.StartCompileAllDeepCopyFieldAction()
+                .ContinueWith(task => _cloneAction = task.Result);
+        }
+
+        public void StartPreload()
+        {
+            _preloadTask = Task.Run(Preload);
+        }
+
+        private object Preload()
+        {
+#if DEBUG
+            lock (Main.Logger)
+                Main.Logger.Log($"Start preload {typeof(T).Name}");
+            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+#endif
+            try
+            {
+                DateId = SaveDateFile.instance.dateId;
+                var gamedatabaseObj = (T)Activator.CreateInstance(typeof(T), getSaveFileName(), _customSaveRootDir);
+                var r = gamedatabaseObj.Load(DateId);
+#if DEBUG
+                lock (Main.Logger)
+                    Main.Logger.Log($"End preload {typeof(T).Name}: {stopwatch.ElapsedMilliseconds} ms");
+#endif
+                return r;
+            }
+            catch (Exception ex)
+            {
+                lock (Main.Logger)
+                {
+                    Main.Logger.Error($"Preload");
+                    Main.Logger.Error(ex.ToString());
+                }
+            }
+            return null;
+        }
+
+        string getSaveFileName()
+        {
+            if(typeof(T) == typeof(DefaultData))
+                return SaveDateFile.instance.saveDateName;
+            if (typeof(T) == typeof(ActorLives))
+                return SaveDateFile.instance.actorLifeName;
+            throw new NotImplementedException($"getSaveFileName is not implemented {typeof(T).FullName}");
+        }
+
+        public object GetDate()
+        {
+            var result = _preloadTask?.Result;
+            var r2 = Activator.CreateInstance<T2>();
+            _cloneAction((T2)result, r2);
+            return r2;
+        }
+
+    }
+
+    [HarmonyPatch(typeof(DefaultData), "Load")]
+    public class DefaultData_Load_Patch
+    {
+        static System.Diagnostics.Stopwatch _stopwatch;
+        private static bool Prefix(ref object __result, int saveId)
+        {
+            if (!Main.Enabled) return true;
+            _stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            if (!HyperQuickLoadManager.NextLoadIsQuickLoad ||
+                HyperQuickLoadManager.DefaultDataPreloader?.DateId != saveId)
+                return true;
+            var data = HyperQuickLoadManager.DefaultDataPreloader.GetDate();
+            if(data != null)
+            {
+                Main.Logger.Log($"DefaultData.Load use preload data.");
+                __result = data;
+                return false;
+            }
+            return true;
+        }
+#if DEBUG
+        private static void Postfix()
+        {
+            Main.Logger.Log($"DefaultData.Load: {_stopwatch.ElapsedMilliseconds} ms");
+        }
+#endif
+    }
+
+    [HarmonyPatch(typeof(ActorLives), "Load")]
+    public class ActorLives_Load_Patch
+    {
+        static System.Diagnostics.Stopwatch _stopwatch;
+        private static bool Prefix(ref object __result, int saveId)
+        {
+            if (!Main.Enabled) return true;
+            _stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            if (!HyperQuickLoadManager.NextLoadIsQuickLoad ||
+                HyperQuickLoadManager.ActorLivesPreloader?.DateId != saveId)
+                return true;
+            var data = HyperQuickLoadManager.ActorLivesPreloader.GetDate();
+            if (data != null)
+            {
+                Main.Logger.Log($"ActorLives.Load use preload data.");
+                __result = data;
+                return false;
+            }
+            return true;
+        }
+#if DEBUG
+        private static void Postfix()
+        {
+            Main.Logger.Log($"ActorLives.Load: {_stopwatch.ElapsedMilliseconds} ms");
+        }
+#endif
+    }
+
+    [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
+    public class MainMenu_BackToMainWindow_Patch
+    {
+        private static void Prefix()
+        {
+            HyperQuickLoadManager.NextLoadIsQuickLoad = false;
+        }
+    }
+
+    public static class DeepCopyHelper
+    {
+        //public static Dictionary<TKey, TValue> DeepCopy<TKey, TValue>(this Dictionary<TKey, TValue> origin)
+        //{
+        
+        //}
+
+        public static int[] DeepCopy(this int[] array)
+        {
+            var r = new int[array.Length];
+            array.CopyTo(r, 0);
+            return r;
+        }
+
+        public static List<int[]> DeepCopy(this List<int[]> listOfIntArray)
+        {
+            return new List<int[]>(listOfIntArray.Select(a => a.DeepCopy()));
+        }
+    }
+
+    public class RefSaveDate
+    {
+        public void Test<T>()
+        {
+            var fields = typeof(T).GetFields();
+            // fields[0].DeepClone
+            
+        }
+    }
+
 }
