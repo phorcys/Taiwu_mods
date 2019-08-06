@@ -537,7 +537,7 @@ namespace Sth4nothing.SLManager
             MainMenu.instance.SetLoadIndex(dataId);
         }
 
-
+        
 
         /// <summary>
         /// 解压存档到游戏存档目录
@@ -604,10 +604,10 @@ namespace Sth4nothing.SLManager
                 Debug.Log("存档文件不全");
                 return null;
             }
-            if (Main.settings.enableHyperQuickLoad)
-            {
-                HyperQuickLoadManager.StartPreload();
-            }
+            //if (Main.settings.enableHyperQuickLoad)
+            //{
+            //    HyperQuickLoadManager.StartPreload();
+            //}
             switch (backupType)
             {
                 case AfterSaveBackup:
@@ -1014,8 +1014,7 @@ namespace Sth4nothing.SLManager
         private object Preload()
         {
 #if DEBUG
-            lock (Main.Logger)
-                Main.Logger.Log($"Start preload {typeof(T).Name}");
+            Main.Logger.Log($"Start preload {typeof(T).Name}");
             System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
 #endif
             try
@@ -1024,18 +1023,14 @@ namespace Sth4nothing.SLManager
                 var gamedatabaseObj = (T)Activator.CreateInstance(typeof(T), getSaveFileName(), _customSaveRootDir);
                 var r = gamedatabaseObj.Load(DateId);
 #if DEBUG
-                lock (Main.Logger)
-                    Main.Logger.Log($"End preload {typeof(T).Name}: {stopwatch.ElapsedMilliseconds} ms");
+                Main.Logger.Log($"End preload {typeof(T).Name}: {stopwatch.ElapsedMilliseconds} ms");
 #endif
                 return r;
             }
             catch (Exception ex)
             {
-                lock (Main.Logger)
-                {
-                    Main.Logger.Error($"Preload");
-                    Main.Logger.Error(ex.ToString());
-                }
+                Main.Logger.Error($"Preload");
+                Main.Logger.Error(ex.ToString());
             }
             return null;
         }
@@ -1059,60 +1054,203 @@ namespace Sth4nothing.SLManager
 
     }
 
+    class StateHelper
+    {
+        public static int IntoGameIndex { get; internal set; } = 0;
+
+        public static bool IsIntoGame()
+        {
+            //Main.Logger.Log($"IsInGame : {ActorMenu.instance != null},{DateFile.instance != null}");
+            //return ActorMenu.instance != null && DateFile.instance != null;
+            return IntoGameIndex > 0;
+        }
+    }
+
+    class CacheManager
+    {
+        static Action<DateFile.SaveDate, DateFile.SaveDate> _saveDateDeepCopyAction;
+        static Action<DateFile.ActorLife, DateFile.ActorLife> _actorLifeDeepCopyAction;
+
+
+        static object _lock = new object();
+        static DateFile.SaveDate _saveData_cache = null;
+        static int _saveData_cache_index = 0;
+        static DateFile.ActorLife _actorLife_cache = null;
+        static int _actorLife_cache_index = 0;
+
+        static CacheManager()
+        {
+            _saveDateDeepCopyAction = (new DeepCopier.DeepCopier<DateFile.SaveDate>()).CompileAllDeepCopyFieldAction();
+            _actorLifeDeepCopyAction = (new DeepCopier.DeepCopier<DateFile.ActorLife>()).CompileAllDeepCopyFieldAction();
+        }
+
+        public static void SetSaveDateCache(int saveId, DateFile.SaveDate dataToCache)
+        {
+            var newCache = new DateFile.SaveDate();
+            _saveDateDeepCopyAction(dataToCache, newCache);
+            lock (_lock)
+            {
+                _saveData_cache_index = saveId;
+                _saveData_cache = newCache;
+            }
+        }
+
+        public static DateFile.SaveDate GetSaveDateCache(int saveId)
+        {
+            lock (_lock)
+            {
+                if (_saveData_cache_index == saveId)
+                    return _saveData_cache;
+            }
+            return null;
+        }
+
+        public static void SetActorLifeCache(int saveId, DateFile.ActorLife dataToCache)
+        {
+            var newCache = new DateFile.ActorLife();
+            _actorLifeDeepCopyAction(dataToCache, newCache);
+            lock (_lock)
+            {
+                _actorLife_cache_index = saveId;
+                _actorLife_cache = newCache;
+            }
+        }
+
+        public static DateFile.ActorLife GetActorLifeCache(int saveId)
+        {
+            lock (_lock)
+            {
+                if (_actorLife_cache_index == saveId)
+                    return _actorLife_cache;
+            }
+            return null;
+        }
+
+    }
+
+    // 攔截讀檔時(後)
     [HarmonyPatch(typeof(DefaultData), "Load")]
     public class DefaultData_Load_Patch
     {
         static System.Diagnostics.Stopwatch _stopwatch;
+
+
+
         private static bool Prefix(ref object __result, int saveId)
         {
             if (!Main.Enabled) return true;
             _stopwatch = System.Diagnostics.Stopwatch.StartNew();
             if (!HyperQuickLoadManager.NextLoadIsQuickLoad ||
-                HyperQuickLoadManager.DefaultDataPreloader?.DateId != saveId)
+                !StateHelper.IsIntoGame())
                 return true;
-            var data = HyperQuickLoadManager.DefaultDataPreloader.GetDate();
-            if(data != null)
+            var data = CacheManager.GetSaveDateCache(saveId);
+            if (data != null)
             {
-                Main.Logger.Log($"DefaultData.Load use preload data.");
+                Main.Logger.Log($"DefaultData.Load use cache.");
                 __result = data;
                 return false;
             }
             return true;
         }
-#if DEBUG
-        private static void Postfix()
+        private static void Postfix(object __result, int saveId)
         {
-            Main.Logger.Log($"DefaultData.Load: {_stopwatch.ElapsedMilliseconds} ms");
-        }
+            if (!Main.Enabled) return;
+            if (Main.settings.enableHyperQuickLoad &&
+                StateHelper.IntoGameIndex > 0)
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                CacheManager.SetSaveDateCache(saveId, (DateFile.SaveDate)__result);
+#if DEBUG
+                Main.Logger.Log($"Cache SaveDate after loaded: {stopwatch.ElapsedMilliseconds} ms");
 #endif
+            }
+#if DEBUG
+            Main.Logger.Log($"DefaultData.Load: {_stopwatch?.ElapsedMilliseconds} ms");
+#endif
+        }
     }
+
 
     [HarmonyPatch(typeof(ActorLives), "Load")]
     public class ActorLives_Load_Patch
     {
         static System.Diagnostics.Stopwatch _stopwatch;
+
         private static bool Prefix(ref object __result, int saveId)
         {
             if (!Main.Enabled) return true;
             _stopwatch = System.Diagnostics.Stopwatch.StartNew();
             if (!HyperQuickLoadManager.NextLoadIsQuickLoad ||
-                HyperQuickLoadManager.ActorLivesPreloader?.DateId != saveId)
+                !StateHelper.IsIntoGame())
                 return true;
-            var data = HyperQuickLoadManager.ActorLivesPreloader.GetDate();
+            var data = CacheManager.GetActorLifeCache(saveId);
             if (data != null)
             {
-                Main.Logger.Log($"ActorLives.Load use preload data.");
+                Main.Logger.Log($"ActorLives.Load use cache.");
                 __result = data;
                 return false;
             }
             return true;
         }
-#if DEBUG
-        private static void Postfix()
+        private static void Postfix(object __result, int saveId)
         {
-            Main.Logger.Log($"ActorLives.Load: {_stopwatch.ElapsedMilliseconds} ms");
-        }
+            if (!Main.Enabled) return;
+            if (Main.settings.enableHyperQuickLoad &&
+                StateHelper.IntoGameIndex > 0)
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                CacheManager.SetActorLifeCache(saveId, (DateFile.ActorLife)__result);
+#if DEBUG
+                Main.Logger.Log($"Cache ActorLife after loaded: {stopwatch.ElapsedMilliseconds} ms");
 #endif
+            }
+#if DEBUG
+            Main.Logger.Log($"ActorLives.Load: {_stopwatch?.ElapsedMilliseconds} ms");
+#endif
+        }
+    }
+
+
+    // 攔截存檔時(後)
+    [HarmonyPatch(typeof(DateFile.SaveDate), "FillDate")]
+    public class SaveDate_FillDate_Patch
+    {
+        private static void Postfix(DateFile.SaveDate __instance)
+        {
+            if (!Main.Enabled || !Main.settings.enableHyperQuickLoad)
+                return;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            CacheManager.SetSaveDateCache(SaveDateFile.instance.dateId, __instance);
+#if DEBUG
+            Main.Logger.Log($"SetSaveDateCache by SaveDate_FillDate.Postfix: {stopwatch.ElapsedMilliseconds} ms");
+#endif
+        }
+    }
+
+    // 攔截存檔時(後)
+    [HarmonyPatch(typeof(DateFile.ActorLife), "FillDate")]
+    public class ActorLife_FillDate_Patch
+    {
+        private static void Postfix(DateFile.ActorLife __instance)
+        {
+            if (!Main.Enabled || !Main.settings.enableHyperQuickLoad)
+                return;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            CacheManager.SetActorLifeCache(SaveDateFile.instance.dateId, __instance);
+#if DEBUG
+            Main.Logger.Log($"SetActorLifeCache by ActorLife_FillDate.Postfix: {stopwatch.ElapsedMilliseconds} ms");
+#endif
+        }
+    }
+
+    // 攔截讀取並進入遊戲的行為, 用以控制狀態
+    [HarmonyPatch(typeof(MainMenu), "SetLoadIndex")]
+    class MainMenu_SetLoadIndex_Patch
+    {
+        private static void Prefix(int index)
+        {
+            StateHelper.IntoGameIndex = index;
+        }
     }
 
     [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
@@ -1120,38 +1258,7 @@ namespace Sth4nothing.SLManager
     {
         private static void Prefix()
         {
-            HyperQuickLoadManager.NextLoadIsQuickLoad = false;
+            StateHelper.IntoGameIndex = 0;
         }
     }
-
-    public static class DeepCopyHelper
-    {
-        //public static Dictionary<TKey, TValue> DeepCopy<TKey, TValue>(this Dictionary<TKey, TValue> origin)
-        //{
-        
-        //}
-
-        public static int[] DeepCopy(this int[] array)
-        {
-            var r = new int[array.Length];
-            array.CopyTo(r, 0);
-            return r;
-        }
-
-        public static List<int[]> DeepCopy(this List<int[]> listOfIntArray)
-        {
-            return new List<int[]>(listOfIntArray.Select(a => a.DeepCopy()));
-        }
-    }
-
-    public class RefSaveDate
-    {
-        public void Test<T>()
-        {
-            var fields = typeof(T).GetFields();
-            // fields[0].DeepClone
-            
-        }
-    }
-
 }

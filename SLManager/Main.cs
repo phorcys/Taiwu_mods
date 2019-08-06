@@ -22,6 +22,37 @@ namespace Sth4nothing.SLManager
 
     }
 
+
+    public class ThreadSafeLogger 
+    {
+        UnityModManager.ModEntry.ModLogger _baseLogger;
+        private object _writeLock = new object();
+
+        public ThreadSafeLogger(UnityModManager.ModEntry.ModLogger baseLogger)
+        {
+            _baseLogger = baseLogger;
+        }
+
+
+        public virtual void Critical(string str)
+        {
+            lock (_writeLock) _baseLogger.Critical(str);
+        }
+        public virtual void Error(string str)
+        {
+            lock (_writeLock) _baseLogger.Error(str);
+        }
+        public virtual void Log(string str)
+        {
+            lock (_writeLock) _baseLogger.Log(str);
+        }
+        public virtual void Warning(string str)
+        {
+            lock (_writeLock) _baseLogger.Warning(str);
+        }
+    }
+
+
     public static class Main
     {
         public static bool Enabled { get; private set; }
@@ -32,7 +63,7 @@ namespace Sth4nothing.SLManager
 
         public static Settings settings;
 
-        public static UnityModManager.ModEntry.ModLogger Logger;
+        public static ThreadSafeLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -41,7 +72,7 @@ namespace Sth4nothing.SLManager
                 @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
             );
 
-            Logger = modEntry.Logger;
+            Logger = new ThreadSafeLogger(modEntry.Logger);
             settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
 

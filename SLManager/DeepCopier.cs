@@ -211,7 +211,6 @@ namespace DeepCopier
                 }
             }
             throw new NotImplementedException($"{dataType.Name} is not implemented");
-            return null;
         }
 
 
