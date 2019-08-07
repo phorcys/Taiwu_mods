@@ -8,7 +8,7 @@ using System.Reflection.Emit;
 
 namespace DeepCopier
 {
-    class DeepCopier<T> where T : class
+    class DeepCopier<T> 
     {
         private ParameterExpression _sourceExpr;
         private ParameterExpression _destExpr;
@@ -34,7 +34,7 @@ namespace DeepCopier
         }
 
         internal Expression<Action<T, T>> GetAllDeepCopyFieldLambda()
-            => Lambda(typeof(T).GetFields().Select(field => GetDeepCopyFieldExpression(field)));
+            => Lambda(GetAllDeepCopyFieldExpressions());
 
         internal Action<T, T> CompileAllDeepCopyFieldAction()
             => GetAllDeepCopyFieldLambda().Compile();
@@ -76,20 +76,28 @@ namespace DeepCopier
             return Lambda(expression).Compile();
         }
 
-
-        Dictionary<Type, ParameterExpression> _dict_Parameters = new Dictionary<Type, ParameterExpression>();
-
-        public ParameterExpression GetParameter(Type parameterType)
+        internal IEnumerable<Expression> GetAllShallowCopyFieldExpressions()
         {
-            if (!_dict_Parameters.TryGetValue(parameterType, out var expression))
-            {
-                expression = Expression.Parameter(parameterType);
-                _dict_Parameters[parameterType] = expression;
-            }
-            return expression;
+            return typeof(T).GetFields().Select(field => GetShallowCopyFieldExpression(field));
         }
 
-        // Dictionary<Type, LambdaExpression> _dict_typeDeepCloneLambda = new Dictionary<Type, LambdaExpression>();
+        internal Expression<Action<T, T>> GetShallowCopyCopyFieldLambda()
+            => Lambda(GetAllShallowCopyFieldExpressions());
+
+        internal Action<T, T> CompileAllShallowCopyFieldAction()
+            => GetShallowCopyCopyFieldLambda().Compile();
+
+        internal Task<Action<T, T>> StartCompileAllShallowCopyFieldAction()
+            => Task.Run(CompileAllShallowCopyFieldAction);
+
+        public Expression GetShallowCopyFieldExpression(System.Reflection.FieldInfo field)
+        {
+            MemberExpression sourceFieldExp = Expression.Field(_sourceExpr, field);
+            MemberExpression destFieldExp = Expression.Field(_destExpr, field);
+            BinaryExpression assignExp = Expression.Assign(destFieldExp, sourceFieldExp);
+            return assignExp;
+        }
+
 
         public Expression GetDeepCloneExpression(Type dataType, Expression dataExpr)
         {

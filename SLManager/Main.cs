@@ -18,7 +18,7 @@ namespace Sth4nothing.SLManager
         public bool blockAutoSave = false;
         public int maxBackupToLoad = 8;
         public int maxBackupsToKeep = 1000;
-        public bool enableHyperQuickLoad = false;
+        public bool enableTurboQuickLoad = false;
 
     }
 
@@ -119,7 +119,7 @@ namespace Sth4nothing.SLManager
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
-            settings.enableHyperQuickLoad = GUILayout.SelectionGrid(settings.enableHyperQuickLoad ? 1 : 0,
+            settings.enableTurboQuickLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoad ? 1 : 0,
                                          AutoSaveState, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
