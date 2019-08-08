@@ -1095,6 +1095,7 @@ namespace Sth4nothing.SLManager
         }
     }
 
+    [HarmonyAfter(new string[] { "FastLoad.DefaultData_Load_Patch" })]
     // 攔截讀檔時(後)
     [HarmonyPatch(typeof(DefaultData), "Load")]
     public class DefaultData_Load_Patch
@@ -1134,7 +1135,7 @@ namespace Sth4nothing.SLManager
         private static void Postfix(object __result, int saveId)
         {
             if (!Main.Enabled) return;
-            if (Main.settings.enableHyperQuickLoad &&
+            if (Main.settings.enableTurboQuickLoad &&
                 StateHelper.IntoGameIndex > 0)
             {
                 if (_lastCalledLoadingState == StateHelper.LoadingState)
