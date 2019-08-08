@@ -1074,6 +1074,7 @@ namespace CharacterFloatInfo
         /// </summary>
         /// <param name="actorId"></param>
         /// <returns></returns>
+        /// <remarks>参考<see cref="MassageWindow.EndEvent9013_8()"/></remarks>
         private static string SetInfoMessage3(int actorId)
         {
             if (!Main.settings.showLevel)
@@ -1086,16 +1087,24 @@ namespace CharacterFloatInfo
                     if (CanTeach(actorId, i))
                     {
                         int typ = (i < 100 ? 501 : 500) + i;
-                        // 当前好感等级
-                        int favor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000;
                         // 当前可传授最高等级
-                        int maxLevel = Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, typ), 8);
-                        // 当前可传授等级
-                        int level = Mathf.Clamp(Mathf.Min(maxLevel - 1, favor), 0, 8);
-                        string[] marks = { "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
-                        // 文字为当前可传授等级 颜色为当前可传授最高等级
-                        string mark = Main.settings.useColorOfTeachingSkill ? DateFile.instance.SetColoer(20002 + maxLevel, marks[level]) : "※";
-                        text.Append(mark);
+                        int maxLevel = MassageWindow.instance.GetSkillValue(actorId, typ);
+                        if(maxLevel > 0)
+                        {
+                            maxLevel = Math.Min(maxLevel, 9);
+                            // 当前好感对应的等级
+                            int favorlvl = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000 - 1;
+                            // 当前可传授等级
+                            int level = Mathf.Clamp(Mathf.Min(maxLevel, favorlvl), 0, 9);
+                            string[] marks = { "●", "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
+                            // 文字为当前可传授最高等级 颜色为角色掌握的最高等级
+                            string mark = Main.settings.useColorOfTeachingSkill ? DateFile.instance.SetColoer(20002 + maxLevel-1, marks[level]) : "※";
+                            text.Append(mark);
+                        }
+                        else
+                        {
+                            text.Append("　");
+                        }
                     }
                     else
                     {
@@ -1442,7 +1451,7 @@ namespace CharacterFloatInfo
             int maxhealth = ActorMenu.instance.MaxHealth(id);
             int totalAge = GetAge(id) + maxhealth;
             int ageReduced = health - maxhealth;
-            int ageGrade = Mathf.Clamp((int)Math.Floor((decimal)(totalAge - 10) / 10), 0, 8);
+            int ageGrade = Mathf.Clamp((int)Math.Floor((decimal)(totalAge - 10) / 10), 0, 9);
             return $"{DateFile.instance.SetColoer(20001 + ageGrade, totalAge.ToString())}" +
                 $"<color=red>{(ageReduced != 0 ? ageReduced.ToString() : "")}</color>";
         }
@@ -1736,7 +1745,7 @@ namespace CharacterFloatInfo
             int[] buildingData = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int buildType = buildingData[0];
             int buildLv = buildingData[1];
-            return DateFile.instance.basehomePlaceDate[buildType][0]+" - Lv." + buildLv;
+            return DateFile.instance.basehomePlaceDate[buildType][0] + " - Lv." + buildLv;
         }
 
         /// <summary>
@@ -1758,8 +1767,8 @@ namespace CharacterFloatInfo
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
             int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
-            
-            return  $"{(float)currentXp / BuildingMaxXp * 100:0.#}% " +
+
+            return $"{(float)currentXp / BuildingMaxXp * 100:0.#}% " +
                 $"(+{(float)efficient * 100 / BuildingMaxXp:0.#}%" +
                 $"{DateFile.instance.massageDate[7006][1]})";
         }
