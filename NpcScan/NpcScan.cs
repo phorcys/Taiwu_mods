@@ -28,18 +28,14 @@ namespace NpcScan
         internal static bool bindingKey = false;
         /// <summary>特性字典</summary>
         internal static readonly Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
-        /// <summary>特性搜索条件</summary>
-        internal static readonly HashSet<int> findSet = new HashSet<int>();
         /// <summary>特性名称对应特性ID</summary>
         internal static readonly Dictionary<string, int> featureNameList = new Dictionary<string, int>();
-        /// <summary>功法搜索条件</summary>
-        internal static readonly List<int> gongFaList = new List<int>();
-        /// <summary>功法搜索条件</summary>
-        internal static readonly List<int> skillList = new List<int>();
         /// <summary>功法名字反查ID</summary>
         internal static readonly Dictionary<string, int> gongFaNameList = new Dictionary<string, int>();
         /// <summary>技艺名字反查ID</summary>
         internal static readonly Dictionary<string, int> skillNameList = new Dictionary<string, int>();
+        /// <summary>物品名字反查物品基础ID</summary>
+        internal static readonly Dictionary<string, List<int>> itemNameList = new Dictionary<string, List<int>>();
         /// <summary>文字颜色</summary>
         internal static readonly Dictionary<int, string> textColor = new Dictionary<int, string>()
         {

@@ -1,6 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
 
@@ -9,23 +10,33 @@ namespace NpcScan
     /// <summary>
     /// 角色信息类
     /// </summary>
-    internal class ActorItem
+    internal class ActorItem : IComparable<ActorItem>, IEquatable<ActorItem>
     {
-        #region 私有域
+        #region 域
         /// <summary>UI索引</summary>
         private readonly UI _ui;
         /// <summary>NPC的ID</summary>
-        private readonly int npcId;
+        public readonly int npcId;
         /// <summary>是否获取基础值</summary>
         private readonly bool isGetReal;
         /// <summary>是否是排行榜模式</summary>
         private readonly bool isRank;
-        /// <summary>门派名称</summary>
+        /// <summary>是否精确特性</summary>
+        private readonly bool isTarFeature;
+        /// <summary>从属名称</summary>
         private readonly string gangName;
-        /// <summary>门派身份等级文字</summary>
+        /// <summary>门派身份文字描述</summary>
         private readonly string gangLevelText;
-        /// <summary>商会</summary>
+        /// <summary>商会名称</summary>
         private readonly string shopName;
+        /// <summary>排行模式下综合评价计算时的加权</summary>
+        private int[] totalRankWeight;
+        /// <summary>角色物品, 基础ID、促织ID和促织部位ID共同唯一确定任何物品的品阶和名称</summary>
+        /// <remarks>使用<see cref="ValueTuple"/>作为Key比使用<see cref="Item"/>为Key速度快很多</remarks>
+        private Dictionary<(int BaseId, int QuquId, int QuquPartId), int> actorItems;
+        /// <summary>角色装备, 基础ID、促织ID和促织部位ID共同唯一确定任何物品的品阶和名称</summary>
+        private Dictionary<(int BaseId, int QuquId, int QuquPartId), int> actorEquips;
+
         /*----------------------------------------
         以下缓存对应的数据计算方法无法多线程计算，只在UI
         渲染时才会按需计算，使用缓存可以减少排序时的计算量
@@ -43,16 +54,19 @@ namespace NpcScan
         private List<int> skillMaxCache;
         /// <summary>可教功法数量缓存</summary>
         private int[] gongFaResultCache;
+        /// <summary>物品搜索结果缓存</summary>
+        private Item[] itemResultCache;
         /// <summary>搜索结果渲染缓存</summary>
-        private string[] addItemCache;
+        private string[] addedItemCache;
         /*----------------------------------------*/
         /// <summary>线程锁</summary>
         private int locker;
-        /// <summary>是否需要添加</summary>
-        private bool isNeededAdd;
         #endregion
 
         #region 私有属性(只在需要时才执行其中的方法，提高搜索性能)
+        /// <summary>是否需要添加(线程安全)</summary>
+        public bool NeededAdd { get; private set; }
+        // 注意:以下属性引用的大部分方法不保证线程安全
         /// <summary>姓名</summary>
         public string ActorName { get; private set; }
         /// <summary>膂力</summary>
@@ -101,11 +115,10 @@ namespace NpcScan
         public int GangLevel => int.Parse(DateFile.instance.GetActorDate(npcId, 20, false));
         /// <summary>金钱</summary>
         public int Money => intCache[8] = intCache[8] > -1 ? intCache[8] : ActorMenu.instance.ActorResource(npcId)[5];
-        /// <summary>身份等级对应的数据ID</summary>
+        /// <summary>从属身份对应的数据ID</summary>
         public int GangValueId => DateFile.instance.GetGangValueId(Groupid, GangLevel);
         /// <summary>七元赋性</summary>
         public int[] ActorResources => actorResourcesCache = actorResourcesCache ?? ActorMenu.instance.GetActorResources(npcId);
-
         /// <summary>角色特性</summary>
         public List<int> ActorFeatures { get; private set; }
         /// <summary>综合评价</summary>
@@ -115,13 +128,16 @@ namespace NpcScan
             {
                 if (intCache[9] > -1)
                     return intCache[9];
-                var tmp = Str * _ui.StrValue + Con * _ui.ConValue + Agi * _ui.AgiValue + Bon * _ui.BonValue + Inv * _ui.IntValue + Pat * _ui.PatValue;
-                tmp += Charm * _ui.CharmValue;
+                if (totalRankWeight == null) return 0;
+                var tmp = Str * totalRankWeight[0] + Con * totalRankWeight[1] + Agi * totalRankWeight[2] + Bon * totalRankWeight[3] + Inv * totalRankWeight[4] + Pat * totalRankWeight[5];
+                tmp += Charm * totalRankWeight[6];
                 for (int tmpi = 0; tmpi < 14; tmpi++)
-                    tmp += GetLevelValue(tmpi, 1) * _ui.Gongfa[tmpi];
+                    tmp += GetLevelValue(tmpi, 1) * totalRankWeight[7 + tmpi];
                 for (int tmpi = 0; tmpi < 16; tmpi++)
-                    tmp += GetLevelValue(tmpi, 0) * _ui.Skill[tmpi];
+                    tmp += GetLevelValue(tmpi, 0) * totalRankWeight[21 + tmpi];
                 intCache[9] = tmp;
+                // 计算完毕清除权重
+                totalRankWeight = null;
                 return tmp;
             }
         }
@@ -143,39 +159,58 @@ namespace NpcScan
             _ui = ui;
             this.npcId = npcId;
             isGetReal = ui.IsGetReal;
-            isRank = _ui.Rankmode ? true : false;
+            isRank = ui.Rankmode ? true : false;
+            isTarFeature = ui.TarFeature;
             ActorName = DateFile.instance.GetActorName(npcId);
-            SamsaraNames = GetSamsaraNames();
+            SamsaraNames = GetSamsaraNames(npcId);
 
             gangName = DateFile.instance.GetGangDate(Groupid, 0);
             // 地位名称ID (注：因亲属关系可能获得相应地位改变)
-            int key2 = (GangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)));
-            // 身份gangLevelText
-            gangLevelText = DateFile.instance.SetColoer((GangValueId != 0) ? (20011 - Mathf.Abs(GangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[GangValueId][key2], false);
+            int gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)));
+            // 身份的文字描述
+            gangLevelText = DateFile.instance.SetColoer((GangValueId != 0) ? (20011 - Mathf.Abs(GangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[GangValueId][gangLevelTextId], false);
 
             //商会信息获取
-            shopName = GetShopName(key2, true);
+            shopName = GetShopName(gangLevelTextId, true);
             /// <see cref="Patch.DateFile_GetActorFeature_Patch"/>中已经将该方法修改为线程安全
             ActorFeatures = DateFile.instance.GetActorFeature(npcId);
             // 初始化缓存
             for (int i = 0; i < intCache.Length; i++)
                 intCache[i] = -1;
+            if (isRank)
+            {
+                // 初始化综合评分计算加权
+                totalRankWeight = new int[37];
+                totalRankWeight[0] = ui.StrValue;
+                totalRankWeight[1] = ui.ConValue;
+                totalRankWeight[2] = ui.AgiValue;
+                totalRankWeight[3] = ui.BonValue;
+                totalRankWeight[4] = ui.IntValue;
+                totalRankWeight[5] = ui.PatValue;
+                totalRankWeight[6] = ui.CharmValue;
+                for (int tmpi = 0; tmpi < 14; tmpi++)
+                    totalRankWeight[7 + tmpi] = ui.Gongfa[tmpi];
+                for (int tmpi = 0; tmpi < 16; tmpi++)
+                    totalRankWeight[21 + tmpi] = ui.Skill[tmpi];
+            }
+
+            AddCheck();
         }
 
         /// <summary>
-        /// 获取每行搜索结果
+        /// 获取搜索结果
         /// </summary>
         /// <returns></returns>
-        public string[] GetAddItem()
+        public string[] GetAddedItem()
         {
             // 之前已经处理过则不需要再次处理
-            if (addItemCache != null)
-                return addItemCache;
-            if (!isNeededAdd)
+            if (addedItemCache != null)
+                return addedItemCache;
+            if (!NeededAdd)
                 return null;
             int index = 0;
             // 使用array而非List减少copy次数提升渲染性能
-            var additem = new string[isRank ? 62 : 61];
+            var additem = new string[isRank ? 63 : 62];
             //综合评分
             if (isRank)
                 additem.Add(Totalrank.ToString(), ref index);
@@ -247,57 +282,65 @@ namespace NpcScan
             additem.Add(GetGongFaListText(), ref index);
             // 可学技艺
             additem.Add(GetMaxSkillLevelText(), ref index);
+            // 物品
+            additem.Add(GetItemsText(), ref index);
             // 前世
             additem.Add(SamsaraNames, ref index);
             // 特性
-            additem.Add(GetActorFeatureNameText(_ui.TarFeature), ref index);
-            addItemCache = additem;
+            additem.Add(GetActorFeatureNameText(isTarFeature), ref index);
+            addedItemCache = additem;
             return additem;
         }
 
         /// <summary>
         /// 添加的检查：是否符合搜索条件(线程安全)
         /// </summary>
-        public bool AddCheck()
+        private void AddCheck()
         {
             // 997为人物模板, 当大于100是特殊剧情人物，跳过不处理, 详见TextAsset中的PresetActor_Date
             // 如: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
-            if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 100) return false;
+            if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 100) return;
 
             if (_ui.Minage > 0)
             {
+                bool result = false;
                 Lock();
-                var result = Age < _ui.Minage;
-                Unlock();
-                if (result) return false;
+                try { result = Age < _ui.Minage; }
+                finally { Unlock(); }
+                if (result) return;
             }
             if (_ui.HealthValue > 0)
             {
+                bool result = false;
                 Lock();
-                var result = Health < _ui.HealthValue;
-                Unlock();
-                if (result) return false;
+                try { result = Health < _ui.HealthValue; }
+                finally { Unlock(); }
+                if (result) return;
             }
             if (_ui.SamsaraCount > 0)
             {
+                bool result = false;
                 Lock();
-                var result = SamsaraCount < _ui.SamsaraCount;
-                Unlock();
-                if (result) return false;
+                try { result = SamsaraCount < _ui.SamsaraCount; }
+                finally
+                { Unlock(); }
+                if (result) return;
             }
             if (_ui.Maxage > 0)
             {
+                bool result = false;
                 Lock();
-                var result = Age > _ui.Maxage;
-                Unlock();
-                if (result) return false;
+                try { result = Age > _ui.Maxage; }
+                finally { Unlock(); }
+                if (result) return;
             }
             if (_ui.GenderValue > 0)
             {
+                bool result = false;
                 Lock();
-                var result = Gender != _ui.GenderValue;
-                Unlock();
-                if (result) return false;
+                try { result = Gender != _ui.GenderValue; }
+                finally { Unlock(); }
+                if (result) return;
             }
 
             // 排行榜模式以下搜索条件无效
@@ -306,130 +349,189 @@ namespace NpcScan
             {
                 if (_ui.IntValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Inv < _ui.IntValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Inv < _ui.IntValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.StrValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Str < _ui.StrValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Str < _ui.StrValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.ConValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Con < _ui.ConValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Con < _ui.ConValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.AgiValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Agi < _ui.AgiValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Agi < _ui.AgiValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.BonValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Bon < _ui.BonValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Bon < _ui.BonValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.PatValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Pat < _ui.PatValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Pat < _ui.PatValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 if (_ui.CharmValue > 0)
                 {
+                    bool result = false;
                     Lock();
-                    var result = Charm < _ui.CharmValue;
-                    Unlock();
-                    if (result) return false;
+                    try { result = Charm < _ui.CharmValue; }
+                    finally { Unlock(); }
+                    if (result) return;
                 }
                 for (int i = 0; i < 14; i++)
                 {
                     if (_ui.Gongfa[i] > 0)
                     {
+                        bool result = false;
                         Lock();
-                        var result = GetLevelValue(i, 1) < _ui.Gongfa[i];
-                        Unlock();
-                        if (result) return false;
-
+                        try { result = GetLevelValue(i, 1) < _ui.Gongfa[i]; }
+                        finally { Unlock(); }
+                        if (result) return;
                     }
                 }
                 for (int i = 0; i < 16; i++)
                 {
                     if (_ui.Skill[i] > 0)
                     {
+                        bool result = false;
                         Lock();
-                        var result = GetLevelValue(i, 0) < _ui.Skill[i];
-                        Unlock();
-                        if (result) return false;
+                        try { result = GetLevelValue(i, 0) < _ui.Skill[i]; }
+                        finally { Unlock(); }
+                        if (result) return;
                     }
                 }
             }
 
-            if (_ui.ActorFeatureText != "" && !ScanFeature(Main.findSet, _ui.TarFeature, _ui.TarFeatureOr))
-                return false;
-            if (_ui.ActorGongFaText != "" && !ScanGongFa(Main.gongFaList, _ui.TarGongFaOr))
-                return false;
-            if (_ui.ActorSkillText != "" && !ScanSkills(Main.skillList, _ui.TarSkillOr))
-                return false;
-
             // gangLevel 门派地位 若为负 则地位由婚姻带来的。
             if (_ui.HighestLevel > 1)
             {
+                bool result = false;
                 Lock();
-                var result = Mathf.Abs(GangLevel) < _ui.HighestLevel;
-                Unlock();
-                if (result) return false;
+                try { result = Mathf.Abs(GangLevel) < _ui.HighestLevel; }
+                finally { Unlock(); }
+                if (result) return;
             }
 
             // 如果未开启门派搜索 直接通过
             if (_ui.TarIsGang && _ui.IsGang)
             {
+                bool result = false;
                 Lock();
-                var result = Groupid > 15;
-                Unlock();
-                if (result) return false;
+                try { result = Groupid > 15; }
+                finally { Unlock(); }
+                if (result) return;
             }
 
             if (_ui.Goodness > -1)
             {
+                bool result = false;
                 Lock();
-                var result = Goodness != _ui.Goodness;
-                Unlock();
-                if (result) return false;
+                try { result = Goodness != _ui.Goodness; }
+                finally { Unlock(); }
+                if (result) return;
             }
 
             // 姓名
             if (!(ActorName.Contains(_ui.AName) || SamsaraNames.Contains(_ui.AName)))
-                return false;
+                return;
 
             // 从属和地位
             if (!gangName.Contains(_ui.GangValue) || !gangLevelText.Contains(_ui.GangLevelValue))
-                return false;
+                return;
 
             // 商会
             if (_ui.AShopName != "" && !shopName.Contains(_ui.AShopName))
-                return false;
+                return;
 
-            isNeededAdd = true;
-            return true;
+            if (_ui.ActorFeatureText != "" && !ScanFeature(_ui.featureSearchSet, _ui.TarFeature, _ui.TarFeatureOr))
+                return;
+            if (_ui.ActorGongFaText != "" && !ScanGongFa(npcId, _ui.gongFaSearchList, _ui.TarGongFaOr))
+                return;
+            if (_ui.ActorSkillText != "" && !ScanSkills(_ui.skillSearchList, _ui.TarSkillOr))
+                return;
+            //初始化角色物品比较耗时间，仅在前面的条件都筛选完了才执行
+            //是否搜索过世之人的物品
+            bool isDead = int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) > 0;
+            if (!isDead || _ui.ItemDead)
+            {
+                InitActorItems();
+            }
+            if (_ui.ActorItemText != "" && !ScanItems(_ui.itemSearchList, _ui.TarItemOr))
+                return;
+
+            NeededAdd = true;
         }
 
+        /// <summary>
+        /// 初始化角色物品
+        /// </summary>
+        private void InitActorItems()
+        {
+            if (DateFile.instance.actorItemsDate.TryGetValue(npcId, out var actorItemData))
+            {
+                actorItems = new Dictionary<(int baseId, int QuquId, int QuquPartId), int>();
+                foreach (var itemId in actorItemData.Keys)
+                {
+                    if (itemId > 0 && DateFile.instance.GetItemNumber(npcId, itemId) > 0)
+                    {
+                        int baseId = int.Parse(DateFile.instance.GetItemDate(itemId, 999, false));
+                        int ququId = int.Parse(DateFile.instance.GetItemDate(itemId, 2002, false));
+                        int ququPartId = int.Parse(DateFile.instance.GetItemDate(itemId, 2003, false));
+                        var item = (baseId, ququId, ququPartId);
+                        if (!actorItems.ContainsKey(item))
+                            actorItems.Add(item, itemId);
+                    }
+                }
+            }
+
+            for (int i = 0; i < 12; i++)
+            {
+                actorEquips = actorEquips ?? new Dictionary<(int baseId, int ququId, int ququPartId), int>();
+                actorItems = actorItems ?? new Dictionary<(int baseId, int ququId, int ququPartId), int>();
+                int equipId = int.Parse(DateFile.instance.GetActorDate(npcId, 301 + i, false));
+                if (equipId > 0)
+                {
+                    int baseId = int.Parse(DateFile.instance.GetItemDate(equipId, 999, false));
+                    int ququId = int.Parse(DateFile.instance.GetItemDate(equipId, 2002, false));
+                    int ququPartId = int.Parse(DateFile.instance.GetItemDate(equipId, 2003, false));
+                    var item = (baseId, ququId, ququPartId);
+                    if (!actorEquips.ContainsKey(item))
+                        actorEquips.Add(item, equipId);
+                    if (!actorItems.ContainsKey(item))
+                        actorItems.Add(item, equipId);
+                }
+            }
+        }
 
         /// <summary>
         /// 获取婚姻状况
         /// </summary>
-        /// <param name="actorId">NpcId</param>
+        /// <param name="color">是否带颜色</param>
         /// <returns>婚姻状况</returns>
         public string GetSpouse(bool color = false)
         {
@@ -459,7 +561,7 @@ namespace NpcScan
         /// <summary>
         /// 技艺资质成长
         /// </summary>
-        /// <param name="actorId"></param>
+        /// <param name="color">是否带颜色</param>
         /// <returns></returns>
         public string GetSkillDevelopText(bool color = false)
         {
@@ -492,7 +594,7 @@ namespace NpcScan
         /// <summary>
         /// 功法资质成长(线程安全)
         /// </summary>
-        /// <param name="actorId"></param>
+        /// <param name="color">是否带颜色</param>
         /// <returns></returns>
         public string GetGongFaDevelopText(bool color = false)
         {
@@ -569,18 +671,17 @@ namespace NpcScan
         /// <param name="searchlist"></param>
         /// <param name="tarGongFaOr"></param>
         /// <returns></returns>
-        private bool ScanGongFa(List<int> searchlist, bool tarGongFaOr)
+        private static bool ScanGongFa(int actorId, List<int> searchlist, bool tarGongFaOr)
         {
-            if (searchlist.Count == 0 || !DateFile.instance.actorGongFas.TryGetValue(npcId, out var gongFas) || gongFas == null || gongFas.Count == 0)
+            if (searchlist.Count == 0 || !DateFile.instance.actorGongFas.TryGetValue(actorId, out var gongFas) || gongFas == null || gongFas.Count == 0)
             {
                 return false;
             }
-            var actorGongFas = new HashSet<int>(gongFas.Keys);
             if (!tarGongFaOr)   //与查找
             {
                 foreach (int key in searchlist)
                 {
-                    if (!actorGongFas.Contains(key))
+                    if (!gongFas.ContainsKey(key))
                         return false;
                 }
                 return true;
@@ -589,7 +690,7 @@ namespace NpcScan
             {
                 foreach (int key in searchlist)
                 {
-                    if (actorGongFas.Contains(key))
+                    if (gongFas.ContainsKey(key))
                         return true;
                 }
                 return false;
@@ -667,8 +768,12 @@ namespace NpcScan
             {
                 foreach (int key in searchlist)
                 {
-                    if (!CanTeach(key))
-                        return false;
+                    if (!CanTeach(key)) return false;
+                    Lock();
+                    int maxLevel = 0;
+                    try { maxLevel = MassageWindow.instance.GetSkillValue(npcId, key + 501); }
+                    finally { Unlock(); }
+                    if (maxLevel <= 0) return false;
                 }
                 return true;
             }
@@ -677,6 +782,68 @@ namespace NpcScan
                 foreach (int key in searchlist)
                 {
                     if (CanTeach(key))
+                    {
+                        Lock();
+                        int maxLevel = 0;
+                        try { maxLevel = MassageWindow.instance.GetSkillValue(npcId, key + 501); }
+                        finally { Unlock(); }
+                        if (maxLevel > 0) return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 检测是否符合物品搜索条件(线程安全)
+        /// </summary>
+        /// <param name="searchList"></param>
+        /// <param name="tarItemsOr"></param>
+        /// <returns></returns>
+        private bool ScanItems(List<int> searchList, bool tarItemsOr)
+        {
+            if (searchList.Count == 0 || actorItems == null || actorItems.Count == 0)
+            {
+                return false;
+            }
+
+            if (!tarItemsOr)   //与查找
+            {
+                /// 需要处理同一名字对应多个ID的情况, 同名称对应多个ID在<see cref="UI.GetItemKey"/>中取反编为一组，每组ID用0结尾
+                // 上一个baseId是否小于0
+                bool lastIdSameGroup = false;
+                // 上一组baseId小于零的物品的查找情况(其值只在lastIdNegative为真时有意义)
+                bool lastStatusWhenNegative = false;
+                foreach (var baseId in searchList)
+                {
+                    if (baseId < 0)
+                    {
+                        // 连续的基础ID小于零的物品拥有相同的名称，这部分用OR查找，有一个为真则最终结果为真
+                        if (lastIdSameGroup && lastStatusWhenNegative) continue;
+                        lastIdSameGroup = true;
+                        lastStatusWhenNegative = actorItems.ContainsKey((-baseId, 0, 0));
+                    }
+                    else if (baseId == 0)
+                    {
+                        // 0为拥有相同名字的一组物品ID截止符，但是其主要作用还是隔开两组都小于零但是对于名称不同的ID
+                        if (lastIdSameGroup && !lastStatusWhenNegative) return false;
+                        lastIdSameGroup = false;
+                    }
+                    else
+                    {
+                        // 非零则AND查找，先判断上一组基础ID小于零的物品的最终查找结果是否为真，否则直接否决
+                        if (!actorItems.ContainsKey((baseId, 0, 0)))
+                            return false;
+                    }
+                }
+                return true;
+            }
+            else                //或查找
+            {
+                foreach (var baseId in searchList)
+                {
+                    if (baseId == 0) continue;
+                    if (actorItems.ContainsKey((Math.Abs(baseId), 0, 0)))
                         return true;
                 }
                 return false;
@@ -686,7 +853,6 @@ namespace NpcScan
         /// <summary>
         /// 获得功法、技艺资质数值
         /// </summary>
-        /// <param name="actorId"></param>
         /// <param name="index">
         /// 功法 0:内功;1:身法;2:绝技;3:拳掌;4:指法;5:腿法;6:暗器;7:剑法;8:刀法;9:长兵;10:奇门;11:软兵;12:御射;13:乐器;
         /// 技艺 0:音律;1:弈棋;2:诗书;3:绘画;4:术数;5:品鉴;6:锻造;7:制木;8:医术;9:毒术;10:织锦;11:巧匠;12:道法;13:佛学;14:厨艺;15:杂学;
@@ -702,10 +868,11 @@ namespace NpcScan
             if (isGetReal)
             {
                 num = int.Parse(DateFile.instance.GetActorDate(npcId, 501 + index + 100 * gongfa, false));
-                int age = int.Parse(DateFile.instance.GetActorDate(npcId, 11, false));
-                if (age <= 14 && age > 0)
+                int age = Age;
+                if (age <= ConstValue.actorMinAge && age > 0)
                 {
-                    num = num * (1400 / age) / 100;
+                    // 显示年幼者真实资质
+                    num = num * (ConstValue.actorMinAge * 100 / age) / 100;
                 }
             }
             else
@@ -742,17 +909,22 @@ namespace NpcScan
             if (gongFaResultCache != null)
                 return gongFaResultCache;
 
-            if (!DateFile.instance.actorGongFas.TryGetValue(npcId, out var gongFas) || gongFas == null || gongFas.Count == 0)
-                return null;
+            int[] resultList = new int[9];
+            // 没办法向过世之人请教功法，直接跳过
+            bool isDead = int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) > 0;
+            if (isDead || !DateFile.instance.actorGongFas.TryGetValue(npcId, out var gongFas) || gongFas == null || gongFas.Count == 0)
+            {
+                gongFaResultCache = resultList;
+                return resultList;
+            }
 
-            int[] resultList = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-            var instance = DateFile.instance;
-
-            var myGongFas = new HashSet<int>(instance.actorGongFas[instance.MianActorID()].Keys);
+            var dateFile = DateFile.instance;
+            // 主角已经会的功法就不算做"可学功法"了
+            var myGongFas = new HashSet<int>(dateFile.actorGongFas[dateFile.MianActorID()].Keys);
             foreach (var key in gongFas.Keys)
             {
                 if (!myGongFas.Contains(key)
-                    && instance.gongFaDate.TryGetValue(key, out var gongFaInfo)
+                    && dateFile.gongFaDate.TryGetValue(key, out var gongFaInfo)
                     && gongFaInfo.TryGetValue(2, out var text) && int.TryParse(text, out var prestige))
                 {
                     resultList[9 - prestige]++;
@@ -765,72 +937,71 @@ namespace NpcScan
         /// <summary>
         /// 获取可学功法数量的文字(线程安全)
         /// </summary>
-        /// <param name="actorId"></param>
         /// <returns></returns>
         private string GetGongFaListText()
         {
             var resultList = GetGongFaList();
-            if (resultList == null)
+            if (resultList == null && resultList.Length < 9)
                 return "";
 
-            var result = new StringBuilder();
+            var result = new string[9];
 
             for (int i = 0; i < 9; i++)
-            {
-                result.Append(DateFile.instance.SetColoer(20010 - i, $"{resultList[i]:D2}"));
-                if (i != 8)
-                    result.Append(" | ");
-            }
-            return result.ToString();
+                result[i] = DateFile.instance.SetColoer(20010 - i, $"{resultList[i]:D2}");
+
+            return string.Join(" | ", result);
         }
 
         /// <summary>
         /// 获取特性的文字(线程安全)
         /// </summary>
-        /// <param name="tarFeature"></param>
+        /// <param name="tarFeature">是否精确特性</param>
         /// <returns></returns>
         private string GetActorFeatureNameText(bool tarFeature)
         {
             if (ActorFeatures.Count == 0)
                 return "";
 
-            var text = new StringBuilder();
+            var featureList = new string[ActorFeatures.Count];
+            int index = 0;
             foreach (int key in ActorFeatures)
             {
                 Features f = Main.featuresList[key];
-                string s = f.Level.ToString();
                 if (!tarFeature)
                 {
                     if (f.Plus == 3 || f.Plus == 4)
                     {
-                        text.Append(Main.findSet.Contains(f.Group) ? f.TarColor : f.Color)
-                            .Append(f.Name + "(" + s + ")</color>");
+                        // 不要求精确特性时，将与搜索条件中的特性的同类特性全部标识
+                        featureList.Add((_ui.featureSearchSet.Contains(f.Group) ? f.TarColor : f.Color)
+                            + f.Name + "(" + f.Level + ")</color>", ref index);
                         continue;
                     }
                 }
-
-                text.Append(Main.findSet.Contains(key) ? f.TarColor : f.Color)
-                    .Append(f.Name + "(" + s + ")</color>");
+                // 要求精确特性时，只标识将与搜索条件中的特性
+                featureList.Add((_ui.featureSearchSet.Contains(key) ? f.TarColor : f.Color)
+                    + f.Name + "(" + f.Level + ")</color>", ref index);
             }
-            return text.ToString();
+            return string.Concat(featureList);
         }
 
         /// <summary>
         /// 获取前世(线程安全)
         /// </summary>
+        /// <param name="npcId"></param>
         /// <returns></returns>
-        private string GetSamsaraNames()
+        private static string GetSamsaraNames(int npcId)
         {
-            var samaras = DateFile.instance.GetLifeDateList(npcId, 801, false);
+            List<int> samaras = DateFile.instance.GetLifeDateList(npcId, 801, false);
             if (samaras.Count == 0)
                 return "";
 
-            var samsaraNames = new StringBuilder();
+            var samsaraNames = new string[samaras.Count];
+            int index = 0;
             foreach (int samsaraId in samaras)
             {
-                samsaraNames.Append(" ").Append(DateFile.instance.GetActorName(samsaraId));
+                samsaraNames.Add(DateFile.instance.GetActorName(samsaraId), ref index);
             }
-            return samsaraNames.ToString(); ;
+            return string.Join(" ", samsaraNames);
         }
 
         /// <summary>
@@ -841,19 +1012,28 @@ namespace NpcScan
         {
             if (int.Parse(DateFile.instance.GetActorDate(npcId, 11, false)) > 14)
             {
-                if (int.Parse(DateFile.instance.GetActorDate(npcId, 8, false)) != 1
-                    || int.Parse(DateFile.instance.GetActorDate(npcId, 305, false)) != 0)
+                // 敌人组别，1为大大的良民
+                int enemyTeamId = int.Parse(DateFile.instance.GetActorDate(npcId, 8, false));
+                // 穿着衣服
+                int equipedclothId = int.Parse(DateFile.instance.GetActorDate(npcId, 305, false));
+                // 敌人的话就不用考虑是否衣不蔽体了
+                if (enemyTeamId != 1 || equipedclothId != 0)
                 {
-                    return DateFile.instance.massageDate[25][int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)) - 1]
-                        .Split('|')[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(npcId, 15, true)) / 100, 0, 9)];
+                    // 不同性别有不同的魅力等级描述文字，0男1女
+                    int genderIndex = int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)) - 1;
+                    // 魅力等级
+                    int charmLevel = Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(npcId, 15, true)) / 100, 0, 9);
+                    return DateFile.instance.massageDate[25][genderIndex].Split('|')[charmLevel];
                 }
                 else
                 {
+                    // 衣不蔽体
                     return DateFile.instance.massageDate[25][5].Split('|')[1];
                 }
             }
             else
             {
+                // 年幼
                 return DateFile.instance.massageDate[25][5].Split('|')[0];
             }
         }
@@ -865,8 +1045,11 @@ namespace NpcScan
         private string GetPlace()
         {
             string place;
-            if (int.Parse(DateFile.instance.GetActorDate(npcId, 8, false)) != 1)
+            // 敌人组别，1为大大的良民
+            int enemyTeamId = int.Parse(DateFile.instance.GetActorDate(npcId, 8, false));
+            if (enemyTeamId != 1)
             {
+                // "身处未知之地"
                 place = DateFile.instance.massageDate[8010][3].Split(new char[] { '|' })[1];
             }
             else
@@ -895,17 +1078,20 @@ namespace NpcScan
         /// <summary>
         /// 商会信息获取(线程安全)
         /// </summary>
-        /// <param name="key2"></param>
+        /// <param name="gangLevelTextId">身份描述文字索引</param>
+        /// <param name="color">是否带颜色</param>
         /// <returns></returns>
-        public string GetShopName(int key2 = -1, bool color = false)
+        public string GetShopName(int gangLevelTextId = -1, bool color = false)
         {
-            int key = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(npcId, 9, false)), 16));
-            string shopName = DateFile.instance.storyShopDate[key][0];
+            int gangId = int.Parse(DateFile.instance.GetActorDate(npcId, 9, false));
+            int shopType = int.Parse(DateFile.instance.GetGangDate(gangId, 16));
+            string shopName = DateFile.instance.storyShopDate[shopType][0];
             if (!color)
                 return shopName;
-            if (key2 < 0)
-                key2 = (GangLevel >= 0) ? 1001 : (1001 + Gender);
-            shopName = DateFile.instance.presetGangGroupDateValue[GangValueId][key2] == "商人"
+            if (gangLevelTextId < 0)
+                gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + Gender);
+            // 如果不是真正的商人, 将隐藏的商会类型名称标为灰色
+            shopName = DateFile.instance.presetGangGroupDateValue[GangValueId][gangLevelTextId] == "商人"
                 ? DateFile.instance.SetColoer(20006, shopName, false)
                 : DateFile.instance.SetColoer(20002, shopName, false);
             return shopName;
@@ -922,7 +1108,7 @@ namespace NpcScan
             {
                 foreach (var value in skillMaxCache)
                 {
-                    result += value << value;
+                    result += value << (value - 1);
                 }
             }
             else
@@ -934,8 +1120,11 @@ namespace NpcScan
                     {
                         int typ = key + 501;
                         int maxLevel = Mathf.Min(MassageWindow.instance.GetSkillValue(npcId, typ), 8);
-                        skillMaxCache.Add(maxLevel);
-                        result += maxLevel << maxLevel;
+                        if (maxLevel > 0)
+                        {
+                            skillMaxCache.Add(maxLevel);
+                            result += maxLevel << (maxLevel - 1);
+                        }
                     }
                 }
             }
@@ -948,30 +1137,32 @@ namespace NpcScan
         /// <returns></returns>
         private string GetMaxSkillLevelText()
         {
-            var result = new StringBuilder();
             skillMaxCache = new List<int>();
+            if (int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) > 0)
+                return "";
+
+            var result = new List<string>();
             foreach (var pair in DateFile.instance.baseSkillDate)
             {
                 if (pair.Key < 100 && CanTeach(pair.Key))
                 {
                     int typ = pair.Key + 501;
-                    int maxLevel = Mathf.Min(MassageWindow.instance.GetSkillValue(npcId, typ), 8);
-                    skillMaxCache.Add(maxLevel);
-                    var name = pair.Value[0][0];
-                    if (result.Length != 0)
+                    int maxLevel = MassageWindow.instance.GetSkillValue(npcId, typ);
+                    if (maxLevel > 0)
                     {
-                        result.Append(" ");
+                        maxLevel = Mathf.Min(maxLevel, 9);
+                        skillMaxCache.Add(maxLevel);
+                        result.Add(DateFile.instance.SetColoer(20001 + maxLevel, $"{pair.Value[0]}{10 - maxLevel}"));
                     }
-                    result.Append(DateFile.instance.SetColoer(20002 + maxLevel, $"{name}{9 - maxLevel}"));
                 }
             }
-            return result.ToString();
+            return string.Join(" ", result);
         }
 
         /// <summary>
         /// 根据NPC的门派或职业,判断能否传授你这生活艺能(线程安全)
         /// </summary>
-        /// <param name="skillId"></param>
+        /// <param name="skillId">技艺ID(对应资质ID减去501)</param>
         /// <returns></returns>
         /// 借鉴自人物浮动信息MOD
         public bool CanTeach(int skillId)
@@ -1016,8 +1207,91 @@ namespace NpcScan
         }
 
         /// <summary>
+        /// 人物身上的最佳物品获取+装备+搜索的物品
+        /// </summary>
+        /// <returns></returns>
+        public Item[] GetItems()
+        {
+            if (itemResultCache != null)
+                return itemResultCache;
+
+            // 使用hashset防止加入相同名称的物品(基础ID、促织ID和促织部位ID共同唯一确定任何物品的品阶和名称)
+            var items = new HashSet<(int BaseId, int QuquId, int QuquPartId)>();
+            if (actorItems != null && actorItems.Count > 0)
+            {
+                int bestGrade = 0;
+                // 添加最佳物品
+                foreach (var item in actorItems)
+                {
+                    if (int.Parse(DateFile.instance.GetItemDate(item.Value, 98, false)) == 86)
+                        continue; //跳过伏虞剑及其碎片
+                    int grade = int.Parse(DateFile.instance.GetItemDate(item.Value, 8, false));
+                    if (grade > bestGrade)
+                    {
+                        bestGrade = grade;
+                        items.Clear();
+                        items.Add(item.Key);
+                    }
+                    else if (grade == bestGrade)
+                    {
+                        items.Add(item.Key);
+                    }
+                }
+            }
+
+            // 添加装备
+            if (actorEquips != null && actorEquips.Count > 0)
+                items.UnionWith(actorEquips.Keys);
+
+            // 添加要搜索的物品
+            if (_ui.itemSearchSet.Count > 0)
+            {
+                foreach (var baseIds in _ui.itemSearchSet)
+                {
+                    if (actorItems.ContainsKey((baseIds, 0, 0)))
+                        items.Add((baseIds, 0, 0));
+                }
+            }
+            itemResultCache = new Item[items.Count];
+            int index = 0;
+            foreach (var item in items)
+            {
+                var newitem = new Item(actorItems[item]);
+                itemResultCache.Add(newitem, ref index);
+            }
+            // 逆序排
+            Array.Sort(itemResultCache, (a, b) => -a.CompareTo(b));
+            // 使命完成，释放内存
+            actorItems = actorEquips = null;
+            return itemResultCache;
+        }
+
+        /// <summary>
+        /// 人物身上的最佳物品获取+装备+搜索的物品的文字
+        /// </summary>
+        /// <returns></returns>
+        private string GetItemsText()
+        {
+            var items = GetItems();
+            return items.Length == 0 ? "" : string.Join(", ", items.Select(GetItemColorName));
+        }
+
+        /// <summary>
+        /// 获得带品级颜色的物品名称
+        /// </summary>
+        /// <param name="itemID"></param>
+        /// <returns></returns>
+        private string GetItemColorName(Item item)
+        {
+            if (_ui.itemSearchSet.Contains(item.BaseId))
+                return $"<color=red>{item.Name}</color>";
+            return DateFile.instance.SetColoer(20001 + item.Grade, item.Name);
+        }
+
+        /// <summary>
         /// 线程锁加锁
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Lock()
         {
             while (Interlocked.CompareExchange(ref locker, 1, 0) == 1) ;
@@ -1026,6 +1300,42 @@ namespace NpcScan
         /// <summary>
         /// 线程锁解锁
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Unlock() => Interlocked.Exchange(ref locker, 0);
+
+        /// <summary>
+        /// 比较大小
+        /// </summary>
+        /// <param name="other">要比较的另一个<see cref="ActorItem"/>实例</param>
+        /// <returns></returns>
+        public int CompareTo(ActorItem other)
+        {
+            if (other == null)
+                return 1;
+            return npcId.CompareTo(other.npcId);
+        }
+
+        /// <summary>
+        /// 是否相同
+        /// </summary>
+        /// <param name="other">要比较的另一个<see cref="ActorItem"/>实例</param>
+        /// <returns></returns>
+        public bool Equals(ActorItem other)
+        {
+            if (other == null)
+                return false;
+            return npcId.Equals(other.npcId);
+        }
+
+        public override int GetHashCode() => npcId.GetHashCode();
+
+        public override bool Equals(object obj)
+        {
+            if (obj is ActorItem actorItem)
+            {
+                return Equals(actorItem);
+            }
+            return false;
+        }
     }
 }

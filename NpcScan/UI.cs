@@ -28,7 +28,7 @@ namespace NpcScan
         /// <summary>存放GUI.skin.horizonScrollBar.fixHeight, 左右滚动条基准高度</summary>
         private float horizonScollBarHeight;
         /// <summary>窗口控件样式</summary>
-        public static GUIStyle window;
+        private GUIStyle window;
         /// <summary>Label控件样式</summary>
         private GUIStyle labelStyle;
         /// <summary>button控件样式</summary>
@@ -41,73 +41,40 @@ namespace NpcScan
         private GUIStyle horizontalScrollbarStyle;
         /// <summary>上下滚动条样式</summary>
         private GUIStyle verticalScrollbarStyle;
+        /// <summary>空样式</summary>
+        private GUIStyle emptyStyle;
         /// <summary>缩放比例</summary>
         private float ratio = 1f;
         /// <summary>窗口位置和大小</summary>
-        private Rect mWindowRect = new Rect(0, 0, 0, 0);
+        private Rect mWindowRect;
         #endregion
 
-        #region 常数
+        #region 常量
+        /// <summary>立场类型</summary>
+        private static readonly string[] goodnessValue = new string[] { "全部", "中庸", "仁善", "刚正", "叛逆", "唯我" };
+        /// <summary>性别选项文字</summary>
+        private static readonly string[] sexChoiceText = new[] { "全部", "男", "女", "男生女相", "女生男相" };
+        /// <summary>性别选项宽度</summary>
+        private static readonly float[] sexChoiceWidth = new float[] { 45, 30, 30, 65, 65 };
+        /// <summary>功法类型文字</summary>
+        private static readonly string[] gongFaTypText = new[] { "内功", "身法", "绝技", "拳掌", "指法", "腿法", "暗器", "剑法", "刀法", "长兵", "奇门", "软兵", "御射", "乐器" };
+        /// <summary>技能类型文字</summary>
+        private static readonly string[] skillTypText = new[] { "音律", "弈棋", "诗书", "绘画", "术数", "品鉴", "锻造", "制木", "医术", "毒术", "织锦", "巧匠", "道法", "佛学", "厨艺", "杂学" };
         /// <summary>求和时品阶的加权</summary>
         private static readonly long[] power = { (long)1E16, (long)1E14, (long)1E12, (long)1E10, (long)1E8, (long)1E6, (long)1E4, (long)1E2, 1 };
-        #endregion
-
-        #region 常用正则表达式
-        /// <summary>用于匹配空白和颜色标签</summary>
-        private static readonly Regex colorTagRegex = new Regex(@"(?>\s+|<color=#[0-9a-fA-F]{6,8}>|</color>)");
-        #endregion
-
-
-        #region 私有成员
-        /// <summary>UI是否已经初始化</summary>
-        private bool mInit = false;
-        /// <summary>是否删除综合评分列</summary>
-        private bool showlistshrinked;
-        /// <summary>是否添加综合评分列</summary>
-        private bool showlistadded = false;
-        /// <summary>降序排列</summary>
-        private bool desc = true;
-        /// <summary>按哪一列排序</summary>
-        private int sortIndex = -1;
-        /// <summary>分页</summary>
-        private int page = 1;
-        /// <summary>分页</summary>
-        private int Page
-        {
-            get => page;
-            set
-            {
-                OptimizeScrollView.GetInstance("Content").ResetView();
-                page = value;
-            }
-        }
-        /// <summary>综合评分列已添加</summary>
-        private bool rankcolumnadded = false;
-        /// <summary>立场选项</summary>
-        private readonly bool[] goodness = new bool[] { true, false, false, false, false, false };
-        /// <summary>立场</summary>
-        private readonly string[] goodnessValue = new string[] { "全部", "中庸", "仁善", "刚正", "叛逆", "唯我" };
-        /// <summary>每页显示条数</summary>
-        private int countPerPage = 0;
-        /// <summary>每页显示条数的倒数，减少浮点除法的运算次数</summary>
-        private float reciprocalCountPerPage;
-        /// <summary>性别选项：0 双性 1 男 2 女 3 男生女相 4 女生男相</summary>
-        private readonly bool[] sexChoice = new[] { true, false, false, false, false };
-        private readonly string[] sexChoiceText = new[] { "全部", "男", "女", "男生女相", "女生男相" };
-        private readonly float[] sexChoiceWidth = new float[] { 45, 30, 30, 65, 65 };
         /// <summary>搜索结果表头</summary>
         private static readonly List<Column> mColumns = new List<Column>
         {
-            new Column {name = "姓名", width = 100},
+            new Column {name = "姓名", width = 105},
             new Column {name = "年龄", width = 30},
             new Column {name = "性别", width = 30},
             new Column {name = "位置", width = 165},
             new Column {name = "魅力", width = 70},
-            new Column {name = "从属", width = 60},//从属gangText
-            new Column {name = "身份", width = 70},//身份gangLevelText
-            new Column {name = "商会", width = 70},//商会
-            new Column {name = "立场", width = 30},//立场goodnessText
-            new Column {name = "婚姻", width = 30},//
+            new Column {name = "从属", width = 60},
+            new Column {name = "身份", width = 70},
+            new Column {name = "商会", width = 70},
+            new Column {name = "立场", width = 30},
+            new Column {name = "婚姻", width = 30},
             new Column {name = "技能成长", width = 70},
             new Column {name = "功法成长", width = 70},
             new Column {name = "健康", width = 60},
@@ -148,7 +115,6 @@ namespace NpcScan
             new Column {name = "厨艺", width = 30},
             new Column {name = "杂学", width = 30},
             new Column {name = "银钱", width = 60},
-            //七元
             new Column {name = "细腻", width = 30},
             new Column {name = "聪颖", width = 30},
             new Column {name = "水性", width = 30},
@@ -158,13 +124,70 @@ namespace NpcScan
             new Column {name = "福缘", width = 30},
             new Column {name = "可学功法(不考虑好感度影响)", width = 210},
             new Column {name = "可学技艺(不考虑好感度影响)", width = 160},
+            new Column {name = "最佳物品和装备", width = 300},
             new Column {name = "前世", width = 120},
             new Column {name = "特性", width = 500}
         };
+        #endregion
+
+        #region 常用正则表达式
+        /// <summary>用于匹配空白和颜色标签</summary>
+        public static readonly Regex colorTagRegex = new Regex(@"(?>\s+|<color=#[0-9a-fA-F]{6,8}>|</color>)");
+        #endregion
+
+        #region 私有成员
+        /// <summary>UI是否已经初始化</summary>
+        private bool mInit = false;
+        /// <summary>是否删除综合评分列</summary>
+        private bool showlistshrinked;
+        /// <summary>是否添加综合评分列</summary>
+        private bool showlistadded = false;
+        /// <summary>降序排列</summary>
+        private bool desc = true;
+        /// <summary>按哪一列排序</summary>
+        private int sortIndex = -1;
+        /// <summary>分页</summary>
+        private int page = 1;
+        /// <summary>分页</summary>
+        private int Page
+        {
+            get => page;
+            set
+            {
+                OptimizeScrollView.GetInstance("Content").ResetView();
+                page = value;
+            }
+        }
+        /// <summary>综合评分列已添加</summary>
+        private bool rankcolumnadded = false;
+        /// <summary>立场选项:全部 中庸 仁善 刚正 叛逆 唯我" </summary>
+        private readonly bool[] goodness = new bool[] { true, false, false, false, false, false };
+        /// <summary>每页显示条数</summary>
+        private int countPerPage = 0;
+        /// <summary>每页显示条数的倒数，减少浮点除法的运算次数</summary>
+        private float reciprocalCountPerPage;
+        /// <summary>性别选项：0 双性 1 男 2 女 3 男生女相 4 女生男相</summary>
+        private readonly bool[] sexChoice = new[] { true, false, false, false, false };
+        /// <summary>特性搜索条件</summary>
+        internal readonly HashSet<int> featureSearchSet = new HashSet<int>();
+        /// <summary>功法搜索条件</summary>
+        internal readonly List<int> gongFaSearchList = new List<int>();
+        /// <summary>技艺搜索条件</summary>
+        internal readonly List<int> skillSearchList = new List<int>();
+        /// <summary>物品搜索条件</summary>
+        internal readonly HashSet<int> itemSearchSet = new HashSet<int>();
+        /// <summary>物品搜索条件(相同名字的物品基础ID取反)</summary>
+        internal readonly List<int> itemSearchList = new List<int>();
         /// <summary>搜索结果区域当前列宽</summary>
         private GUILayoutOption[] colWidth;
         /// <summary>NPC搜索结果滚动条, 0: 标题行； 1：结果区域</summary>
         private readonly Vector2[] scrollPosition = new Vector2[2];
+        /// <summary>鼠标指向NPC详情时提示NPC姓名</summary>
+        private bool showNameTip = true;
+        /// <summary>鼠标指向引用此GUIContent的GUI控件时显示提示标签</summary>
+        private GUIContent tipContent;
+        /// <summary>提示标签的位置</summary>
+        private Rect tipRect;
         /// <summary>搜索结果</summary>
         private readonly List<ActorItem> actorList = new List<ActorItem>();
         #endregion
@@ -209,11 +232,11 @@ namespace NpcScan
         /// <summary>
         /// 0:内功;1:身法;2:绝技;3:拳掌;4:指法;5:腿法;6:暗器;7:剑法;8:刀法;9:长兵;10:奇门;11:软兵;12:御射;13:乐器;
         /// </summary>
-        public int[] Gongfa { get; private set; } = new int[14];
+        public int[] Gongfa { get; private set; } = new int[gongFaTypText.Length];
         /// <summary>
         /// 0:音律;1:弈棋;2:诗书;3:绘画;4:术数;5:品鉴;6:锻造;7:制木;8:医术;9:毒术;10:织锦;11:巧匠;12:道法;13:佛学;14:厨艺;15:杂学;
         /// </summary>
-        public int[] Skill { get; private set; } = new int[16];
+        public int[] Skill { get; private set; } = new int[skillTypText.Length];
         /// <summary>人物特性(多个特性用'|'分隔)</summary>
         public string ActorFeatureText { get; private set; } = "";
         /// <summary>是否精确查找,精确查找的情况下,特性用'|'分隔</summary>
@@ -228,6 +251,12 @@ namespace NpcScan
         public string ActorSkillText { get; private set; } = "";
         /// <summary>可教技艺Or查询，默认AND</summary>
         public bool TarSkillOr { get; private set; } = false;
+        /// <summary>物品搜索</summary>
+        public string ActorItemText { get; private set; } = "";
+        /// <summary>物品Or查询，默认AND</summary>
+        public bool TarItemOr { get; private set; }
+        /// <summary>搜索过世之人的物品</summary>
+        public bool ItemDead { get; private set; }
         /// <summary>最高查询品级</summary>
         public int HighestLevel { get; private set; } = 1;
         /// <summary>是否开启门派识别</summary>
@@ -282,6 +311,9 @@ namespace NpcScan
             }
         }
 
+        /// <summary>
+        /// 初始化UI
+        /// </summary>
         private void PrepareGUI()
         {
             window = new GUIStyle
@@ -299,7 +331,7 @@ namespace NpcScan
             labelStyle = new GUIStyle(GUI.skin.label)
             {
                 name = "label",
-                fontSize = (int)(baseFontSize * ratio)
+                fontSize = (int)(baseFontSize * ratio),
             };
             buttonStyle = new GUIStyle(GUI.skin.button)
             {
@@ -316,7 +348,6 @@ namespace NpcScan
                 name = "text",
                 fontSize = (int)(baseFontSize * ratio)
             };
-
             verticalScrollBarWidth = GUI.skin.verticalScrollbar.fixedWidth;
             horizonScollBarHeight = GUI.skin.horizontalScrollbar.fixedHeight;
             verticalScrollbarStyle = new GUIStyle(GUI.skin.verticalScrollbar)
@@ -327,8 +358,14 @@ namespace NpcScan
             {
                 fixedHeight = horizonScollBarHeight * ratio
             };
+            emptyStyle = new GUIStyle();
+
+            tipContent = new GUIContent("", GUI.tooltip);
         }
 
+        /// <summary>
+        /// 渲染UI
+        /// </summary>
         private void OnGUI()
         {
             if (!mInit)
@@ -367,7 +404,10 @@ namespace NpcScan
         private void WindowFunction(int windowId)
         {
             GUILayout.BeginVertical("box");
-
+            var labelColor = labelStyle.normal.textColor;
+            var toggleColor = toggleStyle.normal.textColor;
+            labelStyle.normal.textColor = new Color32(200, 255, 255, 255);
+            toggleStyle.normal.textColor = new Color32(255, 226, 198, 255);
             SetNo1Windows();
             SetNo2Windows();
             SetNo3Windows();
@@ -375,6 +415,8 @@ namespace NpcScan
             SetNo5Windows();
             SetNo6Windows();
             SetNo7Windows();
+            labelStyle.normal.textColor = labelColor;
+            toggleStyle.normal.textColor = toggleColor;
 
             if (actorList.Count > 0)
             {
@@ -424,22 +466,20 @@ namespace NpcScan
         /// </summary>
         private void SetNo2Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
             #region add 年龄 性别
             GUILayout.Label("年龄:", labelStyle, GUILayout.Width(30 * ratio));
-            if (int.TryParse(GUILayout.TextField(Minage.ToString(), 3, textStyle, GUILayout.Width(30 * ratio)), out int value))
-            {
-                Minage = value;
-            }
+            int.TryParse(GUILayout.TextField(Minage.ToString(), 3, textStyle, GUILayout.Width(30 * ratio)), out int value);
+            Minage = value;
             GUILayout.Label("--", labelStyle, GUILayout.Width(10 * ratio));
-            if (int.TryParse(GUILayout.TextField(Maxage.ToString(), 3, textStyle, GUILayout.Width(30 * ratio)), out value))
-            {
-                Maxage = value;
-            }
+            int.TryParse(GUILayout.TextField(Maxage.ToString(), 3, textStyle, GUILayout.Width(30 * ratio)), out value);
+            Maxage = value;
             GUILayout.Space(10 * ratio);
-            currentwidth += 110 * ratio;
-            currentwidth = AddHorizontal(currentwidth, (30 + 5 + sexChoiceWidth.Sum() + 10) * ratio);
+            // 记录年龄控件的宽度
+            currentwidth += (30 + 30 + 10 + 30 + 10) * ratio;
+            AddHorizontal(ref currentwidth, (30 + 5 + sexChoiceWidth.Sum() + 10) * ratio);
             GUILayout.Label("性别:", labelStyle, GUILayout.Width(30 * ratio));
             GUILayout.Space(5 * ratio);
             for (int i = 0; i < sexChoice.Length; i++)
@@ -459,28 +499,19 @@ namespace NpcScan
             #endregion
 
             #region add 基础属性
-            currentwidth = AddLabelAndTextField("膂力", currentwidth, StrValue, out value);
-            StrValue = value;
-            currentwidth = AddLabelAndTextField("体质", currentwidth, ConValue, out value);
-            ConValue = value;
-            currentwidth = AddLabelAndTextField("灵敏", currentwidth, AgiValue, out value);
-            AgiValue = value;
-            currentwidth = AddLabelAndTextField("根骨", currentwidth, BonValue, out value);
-            BonValue = value;
-            currentwidth = AddLabelAndTextField("悟性", currentwidth, IntValue, out value);
-            IntValue = value;
-            currentwidth = AddLabelAndTextField("定力", currentwidth, PatValue, out value);
-            PatValue = value;
-            currentwidth = AddLabelAndTextField("魅力", currentwidth, CharmValue, out value);
-            CharmValue = value;
-            currentwidth = AddLabelAndTextField("健康", currentwidth, HealthValue, out value);
-            HealthValue = value;
-            currentwidth = AddLabelAndTextField("轮回次数", currentwidth, (85 + 10) * ratio, 55 * ratio, 30 * ratio, SamsaraCount, out value);
-            SamsaraCount = value;
+            StrValue = AddLabelAndTextField("膂力", ref currentwidth, StrValue);
+            ConValue = AddLabelAndTextField("体质", ref currentwidth, ConValue);
+            AgiValue = AddLabelAndTextField("灵敏", ref currentwidth, AgiValue);
+            BonValue = AddLabelAndTextField("根骨", ref currentwidth, BonValue);
+            IntValue = AddLabelAndTextField("悟性", ref currentwidth, IntValue);
+            PatValue = AddLabelAndTextField("定力", ref currentwidth, PatValue);
+            CharmValue = AddLabelAndTextField("魅力", ref currentwidth, CharmValue);
+            HealthValue = AddLabelAndTextField("健康", ref currentwidth, HealthValue);
+            SamsaraCount = AddLabelAndTextField("轮回次数", ref currentwidth, (55 + 30 + 10) * ratio, 55 * ratio, 30 * ratio, SamsaraCount);
             #endregion
             GUILayout.Space(10 * ratio);
             #region add 翻页
-            AddHorizontal(currentwidth, (80 + 60 + 60) * ratio);
+            AddHorizontal(ref currentwidth, (80 + 60 + 60) * ratio);
             GUILayout.Label($"页码:{Page}/{Mathf.Max((int)Math.Ceiling(actorList.Count * reciprocalCountPerPage), 1)}", labelStyle, GUILayout.Width(80 * ratio));
             if (GUILayout.Button("上页", buttonStyle, GUILayout.Width(60 * ratio)))
             {
@@ -500,26 +531,14 @@ namespace NpcScan
         /// </summary>
         private void SetNo3Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
-
-            #region add 功法属性
-            currentwidth = AddLabelAndTextField("内功", currentwidth, Gongfa[0], out Gongfa[0]);
-            currentwidth = AddLabelAndTextField("身法", currentwidth, Gongfa[1], out Gongfa[1]);
-            currentwidth = AddLabelAndTextField("绝技", currentwidth, Gongfa[2], out Gongfa[2]);
-            currentwidth = AddLabelAndTextField("拳掌", currentwidth, Gongfa[3], out Gongfa[3]);
-            currentwidth = AddLabelAndTextField("指法", currentwidth, Gongfa[4], out Gongfa[4]);
-            currentwidth = AddLabelAndTextField("腿法", currentwidth, Gongfa[5], out Gongfa[5]);
-            currentwidth = AddLabelAndTextField("暗器", currentwidth, Gongfa[6], out Gongfa[6]);
-            currentwidth = AddLabelAndTextField("剑法", currentwidth, Gongfa[7], out Gongfa[7]);
-            currentwidth = AddLabelAndTextField("刀法", currentwidth, Gongfa[8], out Gongfa[8]);
-            currentwidth = AddLabelAndTextField("长兵", currentwidth, Gongfa[9], out Gongfa[9]);
-            currentwidth = AddLabelAndTextField("奇门", currentwidth, Gongfa[10], out Gongfa[10]);
-            currentwidth = AddLabelAndTextField("软兵", currentwidth, Gongfa[11], out Gongfa[11]);
-            currentwidth = AddLabelAndTextField("御射", currentwidth, Gongfa[12], out Gongfa[12]);
-            AddLabelAndTextField("乐器", currentwidth, Gongfa[13], out Gongfa[13]);
-            #endregion
-
+            // 功法属性
+            for (int i = 0; i < gongFaTypText.Length; i++)
+            {
+                Gongfa[i] = AddLabelAndTextField(gongFaTypText[i], ref currentwidth, Gongfa[i]);
+            }
             GUILayout.Label("取值:", labelStyle, GUILayout.Width(30 * ratio));
             GUILayout.Space(5 * ratio);
             IsGetReal = GUILayout.Toggle(IsGetReal, "基础值", toggleStyle, GUILayout.Width(55 * ratio));
@@ -532,26 +551,15 @@ namespace NpcScan
         /// </summary>
         private void SetNo4Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
 
             #region add 技艺属性
-            currentwidth = AddLabelAndTextField("音律", currentwidth, Skill[0], out Skill[0]);
-            currentwidth = AddLabelAndTextField("弈棋", currentwidth, Skill[1], out Skill[1]);
-            currentwidth = AddLabelAndTextField("诗书", currentwidth, Skill[2], out Skill[2]);
-            currentwidth = AddLabelAndTextField("绘画", currentwidth, Skill[3], out Skill[3]);
-            currentwidth = AddLabelAndTextField("术数", currentwidth, Skill[4], out Skill[4]);
-            currentwidth = AddLabelAndTextField("品鉴", currentwidth, Skill[5], out Skill[5]);
-            currentwidth = AddLabelAndTextField("锻造", currentwidth, Skill[6], out Skill[6]);
-            currentwidth = AddLabelAndTextField("制木", currentwidth, Skill[7], out Skill[7]);
-            currentwidth = AddLabelAndTextField("医术", currentwidth, Skill[8], out Skill[8]);
-            currentwidth = AddLabelAndTextField("毒术", currentwidth, Skill[9], out Skill[9]);
-            currentwidth = AddLabelAndTextField("织锦", currentwidth, Skill[10], out Skill[10]);
-            currentwidth = AddLabelAndTextField("巧匠", currentwidth, Skill[11], out Skill[11]);
-            currentwidth = AddLabelAndTextField("道法", currentwidth, Skill[12], out Skill[12]);
-            currentwidth = AddLabelAndTextField("佛学", currentwidth, Skill[13], out Skill[13]);
-            currentwidth = AddLabelAndTextField("厨艺", currentwidth, Skill[14], out Skill[14]);
-            AddLabelAndTextField("杂学", currentwidth, Skill[15], out Skill[15]);
+            for (int i = 0; i < skillTypText.Length; i++)
+            {
+                Skill[i] = AddLabelAndTextField(skillTypText[i], ref currentwidth, Skill[i]);
+            }
             #endregion
 
             GUILayout.EndHorizontal();
@@ -561,21 +569,17 @@ namespace NpcScan
         /// </summary>
         private void SetNo5Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
-
-            currentwidth = AddLabelAndTextField("姓名（包括前世）", currentwidth, 180 * ratio, 100 * ratio, 80 * ratio, AName, out string text);
-            AName = text;
+            AName = AddLabelAndTextField("姓名（包括前世）", ref currentwidth, 180 * ratio, 100 * ratio, 80 * ratio, AName);
             //从属gangText
-            currentwidth = AddLabelAndTextField("从属", currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangValue, out text);
-            GangValue = text;
+            GangValue = AddLabelAndTextField("从属", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangValue);
             //身份gangLevelText
-            currentwidth = AddLabelAndTextField("身份", currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangLevelValue, out text);
-            GangLevelValue = text;
+            GangLevelValue = AddLabelAndTextField("身份", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangLevelValue);
             //商会
-            currentwidth = AddLabelAndTextField("商会", currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, AShopName, out text);
-            AShopName = text;
-            currentwidth = AddHorizontal(currentwidth, (30 + 45 * 6) * ratio);
+            AShopName = AddLabelAndTextField("商会", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, AShopName);
+            AddHorizontal(ref currentwidth, (30 + 45 * 6) * ratio);
             //立场goodnessText
             GUILayout.Label("立场:", labelStyle, GUILayout.Width(30 * ratio));
             for (int i = 0; i < goodness.Length; i++)
@@ -589,33 +593,36 @@ namespace NpcScan
                         if (i != j)
                         {
                             goodness[j] = false;
-                            Goodness = j - 1;
+                            Goodness = i - 1;
                         }
                     }
                 }
             }
             GUILayout.Space(30 * ratio);
-            currentwidth = AddLabelAndTextField("最高查询品级", currentwidth, 170 * ratio, 80 * ratio, 60 * ratio, HighestLevel, out int value);
-            HighestLevel = value;
+            HighestLevel = AddLabelAndTextField("最高查询品级", ref currentwidth, 170 * ratio, 80 * ratio, 60 * ratio, HighestLevel);
             GUILayout.Space(10 * ratio);
-            AddHorizontal(currentwidth, 250 * ratio);
+            AddHorizontal(ref currentwidth, (120 + 170) * ratio);
             TarIsGang = GUILayout.Toggle(TarIsGang, "是否开启识别门派", toggleStyle, GUILayout.Width(120 * ratio));
-            IsGang = GUILayout.Toggle(IsGang, "仅搜索门派(需要开启识别门派)", toggleStyle);
+            IsGang = GUILayout.Toggle(IsGang, "仅搜索门派(需开启识别门派)", toggleStyle, GUILayout.Width(170 * ratio));
             GUILayout.EndHorizontal();
         }
-
+        /// <summary>
+        /// 设置第六行内容
+        /// </summary>
         private void SetNo6Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
-            currentwidth = AddLabelAndTextField("人物特性(多个特性用'|'分隔)", currentwidth, (280 + 60 + 100) * ratio, 160 * ratio, 120 * ratio, ActorFeatureText, out string text);
-            ActorFeatureText = text;
+            ActorFeatureText = AddLabelAndTextField("人物特性(多个用'|'分隔)", ref currentwidth, (130 + 120 + 65 + 145) * ratio, 130 * ratio, 120 * ratio, ActorFeatureText);
             TarFeature = GUILayout.Toggle(TarFeature, "精确特性", toggleStyle, GUILayout.Width(65 * ratio));//是否精确查找,精确查找的情况下,特性用'|'分隔
-            TarFeatureOr = GUILayout.Toggle(TarFeatureOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
-            currentwidth = AddLabelAndTextField("可教功法(多个功法用'|'分隔)", currentwidth, 310 * ratio, 160 * ratio, 150 * ratio, ActorGongFaText, out text);
-            ActorGongFaText = text;
-            AddHorizontal(currentwidth, 180 * ratio);
-            TarGongFaOr = GUILayout.Toggle(TarGongFaOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
+            TarFeatureOr = GUILayout.Toggle(TarFeatureOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(145 * ratio));//默认AND查询方式
+            ActorGongFaText = AddLabelAndTextField("可教功法(多个功法用'|'分隔)", ref currentwidth, (160 + 150 + 145) * ratio, 150 * ratio, 150 * ratio, ActorGongFaText);
+            TarGongFaOr = GUILayout.Toggle(TarGongFaOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(145 * ratio));//默认AND查询方式
+            AddHorizontal(ref currentwidth, 175 * ratio);
+            showNameTip = GUILayout.Toggle(showNameTip, "搜索结果区域提示NPC姓名", toggleStyle, GUILayout.Width(175 * ratio));
+            AddHorizontal(ref currentwidth, 175 * ratio);
+            GUILayout.Label($"{Main.textColor[20009]}点击任意NPC信息打开NPC窗口</color>", labelStyle, GUILayout.Width(175 * ratio));
             GUILayout.EndHorizontal();
         }
 
@@ -624,67 +631,19 @@ namespace NpcScan
         /// </summary>
         private void SetNo7Windows()
         {
+            // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
-            currentwidth = AddLabelAndTextField("可学技艺(用技艺类别名的第一个字搜，多个技艺用'|'分隔)", currentwidth, 410 * ratio, 310 * ratio, 100 * ratio, ActorSkillText, out string text);
-            ActorSkillText = text;
+            ActorSkillText = AddLabelAndTextField("可学技艺(多个用'|'分隔)", ref currentwidth, (130 + 120 + 150) * ratio, 130 * ratio, 120 * ratio, ActorSkillText);
             TarSkillOr = GUILayout.Toggle(TarSkillOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
-
+            ActorItemText = AddLabelAndTextField("物品(多个用'|'分隔,去掉书名号,不支持促织)", ref currentwidth, (230 + 100 + 150 + 150) * ratio, 230 * ratio, 150 * ratio, ActorItemText);
+            TarItemOr = GUILayout.Toggle(TarItemOr, "OR查询(否则默认AND)", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
+            ItemDead = GUILayout.Toggle(ItemDead, "搜索过世之人的物品", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
             GUILayout.FlexibleSpace();
-            AddHorizontal(currentwidth, 150 * ratio);
+            AddHorizontal(ref currentwidth, 150 * ratio);
             if (GUILayout.Button("查找", buttonStyle, GUILayout.Width(150 * ratio)))
             {
-                // 每次点击查找。获取当前每页显示页数。
-                countPerPage = Main.settings.countPerPage;
-                reciprocalCountPerPage = (float)(1 / (double)countPerPage);
-
-                Page = 1;
-                // 首次搜索时，载入特性信息
-                if (Main.featuresList.Count == 0)
-                {
-                    foreach (var pair in DateFile.instance.actorFeaturesDate)
-                    {
-                        var feature = new Features(pair.Key, pair.Value);
-                        Main.featuresList.Add(feature.Key, feature);
-                        Main.featureNameList.Add(feature.Name, feature.Key);
-                    }
-                }
-
-                if (ActorFeatureText != "")
-                {
-                    GetFeatures(ActorFeatureText, TarFeature);
-                }
-
-                if (Main.gongFaNameList.Count == 0)
-                {
-                    foreach (var pair in DateFile.instance.gongFaDate)
-                    {
-                        // 去掉颜色和空白
-                        var tem = colorTagRegex.Replace(pair.Value[0], "");
-                        if (tem != "")
-                            Main.gongFaNameList.Add(tem, pair.Key);
-                    }
-                }
-
-                if (ActorGongFaText != "")
-                {
-                    GetGongFaKey(ActorGongFaText);
-                }
-
-                if (Main.skillNameList.Count == 0)
-                {
-                    foreach (var pair in DateFile.instance.baseSkillDate)
-                    {
-                        if (pair.Key < 100)
-                            Main.skillNameList.Add(pair.Value[0].Substring(0, 1), pair.Key);
-                    }
-                }
-
-                if (ActorSkillText != "")
-                {
-                    GetSkillKey(ActorSkillText);
-                }
-
+                PrepareScan();
                 ScanNpc();
 
                 if (!Rankmode)
@@ -708,17 +667,19 @@ namespace NpcScan
         private void SetSearchResultTitle()
         {
             // 用于冻结标题行，且列会跟着搜索结果区域的左右滚动条动
-            scrollPosition[0] = GUILayout.BeginScrollView(scrollPosition[0], new GUIStyle(), new GUIStyle(),
+            scrollPosition[0] = GUILayout.BeginScrollView(scrollPosition[0], emptyStyle, emptyStyle,
                                                           // 以12pt字体为基准，对应 16 pixels, 两行文字则加倍32pixel, 若字体乘以ratio转成int后并没有实际增大则不增加宽度
                                                           // 先碱法后“除法”(虽然转换成乘法了)，减少浮点型运算积累误差
                                                           GUILayout.Height(70 + ((int)(ratio * baseFontSize) - baseFontSize) * reciprocalFontSize * 32),
                                                           GUILayout.Width(WindowWidth() + 60f));
-            var optInstance1 = OptimizeScrollView.GetInstance("TitleName");
-            var optInstance2 = OptimizeScrollView.GetInstance("TitleBtn");
-            // 第一次执行时记录各列的位置和大小信息
-            if (!optInstance1.IsReady(OptimizeScrollView.OptType.ColOnly) || !optInstance2.IsReady(OptimizeScrollView.OptType.ColOnly))
+            // 获取滚动视图优化类实例
+            var optInstance1 = OptimizeScrollView.GetInstance("TitleName", OptimizeScrollView.OptType.ColOnly);
+            var optInstance2 = OptimizeScrollView.GetInstance("TitleBtn", OptimizeScrollView.OptType.ColOnly);
+            // 首次渲染时记录各列的位置和大小信息
+            if (!optInstance1.IsReady() || !optInstance2.IsReady())
             {
                 GUILayout.BeginHorizontal("box");
+                // 渲染标题中名称
                 for (int i = 0; i < mColumns.Count; i++)
                 {
                     GUILayout.Label(mColumns[i].name, labelStyle, colWidth[i]);
@@ -730,11 +691,12 @@ namespace NpcScan
                 }
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal("box");
+                // 渲染标题中按钮
                 for (int i = 0; i < mColumns.Count; i++)
                 {
                     if (GUILayout.Button("O", buttonStyle, colWidth[i]))
                     {
-                        OnClickColBtn(i);
+                        OnClickTitleColBtn(i);
                     }
                     if (Event.current.type == EventType.Repaint)
                     {
@@ -753,12 +715,12 @@ namespace NpcScan
             }
             else
             {
-                // 已经获取各列的位置和大小信息后, 只渲染能在当前窗口里显示的列
+                // 再次渲染时，因已经获取各列的位置和大小信息后, 可以根据记录只渲染能在当前窗口里可以显示出来的列
                 optInstance1.GetFirstAndLastColVisible(scrollPosition[0], out int firstColVisible, out int lastColVisible);
                 GUILayout.BeginHorizontal("box");
                 if (firstColVisible > 0)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用一块空白填充不能显示的左侧区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance1.GetColEndPosition(firstColVisible - 1));
                 }
                 // 只渲染可以显示的内容
@@ -770,8 +732,8 @@ namespace NpcScan
                 {
                     if (lastColVisible < optInstance1.ColCount - 1)
                     {
-                        // 用空白填充不能显示的区域
-                        GUILayout.Space(optInstance1.GetRowEndPosition(optInstance1.ColCount - 1) - optInstance1.GetRowEndPosition(lastColVisible));
+                        // 用一块空白填充不能显示的右侧区域, 以便滚动条的长度可以正确反应总数据量
+                        GUILayout.Space(optInstance1.GetColEndPosition(optInstance1.ColCount - 1) - optInstance1.GetColEndPosition(lastColVisible));
                     }
                     else
                     {
@@ -779,13 +741,12 @@ namespace NpcScan
                         GUILayout.Space(1.5f * GUI.skin.verticalScrollbar.fixedWidth * ratio);
                     }
                 }
-
                 GUILayout.EndHorizontal();
                 optInstance2.GetFirstAndLastColVisible(scrollPosition[0], out firstColVisible, out lastColVisible);
                 GUILayout.BeginHorizontal("box");
                 if (firstColVisible > 0)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用一块空白填充不能显示的左侧区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance2.GetColEndPosition(firstColVisible - 1));
                 }
                 // 只渲染可以显示的内容
@@ -793,15 +754,15 @@ namespace NpcScan
                 {
                     if (GUILayout.Button("O", buttonStyle, colWidth[i]))
                     {
-                        OnClickColBtn(i);
+                        OnClickTitleColBtn(i);
                     }
                 }
                 if (lastColVisible != -1)
                 {
                     if (lastColVisible < optInstance2.ColCount - 1)
                     {
-                        // 用空白填充不能显示的区域
-                        GUILayout.Space(optInstance2.GetRowEndPosition(optInstance2.ColCount - 1) - optInstance2.GetRowEndPosition(lastColVisible));
+                        // 用一块空白填充不能显示的右侧区域, 以便滚动条的长度可以正确反应总数据量
+                        GUILayout.Space(optInstance2.GetColEndPosition(optInstance2.ColCount - 1) - optInstance2.GetColEndPosition(lastColVisible));
                     }
                     else
                     {
@@ -822,36 +783,43 @@ namespace NpcScan
         {
             // 分页: 当前页最后一行内容序号
             int c = actorList.Count > countPerPage * Page ? countPerPage * Page : actorList.Count;
+            // 让滚动条的大小随窗口的大小缩放
             float verticalThumbWidth = GUI.skin.verticalScrollbarThumb.fixedWidth;
             float horizonThumbHeight = GUI.skin.horizontalScrollbarThumb.fixedHeight;
             GUI.skin.verticalScrollbarThumb.fixedWidth = verticalThumbWidth * ratio;
             GUI.skin.horizontalScrollbarThumb.fixedHeight = horizonThumbHeight * ratio;
             scrollPosition[1] = GUILayout.BeginScrollView(scrollPosition[1], horizontalScrollbarStyle, verticalScrollbarStyle, GUILayout.ExpandHeight(false), GUILayout.Width(WindowWidth() + 60f));
             scrollPosition[0].x = scrollPosition[1].x; // 标题栏列随着结果的列一起移动
-            scrollPosition[0].y = 0; // 冻结标题行
+            scrollPosition[0].y = 0; // 冻结标题栏
+            // 获取滚动视图优化类实例
             var optInstance3 = OptimizeScrollView.GetInstance("Content");
-            // 第一次执行时记录各列和各行的位置和大小信息
+            // 首次渲染时记录各列和各行的位置和大小信息
             if (!optInstance3.IsReady())
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.BeginVertical("box");
                 for (int i = (Page - 1) * countPerPage; i < c; i++)
                 {
-                    var additem = actorList[i].GetAddItem();
+                    // 获取该行展示的内容
+                    string[] additem = actorList[i].GetAddedItem();
                     GUILayout.BeginHorizontal("box");
                     for (int j = 0; j < additem.Length; j++)
                     {
-                        GUILayout.Label(additem[j], labelStyle, colWidth[j]);
+                        if (GUILayout.Button(additem[j], labelStyle, colWidth[j]))
+                        {
+                            OnClickContentArea(i);
+                        }
                         if (Event.current.type == EventType.Repaint)
                         {
-                            // 记录各列位置和大小
-                            optInstance3.AddColRect(j, GUILayoutUtility.GetLastRect(), mColumns.Count);
+                            // 记录各列位置和大小信息，只有repaint事件时才能获取LastRect
+                            var rect = GUILayoutUtility.GetLastRect();
+                            optInstance3.AddColRect(j, rect, mColumns.Count);
                         }
                     }
                     GUILayout.EndHorizontal();
                     if (Event.current.type == EventType.Repaint)
                     {
-                        // 记录各行位置和大小
+                        // 记录各行位置和大小，只有repaint事件时才能获取LastRect
                         optInstance3.AddRowRect(i - (Page - 1) * countPerPage, GUILayoutUtility.GetLastRect());
                     }
                 }
@@ -860,54 +828,77 @@ namespace NpcScan
                 GUILayout.EndScrollView();
                 if (Event.current.type == EventType.Repaint)
                 {
-                    // 记录可显示区域的位置和大小
+                    // 记录滚动视图可现实区域的位置和大小，只有repaint事件时才能获取LastRect
                     optInstance3.AddViewRect(GUILayoutUtility.GetLastRect());
                 }
             }
             else
             {
-                // 已经获取各列和各行的位置和大小信息后, 只渲染能在当前窗口里显示的列和行
+                // 再次渲染时，因已经获取各列和各行的位置和大小信息后, 可以根据记录只渲染能在当前窗口里可以显示出来的列和行
                 optInstance3.GetFirstAndLastColVisible(scrollPosition[1], out int firstColVisible, out int lastColVisible);
                 optInstance3.GetFirstAndLastRowVisible(scrollPosition[1], out int firstRowVisible, out int lastRowVisible);
                 GUILayout.BeginHorizontal();
                 if (firstColVisible > 0)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用一块空白填充不能显示的左侧区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance3.GetColEndPosition(firstColVisible - 1));
                 }
                 GUILayout.BeginVertical("box");
                 if (firstRowVisible > 0)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用空白填充不能显示的上方区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance3.GetRowEndPosition(firstRowVisible - 1));
                 }
-                int beginRow = Math.Max((Page - 1) * countPerPage + firstRowVisible, 0);
-                int endRow = (Page - 1) * countPerPage + lastRowVisible + 1;
+                // 根据起、止行号, 算出起、止记录的序号
+                int beginIndex = Math.Max((Page - 1) * countPerPage + firstRowVisible, 0);
+                int endIndex = (Page - 1) * countPerPage + lastRowVisible + 1;
                 // 只渲染可以显示的行
-                for (int i = beginRow; i < endRow; i++)
+                for (int i = beginIndex; i < endIndex; i++)
                 {
-                    var additem = actorList[i].GetAddItem();
+                    // 获取该行展示的内容
+                    var additem = actorList[i].GetAddedItem();
                     GUILayout.BeginHorizontal("box", GUILayout.Height(optInstance3.GetRowHeight(i - (Page - 1) * countPerPage)));
                     // 只渲染可以显示的列
                     for (int j = Math.Max(firstColVisible, 0); j <= lastColVisible; j++)
                     {
-                        GUILayout.Label(additem[j], labelStyle, colWidth[j]);
+                        tipContent.text = additem[j];
+                        tipContent.tooltip = $"{actorList[i].ActorName}({actorList[i].npcId})";
+                        if (GUILayout.Button(tipContent, labelStyle, colWidth[j]))
+                        {
+                            OnClickContentArea(i);
+                        }
                     }
                     GUILayout.EndHorizontal();
+                    // 鼠标指向NPC详情时提示NPC姓名
+                    if (showNameTip && Event.current.type == EventType.Repaint && GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+                    {
+                        float x = (Event.current.mousePosition.x <= optInstance3.GetColEndPosition(firstColVisible + 1)) ? (Event.current.mousePosition.x + 10) : (Event.current.mousePosition.x - 100 * ratio);
+                        float y = (i < firstRowVisible + 1) ? (Event.current.mousePosition.y + 10) : (Event.current.mousePosition.y - 30 * ratio);
+                        tipRect = new Rect(x, y, 100 * ratio, 30 * ratio);
+                    }
                 }
-                int lastRow = (Page - 1) * countPerPage + optInstance3.RowCount;
-                if (endRow < lastRow)
+                // 当前页的最后一个记录的序号
+                int lastIndex = (Page - 1) * countPerPage + optInstance3.RowCount;
+                if (endIndex < lastIndex)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用空白填充不能显示的下方区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance3.GetRowEndPosition(optInstance3.RowCount - 1) - optInstance3.GetRowEndPosition(lastRowVisible));
                 }
                 GUILayout.EndVertical();
                 if (lastColVisible != -1 && lastColVisible < optInstance3.ColCount - 1)
                 {
-                    // 用空白填充不能显示的区域
+                    // 用空白填充不能显示的右侧区域, 以便滚动条的长度可以正确反应总数据量
                     GUILayout.Space(optInstance3.GetColEndPosition(optInstance3.ColCount - 1) - optInstance3.GetColEndPosition(lastColVisible));
                 }
                 GUILayout.EndHorizontal();
+                // 鼠标指向NPC详情时提示NPC姓名
+                if (showNameTip && tipRect != default)
+                {
+                    var color = labelStyle.normal.textColor;
+                    labelStyle.normal.textColor = new Color32(255, 226, 198, 255);
+                    GUI.Label(tipRect, GUI.tooltip, labelStyle);
+                    labelStyle.normal.textColor = color;
+                }
                 GUILayout.EndScrollView();
             }
             GUI.skin.verticalScrollbarThumb.fixedWidth = verticalThumbWidth;
@@ -916,59 +907,55 @@ namespace NpcScan
 
 
         /// <summary>
-        /// 同时添加一个laber和一个textbox
+        /// 判断是否换行同时添加一个label和一个textbox
         /// </summary>
-        /// <param name="labelName">laber名字</param>
+        /// <param name="labelName">label名字</param>
         /// <param name="currentwidth">当前行宽度</param>
         /// <param name="settingInput">textbox的当前值</param>
-        /// <param name="settingValue">textbox的设定值</param>
-        /// <returns></returns>
-        private float AddLabelAndTextField(string labelName, float currentwidth, int settingInput, out int settingValue)
+        /// <returns>textbox的输入内容</returns>
+        private int AddLabelAndTextField(string labelName, ref float currentwidth, int settingInput)
         {
-            currentwidth = AddHorizontal(currentwidth, 65 * ratio);
+            AddHorizontal(ref currentwidth, 65 * ratio);
             GUILayout.Label($"{labelName}:", labelStyle, GUILayout.Width(30 * ratio));
-            if (!int.TryParse(GUILayout.TextField(settingInput.ToString(), 10, textStyle, GUILayout.Width(30 * ratio)), out settingValue))
+            if (!int.TryParse(GUILayout.TextField(settingInput.ToString(), 10, textStyle, GUILayout.Width(30 * ratio)), out var settingValue))
             {
                 settingValue = 0;
             }
             GUILayout.Space(5 * ratio);
-            return currentwidth;
+            return settingValue;
         }
 
         /// <summary>
-        /// 同时添加一个laber和一个textbox
+        /// 判断是否换行同时添加一个label和一个textbox
         /// </summary>
-        /// <param name="labelName">laber名字</param>
+        /// <param name="labelName">label名字</param>
         /// <param name="currentwidth">当前行宽度</param>
         /// <param name="settingInput">textbox的当前内容</param>
         /// <param name="addwidth">添加的宽度</param>
-        /// <param name="outString">textbox的输入内容</param>
-        /// <returns></returns>
-        private float AddLabelAndTextField(string labelName, float currentwidth, float addwidth, float labelWidth, float textWidth, string settingInput, out string outString)
+        /// <returns>textbox的输入内容</returns>
+        private string AddLabelAndTextField(string labelName, ref float currentwidth, float addwidth, float labelWidth, float textWidth, string settingInput)
         {
-            currentwidth = AddHorizontal(currentwidth, addwidth);
+            AddHorizontal(ref currentwidth, addwidth);
             GUILayout.Label($"{labelName}:", labelStyle, GUILayout.Width(labelWidth));
-            outString = GUILayout.TextField(settingInput, textStyle, GUILayout.Width(textWidth));
-            return currentwidth;
+            return GUILayout.TextField(settingInput, textStyle, GUILayout.Width(textWidth));
         }
 
         /// <summary>
-        /// 同时添加一个laber和一个textbox
+        /// 判断是否换行同时添加一个label和一个textbox
         /// </summary>
-        /// <param name="labelName">laber名字</param>
+        /// <param name="labelName">label名字</param>
         /// <param name="currentwidth">当前行宽度</param>
         /// <param name="settingInput">textbox的当前内容</param>
         /// <param name="addwidth">添加的宽度</param>
-        /// <param name="outValue">textbox的输入内容</param>
-        /// <returns></returns>
-        private float AddLabelAndTextField(string labelName, float currentwidth, float addwidth, float labelWidth, float textWidth, int settingInput, out int outValue)
+        /// <returns>textbox的输入内容</returns>
+        private int AddLabelAndTextField(string labelName, ref float currentwidth, float addwidth, float labelWidth, float textWidth, int settingInput)
         {
 
-            currentwidth = AddHorizontal(currentwidth, addwidth);
+            AddHorizontal(ref currentwidth, addwidth);
             GUILayout.Label($"{labelName}:", labelStyle, GUILayout.Width(labelWidth));
             string outString = GUILayout.TextField(settingInput.ToString(), 10, textStyle, GUILayout.Width(textWidth));
-            int.TryParse(outString, out outValue);
-            return currentwidth;
+            int.TryParse(outString, out var outValue);
+            return outValue;
         }
 
         /// <summary>
@@ -976,8 +963,7 @@ namespace NpcScan
         /// </summary>
         /// <param name="currentwidth">当前宽</param>
         /// <param name="addWidth">添加宽</param>
-        /// <returns>当前宽</returns>
-        private float AddHorizontal(float currentwidth, float addWidth)
+        private void AddHorizontal(ref float currentwidth, float addWidth)
         {
             currentwidth += addWidth;
             if (currentwidth >= WindowWidth())
@@ -986,12 +972,91 @@ namespace NpcScan
                 currentwidth = addWidth;
                 GUILayout.BeginHorizontal("box");
             }
-            return currentwidth;
         }
 
 #if debug
         private readonly Stopwatch stopwatch = new Stopwatch();
 #endif
+        /// <summary>
+        /// 执行搜索准备工作
+        /// </summary>
+        private void PrepareScan()
+        {
+#if debug
+            stopwatch.Restart();
+#endif
+            // 每次点击查找。获取当前每页显示页数。
+            countPerPage = Main.settings.countPerPage;
+            reciprocalCountPerPage = (float)(1 / (double)countPerPage);
+
+            Page = 1;
+            // 首次搜索时，载入特性信息
+            if (Main.featuresList.Count == 0)
+            {
+                foreach (var pair in DateFile.instance.actorFeaturesDate)
+                {
+                    var feature = new Features(pair.Key, pair.Value);
+                    Main.featuresList.Add(pair.Key, feature);
+                    Main.featureNameList.Add(colorTagRegex.Replace(feature.Name, ""), pair.Key);
+                }
+            }
+
+            GetFeatures(ActorFeatureText, TarFeature);
+
+            // 首次搜索时，载入功法信息
+            if (Main.gongFaNameList.Count == 0)
+            {
+                foreach (var pair in DateFile.instance.gongFaDate)
+                {
+                    // 去掉颜色和空白
+                    var tem = colorTagRegex.Replace(pair.Value[0], "");
+                    if (tem != "")
+                        Main.gongFaNameList.Add(tem, pair.Key);
+                }
+            }
+
+            GetGongFaKey(ActorGongFaText);
+
+            // 首次搜索时，载入技艺信息
+            if (Main.skillNameList.Count == 0)
+            {
+                foreach (var pair in DateFile.instance.baseSkillDate)
+                {
+                    if (pair.Key < 100)
+                    {
+                        Main.skillNameList.Add(pair.Value[0].Substring(0, 1), pair.Key);
+                    }
+                }
+            }
+
+            GetSkillKey(ActorSkillText);
+
+            // 首次搜索时，载入物品信息
+            if (Main.itemNameList.Count == 0)
+            {
+                foreach (var pair in DateFile.instance.presetitemDate)
+                {
+                    // NPC一般不持有促织，不需要支持搜索促织
+                    if (pair.Key <= 0 || int.Parse(pair.Value[2001]) == 1)
+                        continue;
+
+                    string name = Item.PurifyItemName(pair.Value[0]).Trim('《', '》');
+
+                    if (!Main.itemNameList.TryGetValue(name, out var itemList))
+                    {
+                        itemList = new List<int>(2);
+                        Main.itemNameList[name] = itemList;
+                    }
+                    itemList.Add(pair.Key);
+                }
+            }
+
+            GetItemKey(ActorItemText);
+#if debug
+            stopwatch.Stop();
+            Main.Logger.Log($"PrepareScan: {stopwatch.Elapsed}");
+#endif
+        }
 
         /// <summary>
         /// 搜索NPC
@@ -1013,7 +1078,7 @@ namespace NpcScan
                 try
                 {
                     var addItem = new ActorItem(npcId, this);
-                    if (addItem.AddCheck())
+                    if (addItem.NeededAdd)
                     {
                         // 加锁
                         while (Interlocked.CompareExchange(ref locker, 1, 0) == 1) ;
@@ -1035,6 +1100,7 @@ namespace NpcScan
             });
             // 搜索完毕, 结束关闭多线程补丁
             Patch.StopGetFeaturePatch();
+            actorList.Sort();
 #if debug
             stopwatch.Stop();
             Main.Logger.Log($"ScanNpc: {stopwatch.Elapsed}");
@@ -1042,14 +1108,15 @@ namespace NpcScan
         }
 
         /// <summary>
-        /// 点击类标题的按钮时触发
+        /// 点击搜索结果标题的按钮时触发
         /// </summary>
         /// <param name="colNum">列序号</param>
-        private void OnClickColBtn(int colNum)
+        private void OnClickTitleColBtn(int colNum)
         {
 #if debug
             stopwatch.Restart();
 #endif
+            DateFile.instance.PlayeSE(2);
             // 新的一列作为排序依据时总是默认降序
             if (sortIndex != colNum)
             {
@@ -1069,18 +1136,58 @@ namespace NpcScan
         }
 
         /// <summary>
+        /// 点击搜索结果区域时触发
+        /// </summary>
+        /// <param name="itemIndex">记录序号</param>
+        /// <param name="colNum">列序号</param>
+        /// <remarks>点击NPC名字打开NPC窗口</remarks>
+        private void OnClickContentArea(int itemIndex)
+        {
+            if (itemIndex < actorList.Count)
+            {
+                var npcId = actorList[itemIndex].npcId;
+                // 为防止游戏npc数据改变之后而玩家没有重新搜索导致出错，做几步验证，而且过世的NPC的窗口没法打开
+                if (DateFile.instance.actorsDate.ContainsKey(npcId)
+                    && int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0
+                    && actorList[itemIndex].ActorName == DateFile.instance.GetActorName(npcId))
+                {
+                    DateFile.instance.PlayeSE(2);
+                    GEvent.AddOneShot(eEvents.ActorMenuOpened, args => ToggleWindow());
+                    GEvent.AddOneShot(eEvents.ActorMenuClosed, args =>
+                    {
+                        if (npcId != DateFile.instance.MianActorID())
+                            ui_NpcSearch.npcSearchActorID = -1;
+                        ToggleWindow();
+                    });
+                    if (npcId == DateFile.instance.MianActorID())
+                    {
+                        ActorMenu.instance.ShowActorMenu(false);
+                    }
+                    else
+                    {
+                        ui_NpcSearch.npcSearchActorID = npcId;
+                        ActorMenu.instance.ShowActorMenu(true);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 获得想要搜索的特性
         /// </summary>
         /// <param name="str">特性搜索条件</param>
         /// <param name="TarFeaure">是否精确查找</param>
         /// <returns></returns>
-        private static void GetFeatures(string str, bool TarFeaure)
+        private void GetFeatures(string str, bool TarFeaure)
         {
-            Main.findSet.Clear();
+            featureSearchSet.Clear();
+            if (str.IsNullOrEmpty())
+                return;
+
             var features = str.Split('|');
             foreach (string s in features)
             {
-                if (Main.featureNameList.TryGetValue(s, out int key))
+                if (Main.featureNameList.TryGetValue(s.Trim(), out int key))
                 {
                     if (!TarFeaure)
                     {
@@ -1088,11 +1195,11 @@ namespace NpcScan
                         int plus = f.Plus;
                         if (plus == 3 || plus == 4)
                         {
-                            Main.findSet.Add(f.Group);
+                            featureSearchSet.Add(f.Group);
                             continue;
                         }
                     }
-                    Main.findSet.Add(key);
+                    featureSearchSet.Add(key);
                 }
             }
         }
@@ -1101,15 +1208,18 @@ namespace NpcScan
         /// 获得想要搜索的功法
         /// </summary>
         /// <param name="str">搜索词条</param>
-        private static void GetGongFaKey(string str)
+        private void GetGongFaKey(string str)
         {
-            Main.gongFaList.Clear();
+            gongFaSearchList.Clear();
+            if (str.IsNullOrEmpty())
+                return;
+
             var gongFaTemp = str.Split('|');
             foreach (string s in gongFaTemp)
             {
-                if (Main.gongFaNameList.TryGetValue(s, out int key))
+                if (Main.gongFaNameList.TryGetValue(s.Trim(), out int key))
                 {
-                    Main.gongFaList.Add(key);
+                    gongFaSearchList.Add(key);
                 }
             }
         }
@@ -1118,15 +1228,45 @@ namespace NpcScan
         /// 获得想要搜索的技艺
         /// </summary>
         /// <param name="str">搜索词条</param>
-        private static void GetSkillKey(string str)
+        private void GetSkillKey(string str)
         {
-            Main.skillList.Clear();
+            skillSearchList.Clear();
+            if (str.IsNullOrEmpty())
+                return;
+
             var skillTemp = str.Split('|');
             foreach (var s in skillTemp)
             {
-                if (Main.skillNameList.TryGetValue(s, out int key))
+                var name = s.Trim();
+                if (name.Length == 0) continue;
+
+                if (Main.skillNameList.TryGetValue(name.Substring(0, 1), out int key))
                 {
-                    Main.skillList.Add(key);
+                    Main.Logger.Log($"{name},{key}");
+                    skillSearchList.Add(key);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获得想要搜索的物品
+        /// </summary>
+        /// <param name="str">搜索词条</param>
+        private void GetItemKey(string str)
+        {
+            itemSearchSet.Clear();
+            itemSearchList.Clear();
+            if (str.IsNullOrEmpty())
+                return;
+
+            var itemTemp = str.Split('|');
+            foreach (var s in itemTemp)
+            {
+                if (Main.itemNameList.TryGetValue(s.Trim(), out var keyList))
+                {
+                    // 一个名字对应多个ID时，将ID取反，以示区分，用零隔开
+                    itemSearchSet.UnionWith(keyList);
+                    itemSearchList.AddRange(keyList.Count > 1 ? keyList.Select(key => -key).Append(0) : keyList);
                 }
             }
         }
@@ -1190,13 +1330,6 @@ namespace NpcScan
         }
 
         /// <summary>
-        /// 调整margin
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private static RectOffset RectOffset(int value) => new RectOffset(value, value, value, value);
-
-        /// <summary>
         /// 排序
         /// </summary>
         /// <param name="a"></param>
@@ -1205,7 +1338,6 @@ namespace NpcScan
         private int SortList(ActorItem a, ActorItem b)
         {
             int index = rankcolumnadded ? sortIndex - 1 : sortIndex;
-            // 分情况讨论，主要是为了使用更专门的Regex，提升排序性能
             switch (index)
             {
                 case -1:
@@ -1317,11 +1449,26 @@ namespace NpcScan
                 case 58:
                     return CheckMN(a.GetMaxSkillGrade(), b.GetMaxSkillGrade());
                 case 59:
-                    return CheckMN(a.SamsaraNames, b.SamsaraNames);
-                case 60:
-                    int count1 = a.ActorFeatures.Count;
-                    int count2 = b.ActorFeatures.Count;
+                    int count1 = a.GetItems().Length;
+                    int count2 = b.GetItems().Length;
                     int count = Math.Min(count1, count2);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var result = CheckMN(a.GetItems()[i], b.GetItems()[i]);
+                        if (result != 0)
+                            return result;
+                    }
+                    if (count1 > count)
+                        return desc ? -1 : 1;
+                    if (count2 > count)
+                        return desc ? 1 : -1;
+                    return 0;
+                case 60:
+                    return CheckMN(a.SamsaraNames, b.SamsaraNames);
+                case 61:
+                    count1 = a.ActorFeatures.Count;
+                    count2 = b.ActorFeatures.Count;
+                    count = Math.Min(count1, count2);
                     for (int i = 0; i < count; i++)
                     {
                         var result = CheckMN(a.ActorFeatures[i], b.ActorFeatures[i]);
@@ -1345,7 +1492,7 @@ namespace NpcScan
         /// <param name="n"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int CheckMN<T>(T m, T n) where T : IComparable => (desc ? -1 : 1) * m.CompareTo(n);
+        private int CheckMN<T>(T m, T n) where T : IComparable<T> => (desc ? -1 : 1) * m.CompareTo(n);
 
         /// <summary>
         /// 计算每列宽度
@@ -1374,15 +1521,22 @@ namespace NpcScan
         }
 
         /// <summary>
+        /// 调整margin
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private static RectOffset RectOffset(int value) => new RectOffset(value, value, value, value);
+
+        /// <summary>
         /// 窗口宽度
         /// </summary>
         /// <returns></returns>
-        private float WindowWidth() => (DateFile.instance.screenWidth * 0.8f);
+        private static float WindowWidth() => (DateFile.instance.screenWidth * 0.8f);
 
         /// <summary>
         /// 屏幕宽度
         /// </summary>
         /// <returns></returns>
-        private float ScreenWidth() => (DateFile.instance.screenWidth);
+        private static float ScreenWidth() => (DateFile.instance.screenWidth);
     }
 }
