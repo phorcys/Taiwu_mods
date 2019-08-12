@@ -596,24 +596,26 @@ namespace Sth4nothing.SLManager
         /// </summary>
         public static int DateId => SaveDateFile.instance.dateId;
 
-        public static string Backup(int backupType)
+        public static string Backup(int dataId, string savingSubId)
         {
-            if (!Backuper.CheckAllSaveFileExist(DateId))
+            string savingDir = SaveGame.GetSavingDir(dataId, savingSubId);
+            if (!Backuper.CheckAllSaveFileExist(savingDir))
             {
                 Debug.Log("存档文件不全");
                 return null;
             }
-            switch (backupType)
-            {
-                case AfterSaveBackup:
-                    return BackupAfterSave();
+            return BackupAfterSave(dataId, savingSubId);
+            //switch (backupType)
+            //{
+            //    case AfterSaveBackup:
+            //        return BackupAfterSave();
 
-                case BeforeLoadingBackup:
-                    return BackupBeforeLoad();
+            //    case BeforeLoadingBackup:
+            //        return BackupBeforeLoad();
 
-                default:
-                    throw new ArgumentException("invalid backupType");
-            }
+            //    default:
+            //        throw new ArgumentException("invalid backupType");
+            //}
         }
 
         private static readonly Regex reg = new Regex(@"Date_\d+\.save\.(.{3})\.zip");
@@ -621,7 +623,7 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 执行存档后备份
         /// </summary>
-        private static string BackupAfterSave()
+        private static string BackupAfterSave(int dataId, string savingSubId)
         {
             if (Main.settings.maxBackupsToKeep == 0)
             {
@@ -681,39 +683,80 @@ namespace Sth4nothing.SLManager
             // 保存备份
             var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
             Main.Logger.Log("备份路径:" + targetFile);
-            BackupFolderToFile(SavePath, targetFile);
+            BackupFolderToFile(dataId, savingSubId, targetFile);
             Main.isBackuping = false;
             return targetFile;
         }
 
-        /// <summary>
-        /// 执行读档前备份
-        /// </summary>
-        private static string BackupBeforeLoad()
-        {
-            var targetFile = Path.Combine(BackPath, $"Date_{DateId}.load.zip");
-            BackupFolderToFile(SavePath, targetFile);
-            return targetFile;
-        }
+        ///// <summary>
+        ///// 执行读档前备份
+        ///// </summary>
+        //private static string BackupBeforeLoad()
+        //{
+        //    var targetFile = Path.Combine(BackPath, $"Date_{DateId}.load.zip");
+        //    BackupFolderToFile(SavePath, targetFile);
+        //    return targetFile;
+        //}
 
         /// <summary>
         /// 压缩到备份路径
         /// </summary>
         /// <param name="pathToBackup"></param>
         /// <param name="targetFile"></param>
-        internal static void BackupFolderToFile(string pathToBackup, string targetFile)
+        internal static void BackupFolderToFile(int dataId, string savingSubId, string targetFile)
         {
-            WriteSaveSummary();
-            var preDir = Environment.CurrentDirectory;
-            Environment.CurrentDirectory = pathToBackup;
-            var files = GetFilesToBackup();
+            // save folder
+            var savingSubFolder = SaveGame.GetSavingDir(dataId, savingSubId);
+            var baseFolder = Directory.GetParent(savingSubFolder).FullName;
+            string summaryPath = Path.Combine(baseFolder, "date.json");
+            WriteSaveSummary(summaryPath);
+
+            List<string> files = new List<string>();
+            files.Add(summaryPath);
+            // files.AddRange()
+
+            files.AddRange(GetFilesToBackup(dataId, savingSubFolder));
+
             using (var zip = new ZipFile(Encoding.UTF8))
             {
-                zip.AddFiles(files, true, "\\");
+                foreach (var file in files)
+                {
+                    zip.AddFile(file, GetRelativeFolderPath(file, baseFolder));
+                }
                 zip.Save(targetFile);
             }
-            Environment.CurrentDirectory = preDir;
 
+        }
+
+        // 取得相對路徑資料夾
+        static string GetRelativeFolderPath(string fullFileName, string folder)
+        {
+            Uri pathUri = new Uri(Path.GetDirectoryName(fullFileName) + Path.DirectorySeparatorChar);
+            // Folders must end in a slash
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folder += Path.DirectorySeparatorChar;
+            }
+            Uri folderUri = new Uri(folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
+
+        /// <summary>
+        /// 获取备份文件列表
+        /// </summary>
+        /// <returns></returns>
+        internal static IEnumerable<string> GetFilesToBackup(int dataId, string savingSubFolder)
+        {
+            var indexPath = ReflectionMethod.Invoke<string>(typeof(SaveGame), "GetSavingIndexPath", dataId);
+            if (File.Exists(indexPath))
+                yield return indexPath;
+            foreach (var file in Directory.EnumerateFiles(
+                savingSubFolder,
+                "*.tw*",
+                SearchOption.TopDirectoryOnly))
+            {
+                yield return file;
+            }
         }
 
         /// <summary>
@@ -726,6 +769,11 @@ namespace Sth4nothing.SLManager
             if (File.Exists(Path.Combine(".", "date.json")))
             {
                 files.Add(Path.Combine(".", "date.json"));
+            }
+            // var indexPath = ReflectionMethod.Invoke<string>(typeof(SaveGame), "GetSavingIndexPath", DateId);
+            if (File.Exists(Path.Combine(".", "index")))
+            {
+                files.Add(Path.Combine(".", "index"));
             }
 
             files.AddRange(Directory.GetFiles(
@@ -755,9 +803,8 @@ namespace Sth4nothing.SLManager
         /// <summary>
         /// 保存当前摘要到date.json
         /// </summary>
-        private static void WriteSaveSummary()
+        private static void WriteSaveSummary(string path)
         {
-            string path = Path.Combine(SaveManager.SavePath, "date.json");
             Main.Logger.Log($"Start WriteSaveSummary to {path}");
             var df = DateFile.instance;
             var data = new SaveData(
@@ -886,17 +933,24 @@ namespace Sth4nothing.SLManager
         }
     }
 
+    // 0.2.4.1 改為 public bool DoBackup(int dataId, string savingSubId)
     [HarmonyPatch(typeof(SaveDateBackuper), "DoBackup")]
     public class SaveDateBackuper_DoBackup_Patch
     {
-        private static bool Prefix(SaveDateBackuper __instance, ref int dataId, ref bool __result)
+        private static bool Prefix(SaveDateBackuper __instance, int dataId, string savingSubId, ref bool __result)
         {
-            string file = SaveManager.Backup(SaveManager.AfterSaveBackup);
-            __result = DoDefaultBackup(__instance, dataId, file);
-            return false;
+            if (!Main.Enabled) return true;
+            string file = SaveManager.Backup(dataId, savingSubId);
+            return true;
+            // 新的版本 備份和存檔的資料夾結構不太一樣, 
+            // 故沒有辦法利用SLManager的存檔來建立太吾本身的備份存檔
+            // 所以固定 return true 讓遊戲自己建立備份 (雖然會損失效能)
+            //__result = DoDefaultBackup(__instance, dataId, savingSubId, file);
+            //return false;
         }
 
-        private static bool DoDefaultBackup(SaveDateBackuper __instance, int dataId, string file)
+        
+        private static bool DoDefaultBackup(SaveDateBackuper __instance, int dataId, string savingSubId, string file)
         {
             if (!SaveManager.Backuper.IsOn)
             {
@@ -909,12 +963,13 @@ namespace Sth4nothing.SLManager
                 Debug.Log($"未到设定的自动备份时间,等待时节剩余:{SaveManager.autoBackupRemain}");
                 return false;
             }
+            string savingDir = SaveGame.GetSavingDir(dataId, savingSubId);
             if (!SaveManager.SavePath.CheckDirectory())
             {
                 Debug.Log("当前存档位置不存在!");
                 return false;
             }
-            if (!SaveManager.Backuper.CheckAllSaveFileExist(dataId))
+            if (!SaveManager.Backuper.CheckAllSaveFileExist(savingDir))
             {
                 Debug.Log("当前存档不完整,不进行备份操作!");
                 return false;
@@ -1021,7 +1076,6 @@ namespace Sth4nothing.SLManager
     {
         Action<T, T> _deepCopyAction;
         Action<T, T> _shallowCopyAction;
-        int _cache_index = 0;
         private T _cache;
         object _lock = new object();
         Task<T> _cloneTask;
@@ -1033,28 +1087,27 @@ namespace Sth4nothing.SLManager
             _shallowCopyAction = (new DeepCopier.DeepCopier<T>()).CompileAllShallowCopyFieldAction();
         }
 
-        public T GetCache(int saveId)
+        public T GetCache()
         {
             if (_cloneTask?.IsCompleted == false)
                 _cloneTask.Wait();
             lock (_lock)
             {
-                if (_cache_index == saveId)
-                    return _cache;
+                return _cache;
             }
             return default(T);
         }
 
-        public void SetCloneCache(int saveId, T data)
+        public void SetCloneCache(T data)
         {
-            Clone(saveId, data);
+            Clone(data);
         }
 
-        public Task StartSetCloneCache(int saveId, T data)
+        public Task StartSetCloneCache( T data)
         {
             var sd = (T)Activator.CreateInstance(typeof(T));
             _shallowCopyAction(data, sd);
-            _cloneTask = StartClone(saveId, sd);
+            _cloneTask = StartClone(sd);
             return _cloneTask;
         }
 
@@ -1062,10 +1115,10 @@ namespace Sth4nothing.SLManager
             => _cloneTask?.Wait();
 
 
-        private Task<T> StartClone(int saveId, T data)
-            => Task.Run(() => Clone(saveId, data));
+        private Task<T> StartClone(T data)
+            => Task.Run(() => Clone(data));
 
-        private T Clone(int saveId, T data)
+        private T Clone(T data)
         {
 
 #if DEBUG
@@ -1076,7 +1129,6 @@ namespace Sth4nothing.SLManager
             lock (_lock)
             {
                 _cache = newCache;
-                _cache_index = saveId;
             }
 
 #if DEBUG
@@ -1090,7 +1142,6 @@ namespace Sth4nothing.SLManager
             lock (_lock)
             {
                 _cache = default(T);
-                _cache_index = 0;
             }
         }
     }
@@ -1105,9 +1156,8 @@ namespace Sth4nothing.SLManager
         static SaveCache<DateFile.SaveDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.SaveDate>();
 
         static object _lastCalledLoadingState = null;
-        static DateFile.SaveDate _lastCalledLoadingStateData = null;
 
-        private static bool Prefix(ref object __result, int saveId)
+        private static bool Prefix(ref object __result)
         {
             if (!Main.Enabled) return true;
             _stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -1115,15 +1165,7 @@ namespace Sth4nothing.SLManager
                 !StateHelper.IsIntoGame())
                 return true;
 
-            if (_lastCalledLoadingState == StateHelper.LoadingState &&
-                _lastCalledLoadingStateData != null)
-            {
-                Main.Logger.Log($"Use last-called-cache.");
-                __result = _lastCalledLoadingStateData;
-                return false;
-            }
-
-            var data = _saveCache.GetCache(saveId);
+            var data = _saveCache.GetCache();
             if (data != null)
             {
                 Main.Logger.Log($"DefaultData.Load use cache.");
@@ -1132,7 +1174,7 @@ namespace Sth4nothing.SLManager
             }
             return true;
         }
-        private static void Postfix(object __result, int saveId)
+        private static void Postfix(object __result)
         {
             if (!Main.Enabled) return;
             if (Main.settings.enableTurboQuickLoad &&
@@ -1146,10 +1188,9 @@ namespace Sth4nothing.SLManager
                     return;
                 }
                 _lastCalledLoadingState = StateHelper.LoadingState;
-                _lastCalledLoadingStateData = (DateFile.SaveDate)__result;
 
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                _saveCache.StartSetCloneCache(saveId, (DateFile.SaveDate)__result);
+                _saveCache.StartSetCloneCache((DateFile.SaveDate)__result);
             }
 #if DEBUG
             Main.Logger.Log($"DefaultData.Load: {_stopwatch?.ElapsedMilliseconds} ms");
@@ -1164,14 +1205,14 @@ namespace Sth4nothing.SLManager
         static System.Diagnostics.Stopwatch _stopwatch;
         static SaveCache<DateFile.ActorLife> _saveCache = SaveCacheFactory.GetInstance<DateFile.ActorLife>();
 
-        private static bool Prefix(ref object __result, int saveId)
+        private static bool Prefix(ref object __result)
         {
             if (!Main.Enabled) return true;
             _stopwatch = System.Diagnostics.Stopwatch.StartNew();
             if (!StateHelper.IsQuickLoad ||
                 !StateHelper.IsIntoGame())
                 return true;
-            var data = _saveCache.GetCache(saveId);
+            var data = _saveCache.GetCache();
             if (data != null)
             {
                 Main.Logger.Log($"ActorLives.Load use cache.");
@@ -1180,14 +1221,14 @@ namespace Sth4nothing.SLManager
             }
             return true;
         }
-        private static void Postfix(object __result, int saveId)
+        private static void Postfix(object __result)
         {
             if (!Main.Enabled) return;
             if (Main.settings.enableTurboQuickLoad &&
                 StateHelper.IntoGameIndex > 0)
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                _saveCache.StartSetCloneCache(saveId, (DateFile.ActorLife)__result);
+                _saveCache.StartSetCloneCache((DateFile.ActorLife)__result);
             }
 #if DEBUG
             Main.Logger.Log($"ActorLives.Load: {_stopwatch?.ElapsedMilliseconds} ms");
@@ -1206,7 +1247,7 @@ namespace Sth4nothing.SLManager
             if (!Main.Enabled || !Main.settings.enableTurboQuickLoad)
                 return;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            _saveCache.StartSetCloneCache(SaveDateFile.instance.dateId, __instance);
+            _saveCache.StartSetCloneCache(__instance);
         }
     }
 
@@ -1220,7 +1261,7 @@ namespace Sth4nothing.SLManager
             if (!Main.Enabled || !Main.settings.enableTurboQuickLoad)
                 return;
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            _saveCache.StartSetCloneCache(SaveDateFile.instance.dateId, __instance);
+            _saveCache.StartSetCloneCache(__instance);
         }
     }
 

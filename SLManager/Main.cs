@@ -67,14 +67,24 @@ namespace Sth4nothing.SLManager
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var userProfile = System.Environment.GetEnvironmentVariable("USERPROFILE");
-            logPath = Path.Combine(userProfile,
-                @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
-            );
-
             Logger = new ThreadSafeLogger(modEntry.Logger);
-            settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+            try
+            {
+                var userProfile = System.Environment.GetEnvironmentVariable("USERPROFILE");
+                logPath = Path.Combine(userProfile,
+                    @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
+                );
+                settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
+                HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
+                throw;
+            }
+
+
 
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
@@ -117,12 +127,12 @@ namespace Sth4nothing.SLManager
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
-            settings.enableTurboQuickLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoad ? 1 : 0,
-                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            //GUILayout.BeginHorizontal();
+            //GUILayout.Label("使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
+            //settings.enableTurboQuickLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoad ? 1 : 0,
+            //                             AutoSaveState, 2, GUILayout.Width(150)) == 1;
+            //GUILayout.FlexibleSpace();
+            //GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
@@ -212,6 +222,21 @@ namespace Sth4nothing.SLManager
         {
             return (T2) typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
+
+        /// <summary>
+        /// 反射执行方法 (静态型別)
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns></returns>
+        public static T2 Invoke<T2>(Type type, string method, params object[] args)
+        {
+            return (T2)type.GetMethod(method, Flags)?.Invoke(null, args);
+        }
+
         /// <summary>
         /// 反射执行方法
         /// </summary>
