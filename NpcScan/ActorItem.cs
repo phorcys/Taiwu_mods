@@ -24,11 +24,11 @@ namespace NpcScan
         /// <summary>是否精确特性</summary>
         private readonly bool isTarFeature;
         /// <summary>从属名称</summary>
-        private readonly string gangName;
+        private string gangName;
         /// <summary>门派身份文字描述</summary>
-        private readonly string gangLevelText;
+        private string gangLevelText;
         /// <summary>商会名称</summary>
-        private readonly string shopName;
+        private string shopName;
         /// <summary>排行模式下综合评价计算时的加权</summary>
         private int[] totalRankWeight;
         /// <summary>角色物品, 基础ID、促织ID和促织部位ID共同唯一确定任何物品的品阶和名称</summary>
@@ -41,11 +41,11 @@ namespace NpcScan
         以下缓存对应的数据计算方法无法多线程计算，只在UI
         渲染时才会按需计算，使用缓存可以减少排序时的计算量
         ------------------------------------------*/
-        /// <summary>整型属性值缓存 0-5六维 6魅力 7立场 8金钱 9综合评分 10-25功法资质 26-39技艺资质</summary>
+        /// <summary>整型属性值缓存 0综合评分 1魅力 2立场 3婚姻 4-9六维 10-23技艺资质 24-39功法资质 40金钱</summary>
         /// <remarks>缓存一些计算量大的整型数值，如<see cref="DateFile.GetActorDate(int, int, bool)"/> bool为true时计算量较大</remarks>
-        private readonly int[] intCache = new int[40];
-        /// <summary>字符串属性值缓存 0 地点坐标 1婚姻(无色) 2技艺资质成长(无色) 3功法资质成长(无色)</summary>
-        private readonly string[] stringCache = new string[4];
+        private readonly int[] intCache = new int[41];
+        /// <summary>字符串属性值缓存 0 地点坐标 1技艺资质成长(无色) 2功法资质成长(无色)</summary>
+        private readonly string[] stringCache = new string[3];
         /// <summary>健康值缓存</summary>
         private int[] healthCache;
         /// <summary>七元赋性缓存</summary>
@@ -69,20 +69,22 @@ namespace NpcScan
         // 注意:以下属性引用的大部分方法不保证线程安全
         /// <summary>姓名</summary>
         public string ActorName { get; private set; }
+        /// <summary>魅力</summary>
+        public int Charm => intCache[1] = intCache[1] > -1 ? intCache[1] : int.Parse(DateFile.instance.GetActorDate(npcId, 15, !isGetReal));
+        /// <summary>立场数值</summary>
+        public int Goodness => intCache[2] = intCache[2] > -1 ? intCache[2] : DateFile.instance.GetActorGoodness(npcId);
         /// <summary>膂力</summary>
-        public int Str => intCache[0] = intCache[0] > -1 ? intCache[0] : int.Parse(DateFile.instance.GetActorDate(npcId, 61, !isGetReal));
-
+        public int Str => intCache[4] = intCache[4] > -1 ? intCache[4] : int.Parse(DateFile.instance.GetActorDate(npcId, 61, !isGetReal));
         /// <summary>体质</summary>
-        public int Con => intCache[1] = intCache[1] > -1 ? intCache[1] : int.Parse(DateFile.instance.GetActorDate(npcId, 62, !isGetReal));
-
+        public int Con => intCache[5] = intCache[5] > -1 ? intCache[5] : int.Parse(DateFile.instance.GetActorDate(npcId, 62, !isGetReal));
         /// <summary>灵敏</summary>
-        public int Agi => intCache[2] = intCache[2] > -1 ? intCache[2] : int.Parse(DateFile.instance.GetActorDate(npcId, 63, !isGetReal));
+        public int Agi => intCache[6] = intCache[6] > -1 ? intCache[6] : int.Parse(DateFile.instance.GetActorDate(npcId, 63, !isGetReal));
         /// <summary>根骨</summary>
-        public int Bon => intCache[3] = intCache[3] > -1 ? intCache[3] : int.Parse(DateFile.instance.GetActorDate(npcId, 64, !isGetReal));
+        public int Bon => intCache[7] = intCache[7] > -1 ? intCache[7] : int.Parse(DateFile.instance.GetActorDate(npcId, 64, !isGetReal));
         /// <summary>悟性</summary>
-        public int Inv => intCache[4] = intCache[4] > -1 ? intCache[4] : int.Parse(DateFile.instance.GetActorDate(npcId, 65, !isGetReal));
+        public int Inv => intCache[8] = intCache[8] > -1 ? intCache[8] : int.Parse(DateFile.instance.GetActorDate(npcId, 65, !isGetReal));
         /// <summary>定力</summary>
-        public int Pat => intCache[5] = intCache[5] > -1 ? intCache[5] : int.Parse(DateFile.instance.GetActorDate(npcId, 66, !isGetReal));
+        public int Pat => intCache[9] = intCache[9] > -1 ? intCache[9] : int.Parse(DateFile.instance.GetActorDate(npcId, 66, !isGetReal));
         /// <summary>年龄</summary>
         public int Age => int.Parse(DateFile.instance.GetActorDate(npcId, 11, false));
         /// <summary>性别：1男 2女 3男生女相 4女生男相</summary>
@@ -93,28 +95,25 @@ namespace NpcScan
                                     // 处理男生女相和女生男相
                                     ? DateFile.instance.SetColoer(20010, Gender - 2 == 1 ? "男" : "女")
                                     : Gender == 1 ? "男" : "女";
-        /// <summary>魅力</summary>
-        public int Charm => intCache[6] = intCache[6] > -1 ? intCache[6] : int.Parse(DateFile.instance.GetActorDate(npcId, 15, !isGetReal));
-        /// <summary>轮回</summary>
-        public int SamsaraCount => DateFile.instance.GetLifeDateList(npcId, 801, false).Count;
+
         /// <summary>健康</summary>
         public int Health => int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? ActorMenu.instance.Health(npcId) : 0;
         /// <summary>坐标</summary>
         public string Place => stringCache[0] = stringCache[0] ?? GetPlace();
         /// <summary>魅力</summary>
         public string CharmText => GetCharmText();
+        /// <summary>轮回</summary>
+        public int SamsaraCount { get; private set; }
         /// <summary>前世</summary>
         public string SamsaraNames { get; private set; }
-        /// <summary>立场数值</summary>
-        public int Goodness => intCache[7] = intCache[7] > -1 ? intCache[7] : DateFile.instance.GetActorGoodness(npcId);
         /// <summary>立场</summary>
         public string GoodnessText => DateFile.instance.massageDate[9][0].Split('|')[Goodness];
-        /// <summary>门派ID</summary>
+        /// <summary>从属ID</summary>
         public int Groupid => int.Parse(DateFile.instance.GetActorDate(npcId, 19, false));
         /// <summary>身份等级(负数时为因配偶身份获得的等级)</summary>
         public int GangLevel => int.Parse(DateFile.instance.GetActorDate(npcId, 20, false));
         /// <summary>金钱</summary>
-        public int Money => intCache[8] = intCache[8] > -1 ? intCache[8] : ActorMenu.instance.ActorResource(npcId)[5];
+        public int Money => intCache[40] = intCache[40] > -1 ? intCache[40] : ActorMenu.instance.ActorResource(npcId)[5];
         /// <summary>从属身份对应的数据ID</summary>
         public int GangValueId => DateFile.instance.GetGangValueId(Groupid, GangLevel);
         /// <summary>七元赋性</summary>
@@ -126,8 +125,8 @@ namespace NpcScan
         {
             get
             {
-                if (intCache[9] > -1)
-                    return intCache[9];
+                if (intCache[0] > -1)
+                    return intCache[0];
                 if (totalRankWeight == null) return 0;
                 var tmp = Str * totalRankWeight[0] + Con * totalRankWeight[1] + Agi * totalRankWeight[2] + Bon * totalRankWeight[3] + Inv * totalRankWeight[4] + Pat * totalRankWeight[5];
                 tmp += Charm * totalRankWeight[6];
@@ -135,7 +134,7 @@ namespace NpcScan
                     tmp += GetLevelValue(tmpi, 1) * totalRankWeight[7 + tmpi];
                 for (int tmpi = 0; tmpi < 16; tmpi++)
                     tmp += GetLevelValue(tmpi, 0) * totalRankWeight[21 + tmpi];
-                intCache[9] = tmp;
+                intCache[0] = tmp;
                 // 计算完毕清除权重
                 totalRankWeight = null;
                 return tmp;
@@ -164,16 +163,6 @@ namespace NpcScan
             ActorName = DateFile.instance.GetActorName(npcId);
             SamsaraNames = GetSamsaraNames(npcId);
 
-            gangName = DateFile.instance.GetGangDate(Groupid, 0);
-            // 地位名称ID (注：因亲属关系可能获得相应地位改变)
-            int gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)));
-            // 身份的文字描述
-            gangLevelText = DateFile.instance.SetColoer((GangValueId != 0) ? (20011 - Mathf.Abs(GangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[GangValueId][gangLevelTextId], false);
-
-            //商会信息获取
-            shopName = GetShopName(gangLevelTextId, true);
-            /// <see cref="Patch.DateFile_GetActorFeature_Patch"/>中已经将该方法修改为线程安全
-            ActorFeatures = DateFile.instance.GetActorFeature(npcId);
             // 初始化缓存
             for (int i = 0; i < intCache.Length; i++)
                 intCache[i] = -1;
@@ -233,7 +222,7 @@ namespace NpcScan
             //立场goodnessText
             additem.Add(GoodnessText, ref index);
             //婚姻
-            additem.Add(GetSpouse(true), ref index);
+            additem.Add(GetMarriageText(), ref index);
             //技艺资质成长
             additem.Add(GetSkillDevelopText(true), ref index);
             //功法资质成长
@@ -300,15 +289,7 @@ namespace NpcScan
             // 997为人物模板, 当大于100是特殊剧情人物，跳过不处理, 详见TextAsset中的PresetActor_Date
             // 如: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
             if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 100) return;
-
-            if (_ui.Minage > 0)
-            {
-                bool result = false;
-                Lock();
-                try { result = Age < _ui.Minage; }
-                finally { Unlock(); }
-                if (result) return;
-            }
+            // 健康
             if (_ui.HealthValue > 0)
             {
                 bool result = false;
@@ -317,15 +298,23 @@ namespace NpcScan
                 finally { Unlock(); }
                 if (result) return;
             }
-            if (_ui.SamsaraCount > 0)
+            // 姓名
+            if (_ui.AName != "" && (!(ActorName.Contains(_ui.AName) || SamsaraNames.Contains(_ui.AName))))
+                return;
+
+            // 轮回次数
+            if (_ui.SamsaraCount > 0 && SamsaraCount < _ui.SamsaraCount) return;
+
+            // 最低年龄
+            if (_ui.Minage > 0)
             {
                 bool result = false;
                 Lock();
-                try { result = SamsaraCount < _ui.SamsaraCount; }
-                finally
-                { Unlock(); }
+                try { result = Age < _ui.Minage; }
+                finally { Unlock(); }
                 if (result) return;
             }
+            // 最高年龄
             if (_ui.Maxage > 0)
             {
                 bool result = false;
@@ -334,6 +323,7 @@ namespace NpcScan
                 finally { Unlock(); }
                 if (result) return;
             }
+            // 性别
             if (_ui.GenderValue > 0)
             {
                 bool result = false;
@@ -347,14 +337,6 @@ namespace NpcScan
             // 我至今不知道排行榜模式有啥用？都能排序了都。
             if (!isRank)
             {
-                if (_ui.IntValue > 0)
-                {
-                    bool result = false;
-                    Lock();
-                    try { result = Inv < _ui.IntValue; }
-                    finally { Unlock(); }
-                    if (result) return;
-                }
                 if (_ui.StrValue > 0)
                 {
                     bool result = false;
@@ -384,6 +366,14 @@ namespace NpcScan
                     bool result = false;
                     Lock();
                     try { result = Bon < _ui.BonValue; }
+                    finally { Unlock(); }
+                    if (result) return;
+                }
+                if (_ui.IntValue > 0)
+                {
+                    bool result = false;
+                    Lock();
+                    try { result = Inv < _ui.IntValue; }
                     finally { Unlock(); }
                     if (result) return;
                 }
@@ -437,8 +427,8 @@ namespace NpcScan
                 if (result) return;
             }
 
-            // 如果未开启门派搜索 直接通过
-            if (_ui.TarIsGang && _ui.IsGang)
+            // 仅搜索门派
+            if (_ui.IsGang)
             {
                 bool result = false;
                 Lock();
@@ -446,7 +436,7 @@ namespace NpcScan
                 finally { Unlock(); }
                 if (result) return;
             }
-
+            // 立场
             if (_ui.Goodness > -1)
             {
                 bool result = false;
@@ -455,18 +445,34 @@ namespace NpcScan
                 finally { Unlock(); }
                 if (result) return;
             }
+            // 婚姻
+            if(_ui.Marriage > 0)
+            {
+                bool result = false;
+                Lock();
+                try { result = GetMarriage() != _ui.Marriage; }
+                finally { Unlock(); }
+                if (result) return;
+            }
 
-            // 姓名
-            if (!(ActorName.Contains(_ui.AName) || SamsaraNames.Contains(_ui.AName)))
-                return;
-
+            // 从属名称
+            gangName = DateFile.instance.GetGangDate(Groupid, 0);
+            // 地位名称ID (注：因亲属关系可能获得相应地位改变)
+            int gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)));
+            // 身份的文字描述
+            gangLevelText = DateFile.instance.SetColoer((GangValueId != 0) ? (20011 - Mathf.Abs(GangLevel)) : 20002, DateFile.instance.presetGangGroupDateValue[GangValueId][gangLevelTextId], false);
             // 从属和地位
-            if (!gangName.Contains(_ui.GangValue) || !gangLevelText.Contains(_ui.GangLevelValue))
+            if ((_ui.GangValue != "" && !gangName.Contains(_ui.GangValue)) || (_ui.GangLevelText != "" && !gangLevelText.Contains(_ui.GangLevelText)))
                 return;
 
+            //商会信息获取
+            shopName = GetShopName(true);
             // 商会
             if (_ui.AShopName != "" && !shopName.Contains(_ui.AShopName))
                 return;
+
+            /// <see cref="Patch.DateFile_GetActorFeature_Patch"/>中已经将该方法修改为线程安全
+            ActorFeatures = DateFile.instance.GetActorFeature(npcId);
 
             if (_ui.ActorFeatureText != "" && !ScanFeature(_ui.featureSearchSet, _ui.TarFeature, _ui.TarFeatureOr))
                 return;
@@ -533,30 +539,96 @@ namespace NpcScan
         /// </summary>
         /// <param name="color">是否带颜色</param>
         /// <returns>婚姻状况</returns>
-        public string GetSpouse(bool color = false)
+        public int GetMarriage()
         {
-            if (!color && stringCache[1] != null)
-                return stringCache[1];
+            if (intCache[3] > -1)
+                return intCache[3];
 
             List<int> actorSocial = DateFile.instance.GetActorSocial(npcId, 309, false, false);
             List<int> actorSocial2 = DateFile.instance.GetActorSocial(npcId, 309, true, false);
-            string result;
-            if (actorSocial2.Count == 0)
+            int result;
+            if (actorSocial.Count <= 0)
             {
-                result = color ? DateFile.instance.SetColoer(20004, "未婚", false) : "未婚";
-            }
-            else if (actorSocial.Count == 0)
-            {
-                result = color ? DateFile.instance.SetColoer(20007, "丧偶", false) : "丧偶";
+                /// 判断是否可以说媒, 参考<see cref="MassageWindow.SetMassageWindow"/>中的
+                /// case -9006中的Add("900600012")时满足的条件，900600012：男媒女约的事件ID
+                // 同道及太吾本人
+                List<int> familyList = DateFile.instance.GetFamily(false);
+                // 同道里有对的人
+                bool hasRightOne = false;
+                foreach (var actorId in familyList)
+                {
+                    int mainActorId = DateFile.instance.MianActorID();
+                    // 对方年龄太小或者太吾想给自己说媒
+                    if (Age < ConstValue.actorMinAge || actorId == mainActorId) continue;
+                    // 同道好感度不够
+                    if (DateFile.instance.GetActorFavor(false, mainActorId, actorId, true) < 4) continue;
+                    // 同道年龄太小
+                    if (int.Parse(DateFile.instance.GetActorDate(actorId, 11, false)) <= ConstValue.actorMinAge) continue;
+                    int gender = int.Parse(DateFile.instance.GetActorDate(actorId, 14, false));
+                    // 同性
+                    if (gender == int.Parse(DateFile.instance.GetActorDate(npcId, 14, false))) continue;
+                    // 是否禁婚
+                    bool abstention = int.Parse(DateFile.instance.presetGangGroupDateValue[GangValueId][803]) == 0;
+                    if (abstention) continue;
+                    if (int.Parse(DateFile.instance.GetActorDate(actorId, 2, false)) != 0) continue;
+                    if (int.Parse(DateFile.instance.GetActorDate(npcId, 2, false)) != 0) continue;
+                    if (DateFile.instance.GetLifeDate(actorId, 601, 0) == DateFile.instance.GetLifeDate(npcId, 601, 0))
+                        continue;
+                    if (DateFile.instance.GetLifeDate(actorId, 602, 0) == DateFile.instance.GetLifeDate(npcId, 602, 0))
+                        continue;
+                    // 对方是同道的义父母
+                    if (DateFile.instance.GetActorSocial(actorId, 304).Contains(npcId)) continue;
+                    // 对方与同道义结金兰
+                    if (DateFile.instance.GetActorSocial(actorId, 308).Contains(npcId)) continue;
+                    if (DateFile.instance.GetActorSocial(actorId, 311).Contains(npcId)) continue;
+                    // 对方已经结婚了
+                    if (DateFile.instance.GetActorSocial(actorId, 309).Count > 0) continue;
+
+                    hasRightOne = true;
+                }
+                if (hasRightOne)
+                {
+                    result = 4; // 可以说媒
+                }
+                else if (actorSocial2.Count <= 0)
+                {
+                    result = 1; // 未婚
+                }
+                else
+                {
+                    result = 3; // 丧偶
+                }
             }
             else
             {
-                result = color ? DateFile.instance.SetColoer(20010, "已婚", false) : "已婚";
+                result = 2; // 已婚
             }
-            if (!color)
-                stringCache[1] = result;
+            intCache[3] = result;
             return result;
         }
+
+        /// <summary>
+        /// 获取婚姻状况
+        /// </summary>
+        /// <param name="color">是否带颜色</param>
+        /// <returns>婚姻状况</returns>
+        private string GetMarriageText()
+        {
+            int spouse = GetMarriage();
+
+            switch (spouse)
+            {
+                default:
+                    return DateFile.instance.SetColoer(20004, "未婚", false);
+                case 2:
+                    return DateFile.instance.SetColoer(20010, "已婚", false);
+                case 3:
+                    return DateFile.instance.SetColoer(20007, "丧偶", false);
+                case 4:
+                    return DateFile.instance.SetColoer(20009, "可媒", false);
+            }
+        }
+
 
         /// <summary>
         /// 技艺资质成长
@@ -565,8 +637,8 @@ namespace NpcScan
         /// <returns></returns>
         public string GetSkillDevelopText(bool color = false)
         {
-            if (!color && stringCache[2] != null)
-                return stringCache[2];
+            if (!color && stringCache[1] != null)
+                return stringCache[1];
 
             DateFile instance = DateFile.instance;
             int skillDevelop = Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(npcId, 551, false)), 2, 4);
@@ -587,7 +659,7 @@ namespace NpcScan
             }
 
             if (!color)
-                stringCache[2] = text;
+                stringCache[1] = text;
             return text;
         }
 
@@ -598,8 +670,8 @@ namespace NpcScan
         /// <returns></returns>
         public string GetGongFaDevelopText(bool color = false)
         {
-            if (!color && stringCache[3] != null)
-                return stringCache[3];
+            if (!color && stringCache[2] != null)
+                return stringCache[2];
 
             int gongFaDevelop = Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(npcId, 651, false)), 2, 4);
             int gongFaDevelopValue = int.Parse(DateFile.instance.ageDate[Mathf.Clamp(int.Parse(DateFile.instance.GetActorDate(npcId, 11, false)), 0, 100)][gongFaDevelop + 3]);
@@ -618,7 +690,7 @@ namespace NpcScan
             }
 
             if (!color)
-                stringCache[3] = text;
+                stringCache[2] = text;
             return text;
         }
 
@@ -861,8 +933,10 @@ namespace NpcScan
         /// <returns></returns>
         public int GetLevelValue(int index, int gongfa)
         {
-            if (intCache[index + 9 + 16 * gongfa] > -1)
-                return intCache[index + 9 + 16 * gongfa];
+            // 11-24技艺资质 25-40功法资质
+            int cacheIndex = index + 10 + (gongfa == 0 ? 14 : 0);
+            if (intCache[cacheIndex] > -1)
+                return intCache[cacheIndex];
 
             int num;
             if (isGetReal)
@@ -879,7 +953,7 @@ namespace NpcScan
             {
                 num = int.Parse(DateFile.instance.GetActorDate(npcId, 501 + index + 100 * gongfa, true));
             }
-            intCache[index + 9 + 16 * gongfa] = num;
+            intCache[cacheIndex] = num;
             return num;
         }
 
@@ -989,12 +1063,12 @@ namespace NpcScan
         /// </summary>
         /// <param name="npcId"></param>
         /// <returns></returns>
-        private static string GetSamsaraNames(int npcId)
+        private string GetSamsaraNames(int npcId)
         {
             List<int> samaras = DateFile.instance.GetLifeDateList(npcId, 801, false);
             if (samaras.Count == 0)
                 return "";
-
+            SamsaraCount = samaras.Count;
             var samsaraNames = new string[samaras.Count];
             int index = 0;
             foreach (int samsaraId in samaras)
@@ -1081,15 +1155,14 @@ namespace NpcScan
         /// <param name="gangLevelTextId">身份描述文字索引</param>
         /// <param name="color">是否带颜色</param>
         /// <returns></returns>
-        public string GetShopName(int gangLevelTextId = -1, bool color = false)
+        public string GetShopName(bool color = false)
         {
             int gangId = int.Parse(DateFile.instance.GetActorDate(npcId, 9, false));
             int shopType = int.Parse(DateFile.instance.GetGangDate(gangId, 16));
             string shopName = DateFile.instance.storyShopDate[shopType][0];
             if (!color)
                 return shopName;
-            if (gangLevelTextId < 0)
-                gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + Gender);
+            int gangLevelTextId = (GangLevel >= 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(npcId, 14, false)));
             // 如果不是真正的商人, 将隐藏的商会类型名称标为灰色
             shopName = DateFile.instance.presetGangGroupDateValue[GangValueId][gangLevelTextId] == "商人"
                 ? DateFile.instance.SetColoer(20006, shopName, false)

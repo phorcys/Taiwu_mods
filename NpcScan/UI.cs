@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -13,9 +14,6 @@ namespace NpcScan
 {
     internal class UI : MonoBehaviour
     {
-        /// <summary>启动窗口按键</summary>
-        public static KeyCode key;
-
         public static UI Instance { get; private set; }
 
         #region 样式
@@ -51,11 +49,15 @@ namespace NpcScan
 
         #region 常量
         /// <summary>立场类型</summary>
-        private static readonly string[] goodnessValue = new string[] { "全部", "中庸", "仁善", "刚正", "叛逆", "唯我" };
+        private static readonly string[] goodnessName = new string[] { "全部", "中庸", "仁善", "刚正", "叛逆", "唯我" };
         /// <summary>性别选项文字</summary>
-        private static readonly string[] sexChoiceText = new[] { "全部", "男", "女", "男生女相", "女生男相" };
+        private static readonly string[] genderChoiceText = new[] { "全部", "男", "女", "男生女相", "女生男相" };
         /// <summary>性别选项宽度</summary>
-        private static readonly float[] sexChoiceWidth = new float[] { 45, 30, 30, 65, 65 };
+        private static readonly float[] genderChoiceWidth = new float[] { 45, 30, 30, 65, 65 };
+        /// <summary>婚姻状况选项文字</summary>
+        private static readonly string[] marriageChoiceText = new[] { "全部", "未婚", "已婚", "丧偶", "可说媒" };
+        /// <summary>婚姻状况选项宽度</summary>
+        private static readonly float[] marriageChoiceWidth = new float[] { 40, 40, 40, 40, 51 };
         /// <summary>功法类型文字</summary>
         private static readonly string[] gongFaTypText = new[] { "内功", "身法", "绝技", "拳掌", "指法", "腿法", "暗器", "剑法", "刀法", "长兵", "奇门", "软兵", "御射", "乐器" };
         /// <summary>技能类型文字</summary>
@@ -162,12 +164,14 @@ namespace NpcScan
         private bool rankcolumnadded = false;
         /// <summary>立场选项:全部 中庸 仁善 刚正 叛逆 唯我" </summary>
         private readonly bool[] goodness = new bool[] { true, false, false, false, false, false };
+        /// <summary>婚姻状态选项:全部 未婚 已婚 丧偶 可说媒" </summary>
+        private readonly bool[] marriage = new bool[] { true, false, false, false, false };
         /// <summary>每页显示条数</summary>
         private int countPerPage = 0;
         /// <summary>每页显示条数的倒数，减少浮点除法的运算次数</summary>
         private float reciprocalCountPerPage;
         /// <summary>性别选项：0 双性 1 男 2 女 3 男生女相 4 女生男相</summary>
-        private readonly bool[] sexChoice = new[] { true, false, false, false, false };
+        private readonly bool[] genderChoice = new[] { true, false, false, false, false };
         /// <summary>特性搜索条件</summary>
         internal readonly HashSet<int> featureSearchSet = new HashSet<int>();
         /// <summary>功法搜索条件</summary>
@@ -224,9 +228,11 @@ namespace NpcScan
         /// <summary>从属gangText</summary>
         public string GangValue { get; private set; } = "";
         /// <summary>身份gangLevelText</summary>
-        public string GangLevelValue { get; private set; } = "";
+        public string GangLevelText { get; private set; } = "";
         /// <summary>立场</summary>
         public int Goodness { get; private set; } = -1;
+        /// <summary>婚姻状况</summary>
+        public int Marriage { get; private set; } = 0;
         /// <summary>商会</summary>
         public string AShopName { get; private set; } = "";
         /// <summary>
@@ -259,15 +265,13 @@ namespace NpcScan
         public bool ItemDead { get; private set; }
         /// <summary>最高查询品级</summary>
         public int HighestLevel { get; private set; } = 1;
-        /// <summary>是否开启门派识别</summary>
-        public bool TarIsGang { get; private set; } = false;
         /// <summary>仅搜索门派</summary>
         public bool IsGang { get; private set; } = false;
         /// <summary>姓名(包括前世)</summary>
         public string AName { get; private set; } = "";
 
         /// <summary>窗口是否已打开</summary>
-        public bool Opened { get; private set; }
+        private bool Opened { get; set; }
         #endregion
 
         private class Column
@@ -304,10 +308,43 @@ namespace NpcScan
 
         private void Update()
         {
-            if ((Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
-                && Input.GetKeyUp(Main.settings.key))
+            if (Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl) && Input.GetKeyUp(KeyCode.F12)
+                || Input.GetKeyUp(Main.settings.keys[0])
+                // 当UI文字输入框激活时，只能用如下方式获取键盘事件
+                || Opened // 在窗口打开时要侦听另外一类键盘事件，避免输入框激活时无法关闭窗口
+                && ((Event.current.type == EventType.KeyUp && Event.current.keyCode == Main.settings.keys[0])
+                    || (Event.current.control && Event.current.type == EventType.KeyUp && Event.current.keyCode == KeyCode.F12)))
             {
                 ToggleWindow();
+            }
+
+            if (Opened)
+            {
+                // 执行热键                
+                // 查找NPC
+                if (Input.GetKeyUp(KeyCode.Return) || Input.GetKeyUp(KeyCode.KeypadEnter)
+                    // 当UI文字输入框激活时，只能用如下方式获取键盘事件
+                    || (Event.current.type == EventType.KeyUp
+                        && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)))
+                {
+                    OnClickSearchBtn();
+                }
+                // 向上翻页
+                if (Input.GetKeyUp(Main.settings.keys[1])
+                    // 当UI文字输入框激活时，只能用如下方式获取键盘事件
+                    || (Event.current.type == EventType.KeyUp && Event.current.keyCode == Main.settings.keys[1]))
+                {
+                    if (Page > 1)
+                        Page--;
+                }
+                // 向下翻页
+                if (Input.GetKeyUp(Main.settings.keys[2])
+                    // 当UI文字输入框激活时，只能用如下方式获取键盘事件
+                    || (Event.current.type == EventType.KeyUp && Event.current.keyCode == Main.settings.keys[2]))
+                {
+                    if (actorList.Count > Page * countPerPage)
+                        Page++;
+                }
             }
         }
 
@@ -441,6 +478,7 @@ namespace NpcScan
             }
             GUILayout.EndVertical();
             GUILayout.Space(3);
+
             // 窗口拖动，必须放到WindowFunction的最后
             if (Input.GetKey(KeyCode.LeftControl))
             {
@@ -449,12 +487,16 @@ namespace NpcScan
         }
 
         /// <summary>
-        /// (设置第一行内容)
+        /// 设置第一行内容
         /// </summary>
         private void SetNo1Windows()
         {
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("NPC查找器(按住 左Ctrl 可以用鼠标拖动窗口)", labelStyle);
+            GUILayout.Label($"当前热键(Ctrl+F10打开UMM修改)： {Main.textColor[20009]}回车</color>---开始查找 " +
+                $"{Main.textColor[20009]}{Main.settings.keys[0]}</color>---打开/关闭窗口 " +
+                $"{Main.textColor[20009]}{Main.settings.keys[1]}</color>---向上翻页 " +
+                $"{Main.textColor[20009]}{Main.settings.keys[2]}</color>---向下翻页");
             if (GUILayout.Button("关闭", buttonStyle, GUILayout.Width(150 * ratio)))
             {
                 ToggleWindow();
@@ -479,22 +521,11 @@ namespace NpcScan
             GUILayout.Space(10 * ratio);
             // 记录年龄控件的宽度
             currentwidth += (30 + 30 + 10 + 30 + 10) * ratio;
-            AddHorizontal(ref currentwidth, (30 + 5 + sexChoiceWidth.Sum() + 10) * ratio);
+            AddHorizontal(ref currentwidth, (30 + 5 + genderChoiceWidth.Sum() + 10) * ratio);
+            // 性别
             GUILayout.Label("性别:", labelStyle, GUILayout.Width(30 * ratio));
             GUILayout.Space(5 * ratio);
-            for (int i = 0; i < sexChoice.Length; i++)
-            {
-                sexChoice[i] = GUILayout.Toggle(sexChoice[i], sexChoiceText[i], toggleStyle, GUILayout.Width(sexChoiceWidth[i] * ratio));
-                if (sexChoice[i])
-                {
-                    GenderValue = i;
-                    for (int j = 0; j < sexChoice.Length; j++)
-                    {
-                        if (i != j)
-                            sexChoice[j] = false;
-                    }
-                }
-            }
+            GenderValue = MultiChoices(genderChoice, genderChoiceText, GenderValue, genderChoiceWidth);
             GUILayout.Space(10 * ratio);
             #endregion
 
@@ -554,14 +585,17 @@ namespace NpcScan
             // 记录当前已被控件占用的长途，用于换行判断
             float currentwidth = 0;
             GUILayout.BeginHorizontal("box");
-
             #region add 技艺属性
             for (int i = 0; i < skillTypText.Length; i++)
             {
                 Skill[i] = AddLabelAndTextField(skillTypText[i], ref currentwidth, Skill[i]);
             }
             #endregion
-
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("重置所有条件", buttonStyle, GUILayout.Width(150 * ratio)))
+            {
+                OnClickResetBtn();
+            }
             GUILayout.EndHorizontal();
         }
         /// <summary>
@@ -576,34 +610,23 @@ namespace NpcScan
             //从属gangText
             GangValue = AddLabelAndTextField("从属", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangValue);
             //身份gangLevelText
-            GangLevelValue = AddLabelAndTextField("身份", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangLevelValue);
+            GangLevelText = AddLabelAndTextField("身份", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, GangLevelText);
             //商会
             AShopName = AddLabelAndTextField("商会", ref currentwidth, 90 * ratio, 30 * ratio, 60 * ratio, AShopName);
-            AddHorizontal(ref currentwidth, (30 + 45 * 6) * ratio);
+            AddHorizontal(ref currentwidth, (65 + 20) * ratio);
+            IsGang = GUILayout.Toggle(IsGang, "仅搜门派", toggleStyle, GUILayout.Width(65 * ratio));
+            GUILayout.Space(20);
+            AddHorizontal(ref currentwidth, (30 + 40 * goodness.Length + 20) * ratio);
             //立场goodnessText
             GUILayout.Label("立场:", labelStyle, GUILayout.Width(30 * ratio));
-            for (int i = 0; i < goodness.Length; i++)
-            {
-                var tmp = goodness[i];
-                goodness[i] = GUILayout.Toggle(goodness[i], goodnessValue[i].ToString(), toggleStyle, GUILayout.Width(45 * ratio));
-                if (tmp != goodness[i] && goodness[i])
-                {
-                    for (int j = 0; j < goodness.Length; j++)
-                    {
-                        if (i != j)
-                        {
-                            goodness[j] = false;
-                            Goodness = i - 1;
-                        }
-                    }
-                }
-            }
-            GUILayout.Space(30 * ratio);
-            HighestLevel = AddLabelAndTextField("最高查询品级", ref currentwidth, 170 * ratio, 80 * ratio, 60 * ratio, HighestLevel);
-            GUILayout.Space(10 * ratio);
-            AddHorizontal(ref currentwidth, (120 + 170) * ratio);
-            TarIsGang = GUILayout.Toggle(TarIsGang, "是否开启识别门派", toggleStyle, GUILayout.Width(120 * ratio));
-            IsGang = GUILayout.Toggle(IsGang, "仅搜索门派(需开启识别门派)", toggleStyle, GUILayout.Width(170 * ratio));
+            Goodness = MultiChoices(goodness, goodnessName, Goodness + 1, 40) - 1;
+            GUILayout.Space(20);
+            AddHorizontal(ref currentwidth, (30 + marriageChoiceWidth.Sum() + 20) * ratio);
+            // 婚姻
+            GUILayout.Label("婚姻:", labelStyle, GUILayout.Width(30 * ratio));
+            Marriage = MultiChoices(marriage, marriageChoiceText, Marriage, marriageChoiceWidth);
+            GUILayout.Space(20 * ratio);
+            HighestLevel = AddLabelAndTextField("最高查询品级", ref currentwidth, (80 + 30) * ratio, 80 * ratio, 30 * ratio, HighestLevel);
             GUILayout.EndHorizontal();
         }
         /// <summary>
@@ -641,21 +664,10 @@ namespace NpcScan
             ItemDead = GUILayout.Toggle(ItemDead, "搜索过世之人的物品", toggleStyle, GUILayout.Width(150 * ratio));//默认AND查询方式
             GUILayout.FlexibleSpace();
             AddHorizontal(ref currentwidth, 150 * ratio);
-            if (GUILayout.Button("查找", buttonStyle, GUILayout.Width(150 * ratio)))
+            if (GUILayout.Button("查找(或回车键)", buttonStyle, GUILayout.Width(150 * ratio)))
             {
-                PrepareScan();
-                ScanNpc();
-
-                if (!Rankmode)
-                {
-                    showlistshrinked = true;
-                    showlistadded = false;
-                }
-                else
-                {
-                    showlistadded = true;
-                    showlistshrinked = false;
-                }
+                // 查找NPC
+                OnClickSearchBtn();
             }
             GUILayout.EndHorizontal();
         }
@@ -974,6 +986,50 @@ namespace NpcScan
             }
         }
 
+        /// <summary>
+        /// 多选项控件(有且仅一个选项被选中)
+        /// </summary>
+        /// <param name="choiceStatus">选项的选择状态</param>
+        /// <param name="choiceNames">选项的描述</param>
+        /// <param name="originalChoiceIndex">原先被选中的选项的序号</param>
+        /// <param name="choiceWidths">各选项的宽度，若只填一个数字，则所有选项均为此宽度</param>
+        /// <returns>新选中的选项的序号(若选项不变则返回原值)</returns>
+        private int MultiChoices(bool[] choiceStatus, string[] choiceNames, int originalChoiceIndex, params float[] choiceWidths)
+        {
+            int newIndex = originalChoiceIndex;
+            for (int i = 0; i < choiceStatus.Length; i++)
+            {
+                bool tmp = choiceStatus[i];
+                if (choiceWidths.Length == 1)
+                {
+                    choiceStatus[i] = GUILayout.Toggle(choiceStatus[i], choiceNames[i], toggleStyle, GUILayout.Width(choiceWidths[0] * ratio));
+                }
+                else
+                {
+                    choiceStatus[i] = GUILayout.Toggle(choiceStatus[i], choiceNames[i], toggleStyle, GUILayout.Width(choiceWidths[i] * ratio));
+                }
+                // 选项状态发生变化时，要保持有且仅有一个选项被选中，即至多一个选择被选中且至少一个被选中
+                if (tmp != choiceStatus[i])
+                {
+                    if (choiceStatus[i])
+                    {
+                        newIndex = i;
+                        // 为了保持至多一个选项被选中
+                        for (int j = 0; j < choiceStatus.Length; j++)
+                        {
+                            if (i != j) choiceStatus[j] = false;
+                        }
+                    }
+                    else
+                    {
+                        // 为了保持至少一个选项被选中
+                        choiceStatus[i] = true;
+                    }
+                }
+            }
+            return newIndex;
+        }
+
 #if debug
         private readonly Stopwatch stopwatch = new Stopwatch();
 #endif
@@ -1108,6 +1164,27 @@ namespace NpcScan
         }
 
         /// <summary>
+        /// 点击查找按钮或回车时触发
+        /// </summary>
+        /// <param name="colNum">列序号</param>
+        private void OnClickSearchBtn()
+        {
+            PrepareScan();
+            ScanNpc();
+
+            if (!Rankmode)
+            {
+                showlistshrinked = true;
+                showlistadded = false;
+            }
+            else
+            {
+                showlistadded = true;
+                showlistshrinked = false;
+            }
+        }
+
+        /// <summary>
         /// 点击搜索结果标题的按钮时触发
         /// </summary>
         /// <param name="colNum">列序号</param>
@@ -1170,6 +1247,74 @@ namespace NpcScan
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 重置搜索条件
+        /// </summary>
+        private void OnClickResetBtn()
+        {
+            var properties = typeof(UI).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var fields = typeof(UI).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+            foreach (var field in fields)
+            {
+                if (field.FieldType.Name == "Boolean[]")
+                {
+                    bool[] array = (bool[])field.GetValue(this);
+#if debug
+                    Main.Logger.Log($"0 {field.Name} {array}");
+#endif
+                    Array.Clear(array, 0, array.Length);
+                    array[0] = true;
+                }
+            }
+
+            foreach (var property in properties)
+            {
+                if (property.PropertyType.Name == "Int32")
+                {
+#if debug
+                    Main.Logger.Log($"1 {property.Name} {property.GetValue(this)}");
+#endif
+                    if (!property.Name.StartsWith("H"))
+                        property.SetValue(this, 0);
+                    else
+                        property.SetValue(this, 1);
+                    continue;
+                }
+
+                if (property.PropertyType.Name == "Int32[]")
+                {
+#if debug
+                    Main.Logger.Log($"2 {property.Name} {property.GetValue(this)}");
+#endif
+                    int[] array = (int[])property.GetValue(this);
+                    Array.Clear(array, 0, array.Length);
+                    continue;
+                }
+
+                if (property.PropertyType.Name == "String" && Regex.IsMatch(property.Name, @"^(?>[A-Z]\w*)"))
+                {
+#if debug
+                    Main.Logger.Log($"3 {property.Name} {property.GetValue(this)}");
+#endif
+                    property.SetValue(this, "");
+                    continue;
+                }
+
+                if (property.PropertyType.Name == "Boolean" && Regex.IsMatch(property.Name, @"^(?>[A-Z]\w*)"))
+                {
+#if debug
+                    Main.Logger.Log($"4 {property.Name} {property.GetValue(this)}");
+#endif
+                    if (property.Name != "IsGetReal")
+                        property.SetValue(this, false);
+                    else
+                        property.SetValue(this, true);
+                    continue;
+                }
+            }
+            showNameTip = true;
         }
 
         /// <summary>
@@ -1361,7 +1506,7 @@ namespace NpcScan
                 case 8:
                     return CheckMN(a.Goodness, b.Goodness);
                 case 9:
-                    return CheckMN(a.GetSpouse(), b.GetSpouse());
+                    return CheckMN(a.GetMarriage(), b.GetMarriage());
                 case 10:
                     return CheckMN(a.GetSkillDevelopText(), b.GetSkillDevelopText());
                 case 11:

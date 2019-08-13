@@ -10,7 +10,7 @@ namespace NpcScan
     public class Settings : UnityModManager.ModSettings
     {
         public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
-        public KeyCode key = KeyCode.F12;
+        public KeyCode[] keys = { KeyCode.F3, KeyCode.PageUp, KeyCode.PageDown };
 
         // 每页最多显示的npc数目
         public int countPerPage = 200;
@@ -25,7 +25,7 @@ namespace NpcScan
         /// <summary>mod的UI是否已加载</summary>
         internal static bool uiIsShow = false;
         /// <summary>是否正在修改热键</summary>
-        internal static bool bindingKey = false;
+        internal static bool[] bindingKeys;
         /// <summary>特性字典</summary>
         internal static readonly Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
         /// <summary>特性名称对应特性ID</summary>
@@ -90,6 +90,7 @@ namespace NpcScan
 
             Logger = modEntry.Logger;
             settings = Settings.Load<Settings>(modEntry);
+            bindingKeys = new bool[settings.keys.Length];
 
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
@@ -98,7 +99,6 @@ namespace NpcScan
             if (!uiIsShow)
             {
                 UI.Load();
-                UI.key = settings.key;
                 uiIsShow = true;
             }
             return true;
@@ -118,28 +118,35 @@ namespace NpcScan
             Event e = Event.current;
             if (e.isKey && Input.anyKeyDown)
             {
-                if (bindingKey)
+                for (int i = 0; i < bindingKeys.Length; i++)
                 {
-                    if ((e.keyCode >= KeyCode.A && e.keyCode <= KeyCode.Z)
-                        || (e.keyCode >= KeyCode.F1 && e.keyCode <= KeyCode.F12)
-                        || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
-                        )
+                    if (bindingKeys[i])
                     {
-                        settings.key = e.keyCode;
+                        if ((e.keyCode >= KeyCode.A && e.keyCode <= KeyCode.Z)
+                            || (e.keyCode >= KeyCode.F1 && e.keyCode <= KeyCode.F12)
+                            || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
+                            || e.keyCode == KeyCode.PageDown
+                            || e.keyCode == KeyCode.PageUp
+                            )
+                        {
+                            // 若热键被其他功能占用，则交换热键
+                            for (int j = 0; j < settings.keys.Length; j++)
+                            {
+                                if (j != i && settings.keys[j] == e.keyCode)
+                                {
+                                    settings.keys[j] = settings.keys[i];
+                                }
+                            }
+                            settings.keys[i] = e.keyCode;
+                        }
+                        bindingKeys[i] = false;
                     }
-                    bindingKey = false;
                 }
             }
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("设置快捷键： Ctrl +", GUILayout.Width(130));
-            if (GUILayout.Button((bindingKey ? "请按键" : settings.key.ToString()),
-                GUILayout.Width(80)))
-            {
-                bindingKey = !bindingKey;
-            }
-            GUILayout.Label("（支持0-9,A-Z,F1-F12）");
-            GUILayout.EndHorizontal();
-
+            SettingKeys("设置打开/关闭窗口快捷键： ", 0, 160);
+            GUILayout.Label("该功能传统热键Ctrl+F12依然有效");
+            SettingKeys("设置向上翻页快捷键： ", 1, 130);
+            SettingKeys("设置向下翻页快捷键： ", 2, 130);
             GUILayout.BeginHorizontal();
             // 设置每页最多显示npc的数目
             GUILayout.Label("每页最大显示NPC数量(1~300)：", GUILayout.Width(370));
@@ -149,8 +156,33 @@ namespace NpcScan
         }
 
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
+
+        /// <summary>
+        /// 设置热键控件
+        /// </summary>
+        /// <param name="text">控件的说明文字</param>
+        /// <param name="index">控件的序号</param>
+        /// <param name="textWidth">控件的说明文字框宽度</param>
+        public static void SettingKeys(string text, int index, float textWidth)
+        {
+            if (index < bindingKeys.Length)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(text, GUILayout.Width(textWidth > 0 ? textWidth : 130));
+                if (GUILayout.Button((bindingKeys[index] ? "请按键" : settings.keys[index].ToString()),
+                    GUILayout.Width(80)))
+                {
+                    bindingKeys[index] = !bindingKeys[index];
+                }
+                GUILayout.Label("（支持0-9,A-Z,F1-F12,PageDown,PageUp）");
+                GUILayout.EndHorizontal();
+            }
+        }
     }
 
+    /// <summary>
+    /// 扩展方法
+    /// </summary>
     internal static class ExtendedMethod
     {
         /// <summary>
