@@ -26,6 +26,7 @@ namespace SmartWear
     {
         public static void Postfix(MakeSystem __instance, int ___baseMakeTyp)
         {
+            if (!Main.Enabled || !Main.settings.MakeSystemAutoAccessories) return;
             StateManager.EquipAccessories(AptitudeTypeHelper.GetAptitudeTypeByBaseMakeType(___baseMakeTyp));
             __instance.UpdateMakeWindow();
         }

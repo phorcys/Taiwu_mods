@@ -33,19 +33,24 @@ namespace SmartWear
             if (!Main.Enabled) return;
             if (keyValue <= 0) return;
 
-            int aptitudeType;
-            if (homeSystem.studySkillTyp < 17)
+            if (Main.settings.HomeSystemAutoAccessories)
             {
-                // 技藝
-                aptitudeType = AptitudeTypeHelper.GetAptitudeTypeBySkillType(homeSystem.studySkillTyp);
+                int aptitudeType;
+                if (homeSystem.studySkillTyp < 17)
+                {
+                    // 技藝
+                    aptitudeType = AptitudeTypeHelper.GetAptitudeTypeBySkillType(homeSystem.studySkillTyp);
+                }
+                else
+                {
+                    // 功法
+                    aptitudeType = aptitudeFunc(keyValue);
+                }
+                StateManager.EquipAccessories(aptitudeType);
             }
-            else 
-            {
-                // 功法
-                aptitudeType = aptitudeFunc(keyValue);
-            }
-            StateManager.EquipAccessories(aptitudeType);
-            StateManager.UseGongFa(Main.settings.HomeSystemGongFaIndex);
+
+            if (Main.settings.HomeSystemGongFaIndex >= 0)
+                StateManager.UseGongFa(Main.settings.HomeSystemGongFaIndex);
         }
     }
 
