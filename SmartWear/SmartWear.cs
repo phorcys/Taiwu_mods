@@ -54,8 +54,14 @@ namespace SmartWear
 
             GUILayout.BeginVertical("Box");
             GUILayoutHelper.Title("製造 <color=#A0A0A0>(锻造、制木、炼药、炼毒、织锦、制石、烹飪)</color>");
-            settings.MakeSystemAutoAccessories = GUILayout.Toggle(settings.MakeSystemAutoAccessories, "自動裝備適合的飾品 (資質優先)");
+            settings.MakeSystemAutoAccessories = GUILayout.Toggle(settings.MakeSystemAutoAccessories, "自動裝備適合的飾品");
             GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("Box");
+            GUILayoutHelper.Title("醫療與解毒");
+            settings.HealingAutoAccessories = GUILayout.Toggle(settings.HealingAutoAccessories, "自動裝備適合的飾品");
+            GUILayout.EndVertical();
+            GUILayout.Label("<color=#FF8080>※如果不在城鎮/門派格，將不會使用倉庫裡的裝備※</color>");
         }
 
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -71,6 +77,8 @@ namespace SmartWear
         public int HomeSystemGongFaIndex = -1;
         public bool HomeSystemAutoAccessories = true;
         public bool MakeSystemAutoAccessories = true;
+        public bool HealingAutoAccessories = true;
+
         //public int GongFaIndexAtHomeSystem = -1;
 
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -99,7 +107,8 @@ namespace SmartWear
     public class StateManager
     {
         // static Dictionary<int, int> _originEquitments = new Dictionary<int, int>();
-        static List<string> _originEquitments = new List<string>(3);
+        // static List<string> _originEquitments = new List<string>(3);
+        static Dictionary<int, string> _originEquitments = new Dictionary<int, string>();
         static int _originGongFaIndex = -1;
 
         static public void EquipAccessories(int aptitudeType)
@@ -118,9 +127,9 @@ namespace SmartWear
             // 紀錄原本的裝備
             if (_originEquitments.Count == 0)
             {
-                _originEquitments.Add(actorDate[(int)ActorsDate.Accessory1]);
-                _originEquitments.Add(actorDate[(int)ActorsDate.Accessory2]);
-                _originEquitments.Add(actorDate[(int)ActorsDate.Accessory3]);
+                _originEquitments.Add((int)ActorsDate.Accessory1, actorDate[(int)ActorsDate.Accessory1]);
+                _originEquitments.Add((int)ActorsDate.Accessory2, actorDate[(int)ActorsDate.Accessory2]);
+                _originEquitments.Add((int)ActorsDate.Accessory3, actorDate[(int)ActorsDate.Accessory3]);
             }
             // 因為只是暫時的, 裝起來就對了
             // 不用特別取出
@@ -150,11 +159,11 @@ namespace SmartWear
         {
             var df = DateFile.instance;
             var actorDate = df.actorsDate[df.mianActorId];
-            for (int i = 0; i < _originEquitments.Count; i++)
+            foreach (var kvp in _originEquitments)
             {
-                actorDate[i + (int)ActorsDate.Accessory1] = _originEquitments[i];
+                actorDate[kvp.Key] = kvp.Value;
 #if (DEBUG)
-                Main.Logger.Log($"Restore Equip: Id:{_originEquitments[i]}");
+                Main.Logger.Log($"Restore Equip: Id:{kvp.Value}@{kvp.Key}");
 #endif
             }
             _originEquitments.Clear();
@@ -205,6 +214,14 @@ namespace SmartWear
         Accessory1 = 307,
         Accessory2 = 308,
         Accessory3 = 309,
+    }
+
+    enum AptitudeType
+    {
+        // 醫術
+        Treatment = 50509,
+        // 毒術
+        Poison = 50510,
     }
 
     public class ItemData
@@ -332,11 +349,17 @@ namespace SmartWear
             => Filter(GetBagItems(), aptitudeType, ItemSource.Bag);
 
         /// <summary>
-        /// 玩家倉庫的物品
+        /// 玩家倉庫的物品 (不可訪問倉庫時則返回空)
         /// </summary>
         /// <returns></returns>
         static private IEnumerable<int> GetWarehouseItems()
-            => DateFile.instance.actorItemsDate[-999].Keys;
+        {
+            var df = DateFile.instance;
+            if (df.CanInToPlaceHome())
+                return df.actorItemsDate[-999].Keys;
+            else
+                return Enumerable.Empty<int>(); // 不可訪問倉庫時則返回空
+        }
 
         /// <summary>
         /// 從玩家倉庫篩選可提升指定資質的物品

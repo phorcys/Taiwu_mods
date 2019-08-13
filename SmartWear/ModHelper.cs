@@ -30,8 +30,6 @@ namespace Litfal
             var st = new System.Diagnostics.StackTrace(true);
             for (int i = 2; i < Math.Min(st.FrameCount, deep); i++)
             {
-                // Note that high up the call stack, there is only
-                // one stack frame.
                 var sf = st.GetFrame(i);
                 var method = sf.GetMethod();
                 logger.Log($"Stack: {method.DeclaringType.Name}.{method.Name}");
