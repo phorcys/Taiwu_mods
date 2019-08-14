@@ -15,7 +15,7 @@ namespace SmartWear
         {
             // 關閉視窗時還原原本的裝備
             // 不檢查 Main.Enabled, 避免使用者於關閉視窗前, 先關閉Mod, 造成一些資料錯亂的問題
-            StateManager.Restore();
+            StateManager.RestoreAll();
         }
     }
 

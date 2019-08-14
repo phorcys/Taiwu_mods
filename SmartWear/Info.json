@@ -1,8 +1,8 @@
 ﻿{
     "Id": "SmartWear",
-    "DisplayName": "練功與製作時自動換上適合的裝備與功法",
+    "DisplayName": "自動換上適合的裝備與功法",
     "Author": "litfal",
-    "Version": "0.9.1",
+    "Version": "1.0.0",
     "AssemblyName": "SmartWear.dll",
     "EntryMethod": "SmartWear.Main.Load",
     "HomePage": "https://github.com/Litfal/Taiwu_mods/tree/SmartWear/SmartWear"

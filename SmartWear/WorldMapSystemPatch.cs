@@ -29,7 +29,7 @@ namespace SmartWear
 
         private static void Postfix()
         {
-            StateManager.Restore();
+            StateManager.RestoreAll();
         }
     }
 

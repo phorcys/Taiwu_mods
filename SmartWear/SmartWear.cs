@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
 using Litfal;
+using System.Linq.Expressions;
 
 namespace SmartWear
 {
@@ -40,26 +41,38 @@ namespace SmartWear
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             GUILayout.BeginVertical("Box");
-            GUILayoutHelper.Title("練功 <color=#A0A0A0>(修習、突破、研讀)</color>");
-            GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("使用功法");
+            // GUILayoutHelper.Title("練功 <color=#A0A0A0>(修習、突破、研讀)</color>");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("<color=#80FF80>練功</color>時使用功法");
             settings.HomeSystemGongFaIndex =
                 GUILayout.SelectionGrid(
                     settings.HomeSystemGongFaIndex + 1,
                     new string[] { "<color=#808080>不切換</color>", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" }, 10,
                     new GUILayoutOption[0]) - 1;
             GUILayout.EndHorizontal();
-            settings.HomeSystemAutoAccessories = GUILayout.Toggle(settings.HomeSystemAutoAccessories, "自動裝備適合的飾品 (資質優先，悟性其次)");
+            settings.HomeSystemAutoAccessories = GUILayout.Toggle(settings.HomeSystemAutoAccessories, "<color=#80FF80>練功</color>時自動裝備適合的飾品 (資質優先，悟性其次)");
+            settings.AdvancedReadBookMode = GUILayout.Toggle(settings.AdvancedReadBookMode, "進階研讀模式：難度超過 50% 則資質優先、悟性其次；否則悟性優先");
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("Box");
-            GUILayoutHelper.Title("製造 <color=#A0A0A0>(锻造、制木、炼药、炼毒、织锦、制石、烹飪)</color>");
-            settings.MakeSystemAutoAccessories = GUILayout.Toggle(settings.MakeSystemAutoAccessories, "自動裝備適合的飾品");
+            // GUILayoutHelper.Title("製造 <color=#A0A0A0>(锻造、制木、炼药、炼毒、织锦、制石、烹飪)</color>");
+            settings.MakeSystemAutoAccessories = GUILayout.Toggle(settings.MakeSystemAutoAccessories, "<color=#80FF80>製造</color>時自動裝備適合的飾品");
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("Box");
-            GUILayoutHelper.Title("醫療與解毒");
-            settings.HealingAutoAccessories = GUILayout.Toggle(settings.HealingAutoAccessories, "自動裝備適合的飾品");
+            settings.HealingAutoAccessories = GUILayout.Toggle(settings.HealingAutoAccessories, "<color=#80FF80>療傷</color>與<color=#80FF80>驅毒</color>自動裝備適合的飾品");
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("Box");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("跨月恢復<color=#80FF80>內息</color>時使用功法");
+            settings.RestGongFaIndex =
+                GUILayout.SelectionGrid(
+                    settings.RestGongFaIndex + 1,
+                    new string[] { "<color=#808080>不切換</color>", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" }, 10,
+                    new GUILayoutOption[0]) - 1;
+            GUILayout.EndHorizontal();
+            settings.RestAutoEquip = GUILayout.Toggle(settings.RestAutoEquip, "跨月恢復<color=#80FF80>內息</color>時自動裝備適合的武器 (內息優先)");
             GUILayout.EndVertical();
             GUILayout.Label("<color=#FF8080>※如果不在城鎮/門派格，將不會使用倉庫裡的裝備※</color>");
         }
@@ -78,6 +91,9 @@ namespace SmartWear
         public bool HomeSystemAutoAccessories = true;
         public bool MakeSystemAutoAccessories = true;
         public bool HealingAutoAccessories = true;
+        public int RestGongFaIndex = -1;
+        public bool RestAutoEquip = true;
+        public bool AdvancedReadBookMode = true;
 
         //public int GongFaIndexAtHomeSystem = -1;
 
@@ -98,7 +114,7 @@ namespace SmartWear
             => GetAptitudeTypeBySkillType(int.Parse(DateFile.instance.gongFaDate[gongFaId][61]));
 
         static public int GetAptitudeTypeByBookId(int bookId)
-            => GetAptitudeTypeByGongFaId(int.Parse(DateFile.instance.GetItemDate(bookId, (int)ItemAttributeKey.BookSkillId, true)));
+            => GetAptitudeTypeByGongFaId(int.Parse(DateFile.instance.GetItemDate(bookId, (int)ItemDateKey.BookSkillId, true)));
     }
 
     /// <summary>
@@ -113,7 +129,12 @@ namespace SmartWear
 
         static public void EquipAccessories(int aptitudeType)
         {
-            EquipAccessories(ItemHelper.GetAptitudeUpOrComprehensionUpAccessories(aptitudeType));
+            RestoreEquip();
+            var items = ItemHelper.GetAptitudeUpOrComprehensionUpAccessories(aptitudeType);
+            // 暫時寫死, 資質高的優先, 其次是悟性
+            EquipAccessories(from item in items
+                             orderby item.AptitudeUp descending, item.ComprehensionUp descending
+                             select item);
         }
 
         static public void EquipAccessories(IEnumerable<ItemData> accessories)
@@ -121,26 +142,13 @@ namespace SmartWear
 
         static public void EquipAccessories(ItemData[] accessories)
         {
-
-            var df = DateFile.instance;
-            var actorDate = df.actorsDate[df.mianActorId];
-            // 紀錄原本的裝備
-            if (_originEquitments.Count == 0)
-            {
-                _originEquitments.Add((int)ActorsDate.Accessory1, actorDate[(int)ActorsDate.Accessory1]);
-                _originEquitments.Add((int)ActorsDate.Accessory2, actorDate[(int)ActorsDate.Accessory2]);
-                _originEquitments.Add((int)ActorsDate.Accessory3, actorDate[(int)ActorsDate.Accessory3]);
-            }
-            // 因為只是暫時的, 裝起來就對了
-            // 不用特別取出
-            int actorsDateIndex = (int)ActorsDate.Accessory1;
+            Equip(accessories.Select(a => a.Id).ToArray(), EquipSlot.Accessory1);
+#if (DEBUG)
             foreach (var item in accessories.Take(3))
             {
-                actorDate[actorsDateIndex++] = item.Id.ToString();
-#if (DEBUG)
-                Main.Logger.Log($"Equip: Id:{item.Id} 資質:{item.AptitudeUp} 悟性:{item.ComprehensionUp}");
-#endif
+                Main.Logger.Log($"Equip: {item.Id}, {((ItemDateKey)item.AptitudeType).GetDescription()}: {item.AptitudeUp}, 悟性: {item.ComprehensionUp}");
             }
+#endif
         }
 
         static public void UseGongFa(int gongFaIndex)
@@ -148,52 +156,83 @@ namespace SmartWear
             if (gongFaIndex < 0) return;
             var currentGongFaIndex = DateFile.instance.mianActorEquipGongFaIndex;
             if (currentGongFaIndex == gongFaIndex) return;
-#if (DEBUG)
-            Main.Logger.Log($"UseGongFa:{gongFaIndex}");
-#endif
+//#if (DEBUG)
+//            Main.Logger.Log($"UseGongFa:{gongFaIndex}");
+//#endif
             _originGongFaIndex = currentGongFaIndex;
             ActorMenu.instance.ChangeEquipGongFa(gongFaIndex);
         }
 
-        static public void Restore()
+        static public void RestoreAll()
+        {
+            RestoreEquip();
+            RestoreGongFa();
+        }
+
+        public static void RestoreEquip()
         {
             var df = DateFile.instance;
             var actorDate = df.actorsDate[df.mianActorId];
             foreach (var kvp in _originEquitments)
             {
                 actorDate[kvp.Key] = kvp.Value;
-#if (DEBUG)
-                Main.Logger.Log($"Restore Equip: Id:{kvp.Value}@{kvp.Key}");
-#endif
+//#if (DEBUG)
+//                Main.Logger.Log($"Restore Equip: Id:{kvp.Value}@{kvp.Key}");
+//#endif
             }
             _originEquitments.Clear();
+        }
 
+        public static void RestoreGongFa()
+        {
             if (_originGongFaIndex != -1)
             {
-                int current_GongFaIndex = df.mianActorEquipGongFaIndex;
+                int current_GongFaIndex = DateFile.instance.mianActorEquipGongFaIndex;
                 if (current_GongFaIndex != _originGongFaIndex)
                 {
-#if (DEBUG)
-                    Main.Logger.Log($"Restore GongFa: Index:{_originGongFaIndex}");
-#endif
                     ActorMenu.instance.ChangeEquipGongFa(_originGongFaIndex);
                 }
                 _originGongFaIndex = -1;
             }
         }
+
+        public static void EquipWeapons(IEnumerable<int> items)
+            => EquipWeapons(items.Take(3).ToArray());
+
+        public static void EquipWeapons(int[] items)
+        {
+            Equip(items, EquipSlot.Weapon1);
+        }
+
+
+        static public void Equip(int[] items, EquipSlot startSlot)
+        {
+            var df = DateFile.instance;
+            var actorDate = df.actorsDate[df.mianActorId];
+            var actorsDateKey = (int)startSlot.ToActorsDateKey();
+            // 紀錄原本的裝備
+            if (_originEquitments.Count == 0)
+            {
+                for (int i = 0; i < items.Length; i++)
+                {
+                    int key = (int)(actorsDateKey + i);
+                    _originEquitments.Add(key, actorDate[key]);
+                }
+            }
+            // 因為只是暫時的, 裝起來就對了
+            // 不用特別取出
+            foreach (var item in items)
+            {
+                actorDate[actorsDateKey++] = item.ToString();
+//#if (DEBUG)
+//                Main.Logger.Log($"Equip:{item}");
+//#endif
+            }
+        }
     }
 
-    enum ItemAttributeKey : int
-    {
-        EquipType = 1,
-        Comprehension = 50065,
-        BookSkillId = 32,
-    }
 
-    enum EquipType : int
-    {
-        Accessory = 3,
-    }
+
 
     public enum ItemSource
     {
@@ -202,19 +241,6 @@ namespace SmartWear
         Warehouse,
     }
 
-    enum EquipSlot
-    {
-        Accessory1 = 7,
-        Accessory2 = 8,
-        Accessory3 = 9,
-    }
-
-    enum ActorsDate
-    {
-        Accessory1 = 307,
-        Accessory2 = 308,
-        Accessory3 = 309,
-    }
 
     enum AptitudeType
     {
@@ -244,18 +270,62 @@ namespace SmartWear
 
     public class ItemHelper
     {
+        
+
+        //static public IQueryable<int> ApplyFilter(IQueryable<int> items)
+        //{
+
+        //}
+
         static public IEnumerable<ItemData> GetAptitudeUpOrComprehensionUpAccessories(int aptitudeType)
         {
             var items =
                 GetEquipAptitudeUpAccessories(aptitudeType).Concat(
                 GetBagAptitudeUpAccessories(aptitudeType)).Concat(
                 GetWarehouseAptitudeUpAccessories(aptitudeType));
+            return items;
+        }
 
-            // 排序
-            // 暫時寫死, 資質高的優先, 其次是悟性
-            return (from item in items
-                    orderby item.AptitudeUp descending, item.ComprehensionUp descending
-                    select item).Take(3);
+
+        /// <summary>
+        /// 依裝備類型篩選
+        /// </summary>
+        /// <param name="items">接受篩選的物品ID</param>
+        /// <param name="equipType">裝備類型</param>
+        /// <returns></returns>
+        static private IQueryable<int> FilterByEquipType(IQueryable<int> items, EquipType equipType)
+        {
+            return items.Where(GetEquipTypeFilter(equipType));
+        }
+
+        static public Expression<Func<int, bool>> GetHasDataFilter(ItemDateKey itemDateKey)
+        {
+            return (item) => DateFile.instance.GetItemDateValue(item, itemDateKey) > 0;
+        }
+
+        static public Expression<Func<int, int>> GetOrderByData(ItemDateKey itemDateKey)
+        {
+            return (item) => DateFile.instance.GetItemDateValue(item, itemDateKey);
+        }
+
+        /// <summary>
+        /// 篩選所有裝備
+        /// </summary>
+        /// <param name="items">接受篩選的物品ID</param>
+        /// <returns></returns>
+        static private IQueryable<int> FilterEquip(IQueryable<int> items)
+        {
+            return items.Where(GetIsEquipFilter());
+        }
+
+        static public Expression<Func<int, bool>> GetIsEquipFilter()
+        {
+            return (item) => DateFile.instance.GetItemDateValue(item, ItemDateKey.EquipType) > 0;
+        }
+
+        static public Expression<Func<int, bool>> GetEquipTypeFilter(EquipType equipType)
+        {
+            return (item) => DateFile.instance.GetItemDateValue(item, ItemDateKey.EquipType) == (int)equipType;
         }
 
 
@@ -265,7 +335,7 @@ namespace SmartWear
         /// <param name="items">接受篩選的物品ID</param>
         /// <param name="aptitudeType">資質種類, 505XX & 506XX </param>
         /// <returns></returns>
-        static private IEnumerable<ItemData> Filter(IEnumerable<int> items, int aptitudeType, ItemSource itemSource)
+        static private IQueryable<ItemData> Filter(IQueryable<int> items, int aptitudeType, ItemSource itemSource)
         {
             return from item in items
                    where IsAccessory(item)
@@ -280,9 +350,9 @@ namespace SmartWear
                    };
         }
 
-        private static IEnumerable<ItemData> FilterInEquip(IEnumerable<KeyValuePair<int, int>> slotItemPairs, int aptitudeType, ItemSource itemSource)
+        private static IQueryable<ItemData> FilterInEquip(IEnumerable<KeyValuePair<int, int>> slotItemPairs, int aptitudeType, ItemSource itemSource)
         {
-            return from kvp in slotItemPairs
+            return from kvp in slotItemPairs.AsQueryable()
                    let item = kvp.Value
                    where IsAccessory(item)
                    let comprehensionUp = GetComprehensionUp(item)
@@ -304,7 +374,7 @@ namespace SmartWear
         /// <returns></returns>
         static private bool IsAccessory(int itemId)
         {
-            return DateFile.instance.GetItemDate(itemId, (int)ItemAttributeKey.EquipType) == ((int)EquipType.Accessory).ToString();
+            return DateFile.instance.GetItemDateValue(itemId, ItemDateKey.EquipType) == (int)EquipType.Accessory;
         }
 
         /// <summary>
@@ -314,9 +384,7 @@ namespace SmartWear
         /// <returns></returns>
         static private int GetComprehensionUp(int itemId)
         {
-            if (int.TryParse(DateFile.instance.GetItemDate(itemId, (int)ItemAttributeKey.Comprehension), out int value))
-                return value;
-            return 0;
+            return DateFile.instance.GetItemDateValue(itemId, ItemDateKey.Comprehension);
         }
 
         /// <summary>
@@ -337,7 +405,7 @@ namespace SmartWear
         /// 玩家身上的物品
         /// </summary>
         /// <returns></returns>
-        static private IEnumerable<int> GetBagItems()
+        static public IEnumerable<int> GetBagItems()
             => DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Keys;
 
         /// <summary>
@@ -345,14 +413,14 @@ namespace SmartWear
         /// </summary>
         /// <param name="aptitudeType">資質種類, 505XX & 506XX </param>
         /// <returns></returns>
-        static public IEnumerable<ItemData> GetBagAptitudeUpAccessories(int aptitudeType)
-            => Filter(GetBagItems(), aptitudeType, ItemSource.Bag);
+        static public IQueryable<ItemData> GetBagAptitudeUpAccessories(int aptitudeType)
+            => Filter(GetBagItems().AsQueryable(), aptitudeType, ItemSource.Bag);
 
         /// <summary>
         /// 玩家倉庫的物品 (不可訪問倉庫時則返回空)
         /// </summary>
         /// <returns></returns>
-        static private IEnumerable<int> GetWarehouseItems()
+        static public IEnumerable<int> GetWarehouseItems()
         {
             var df = DateFile.instance;
             if (df.CanInToPlaceHome())
@@ -366,24 +434,25 @@ namespace SmartWear
         /// </summary>
         /// <param name="aptitudeType">資質種類, 505XX & 506XX </param>
         /// <returns></returns>
-        static public IEnumerable<ItemData> GetWarehouseAptitudeUpAccessories(int aptitudeType)
-            => Filter(GetWarehouseItems(), aptitudeType, ItemSource.Warehouse);
+        static public IQueryable<ItemData> GetWarehouseAptitudeUpAccessories(int aptitudeType)
+            => Filter(GetWarehouseItems().AsQueryable(), aptitudeType, ItemSource.Warehouse);
 
         ///// <summary>
         ///// 玩家裝備的物品
         ///// </summary>
         ///// <returns>slot/itemId pair</returns>
 
-        static private IEnumerable<KeyValuePair<int, int>> GetEquipItems()
+        static public IEnumerable<KeyValuePair<int, int>> GetEquipItems()
         {
-            DateFile df = DateFile.instance;
-            for (int i = (int)EquipSlot.Accessory1; i <= (int)EquipSlot.Accessory3; i++)
+            var df = DateFile.instance;
+            var playerActorData = df.actorsDate[df.mianActorId];
+            for (int i = (int)ActorsDateKey.Accessory1; i <= (int)ActorsDateKey.Accessory3; i++)
             {
-                string itemIdStr = df.actorsDate[df.mianActorId][300 + i];
+                string itemIdStr = playerActorData[i];
                 if (itemIdStr != "0")
                 {
                     int itemId = int.Parse(itemIdStr);
-                    yield return new KeyValuePair<int, int>(300 + i, itemId);
+                    yield return new KeyValuePair<int, int>(i, itemId);
                 }
             }
         }
