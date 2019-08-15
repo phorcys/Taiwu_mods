@@ -16,13 +16,13 @@ namespace SmartWear
     public static class Main
     {
         public static bool Enabled { get; private set; }
-        public static UnityModManager.ModEntry.ModLogger Logger { get; private set; }
+        public static ThreadSafeLogger Logger { get; private set; }
         public static Settings settings;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-            Logger = modEntry.Logger;
+            Logger = new ThreadSafeLogger(modEntry.Logger);
             settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
@@ -38,18 +38,13 @@ namespace SmartWear
             return true;
         }
 
+
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+
             GUILayout.BeginVertical("Box");
             // GUILayoutHelper.Title("練功 <color=#A0A0A0>(修習、突破、研讀)</color>");
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("<color=#80FF80>練功</color>時使用功法");
-            settings.HomeSystemGongFaIndex =
-                GUILayout.SelectionGrid(
-                    settings.HomeSystemGongFaIndex + 1,
-                    new string[] { "<color=#808080>不切換</color>", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" }, 10,
-                    new GUILayoutOption[0]) - 1;
-            GUILayout.EndHorizontal();
+            GUILayoutHelper.GongFaSelection("<color=#80FF80>練功</color>時使用功法", ref settings.HomeSystemGongFaIndex);
             settings.HomeSystemAutoAccessories = GUILayout.Toggle(settings.HomeSystemAutoAccessories, "<color=#80FF80>練功</color>時自動裝備適合的飾品 (資質優先，悟性其次)");
             settings.AdvancedReadBookMode = GUILayout.Toggle(settings.AdvancedReadBookMode, "進階研讀模式：難度超過 50% 則資質優先、悟性其次；否則悟性優先");
             GUILayout.EndVertical();
@@ -60,21 +55,24 @@ namespace SmartWear
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("Box");
-            settings.HealingAutoAccessories = GUILayout.Toggle(settings.HealingAutoAccessories, "<color=#80FF80>療傷</color>與<color=#80FF80>驅毒</color>自動裝備適合的飾品");
+            settings.HealingAutoAccessories = GUILayout.Toggle(settings.HealingAutoAccessories, "<color=#80FF80>療傷</color>與<color=#80FF80>驅毒</color>自動裝備適合的飾品 <color=#FF8080>※如果不在城鎮/門派格，將不會使用倉庫裡的裝備※</color>");
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("Box");
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("跨月恢復<color=#80FF80>內息</color>時使用功法");
-            settings.RestGongFaIndex =
-                GUILayout.SelectionGrid(
-                    settings.RestGongFaIndex + 1,
-                    new string[] { "<color=#808080>不切換</color>", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" }, 10,
-                    new GUILayoutOption[0]) - 1;
-            GUILayout.EndHorizontal();
-            settings.RestAutoEquip = GUILayout.Toggle(settings.RestAutoEquip, "跨月恢復<color=#80FF80>內息</color>時自動裝備適合的武器 (內息優先)");
+            GUILayoutHelper.GongFaSelection("跨月恢復<color=#80FF80>內息</color>時使用功法", ref settings.RestGongFaIndex);
+            settings.RestAutoEquip = GUILayout.Toggle(settings.RestAutoEquip, "跨月恢復<color=#80FF80>內息</color>時自動裝備適合的武器 (內息優先) <color=#FF8080>※如果不在城鎮/門派格，將不會使用倉庫裡的裝備※</color>");
             GUILayout.EndVertical();
-            GUILayout.Label("<color=#FF8080>※如果不在城鎮/門派格，將不會使用倉庫裡的裝備※</color>");
+
+            GUILayout.BeginVertical("Box");
+            GUILayoutHelper.GongFaSelection("進入<color=#80FF80>戰鬥</color>準備畫面時，使用指定功法", ref settings.StartBattleGongFaIndex);
+            GUILayoutHelper.EquipGroupSelection("進入<color=#80FF80>戰鬥</color>準備畫面時，使用指定裝備", ref settings.StartBattleEquipGroupIndex);
+            GUILayout.Label("<color=#FF8080>※戰鬥後不會換回※</color>");
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("Box");
+            GUILayoutHelper.EquipGroupSelection("進入<color=#80FF80>較藝</color>準備畫面時，使用指定裝備", ref settings.StartSkillBattleEquipGroupIndex);
+            GUILayout.Label("<color=#FF8080>※較藝後不會換回※</color>");
+            GUILayout.EndVertical();
         }
 
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -94,6 +92,9 @@ namespace SmartWear
         public int RestGongFaIndex = -1;
         public bool RestAutoEquip = true;
         public bool AdvancedReadBookMode = true;
+        public int StartBattleGongFaIndex = -1;
+        public int StartBattleEquipGroupIndex = -1;
+        public int StartSkillBattleEquipGroupIndex = -1;
 
         //public int GongFaIndexAtHomeSystem = -1;
 

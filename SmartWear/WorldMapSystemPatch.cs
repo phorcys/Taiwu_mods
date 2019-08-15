@@ -1,10 +1,12 @@
 ﻿using Harmony12;
+using Litfal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace SmartWear
 {
@@ -15,7 +17,8 @@ namespace SmartWear
         private static void Prefix(int typ)
         {
             if (!Main.Enabled || !Main.settings.HealingAutoAccessories) return;
-            if(typ == 0)
+
+            if (typ == 0)
             {
                 // 醫療
                 StateManager.EquipAccessories((int)AptitudeType.Treatment);
@@ -32,5 +35,4 @@ namespace SmartWear
             StateManager.RestoreAll();
         }
     }
-
 }
