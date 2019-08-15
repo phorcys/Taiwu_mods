@@ -90,7 +90,7 @@ namespace RestEquip
 
             changeGongFa();
             changeEquip();
- 
+
             return true;
         }
 
@@ -121,31 +121,36 @@ namespace RestEquip
         private static void changeEquip(int index)
         {
             // Main.Logger.Log($"changeEquip: {index}");
-            int num = DateFile.instance.MianActorID();
-            int nowEquipConfigIndex = DateFile.instance.nowEquipConfigIndex;
-            Dictionary<int, int> dictionary = DateFile.instance.mainActorequipConfig[nowEquipConfigIndex];
+            DateFile df = DateFile.instance;
+            if (df.mainActorequipConfig == null) return;
+            int num = df.MianActorID();
+            int nowEquipConfigIndex = df.nowEquipConfigIndex;
+            Dictionary<int, int> dictionary = df.mainActorequipConfig[nowEquipConfigIndex];
+            Dictionary<int, string> playerActorsData = df.actorsDate[num];
+
             foreach (KeyValuePair<int, int> keyValuePair in dictionary)
             {
-                bool flag = keyValuePair.Value != 0 && DateFile.instance.actorsDate[num][keyValuePair.Key] == keyValuePair.Value.ToString();
+                string itemId = playerActorsData[keyValuePair.Key];
+                bool flag = keyValuePair.Value != 0 && itemId == keyValuePair.Value.ToString();
                 if (flag)
                 {
-                    DateFile.instance.GetItem(num, keyValuePair.Value, 1, false, -1, 0);
-                    DateFile.instance.actorsDate[num][keyValuePair.Key] = "0";
+                    df.GetItem(num, keyValuePair.Value, 1, false, -1, 0);
+                    itemId = "0";
                 }
             }
-            DateFile.instance.nowEquipConfigIndex = index;
-            Dictionary<int, int> nowEquipGroup = DateFile.instance.mainActorequipConfig[index];
+            df.nowEquipConfigIndex = index;
+            Dictionary<int, int> nowEquipGroup = df.mainActorequipConfig[index];
             List<int> list = new List<int>();
             foreach (KeyValuePair<int, int> keyValuePair2 in nowEquipGroup)
             {
                 bool flag2 = keyValuePair2.Value != 0;
                 if (flag2)
                 {
-                    bool flag3 = DateFile.instance.HasItem(num, keyValuePair2.Value);
+                    bool flag3 = df.HasItem(num, keyValuePair2.Value);
                     if (flag3)
                     {
-                        DateFile.instance.LoseItem(num, keyValuePair2.Value, 1, false, false);
-                        DateFile.instance.actorsDate[num][keyValuePair2.Key] = keyValuePair2.Value.ToString();
+                        df.LoseItem(num, keyValuePair2.Value, 1, false, false);
+                        playerActorsData[keyValuePair2.Key] = keyValuePair2.Value.ToString();
                     }
                     else
                     {
