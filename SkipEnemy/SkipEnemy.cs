@@ -49,6 +49,7 @@ namespace SkipEnemy
                 GameObject choose = UnityEngine.Object.Instantiate<GameObject>(__instance.massageChoose1, Vector3.zero, Quaternion.identity);
                 choose.name = "Choose,11200002";
                 choose.GetComponent<Button>().onClick.Invoke();
+                UnityEngine.Object.Destroy(choose);
             }
         }
     }
