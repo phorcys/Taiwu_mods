@@ -447,7 +447,7 @@ namespace SmartWear
         {
             var df = DateFile.instance;
             var playerActorData = df.actorsDate[df.mianActorId];
-            for (int i = (int)ActorsDateKey.Accessory1; i <= (int)ActorsDateKey.Accessory3; i++)
+            for (int i = (int)ActorsDateKey.Weapon1; i <= (int)ActorsDateKey.Accessory3; i++)
             {
                 string itemIdStr = playerActorData[i];
                 if (itemIdStr != "0")
