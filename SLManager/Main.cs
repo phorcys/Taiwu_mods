@@ -18,7 +18,8 @@ namespace Sth4nothing.SLManager
         public bool blockAutoSave = false;
         public int maxBackupToLoad = 8;
         public int maxBackupsToKeep = 1000;
-        public bool enableTurboQuickLoad = false;
+        public bool enableTurboQuickLoadAfterLoad = true;
+        public bool enableTurboQuickLoadAfterSave = false;
 
     }
 
@@ -127,12 +128,20 @@ namespace Sth4nothing.SLManager
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            //GUILayout.BeginHorizontal();
-            //GUILayout.Label("使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
-            //settings.enableTurboQuickLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoad ? 1 : 0,
-            //                             AutoSaveState, 2, GUILayout.Width(150)) == 1;
-            //GUILayout.FlexibleSpace();
-            //GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("讀檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
+            settings.enableTurboQuickLoadAfterLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterLoad ? 1 : 0,
+                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("存檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(200));
+            settings.enableTurboQuickLoadAfterSave = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterSave ? 1 : 0,
+                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打印log", GUILayout.Width(100)))

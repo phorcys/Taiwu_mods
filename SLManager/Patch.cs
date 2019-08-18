@@ -214,7 +214,7 @@ namespace Sth4nothing.SLManager
             switch (OnClick.instance.ID)
             {
                 case 4646:
-                    if (Main.settings.enableTurboQuickLoad)
+                    if (Main.settings.enableTurboQuickLoadAfterLoad)
                         StateHelper.IsQuickLoad = true;
                     LoadFile.DoLoad(SaveDateFile.instance.dateId);
                     break;
@@ -260,12 +260,12 @@ namespace Sth4nothing.SLManager
             {
                 LoadFile.OnLoad = false;
 #if DEBUG
-                var m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>(null, "m_Container");
-                Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
-                foreach(string key in SingletonMap.Keys)
-                {
-                    Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
-                }
+                //var m_Container = ReflectionMethod.GetValue<SingletonObject, GameObject>(null, "m_Container");
+                //Main.Logger.Log($"DateFile_Loadloadlegend: Is m_Container null? {m_Container == null}");
+                //foreach(string key in SingletonMap.Keys)
+                //{
+                //    Main.Logger.Log($"DateFile_Loadloadlegend m_SingletonMap keys {key}");
+                //}
 #endif
                 // 清除需要清除的实例(仿自 SingletonObject.ClearInstances)
                 foreach (var inst in instancesToRemove)
@@ -1177,7 +1177,7 @@ namespace Sth4nothing.SLManager
         private static void Postfix(object __result)
         {
             if (!Main.Enabled) return;
-            if (Main.settings.enableTurboQuickLoad &&
+            if (Main.settings.enableTurboQuickLoadAfterLoad &&
                 StateHelper.IntoGameIndex > 0)
             {
                 if (_lastCalledLoadingState == StateHelper.LoadingState)
@@ -1224,7 +1224,7 @@ namespace Sth4nothing.SLManager
         private static void Postfix(object __result)
         {
             if (!Main.Enabled) return;
-            if (Main.settings.enableTurboQuickLoad &&
+            if (Main.settings.enableTurboQuickLoadAfterLoad &&
                 StateHelper.IntoGameIndex > 0)
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -1244,10 +1244,14 @@ namespace Sth4nothing.SLManager
         static SaveCache<DateFile.SaveDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.SaveDate>();
         private static void Postfix(DateFile.SaveDate __instance)
         {
-            if (!Main.Enabled || !Main.settings.enableTurboQuickLoad)
+            _saveCache.ExpireCache();
+            if (!Main.Enabled)
                 return;
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            _saveCache.StartSetCloneCache(__instance);
+            if (Main.settings.enableTurboQuickLoadAfterSave)
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                _saveCache.StartSetCloneCache(__instance);
+            }
         }
     }
 
@@ -1258,11 +1262,16 @@ namespace Sth4nothing.SLManager
         static SaveCache<DateFile.ActorLife> _saveCache = SaveCacheFactory.GetInstance<DateFile.ActorLife>();
         private static void Postfix(DateFile.ActorLife __instance)
         {
-            if (!Main.Enabled || !Main.settings.enableTurboQuickLoad)
+            _saveCache.ExpireCache();
+            if (!Main.Enabled)
                 return;
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            _saveCache.StartSetCloneCache(__instance);
+            if (Main.settings.enableTurboQuickLoadAfterSave)
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                _saveCache.StartSetCloneCache(__instance);
+            }
         }
+
     }
 
     [HarmonyPatch(typeof(Loading), "LoadEnd")]
