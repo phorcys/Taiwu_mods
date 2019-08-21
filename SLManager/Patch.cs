@@ -180,21 +180,7 @@ namespace Sth4nothing.SLManager
         /// </summary>
         public static void LoadFiles()
         {
-            var files = Directory.GetFiles(SaveManager.BackPath,
-                $"Date_{SaveManager.DateId}.save.???.zip",
-                SearchOption.TopDirectoryOnly);
-            Array.Sort(files, StringComparer.InvariantCulture);
-
-            LoadFile.SavedFiles = new List<string>();
-
-            if (File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.twV0"))
-                || File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.tw")))
-                LoadFile.SavedFiles.Add(SaveManager.SavePath);
-
-            LoadFile.SavedFiles.AddRange(
-                Main.settings.maxBackupToLoad > 0
-                    ? files.Reverse().Take(Main.settings.maxBackupToLoad)
-                    : files);
+            LoadFile.ReloadFileList();
 
             LoadFile.ParseFiles();
 
@@ -327,6 +313,115 @@ namespace Sth4nothing.SLManager
         }
     }
 
+    public class SaveArchive
+    {
+        public int Index { get; private set; }
+        public string Path { get; private set; }
+
+        private static readonly Regex _archiveFileNameRegex = new Regex(@"Date_\d+\.save\.(?<index>\d\d*)\.zip", RegexOptions.Compiled);
+        private static readonly string _archiveFileNameFormat = "Date_{0}.save.{1:D8}.zip";
+        private static readonly string _archiveFileNameSearchPattern = "Date_{0}.save.????????.zip";
+        public const int MaxArchiveIndex = 99999999;
+
+
+        public static string GetSearchPattern(int dateId) 
+            => string.Format(_archiveFileNameSearchPattern, dateId);
+
+        /// <summary>
+        /// 取得存檔備份的完整路徑
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <param name="dateId"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public static string GetPath(string folder, int dateId, int index)
+            => System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, string.Format(_archiveFileNameFormat, dateId, index)));
+
+        /// <summary>
+        /// 取得備份壓縮檔與index, 並以 index 升序排序 (index最小=最舊的最先回傳)
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <param name="dateId"></param>
+        /// <returns></returns>
+        public static IEnumerable<SaveArchive> GetArchives(string folder, int dateId)
+        {
+            var files = Directory.EnumerateFiles(folder,
+                GetSearchPattern(dateId),
+                SearchOption.TopDirectoryOnly);
+            return from file in files
+                   let m = _archiveFileNameRegex.Match(file)
+                   where m.Success
+                   let index = int.Parse(m.Groups["index"].Value)
+                   orderby index 
+                   select new SaveArchive()
+                   {
+                       Path = file,
+                       Index = index
+                   };
+        }
+
+
+        public static SaveArchive GetArchiveFile(string path)
+        {
+            var m = _archiveFileNameRegex.Match(path);
+            if (!m.Success) throw new FormatException($"\"{path}\" is not a archive file.");
+            return new SaveArchive()
+            {
+                Path = path,
+                Index = int.Parse(m.Groups["index"].Value)
+            };
+        }
+
+        public static bool IsArchiveFile(string path)
+        {
+            var fileName = System.IO.Path.GetFileName(path);
+            return _archiveFileNameRegex.IsMatch(fileName);
+        }
+
+        public static int GetArchiveFileIndex(string path)
+            => GetArchiveFile(path).Index;
+
+        /// <summary>
+        /// 將 存檔備份 依照順序 重新由 index=0 開始重新命名
+        /// </summary>
+        public static IEnumerable<SaveArchive> RenameArchives(string folder, int dateId)
+        {
+            return RenameArchives(folder, dateId, GetArchives(folder, dateId).ToArray());
+        }
+
+        /// <summary>
+        /// 將 存檔備份 依照順序 重新由 index=0 開始重新命名
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <param name="dateId"></param>
+        /// <param name="archives">目前的存檔備份</param>
+        /// <returns>傳回新的存檔備份(由舊到新)</returns>
+        public static IEnumerable<SaveArchive> RenameArchives(string folder, int dateId, SaveArchive[] archives)
+        {
+            for (int i = 0; i < archives.Length; i++)
+            {
+                var newPath = GetPath(folder, dateId, i);
+                var oriArchive = archives[i];
+                if (!string.Equals(oriArchive.Path, newPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        File.Move(oriArchive.Path, newPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Main.Logger.Error($"{ex.Message}\n{ex.StackTrace}\n{ex.Source}");
+                    }
+                }
+                yield return new SaveArchive()
+                {
+                    Index = i,
+                    Path = newPath,
+                };
+            }
+        }
+    }
+
     public static class LoadFile
     {
         public static bool OnLoad { get; internal set; }
@@ -341,6 +436,21 @@ namespace Sth4nothing.SLManager
         public static ConcurrentDictionary<string, SaveData> SavedInfos;
 
         public const string Format = "yyyy - MM - dd   [ HH : mm ]";
+
+        public static void ReloadFileList()
+        {
+            SavedFiles = new List<string>();
+
+            if (File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.twV0"))
+                || File.Exists(Path.Combine(SaveManager.SavePath, "TW_Save_Date_0.tw")))
+                SavedFiles.Add(SaveManager.SavePath);
+
+            var archives = SaveArchive.GetArchives(SaveManager.BackPath, SaveManager.DateId).Reverse();
+            if (Main.settings.maxBackupToLoad > 0)
+                archives = archives.Take(Main.settings.maxBackupToLoad);
+
+            SavedFiles.AddRange(archives.Select(a => a.Path));
+        }
 
         /// <summary>
         /// 解析压缩存档列表
@@ -618,8 +728,6 @@ namespace Sth4nothing.SLManager
             //}
         }
 
-        private static readonly Regex reg = new Regex(@"Date_\d+\.save\.(.{3})\.zip");
-
         /// <summary>
         /// 执行存档后备份
         /// </summary>
@@ -634,57 +742,41 @@ namespace Sth4nothing.SLManager
 
             Main.Logger.Log("开始备份存档");
 
-            int backupIndex;
-
             // 获取所有当前存档的备份
-            var backupFiles = Directory.GetFiles(
-                BackPath,
-                $"Date_{DateId}.save.???.zip",
-                SearchOption.TopDirectoryOnly);
-            Main.Logger.Log("当前存档数:" + backupFiles.Length);
+            var archives = SaveArchive.GetArchives(BackPath, DateId).ToArray();
+            int backupCount = archives.Length;
+            Main.Logger.Log("当前存档数:" + backupCount);
 
-            var maxIndex = backupFiles.Length == 0
-                ? -1
-                : backupFiles.Select(s => int.TryParse(reg.Match(s).Groups[1].Value, out var num) ? num : -1).Max();
-
-            if (maxIndex < Main.settings.maxBackupsToKeep)
+            int usedIndex = archives.LastOrDefault()?.Index ?? -1;
+            // 若存檔中已到達或超過最大數值, 重新命名所有存檔備份
+            if (usedIndex >= SaveArchive.MaxArchiveIndex)
             {
-                // 若数量未超上限，则直接累加计数
-                backupIndex = maxIndex + 1;
+                Main.Logger.Log($"已使用存檔index={usedIndex}, 重新命名所有存檔備份");
+                archives = SaveArchive.RenameArchives(BackPath, DateId, archives).ToArray();
+                usedIndex = archives.LastOrDefault()?.Index ?? -1;
             }
-            else
+            var backupIndex = usedIndex + 1;
+            // 保存备份
+            var targetFile = SaveArchive.GetPath(BackPath, DateId, backupIndex);
+            Main.Logger.Log("备份路径:" + targetFile);
+            BackupFolderToFile(dataId, savingSubId, targetFile);
+            Main.isBackuping = false;
+
+            backupCount++;
+            int deleteIndex = 0;
+            // 若数量超过上限，将最早的一个删掉
+            while(backupCount > Main.settings.maxBackupsToKeep)
             {
-                // 若数量超过上限，将最早的一个删掉并且平移所有备份
-                Array.Sort(backupFiles, StringComparer.InvariantCulture);
                 try
                 {
-                    File.Delete(backupFiles[0]);
+                    File.Delete(archives[deleteIndex++].Path);
                 }
                 catch (Exception ex)
                 {
                     Main.Logger.Error($"{ex.Message}\n{ex.StackTrace}\n{ex.Source}");
                 }
-
-                for (int i = 1; i < backupFiles.Length; i++)
-                {
-                    try
-                    {
-                        File.Move(backupFiles[i], backupFiles[i - 1]);
-                    }
-                    catch (Exception ex)
-                    {
-                        Main.Logger.Error($"{ex.Message}\n{ex.StackTrace}\n{ex.Source}");
-                    }
-                }
-
-                backupIndex = Main.settings.maxBackupsToKeep - 1;
+                backupCount--;
             }
-
-            // 保存备份
-            var targetFile = Path.Combine(BackPath, $"Date_{DateId}.save.{backupIndex:D3}.zip");
-            Main.Logger.Log("备份路径:" + targetFile);
-            BackupFolderToFile(dataId, savingSubId, targetFile);
-            Main.isBackuping = false;
             return targetFile;
         }
 
