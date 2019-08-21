@@ -30,12 +30,13 @@ namespace SmartWear
                 items = items.Where(ItemHelper.GetEquipTypeFilter(EquipType.Weapon));
                 items = items.Where(ItemHelper.GetHasDataFilter(ItemDateKey.MianQi));
                 items = items.OrderByDescending(ItemHelper.GetOrderByData(ItemDateKey.MianQi));
-#if (DEBUG)
-                foreach (var item in items.Take(3))
+                if (Main.settings.EnabledLog)
                 {
-                    Main.Logger.Log($"Equip: {item}, 內息: { df.GetItemDateValue(item, ItemDateKey.MianQi)}");
+                    foreach (var item in items.Take(3))
+                    {
+                        Main.Logger.Log($"裝備: {item} ({df.GetItemDate(item, 0, false)}), 內息: { df.GetItemDateValue(item, ItemDateKey.MianQi)}");
+                    }
                 }
-#endif
                 StateManager.EquipWeapons(items.Take(3));
             }
 

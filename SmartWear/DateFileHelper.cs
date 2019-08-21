@@ -150,17 +150,29 @@ namespace SmartWear
 
     public enum EquipSlot
     {
+        [Description("兵器1")]
         Weapon1 = 0,
+        [Description("兵器2")]
         Weapon2 = 1,
+        [Description("兵器3")]
         Weapon3 = 2,
+        [Description("頭部")]
         Headwear = 3,
+        [Description("衣著")]
         Clothing = 4,
+        [Description("護體")]
         BodyArmor = 5,
+        [Description("足部")]
         Shoes = 6,
+        [Description("寶物1")]
         Accessory1 = 7,
+        [Description("寶物2")]
         Accessory2 = 8,
+        [Description("寶物3")]
         Accessory3 = 9,
+        [Description("代步")]
         Travel = 10,
+        [Description("促织")]
         Ququ = 11,
     }
 
@@ -174,17 +186,29 @@ namespace SmartWear
 
     public enum ActorsDateKey
     {
+        [Description("兵器1")]
         Weapon1 = 301,
+        [Description("兵器2")]
         Weapon2 = 302,
+        [Description("兵器3")]
         Weapon3 = 303,
+        [Description("頭部")]
         Headwear = 304,
+        [Description("衣著")]
         Clothing = 305,
+        [Description("護體")]
         BodyArmor = 306,
+        [Description("足部")]
         Shoes = 307,
+        [Description("寶物1")]
         Accessory1 = 308,
+        [Description("寶物2")]
         Accessory2 = 309,
+        [Description("寶物3")]
         Accessory3 = 310,
+        [Description("代步")]
         Travel = 311,
+        [Description("促织")]
         Ququ = 312,
     }
 

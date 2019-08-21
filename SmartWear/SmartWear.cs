@@ -73,6 +73,23 @@ namespace SmartWear
             GUILayoutHelper.EquipGroupSelection("進入<color=#80FF80>較藝</color>準備畫面時，使用指定裝備", ref settings.StartSkillBattleEquipGroupIndex);
             GUILayout.Label("<color=#FF8080>※較藝後不會換回※</color>");
             GUILayout.EndVertical();
+
+            GUILayout.BeginVertical("Box");
+            GUILayout.BeginHorizontal();
+            settings.EnabledLog = GUILayout.Toggle(settings.EnabledLog, "輸出偵錯資訊，可於log內檢視切換歷程");
+            if (GUILayout.Button("開啟UnityModManager.log"))
+            {
+                string logFilePath = System.IO.Path.GetFullPath(System.IO.Path.Combine(modEntry.Path, @"../UnityModManager.log"));
+                if (logFilePath != null && System.IO.File.Exists(logFilePath))
+                {
+                    var p = new System.Diagnostics.Process();
+                    p.StartInfo.FileName = "explorer.exe";
+                    p.StartInfo.Arguments = $"\"{logFilePath}\"";
+                    p.Start();
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
         }
 
         private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
@@ -95,6 +112,7 @@ namespace SmartWear
         public int StartBattleGongFaIndex = -1;
         public int StartBattleEquipGroupIndex = -1;
         public int StartSkillBattleEquipGroupIndex = -1;
+        public bool EnabledLog = true;
 
         //public int GongFaIndexAtHomeSystem = -1;
 
@@ -144,12 +162,13 @@ namespace SmartWear
         static public void EquipAccessories(ItemData[] accessories)
         {
             Equip(accessories.Select(a => a.Id).ToArray(), EquipSlot.Accessory1);
-#if (DEBUG)
-            foreach (var item in accessories.Take(3))
+            if (Main.settings.EnabledLog)
             {
-                Main.Logger.Log($"Equip: {item.Id}, {((ItemDateKey)item.AptitudeType).GetDescription()}: {item.AptitudeUp}, 悟性: {item.ComprehensionUp}");
+                foreach (var item in accessories.Take(3))
+                {
+                    Main.Logger.Log($"裝備: {item.Id} ({DateFile.instance.GetItemDate(item.Id, 0, false)}), {((ItemDateKey)item.AptitudeType).GetDescription()}: {item.AptitudeUp}, 悟性: {item.ComprehensionUp}");
+                }
             }
-#endif
         }
 
         static public void UseGongFa(int gongFaIndex)
@@ -157,9 +176,10 @@ namespace SmartWear
             if (gongFaIndex < 0) return;
             var currentGongFaIndex = DateFile.instance.mianActorEquipGongFaIndex;
             if (currentGongFaIndex == gongFaIndex) return;
-//#if (DEBUG)
-//            Main.Logger.Log($"UseGongFa:{gongFaIndex}");
-//#endif
+            if (Main.settings.EnabledLog)
+            {
+                Main.Logger.Log($"切換功法: {gongFaIndex}");
+            }
             _originGongFaIndex = currentGongFaIndex;
             ActorMenu.instance.ChangeEquipGongFa(gongFaIndex);
         }
@@ -177,9 +197,10 @@ namespace SmartWear
             foreach (var kvp in _originEquitments)
             {
                 actorDate[kvp.Key] = kvp.Value;
-//#if (DEBUG)
-//                Main.Logger.Log($"Restore Equip: Id:{kvp.Value}@{kvp.Key}");
-//#endif
+                if (Main.settings.EnabledLog)
+                {
+                    Main.Logger.Log($"換回裝備:{kvp.Value} ({df.GetItemDate(int.Parse(kvp.Value), 0, false)})@{((ActorsDateKey)kvp.Key).GetDescription()}");
+                }
             }
             _originEquitments.Clear();
         }
@@ -191,10 +212,15 @@ namespace SmartWear
                 int current_GongFaIndex = DateFile.instance.mianActorEquipGongFaIndex;
                 if (current_GongFaIndex != _originGongFaIndex)
                 {
+                    if (Main.settings.EnabledLog)
+                    {
+                        Main.Logger.Log($"換回功法: {_originGongFaIndex}");
+                    }
                     ActorMenu.instance.ChangeEquipGongFa(_originGongFaIndex);
                 }
                 _originGongFaIndex = -1;
             }
+            
         }
 
         public static void EquipWeapons(IEnumerable<int> items)
