@@ -134,8 +134,8 @@ namespace BaseResourceMod
         /// <summary>
         /// 每次载入新场景时，清理外部贴图缓存
         /// </summary>
-        [HarmonyPatch(typeof(Loading), "LoadScene")]
-        private static class Loading_LoadingScene_Patch
+        [HarmonyPatch(typeof(ui_Loading), "Show")]
+        private static class Loading_Show_Patch
         {
             private static bool Prefix()
             {

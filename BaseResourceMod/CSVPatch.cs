@@ -143,7 +143,7 @@ namespace BaseResourceMod
         /// <summary>
         ///  读取基础数据完毕后，读取自定义数据
         /// </summary>
-        [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
+        [HarmonyPatch(typeof(DateFile), "LoadGameConfigs")]
         private static class Loading_LoadBaseDate_Patch
         {
             /// <summary>
