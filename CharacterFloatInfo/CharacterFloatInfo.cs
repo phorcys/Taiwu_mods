@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameData;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.TextCore;
+using UnityEngine.TextCore.LowLevel;
 using UnityModManagerNet;
 
 namespace CharacterFloatInfo
@@ -214,10 +217,10 @@ namespace CharacterFloatInfo
     }
 
     // 工作间正在工作的村民
-    [HarmonyPatch(typeof(HomeSystem), "ShowWorkingActor")]
-    public static class HomeSystem_ShowWorkingActor_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "ShowWorkingActor")]
+    public static class BuildingWindow_ShowWorkingActor_Patch
     {
-        static void Postfix(HomeSystem __instance, bool show, ActorFace ___mianActorFace)
+        static void Postfix(BuildingWindow __instance, bool show, ActorFace ___mianActorFace)
         {
             if (!Main.enabled) return;
             if (show)
@@ -234,7 +237,7 @@ namespace CharacterFloatInfo
     }
 
     // 對話時,彈出的NPC選擇窗
-    [HarmonyPatch(typeof(MassageWindow), "GetActor")]
+    [HarmonyPatch(typeof(ui_MessageWindow), "GetActor")]
     public static class MassageWindow_GetActor_Patch
     {
         static void Postfix(Transform ___actorHolder)
@@ -278,6 +281,17 @@ namespace CharacterFloatInfo
         }
     }
 
+    [HarmonyPatch(typeof(ActorMenu))]
+    [HarmonyPatch("Awake")]
+    public static class ActorMenu_Awake_Patch
+    {
+        public static void Postfix(ref ActorMenu __instance)
+        {
+            Main.Logger.Error("ActorMenu_InstanceGet_Patch v");
+            WindowManage_WindowSwitch_Patch.amInst = __instance;
+        }
+    }
+
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
@@ -286,6 +300,7 @@ namespace CharacterFloatInfo
         public static bool isDead;
         public static bool smallerWindow;
         public static WindowType windowType;
+        public static ActorMenu amInst;
 
         public enum WindowType
         {
@@ -324,7 +339,7 @@ namespace CharacterFloatInfo
 
             if (id.Equals(0))
             {
-                var count = tips.transform.GetChildCount();
+                var count = tips.transform.childCount;
                 for (int i = 0; i < count; i++)
                 {
                     var item = tips.transform.GetChild(i);
@@ -340,12 +355,11 @@ namespace CharacterFloatInfo
 
         public static void Postfix(bool on, GameObject tips, ref Text ___itemMoneyText, ref Text ___itemLevelText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips, ref int ___tipsW, ref int ___tipsH)
         {
-            if (!on || !Main.enabled || ActorMenu.instance == null || tips == null) return;
-
+            if (!on || !Main.enabled || tips == null || amInst == null) return;
             bool needShow = false;
             string[] array = tips.name.Split(',');
             int id = getId(tips);
-
+            
             //大地圖下面的太吾自己的頭像
             if (array[0] == "PlayerFaceButton")
             {
@@ -370,21 +384,21 @@ namespace CharacterFloatInfo
             }
             else
             //人物訊息內的關係頁及輪迴前世
-            if (tips.transform.parent.name == "ActorListHolder" || (ActorMenu.instance.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
+            if (tips.transform.parent.name == "ActorListHolder" || (amInst.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
             {
                 needShow = Main.settings.enableRI;
                 windowType = WindowType.Relationship;
             }
             else
             //太吾村內工作人員選單
-            if (HomeSystem.instance.buildingWindow.gameObject.activeSelf && tips.transform.parent.name == "ActorHolder")
+            if (BuildingWindow.instance.buildingWindow.gameObject.activeSelf && tips.transform.parent.name == "ActorHolder")
             {
                 needShow = Main.settings.enableBW;
                 windowType = WindowType.BuildingWindow;
             }
             else
             //对话界面的人物选择
-            if (MassageWindow.instance.actorWindow.activeInHierarchy && tips.transform.parent.name == "ActorHolder")
+            if (ui_MessageWindow.Instance.actorWindow.activeInHierarchy && tips.transform.parent.name == "ActorHolder")
             {
                 needShow = Main.settings.enableMAC;
                 windowType = WindowType.DialogChooseActors;
@@ -392,7 +406,7 @@ namespace CharacterFloatInfo
             //对话窗口的人物头像
             else if (array[0] == "FaceHolder")
             {
-                id = MassageWindow.instance.eventMianActorId;
+                id = ui_MessageWindow.Instance.eventMianActorId;
                 needShow = Main.settings.enableDI;
                 windowType = WindowType.Dialog;
             }
@@ -424,7 +438,7 @@ namespace CharacterFloatInfo
                 windowType = WindowType.WorkerNewVillager;
             }
             else
-            if (array[0] == "NameIcon" && !ActorMenu.instance.actorMenu.activeSelf)
+            if (array[0] == "NameIcon" && !amInst.actorMenu.activeSelf)
             {
                 int partId = HomeSystem.instance.homeMapPartId;
                 int placeId = HomeSystem.instance.homeMapPlaceId;
@@ -442,7 +456,6 @@ namespace CharacterFloatInfo
 
 
             }
-
 
             isDead = int.Parse(DateFile.instance.GetActorDate(id, 26, false)) > 0;
             if (isDead && !Main.settings.deadActor)
@@ -616,10 +629,10 @@ namespace CharacterFloatInfo
             }
             else if (DateFile.instance.actorInjuryDate.ContainsKey(id))
             {
-                int Hp = ActorMenu.instance.Hp(id, false);
-                int maxHp = ActorMenu.instance.MaxHp(id, 100);
-                int Sp = ActorMenu.instance.Sp(id, false);
-                int maxSp = ActorMenu.instance.MaxSp(id, 100);
+                int Hp = DateFile.instance.Hp(id, false);
+                int maxHp = DateFile.instance.MaxHp(id, 100);
+                int Sp = DateFile.instance.Sp(id, false);
+                int maxSp = DateFile.instance.MaxSp(id, 100);
                 int dmg = Math.Max(Hp * 100 / maxHp, Sp * 100 / maxSp);
                 int dmgtyp = 0;
                 if (dmg >= 20) dmgtyp = 1;
@@ -706,12 +719,12 @@ namespace CharacterFloatInfo
 
                 text += string.Format("\t威望:<color=white>{0}</color>", int.Parse(DateFile.instance.GetActorDate(id, 407, false)));
 
-                text += string.Format("\t银钱:<color=white>{0}</color>", ActorMenu.instance.ActorResource(id)[5]); 
+                text += string.Format("\t银钱:<color=white>{0}</color>", DateFile.instance.ActorResource(id)[5]); 
             }
             else if (windowType == WindowType.BuildingWindow || windowType == WindowType.WorkingActor)
             {
                 if (HomeSystem.instance == null) return null;
-                if (!HomeSystem.instance.buildingWindowOpend) return null;
+                if (!BuildingWindow.instance.buildingWindowOpend) return null;
                 int partId, placeId, buildingIndex;
                 var date = DateFile.instance.actorsWorkingDate;
 
@@ -752,11 +765,11 @@ namespace CharacterFloatInfo
             else if (windowType == WindowType.DialogChooseActors)
             {
                 List<int> martialQuests = new List<int> { 9301, 9303, 9304, 9305, 9307, 9308, 9310, 9312, 9315, 9366, 9321 };
-                if (!martialQuests.Contains(MassageWindow.instance.mianEventDate[2])) return text; // 只在門派掌門任務中顯示以下內容.
+                if (!martialQuests.Contains(MessageEventManager.Instance.MainEventData[2])) return text; // 只在門派掌門任務中顯示以下內容.
 
-                int gangId = int.Parse(DateFile.instance.GetActorDate(MassageWindow.instance.eventMianActorId, 19, false));
+                int gangId = int.Parse(DateFile.instance.GetActorDate(ui_MessageWindow.Instance.eventMianActorId, 19, false));
                 text += string.Format("地区恩义:<color=white>{0}%</color>", DateFile.instance.GetBasePartValue(int.Parse(DateFile.instance.GetGangDate(gangId, 11)), int.Parse(DateFile.instance.GetGangDate(gangId, 3))) / 10);
-                switch (MassageWindow.instance.mianEventDate[2])
+                switch (MessageEventManager.Instance.MainEventData[2])
                 {
                     case 9301: // 念经忏悔
                         int num = Math.Min(0, GetActorFame(id));
@@ -764,17 +777,17 @@ namespace CharacterFloatInfo
                         break;
                     case 9321: // 治疗伤病
                     case 9303: // 起死回生
-                        int Hp = ActorMenu.instance.Hp(id, false);
-                        int maxHp = ActorMenu.instance.MaxHp(id, 100);
-                        int Sp = ActorMenu.instance.Sp(id, false);
-                        int maxSp = ActorMenu.instance.MaxSp(id, 100);
+                        int Hp = DateFile.instance.Hp(id, false);
+                        int maxHp = DateFile.instance.MaxHp(id, 100);
+                        int Sp = DateFile.instance.Sp(id, false);
+                        int maxSp = DateFile.instance.MaxSp(id, 100);
                         text += string.Format("\t\t外傷:<color={4}>{0}/{1}</color>\t\t內傷:<color={5}>{2}/{3}</color>", Hp, maxHp, Sp, maxSp, Hp == 0 ? "white" : "red", Sp == 0 ? "white" : "red");
                         break;
                     case 9307: // 王禅典籍
                         text += string.Format("\t\t处世立场:{0}", GetActorFame(id));
                         break;
                     case 9310: // 秘药延寿
-                        int year = ActorMenu.instance.Health(id);
+                        int year = DateFile.instance.Health(id);
                         text += string.Format("\t\t寿命余下<color={1}>{0}</color>年", year, year > 1 ? "white" : "red");
                         break;
                     case 9366: // 驱除毒素
@@ -835,30 +848,30 @@ namespace CharacterFloatInfo
                 foreach (int featureID in DateFile.instance.GetActorFeature(id))
                     if (DateFile.instance.actorFeaturesDate[featureID][95] != "1" || Main.settings.showIV) //判斷是否顯示隱藏的特性
                     {
-                        Transform actorFeature = UnityEngine.Object.Instantiate(ActorMenu.instance.actorFeature, Vector3.zero, Quaternion.identity).transform;
+                        Transform actorFeature = UnityEngine.Object.Instantiate(amInst.actorFeature, Vector3.zero, Quaternion.identity).transform;
                         actorFeature.Find("ActorFeatureNameText").GetComponent<Text>().text = DateFile.instance.actorFeaturesDate[featureID][0];
                         Transform actorFeatureStarHolder = actorFeature.Find("ActorFeatureStarHolder");
 
                         string att = DateFile.instance.actorFeaturesDate[featureID][1];
                         if (att.IndexOf('|') > -1 || att != "0") foreach (string j in att.Split('|'))
                             {
-                                UnityEngine.Object.Instantiate(ActorMenu.instance.actorAttackFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                                UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorAttackFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
                             }
                         string def = DateFile.instance.actorFeaturesDate[featureID][2];
                         if (def.IndexOf('|') > -1 || def != "0") foreach (string j in def.Split('|'))
                             {
-                                UnityEngine.Object.Instantiate(ActorMenu.instance.actorDefFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                                UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorDefFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
                             }
                         string spd = DateFile.instance.actorFeaturesDate[featureID][3];
                         if (spd.IndexOf('|') > -1 || spd != "0") foreach (string j in spd.Split('|'))
                             {
-                                UnityEngine.Object.Instantiate(ActorMenu.instance.actorPlanFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                                UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorPlanFeatureStarIcons[int.Parse(j) > 0 ? int.Parse(j) - 1 : 3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
                             }
                         if (att == "0" && def == "0" && spd == "0")
                         {
-                            UnityEngine.Object.Instantiate(ActorMenu.instance.actorAttackFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
-                            UnityEngine.Object.Instantiate(ActorMenu.instance.actorDefFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
-                            UnityEngine.Object.Instantiate(ActorMenu.instance.actorPlanFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorAttackFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorDefFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
+                            UnityEngine.Object.Instantiate(UsefulPrefabs.instance.actorPlanFeatureStarIcons[3], Vector3.zero, Quaternion.identity).transform.SetParent(actorFeatureStarHolder, false);
                         }
 
                         actorFeature.SetParent(GetActorFeatureHolder(), false);
@@ -887,7 +900,7 @@ namespace CharacterFloatInfo
                     // 当前好感等级
                     int b = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, false, false) / 6000;
                     // 当前可传授最高等级
-                    int maxLevel = Mathf.Min(MassageWindow.instance.GetSkillValue(actorId, typ), 8);
+                    int maxLevel = Mathf.Min(MessageEventManager.Instance.GetSkillValue(actorId, typ), 8);
                     // 当前可传授等级
                     int level = Mathf.Clamp(Mathf.Min(maxLevel - 1, b), 0, 8);
                     string[] marks = { "❾", "❽", "❼", "❻", "❺", "❹", "❸", "❷", "❶" };
@@ -1015,7 +1028,7 @@ namespace CharacterFloatInfo
         public static string SetInfoMessage5(int id) => Main.settings.lifeMessage && !smallerWindow ? "\n" + GetLifeMessage(id, 3) : "";
 
         //心情
-        public static string GetMood(int id) => ActorMenu.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
+        public static string GetMood(int id) => DateFile.instance.Color2(DateFile.instance.GetActorDate(id, 4, false));
 
         //印象
         public static string GetLifeFace(int actorId)
@@ -1051,7 +1064,7 @@ namespace CharacterFloatInfo
         }
 
         //名誉
-        public static string GetFame(int id) => ActorMenu.instance.Color7(GetActorFame(id));
+        public static string GetFame(int id) => DateFile.instance.Color7(GetActorFame(id));
         public static int GetActorFame(int id) => DateFile.instance.GetActorFame(id);
 
         //立场
@@ -1086,8 +1099,8 @@ namespace CharacterFloatInfo
         //健康值
         public static string GetHealth(int id)
         {
-            int health = ActorMenu.instance.Health(id);
-            int maxhealth = ActorMenu.instance.MaxHealth(id);
+            int health = DateFile.instance.Health(id);
+            int maxhealth = DateFile.instance.MaxHealth(id);
             int totalAge = GetAge(id) + maxhealth;
             int ageReduced = health - maxhealth;
             int ageGrade = Mathf.Clamp((int)Math.Floor((decimal)totalAge / 10), 0, 8);
@@ -1273,7 +1286,7 @@ namespace CharacterFloatInfo
             List<string> bestItems = new List<string> { };
             int bestGrade = 0;
 
-            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(id, 0, false).Keys);
+            List<int> list = new List<int>(DateFile.instance.GetActorItems(id, 0, false).Keys);
             foreach (int itemID in list)
             {
                 string itemName = GetItemColorName(itemID);
@@ -1319,7 +1332,7 @@ namespace CharacterFloatInfo
 
             int currentXp = buildingData[11];
             int BuildingMaxXp = int.Parse(buildingSetting[91]);
-            int efficient = HomeSystem.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
+            int efficient = DateFile.instance.GetBuildingLevelPct(partId, placeId, buildingIndex);
             text += buildingType == 1003 ? "此人正在厢房摸鱼……" : string.Format("{0:0.#}% (+{1:0.#}%{2})", (float)currentXp / BuildingMaxXp * 100, (float)efficient * 100 / BuildingMaxXp, DateFile.instance.massageDate[7006][1]);
 
             return text;
@@ -1434,29 +1447,29 @@ namespace CharacterFloatInfo
                     DateFile.instance.GetActorName(id, false, true),
                     DateFile.instance.massageDate[8010][1].Split('|')[2]
                 }));
-                if (DateFile.instance.actorLifeMassage.ContainsKey(id))
+                LifeRecords.LifeRecord[] allRecords = LifeRecords.GetAllRecords(id);
+                if (allRecords != null)
                 {
-                    count = DateFile.instance.actorLifeMassage[id].Count;
+                    count = DateFile.instance.actorLife[id].Count;
                     index = count >= shownum ? count - shownum : 0;
-                    for (int i = index; i < count; i++)
+                    foreach(LifeRecords.LifeRecord record in allRecords)
                     {
-                        int[] array = DateFile.instance.actorLifeMassage[id][i];
-                        int key2 = array[0];
+                        int key2 = record.messageId;
                         string[] array2 = DateFile.instance.actorMassageDate[key2][2].Split('|');
                         string[] array3 = DateFile.instance.actorMassageDate[key2][99].Split('|');
                         List<string> list = new List<string>
                         {
-                            DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString(), false) + DateFile.instance.massageDate[16][3],
-                            DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0], false)
+                            DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, record.year.ToString(), false) + DateFile.instance.massageDate[16][3],
+                            DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[record.solarTerm][0], false)
                         };
 
-                        list.Add(DateFile.instance.SetColoer(10004, DateFile.instance.GetNewMapDate(array[3], array[4], 98) + DateFile.instance.GetNewMapDate(array[3], array[4], 0), false));
+                        list.Add(DateFile.instance.SetColoer(10004, DateFile.instance.GetNewMapDate(record.mapId, record.tileId, 98) + DateFile.instance.GetNewMapDate(record.mapId, record.tileId, 0), false));
                         for (int j = 0; j < array3.Length; j++)
                         {
                             list.Add(array3[j]);
                         }
 
-                        for (int k = 5; k < array.Length; k++)
+                        /*for (int k = 5; k < array.Length; k++)
                         {
                             int num2 = array[k];
                             switch (int.Parse(array2[k - 5]))
@@ -1480,7 +1493,7 @@ namespace CharacterFloatInfo
                                     list.Add(DateFile.instance.SetColoer(20011 - Mathf.Abs(int.Parse(DateFile.instance.GetActorDate(id, 20, false))), DateFile.instance.presetGangGroupDateValue[Mathf.Abs(num2)][(num2 <= 0) ? (1001 + int.Parse(DateFile.instance.GetActorDate(id, 14, false))) : 1001], false));
                                     break;
                             }
-                        }
+                        }*/
                         actorMassage.Add(string.Format("{0}{1}:\u00A0" + DateFile.instance.actorMassageDate[key2][1], list.ToArray()));
                     }
                 }
@@ -1513,7 +1526,7 @@ namespace CharacterFloatInfo
         {
             if (!Main.settings.showResources) return "";
 
-            int[] actorResources = ActorMenu.instance.GetActorResources(id);  //401~407
+            int[] actorResources = DateFile.instance.GetActorResources(id);  //401~407
             if (DateFile.instance.deadActors.Contains(id) || actorResources.Sum() == 0 || smallerWindow)
             {
                 ClearResourceHolder();
@@ -1540,10 +1553,10 @@ namespace CharacterFloatInfo
         public static string GetItemWeight(int key)
         {
             string text = "";
-            int maxItemSize = ActorMenu.instance.GetMaxItemSize(key);
-            int useItemSize = ActorMenu.instance.GetUseItemSize(key);
+            int maxItemSize = DateFile.instance.GetMaxItemSize(key);
+            int useItemSize = DateFile.instance.GetUseItemSize(key);
             text += string.Format("{3}{0}{1} / {2}</color>", new object[] {
-                ActorMenu.instance.Color8(useItemSize, maxItemSize),
+                DateFile.instance.Color8(useItemSize, maxItemSize),
                 ((float)useItemSize / 100f).ToString("f1"),
                 ((float)maxItemSize / 100f).ToString("f1"),
                 DateFile.instance.massageDate[807][2].Split('|')[0]
@@ -1567,7 +1580,7 @@ namespace CharacterFloatInfo
             Transform actorFeatureHolder = WindowManage.instance.informationMassage.transform.Find("ActorFeatureHolder");
             if (actorFeatureHolder == null)
             {
-                actorFeatureHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.actorFeatureHolder, new Vector3(-20f, -60f, 1), Quaternion.identity);
+                actorFeatureHolder = UnityEngine.Object.Instantiate(amInst.actorFeatureHolder, new Vector3(-20f, -60f, 1), Quaternion.identity);
                 actorFeatureHolder.name = "ActorFeatureHolder";
                 actorFeatureHolder.localScale = new Vector3(.73f, .73f, 1);
                 actorFeatureHolder.GetComponent<RectTransform>().sizeDelta = new Vector2(800f, 0);
@@ -1595,7 +1608,7 @@ namespace CharacterFloatInfo
             Transform resourceHolder = WindowManage.instance.informationMassage.transform.Find("ResourceHolder");
             if (resourceHolder == null)
             {
-                resourceHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.teamResourcesText[0].transform.parent, new Vector3(0, -y, 1), Quaternion.identity);
+                resourceHolder = UnityEngine.Object.Instantiate(amInst.teamResourcesText[0].transform.parent, new Vector3(0, -y, 1), Quaternion.identity);
                 resourceHolder.name = "ResourceHolder";
                 resourceHolder.SetParent(WindowManage.instance.informationMassage.GetComponent<RectTransform>(), false);
             }
@@ -1609,7 +1622,7 @@ namespace CharacterFloatInfo
             Transform favourHolder = WindowManage.instance.itemMoneyText.transform.Find("FavourHolder");
             if (favourHolder == null)
             {
-                favourHolder = UnityEngine.Object.Instantiate(MassageWindow.instance.actorFavor.transform);
+                favourHolder = UnityEngine.Object.Instantiate(ui_MessageWindow.Instance.actorFavor.transform);
                 UnityEngine.Object.Destroy(favourHolder.Find("PartGoodIcon").gameObject);
                 favourHolder.name = "FavourHolder";
                 favourHolder.Rotate(new Vector3(0, 180f, 0));
