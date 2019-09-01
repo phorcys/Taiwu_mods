@@ -35,12 +35,12 @@ namespace SkipEnemy
 
 
     // 攔截遭遇逃亡小怪事件
-    [HarmonyPatch(typeof(MassageWindow), "SetEventWindow")]
+    [HarmonyPatch(typeof(ui_MessageWindow), "SetEventWindow")]
     public class MassageWindow_SetEventWindow_Patch
     {
-        private static void Postfix(MassageWindow __instance, int[] eventDate)
+        private static void Postfix(ui_MessageWindow __instance, int[] eventDate)
         {
-            if(Main.Enabled && eventDate.Length == 4 && eventDate[2] == 112)
+            if (Main.Enabled && eventDate.Length == 4 && eventDate[2] == 112)
             {
 #if (DEBUG)
                 Main.Logger.Log("Skip");
