@@ -65,8 +65,9 @@ namespace Sth4nothing.SLManager
         }
     }
 
-    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
-    public static class WorldMapSystem_Start_Patch
+    // 掛在 MissionSystem.Start() 以添加按鈕
+    [HarmonyPatch(typeof(MissionSystem), "Start")]
+    public static class MissionSystem_Start_Patch
     {
         private static readonly string[] btns =
         {
@@ -94,6 +95,7 @@ namespace Sth4nothing.SLManager
         {
             if (Main.Enabled)
             {
+                Main.Logger.Log("Add buttons");
                 UI.Load();
 
                 float startX = StartX;
@@ -267,7 +269,7 @@ namespace Sth4nothing.SLManager
                     }
                 }
                 // 清除Subsystem中可能存在冲突的实例
-                SubSystems.OnUnloadGameData();
+                SubSystems.OnLeaveGame();
             }
             return true;
         }
@@ -637,11 +639,12 @@ namespace Sth4nothing.SLManager
         {
             OnLoad = true;
             // 防止UI活动生成新的SingletonObject实例
-            UIDate.instance.gameObject.SetActive(false);
+            // todo: 新版本不知道要用哪個來取代下一行
+            // UIDate.instance.gameObject.SetActive(false);
             // 来自DateFile.BackToStartMenu()方法，载入存档前清空，防止载入存档时载入奇书数据时卡档
             SingletonObject.ClearInstances();
             // 释放资源
-            SubSystems.OnUnloadGameData();
+            SubSystems.OnLeaveGame();
 
             MainMenu.instance.SetLoadIndex(dataId);
         }
@@ -963,11 +966,15 @@ namespace Sth4nothing.SLManager
                 if (Main.ForceSave)
                 {
                     Main.ForceSave = false;
-                    UIDate.instance.trunSaveText.text = "手动存档";
+                    //UIDate.instance.trunSaveText.text = "手动存档";
                 }
                 else if (Main.settings.blockAutoSave)
                 {
-                    UIDate.instance.trunSaveText.text = "由于您的MOD设置，游戏未保存";
+                    // 0.2.5.x 之後
+                    // 事件訊息的顯示由GEvent 統一派發
+                    // 跨回合事件由 ui_TurnChange.OnSaveFinish 處理
+                    // 無法簡單修改 UIDate 內的 Text
+                    // 故"未保存" 的訊息由另一個patch 處理
                     __instance.saveSaveDate = false;
                 }
 
@@ -989,6 +996,22 @@ namespace Sth4nothing.SLManager
             }
             // 存檔由原始函數處裡, 改攔截 SaveDateBackuper.DoBackup (Prefix)
             return true;
+        }
+    }
+
+    /// <summary>
+    /// 注入特別的存檔訊息
+    /// </summary>
+    [HarmonyPatch(typeof(ui_TurnChange), "OnSaveFinish")]
+    public static class ui_TurnChange_OnSaveFinish_Patch
+    {
+        private static void Postfix(object[] args, CText ___SaveText)
+        {
+            if (!Main.Enabled)
+                return;
+            if (Main.settings.blockAutoSave &&
+                (int)args[0] == 2)
+                ___SaveText.text = "由于您的MOD设置，游戏未保存";
         }
     }
 
@@ -1216,17 +1239,24 @@ namespace Sth4nothing.SLManager
 #if DEBUG
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 #endif
-            var newCache = (T)Activator.CreateInstance(typeof(T));
-            _deepCopyAction(data, newCache);
-            lock (_lock)
+            try
             {
-                _cache = newCache;
-            }
-
+                var newCache = (T)Activator.CreateInstance(typeof(T));
+                _deepCopyAction(data, newCache);
+                lock (_lock)
+                {
+                    _cache = newCache;
+                }
 #if DEBUG
-            Main.Logger.Log($"Cache<{typeof(T).Name}> clone finished: {stopwatch.ElapsedMilliseconds} ms");
+                Main.Logger.Log($"Cache<{typeof(T).Name}> clone finished: {stopwatch.ElapsedMilliseconds} ms");
 #endif
-            return newCache;
+                return newCache;
+            }
+            catch (Exception ex)
+            {
+                Main.Logger.Log($"Cache<{typeof(T).Name}> clone failed, error: \r\n{ex}");
+                return default(T);
+            }
         }
 
         public void ExpireCache()
@@ -1366,11 +1396,12 @@ namespace Sth4nothing.SLManager
 
     }
 
-    [HarmonyPatch(typeof(Loading), "LoadEnd")]
-    public class Loading_LoadEnd_Patch
+    [HarmonyPatch(typeof(LoadGame), "LoadedSavedData")]
+    public class LoadGame_LoadedSavedData_Patch
     {
-        private static void Postfix()
+        private static void Postfix(bool __result)
         {
+            if (!__result) return;
 #if DEBUG
             Main.Logger.Log($"Wait cache finish after LoadEnd");
 #endif

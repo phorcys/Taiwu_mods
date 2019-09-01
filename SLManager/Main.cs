@@ -56,6 +56,8 @@ namespace Sth4nothing.SLManager
 
     public static class Main
     {
+        const bool ENABLE_HYPER_LOAD = false;
+
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;
         public static bool isBackuping = false;
@@ -128,22 +130,23 @@ namespace Sth4nothing.SLManager
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-#if (false)
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("讀檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
-            settings.enableTurboQuickLoadAfterLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterLoad ? 1 : 0,
-                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
+            if (ENABLE_HYPER_LOAD)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("讀檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
+                settings.enableTurboQuickLoadAfterLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterLoad ? 1 : 0,
+                                             AutoSaveState, 2, GUILayout.Width(150)) == 1;
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
 
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("存檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
-            settings.enableTurboQuickLoadAfterSave = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterSave ? 1 : 0,
-                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-#endif
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("存檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
+                settings.enableTurboQuickLoadAfterSave = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterSave ? 1 : 0,
+                                             AutoSaveState, 2, GUILayout.Width(150)) == 1;
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打印log", GUILayout.Width(100)))

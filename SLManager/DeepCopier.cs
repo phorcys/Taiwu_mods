@@ -141,7 +141,8 @@ namespace DeepCopier
                         var contructor = genericDictType.GetConstructor(new Type[] { IDictionaryType, IComparerType });
                         var comparerProperty = Expression.Property(dataExpr, "Comparer");
                         var newDictExpr = Expression.New(contructor, dataExpr, comparerProperty);
-                        return newDictExpr;
+                        var nullCondExpr = getNullConditionalExpr(genericDictType, dataExpr, newDictExpr);
+                        return nullCondExpr;
                     }
                     else
                     {
@@ -166,7 +167,9 @@ namespace DeepCopier
                         Type IDictionaryType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
                         var contructor = genericDictType.GetConstructor(new Type[] { IDictionaryType });
                         var newDictExpr = Expression.New(contructor, dataExpr);
-                        return newDictExpr;
+
+                        var nullCondExpr = getNullConditionalExpr(genericDictType, dataExpr, newDictExpr);
+                        return nullCondExpr;
                     }
                     else
                     {
@@ -201,7 +204,8 @@ namespace DeepCopier
                     {
                         var contructor = genericListType.GetConstructor(new Type[] { enumerableType });
                         var newListExpr = Expression.New(contructor, dataExpr);
-                        return newListExpr;
+                        var nullCondExpr = getNullConditionalExpr(genericListType, dataExpr, newListExpr);
+                        return nullCondExpr;
                     }
                     else
                     {
@@ -214,126 +218,22 @@ namespace DeepCopier
                         var selectCloneExpr = Expression.Call(selectGenericMethod, dataExpr, valueCloneLambda);
                         var toListMethod = ExpressionHelper.GetToListGenericMethod(valueType);
                         var toListExpr = Expression.Call(toListMethod, selectCloneExpr);
-                        return toListExpr;  // source.{field}.Select(item => CloneArray(item)).ToList()
+                        var nullCondExpr = getNullConditionalExpr(genericListType, dataExpr, toListExpr);
+                        return nullCondExpr;  // source?.{field}.Select(item => CloneArray(item)).ToList()
                     }
                 }
             }
             throw new NotImplementedException($"{dataType.Name} is not implemented");
         }
 
-
-
-        //public LambdaExpression GetDeepCloneLambda(string fieldName)
-        //    => GetDeepCloneLambda(typeof(T).GetField(fieldName).FieldType);
-
-        //public LambdaExpression GetDeepCloneLambda(Type dataType)
-        //{
-
-        //    ParameterExpression dataExpr = Expression.Parameter(dataType, "source");
-        //    //if(_dict_typeDeepCloneExpressions.TryGetValue(data))
-        //    if (dataType.IsValueType)
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    else if (dataType.IsArray)
-        //    {
-        //        var valueType = dataType.GetElementType();
-        //        if (valueType.IsValueType)
-        //        {
-        //            var cloneArrayMethod = typeof(DeepCopyExpressionHelper).GetMethod("CloneArray", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-        //            var cloneArrayGenericMethod = cloneArrayMethod.MakeGenericMethod(valueType);
-        //            var cloneArrayExpr = Expression.Call(cloneArrayGenericMethod, dataExpr);
-        //            return Expression.Lambda(cloneArrayExpr, dataExpr);
-        //        }
-        //        else
-        //        {
-        //            // deepclone element
-        //        }
-        //    }
-        //    else if (dataType.IsGenericType)
-        //    {
-        //        var genericArgTypes = dataType.GetGenericArguments();
-        //        var genericTypeDef = dataType.GetGenericTypeDefinition();
-        //        if (typeof(SortedDictionary<,>) == genericTypeDef)
-        //        {
-
-        //        }
-        //        if (typeof(Dictionary<,>) == genericTypeDef)
-        //        {
-        //            Type keyType = genericArgTypes[0];
-        //            Type valueType = genericArgTypes[1];
-        //            if (!keyType.IsValueType)
-        //                throw new NotSupportedException($"Dictionary {dataType.Name} key is not a value type");
-        //            if (valueType.IsValueType)
-        //            {
-        //                // clone by new Dictionary<,>(IDictionary)
-        //                Type genericDictType = genericTypeDef.MakeGenericType(keyType, valueType);
-        //                Type IDictionaryType = typeof(IDictionary<,>).MakeGenericType(keyType, valueType);
-        //                var contructor = genericDictType.GetConstructor(new Type[] { IDictionaryType });
-        //                var newDictExpr = Expression.New(contructor, dataExpr);
-        //                return Expression.Lambda(newDictExpr, dataExpr);
-        //            }
-        //            else
-        //            {
-        //                Type kvpGenericType = DeepCopyExpressionHelper.GetKeyValuePairType(keyType, valueType);
-        //                ParameterExpression paramExpr = Expression.Parameter(kvpGenericType, "kvp");
-        //                // key
-        //                Expression keySelectExpr = Expression.Field(paramExpr, "Key");
-        //                var keySelectLambda = Expression.Lambda(keySelectExpr, paramExpr);
-        //                // value
-        //                Expression valueSelectExpr = Expression.Field(paramExpr, "Value");
-        //                var valueCloneExpr = GetDeepCloneExpression(valueType, valueSelectExpr);
-        //                var valueCloneLambda = Expression.Lambda(valueCloneExpr, paramExpr);
-        //                // ToDictionary
-        //                var toDictMethod = DeepCopyExpressionHelper.GetToDictionaryGenericMethod(kvpGenericType, keyType, valueType);
-        //                var toDictExpr = Expression.Call(toDictMethod, dataExpr, keySelectLambda, valueCloneLambda);
-        //                return Expression.Lambda(toDictExpr, dataExpr);
-        //                // var keySelectLambda = Expression.Lambda(keySelectExpr, paramExpr);
-
-
-        //                //d.ToDictionary()
-        //                // Func(KeyValuePair<TKey, TValue>, TKey)
-
-
-        //                //ParameterExpression paramExpr = Expression.Parameter(valueType, "item");
-        //                //var valueCloneExpr = GetDeepCloneExpression(valueType, paramExpr);
-        //                //var valueCloneLambda = Expression.Lambda(valueCloneExpr, paramExpr);
-
-        //                // Dictionary => IEnumerable<KeyValuePair<TKey,TValue>>
-
-
-        //                // var cloneExprOfValue = GetDeepCloneExpression(valueType);
-        //            }
-        //        }
-        //        else if (typeof(List<>) == genericTypeDef)
-        //        {
-        //            Type valueType = genericArgTypes[0];
-        //            Type genericListType = genericTypeDef.MakeGenericType(valueType);
-        //            Type enumerableType = typeof(IEnumerable<>).MakeGenericType(valueType);
-        //            if (valueType.IsValueType)
-        //            {
-        //                var contructor = genericListType.GetConstructor(new Type[] { enumerableType });
-        //                var newListExpr = Expression.New(contructor, dataExpr);
-        //                return Expression.Lambda(newListExpr, dataExpr);
-        //            }
-        //            else
-        //            {
-        //                ParameterExpression paramExpr = Expression.Parameter(valueType, "item");
-        //                var valueCloneExpr = GetDeepCloneExpression(valueType, paramExpr);
-        //                var valueCloneLambda = Expression.Lambda(valueCloneExpr, paramExpr);
-
-        //                var selectGenericMethod = DeepCopyExpressionHelper.GetSelectGenericMethod(valueType, valueType);
-        //                var selectCloneExpr = Expression.Call(selectGenericMethod, dataExpr, valueCloneLambda);
-        //                var toListMethod = DeepCopyExpressionHelper.GetToListGenericMethod(valueType);
-        //                var toListExpr = Expression.Call(toListMethod, selectCloneExpr);
-        //                return Expression.Lambda(toListExpr, dataExpr);  // source.{field}.Select(item => CloneArray(item)).ToList()
-        //            }
-        //        }
-        //    }
-        //    return null;
-        //}
-
-        // private 
+        // (testExpr != null) ? notNullExpr : null
+        private static ConditionalExpression getNullConditionalExpr(Type type, Expression testExpr, Expression notNullExpr)
+        {
+            var nullExpr = Expression.Constant(null, type);
+            var isNullExpr = Expression.Equal(testExpr, nullExpr);
+            var nullCondExpr = Expression.Condition(isNullExpr, nullExpr, notNullExpr);
+            return nullCondExpr;
+        }
     }
 
     class ExpressionHelper
