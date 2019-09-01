@@ -10,9 +10,9 @@ using UnityEngine;
 
 namespace SmartWear
 {
-    //WorldMapSystem.DoMapHealing
-    [HarmonyPatch(typeof(WorldMapSystem), "DoMapHealing")]
-    public class WorldMapSystem_DoMapHealing_Patch
+    //ChoosePlaceWindow.DoMapHealing
+    [HarmonyPatch(typeof(ChoosePlaceWindow), "DoMapHealing")]
+    public class ChoosePlaceWindow_DoMapHealing_Patch
     {
         private static void Prefix(int typ)
         {
