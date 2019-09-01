@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace SmartWear
 {
-    [HarmonyPatch(typeof(ActorMenu), "MianQiAutoChange")]
-    public class ActorMenu_MianQiAutoChange_Patch
+    // DateFile.instance.MianQiAutoChange
+    [HarmonyPatch(typeof(DateFile), "MianQiAutoChange")]
+    public class DateFile_MianQiAutoChange_Patch
     {
 
         private static void Prefix(int key)
