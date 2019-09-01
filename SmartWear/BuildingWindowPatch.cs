@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace SmartWear
 {
-    //HomeSystem.CloseStudyWindow
-    [HarmonyPatch(typeof(HomeSystem), "CloseStudyWindow")]
-    public class HomeSystem_CloseStudyWindow_Patch
+    //BuildingWindow.CloseStudyWindow
+    [HarmonyPatch(typeof(BuildingWindow), "CloseStudyWindow")]
+    public class BuildingWindow_CloseStudyWindow_Patch
     {
         private static void Prefix(HomeSystem __instance)
         {
@@ -20,7 +20,7 @@ namespace SmartWear
         }
     }
 
-    public class HomeSystem_Patch
+    public class BuildingWindow_Patch
     {
         /// <summary>
         /// 切換功法 / 裝備的共用函數
@@ -28,7 +28,7 @@ namespace SmartWear
         /// <param name="homeSystem">HomeSystem instance</param>
         /// <param name="keyValue">關鍵值, 修習=studySkillId, 突破=levelUPSkillId, 讀書=readBookId</param>
         /// <param name="aptitudeFunc">使用 keyValue 計算對應的技能種類的Function</param>
-        public static void SwitchProc(HomeSystem homeSystem, int keyValue, Func<int, int> aptitudeFunc)
+        public static void SwitchProc(BuildingWindow homeSystem, int keyValue, Func<int, int> aptitudeFunc)
         {
             if (!Main.Enabled) return;
             if (keyValue <= 0) return;
@@ -54,9 +54,9 @@ namespace SmartWear
         }
     }
 
-    //HomeSystem.UpdateReadBookWindow()
-    [HarmonyPatch(typeof(HomeSystem), "UpdateReadBookWindow")]
-    public class HomeSystem_UpdateReadBookWindow_Patch
+    //BuildingWindow.UpdateReadBookWindow()
+    [HarmonyPatch(typeof(BuildingWindow), "UpdateReadBookWindow")]
+    public class BuildingWindow_UpdateReadBookWindow_Patch
     {
         static int[] Emptys = new int[] { 0, 0, 0 };
         static bool CallByPatch = false;
@@ -67,7 +67,7 @@ namespace SmartWear
         //    Emptys = Enumerable.Repeat(new ItemData(0, ItemSource.Bag), 3).ToArray();
         //}
 
-        private static void Prefix(HomeSystem __instance)
+        private static void Prefix(BuildingWindow __instance)
         {
             if (!Main.Enabled ||
                 __instance.readBookId <= 0 ||
@@ -102,7 +102,7 @@ namespace SmartWear
 
         }
 
-        private static void Postfix(HomeSystem __instance)
+        private static void Postfix(BuildingWindow __instance)
         {
             if (!Main.Enabled ||
                 __instance.readBookId <= 0 ||
@@ -129,7 +129,7 @@ namespace SmartWear
             StateManager.RestoreEquip();
             var items = ItemHelper.GetAptitudeUpOrComprehensionUpAccessories(aptitudeType);
             if (Main.settings.AdvancedReadBookMode &&
-                HomeSystem_GetNeedInt_Patch.LastNeedInt <= 50)
+                BuildingWindow_GetNeedInt_Patch.LastNeedInt <= 50)
             {
                 // 如果開了進階閱讀模式, 閱讀難度小於等於50時, 悟性優先
                 items = from item in items
@@ -151,9 +151,9 @@ namespace SmartWear
         }
     }
 
-    // HomeSystem.GetNeedInt
-    [HarmonyPatch(typeof(HomeSystem), "GetNeedInt")]
-    public class HomeSystem_GetNeedInt_Patch
+    // BuildingWindow.GetNeedInt
+    [HarmonyPatch(typeof(BuildingWindow), "GetNeedInt")]
+    public class BuildingWindow_GetNeedInt_Patch
     {
         public static int LastNeedInt = 0;
         private static void Postfix(int __result)
@@ -163,23 +163,23 @@ namespace SmartWear
 
     }
 
-    //HomeSystem.UpdateLevelUPSkillWindow()
-    [HarmonyPatch(typeof(HomeSystem), "UpdateLevelUPSkillWindow")]
-    public class HomeSystem_UpdateLevelUPSkillWindow_Patch
+    //BuildingWindow.UpdateLevelUPSkillWindow()
+    [HarmonyPatch(typeof(BuildingWindow), "UpdateLevelUPSkillWindow")]
+    public class BuildingWindow_UpdateLevelUPSkillWindow_Patch
     {
-        private static void Prefix(HomeSystem __instance)
+        private static void Prefix(BuildingWindow __instance)
         {
-            HomeSystem_Patch.SwitchProc(__instance, __instance.levelUPSkillId, AptitudeTypeHelper.GetAptitudeTypeByGongFaId);
+            BuildingWindow_Patch.SwitchProc(__instance, __instance.levelUPSkillId, AptitudeTypeHelper.GetAptitudeTypeByGongFaId);
         }
     }
 
-    //HomeSystem.UpdateStudySkillWindow()
-    [HarmonyPatch(typeof(HomeSystem), "UpdateStudySkillWindow")]
-    public class HomeSystem_UpdateStudySkillWindow_Patch
+    //BuildingWindow.UpdateStudySkillWindow()
+    [HarmonyPatch(typeof(BuildingWindow), "UpdateStudySkillWindow")]
+    public class BuildingWindow_UpdateStudySkillWindow_Patch
     {
-        private static void Prefix(HomeSystem __instance, int ___studySkillId)
+        private static void Prefix(BuildingWindow __instance, int ___studySkillId)
         {
-            HomeSystem_Patch.SwitchProc(__instance, ___studySkillId, AptitudeTypeHelper.GetAptitudeTypeByGongFaId);
+            BuildingWindow_Patch.SwitchProc(__instance, ___studySkillId, AptitudeTypeHelper.GetAptitudeTypeByGongFaId);
         }
     }
 
