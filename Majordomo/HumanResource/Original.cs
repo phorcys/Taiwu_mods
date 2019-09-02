@@ -79,8 +79,12 @@ namespace Majordomo
         public static void UpdateAllBuildings(int partId, int placeId)
         {
             var buildings = DateFile.instance.homeBuildingsDate[partId][placeId];
-            foreach (int buildingIndex in buildings.Keys)
-                HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex);
+
+            if (HomeSystemWindow.Exists)
+            {
+                foreach (int buildingIndex in buildings.Keys)
+                    HomeSystemWindow.Instance.UpdateHomePlace(partId, placeId, buildingIndex);
+            }
         }
 
 

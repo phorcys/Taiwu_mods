@@ -138,9 +138,11 @@ namespace Majordomo
 
         private void CreatePanel()
         {
+            // 此函数的触发条件就是 BuildingWindow.instance 存在
+            var ququBox = BuildingWindow.instance.GetComponentInChildren<QuquBox>();
+
             // clone & modify panel
-            if (!QuquBox.instance.ququBoxWindow) throw new Exception("QuquBox.instance.ququBoxWindow is null");
-            var oriPanel = Common.GetChild(QuquBox.instance.ququBoxWindow, "QuquBoxHolder");
+            var oriPanel = Common.GetChild(ququBox.ququBoxWindow, "QuquBoxHolder");
             this.panel = UnityEngine.Object.Instantiate(oriPanel, this.parent.transform);
             this.panel.SetActive(true);
             this.panel.name = "MajordomoPanelCharts";
@@ -254,8 +256,8 @@ namespace Majordomo
         private GameObject CreateButton(string name, string label, UnityEngine.Events.UnityAction callback, GameObject parent)
         {
             // clone & modify button
-            if (!HomeSystem.instance.studyActor) throw new Exception("HomeSystem.instance.studyActor is null");
-            var studySkillButton = Common.GetChild(HomeSystem.instance.studyActor, "StudySkill,0");
+            // 此函数的触发条件就是 BuildingWindow.instance 存在
+            var studySkillButton = Common.GetChild(BuildingWindow.instance.studyActor, "StudySkill,0");
             if (!studySkillButton) throw new Exception("Failed to get child 'StudySkill,0' from HomeSystem.instance.studyActor");
 
             var goButton = UnityEngine.Object.Instantiate(studySkillButton, parent.transform);
