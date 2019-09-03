@@ -2,7 +2,7 @@
     "Id": "SkipEnemy",
     "DisplayName": "放過外道",
     "Author": "litfal",
-    "Version": "1.0.2",
+    "Version": "1.0.3",
     "AssemblyName": "SkipEnemy.dll",
     "EntryMethod": "SkipEnemy.Main.Load",
     "HomePage": "https://github.com/Litfal/Taiwu_mods/tree/SkipEnemy/SkipEnemy"

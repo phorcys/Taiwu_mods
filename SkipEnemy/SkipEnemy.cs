@@ -42,14 +42,17 @@ namespace SkipEnemy
         {
             if (Main.Enabled && eventDate.Length == 4 && eventDate[2] == 112)
             {
+
+                var skipBtn = __instance.GetComponentsInChildren<Button>().FirstOrDefault(btn => btn.name == "Choose,11200002");
+                if(skipBtn == null)
+                {
+                    Main.Logger.Log("Could't find the skip choose!");
+                    return;
+                }
 #if (DEBUG)
                 Main.Logger.Log("Skip");
 #endif
-                // make a choose and click
-                GameObject choose = UnityEngine.Object.Instantiate<GameObject>(__instance.massageChoose1, Vector3.zero, Quaternion.identity);
-                choose.name = "Choose,11200002";
-                choose.GetComponent<Button>().onClick.Invoke();
-                UnityEngine.Object.Destroy(choose);
+                skipBtn.onClick.Invoke();
             }
         }
     }
