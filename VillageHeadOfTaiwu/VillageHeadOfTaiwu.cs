@@ -172,8 +172,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
         GUIStyle windowStyle, collapseStyle, buttonStyle, seperatorStyle, itemStyle, seperatorStyle2;
 
-        DateFile df;
-        WorldMapSystem wms;
+        DateFile df => DateFile.instance;
+        WorldMapSystem wms => WorldMapSystem.instance;
 
         public static bool Load()
         {
@@ -217,15 +217,13 @@ namespace Sth4nothing.VillageHeadOfTaiwu
 
         public void Init()
         {
-            df = DateFile.instance;
-            wms = WorldMapSystem.instance;
             // 设置点击事件
-            var btn = GameObject.Find("ManpowerIcon,7").AddComponent<Button>();
-            btn.targetGraphic = UIDate.instance.manpowerText;
+            var manpowerText = ReflectionMethod.GetValue<ui_TopBar, CText>(ui_TopBar_Awake_Patch.TopBar, "ManpowerText");
+            var btn = manpowerText.transform.parent.parent.gameObject.AddComponent<Button>();
+            btn.targetGraphic = manpowerText;
             btn.interactable = true;
             btn.onClick.AddListener(ToggleWindow);
         }
-
         private void PrepareGUI()
         {
             windowStyle = new GUIStyle
@@ -511,7 +509,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 if (manPool >= manNeed)
                 {
                     Debug.Log($"开始在{maxPart},{maxPlace}采集{workStr[(int)workType]}");
-                    wms.SetPlaceWork(maxPart, maxPlace, (int)workType);
+                    ChoosePlaceWindow.Instance.SetPlaceWork(maxPart, maxPlace, (int)workType);
                     UpdateUiManpower();
                 }
             }
@@ -533,7 +531,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                 manpowerList[worker.part].ContainsKey(worker.place))
             {
                 Debug.Log($"移除{worker.part},{worker.place}的采集{workStr[worker.type]}({worker.resource}/{worker.manpower}人力/时节)");
-                wms.RemovePlaceWork(worker.part, worker.place);
+                ChoosePlaceWindow.Instance.RemovePlaceWork(worker.part, worker.place);
                 DateFile.instance.MarkPlace(worker.part, worker.place, false);
                 UpdateUiManpower();
             }
@@ -625,7 +623,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 time++;
             }
-            if (WorldMapSystem.instance.GetWorldId(partId) != int.Parse(df.GetGangDate(16, 11)))
+            if (df.GetWorldId(partId) != int.Parse(df.GetGangDate(16, 11)))
             {
                 time++;
             }
@@ -670,14 +668,15 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         }
     }
 
-    /// <summary>
-    /// 载入游戏时加载VillageList类
-    /// </summary>
-    [HarmonyPatch(typeof(UIDate), "Start")]
-    public class UIDate_Start_Patch
+    [HarmonyPatch(typeof(ui_TopBar), "Awake")]
+    public class ui_TopBar_Awake_Patch
     {
-        public static void Postfix()
+        public static ui_TopBar TopBar { get; private set; }
+        private static void Postfix(ui_TopBar __instance)
         {
+            Debug.Log("ui_Topbar awake!");
+            TopBar = __instance;
+
             if (VillagersList.Instance == null)
             {
                 Main.Logger.Log($"create ui: {VillagersList.Load()}");
@@ -689,8 +688,8 @@ namespace Sth4nothing.VillageHeadOfTaiwu
                     VillagersList.Instance.ToggleWindow();
             }
         }
-    }
 
+    }
     public class Settings : UnityModManager.ModSettings
     {
         [XmlIgnore]
