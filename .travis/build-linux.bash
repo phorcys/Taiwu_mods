@@ -14,7 +14,7 @@ unzip ./dlls-${DLLPACK_VERSION}.zip -d ..
 mkdir -p build ; cd build
 
 cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build .
+cmake --build --k .
 
 echo "List builded Mods:"
 ls -al Mods
