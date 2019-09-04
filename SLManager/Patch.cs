@@ -638,15 +638,13 @@ namespace Sth4nothing.SLManager
         public static void DoLoad(int dataId)
         {
             OnLoad = true;
-            // 防止UI活动生成新的SingletonObject实例
-            // todo: 新版本不知道要用哪個來取代下一行
-            // UIDate.instance.gameObject.SetActive(false);
-            // 来自DateFile.BackToStartMenu()方法，载入存档前清空，防止载入存档时载入奇书数据时卡档
+            // 用 GMPanel 的寫法
             SingletonObject.ClearInstances();
-            // 释放资源
             SubSystems.OnLeaveGame();
-
-            MainMenu.instance.SetLoadIndex(dataId);
+            WorldMapSystem.instance.ResetWorldMap();
+            UIManager.Instance.DestroyAllOldPrefabs();
+            DateFile.instance.Initialize(dataId, DateFile.instance.allMainActors[dataId] == null);
+           
         }
 
         
