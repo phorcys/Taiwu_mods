@@ -24,10 +24,10 @@ namespace Majordomo
         private const string MESSAGE_TITLE = "管家";
         private const string MESSAGE_CONTENT = "查看管家相关信息…";
 
-        // 管家按钮
-        public static GameObject goButton;
+        // 管家按钮图片
+        private static Sprite buttonSprite;
         // 按钮消息 ID
-        private static int messageId = -1;
+        public static int messageId = -1;
 
 
         /// <summary>
@@ -49,24 +49,27 @@ namespace Majordomo
             }
 
             // 载入并注册管家入口按钮
-            if (!MajordomoWindowButton.goButton)
+            var windowButtonHolder = BuildingWindow.instance.showQuquBoxButton.transform.parent;
+
+            if (buttonSprite == null)
             {
-                var windowButtonHolder = HomeSystem.instance.showQuquBoxButton.transform.parent;
-
-                MajordomoWindowButton.goButton = UnityEngine.Object.Instantiate(HomeSystem.instance.showQuquBoxButton, windowButtonHolder);
-                MajordomoWindowButton.goButton.name = $"MajordomoWindowButton,{MajordomoWindowButton.messageId}";
-
-                var image = MajordomoWindowButton.goButton.GetComponent<Image>();
                 string buttonImagePath = Path.Combine(Path.Combine(Main.resBasePath, "Texture"), $"{MajordomoWindowButton.IMAGE_NAME}.png");
-                image.sprite = ResourceLoader.CreateSpriteFromImage(buttonImagePath);
-                if (!image.sprite) throw new Exception($"Failed to create sprite: {buttonImagePath}");
-
-                var texts = MajordomoWindowButton.goButton.GetComponentsInChildren<Text>();
-                foreach (var text in texts) text.text = MajordomoWindowButton.MESSAGE_TITLE;
-
-                var button = Common.RemoveComponent<Button>(MajordomoWindowButton.goButton, recreate: true);
-                button.onClick.AddListener(() => MajordomoWindow.instance.Open());
+                buttonSprite = ResourceLoader.CreateSpriteFromImage(buttonImagePath);
+                if (buttonSprite == null) throw new Exception($"Failed to create sprite: {buttonImagePath}");
             }
+
+            var goButton = UnityEngine.Object.Instantiate(BuildingWindow.instance.showQuquBoxButton, windowButtonHolder);
+            goButton.name = $"MajordomoWindowButton,{MajordomoWindowButton.messageId}";
+
+            var image = goButton.GetComponent<Image>();
+            image.sprite = buttonSprite;
+            var texts = goButton.GetComponentsInChildren<Text>();
+            foreach (var text in texts) text.text = MajordomoWindowButton.MESSAGE_TITLE;
+
+            var button = Common.RemoveComponent<Button>(goButton, recreate: true);
+            button.onClick.AddListener(() => MajordomoWindow.instance.Open());
+
+            UnityEngine.Debug.Log("Resources of MajordomoWindowButton registered.");
         }
     }
 
@@ -74,15 +77,29 @@ namespace Majordomo
     /// <summary>
     /// Patch: 注册管家界面按钮（在其他 mod 之后注册）
     /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "Start")]
+    [HarmonyPatch(typeof(BuildingWindow), "instance", MethodType.Getter)]
     [HarmonyPriority(Priority.Last)]
-    public static class HomeSystem_Start_RegisterMajordomoWindowButton
+    public static class BuildingWindow_instance_Getter_RegisterMajordomoWindowButton
     {
-        static void Postfix()
+        static void Prefix(ref bool __state, BuildingWindow ____inst)
         {
             if (!Main.enabled) return;
 
-            MajordomoWindowButton.TryRegisterResources();
+            __state = ____inst == null;
+
+            if (__state) UnityEngine.Debug.Log($"BuildingWindow.instance: initializing...");
+        }
+
+
+        static void Postfix(bool __state)
+        {
+            if (!Main.enabled) return;
+
+            if (__state)
+            {
+                UnityEngine.Debug.Log($"BuildingWindow.instance: initialized.");
+                MajordomoWindowButton.TryRegisterResources();
+            }
         }
     }
 
@@ -90,22 +107,25 @@ namespace Majordomo
     /// <summary>
     /// Patch: 显示管家界面按钮
     /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "GetBuildingMassage")]
-    public static class HomeSystem_GetBuildingMassage_ShowMajordomoWindowButton
+    [HarmonyPatch(typeof(BuildingWindow), "GetBuildingMassage")]
+    public static class BuildingWindow_GetBuildingMassage_ShowMajordomoWindowButton
     {
-        static void Postfix(HomeSystem __instance)
+        static void Postfix()
         {
             if (!Main.enabled) return;
 
-            int partId = __instance.homeMapPartId;
-            int placeId = __instance.homeMapPlaceId;
-            int buildingIndex = __instance.homeMapbuildingIndex;
+            int partId = HomeSystem.instance.homeMapPartId;
+            int placeId = HomeSystem.instance.homeMapPlaceId;
+            int buildingIndex = HomeSystem.instance.homeMapbuildingIndex;
 
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int baseBuildingId = building[0];
             bool isTaiwuVillage = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][44]) > 0;
 
-            MajordomoWindowButton.goButton.SetActive(isTaiwuVillage);
+            var windowButtonHolder = BuildingWindow.instance.showQuquBoxButton.transform.parent;
+            var goButton = windowButtonHolder.Find($"MajordomoWindowButton,{MajordomoWindowButton.messageId}").gameObject;
+
+            goButton.SetActive(isTaiwuVillage);
         }
     }
 }

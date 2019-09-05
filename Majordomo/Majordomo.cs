@@ -298,6 +298,8 @@ namespace Majordomo
                     [98] = "${" + TurnEvent.IMAGE_NAME + "}",
                     [99] = "您的管家禀告了如下收获：",
                 });
+
+            UnityEngine.Debug.Log("Resources of TurnEvent registered.");
         }
 
 
@@ -372,9 +374,9 @@ namespace Majordomo
     /// <summary>
     /// Patch: 注册过月事件资源（在其他 mod 之后注册）
     /// </summary>
-    [HarmonyPatch(typeof(UIDate), "Start")]
+    [HarmonyPatch(typeof(EnterGame), "EnterWorld")]
     [HarmonyPriority(Priority.Last)]
-    public static class Loading_LoadScene_DynamicallyLoadResources
+    public static class EnterGame_EnterWorld_RegisterTurnEvent
     {
         static void Postfix()
         {
@@ -386,10 +388,10 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 展示过月事件
+    /// Patch: 保存过月事件
     /// </summary>
-    [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
-    public static class UIDate_SetTrunChangeWindow_OnChangeTurn
+    [HarmonyPatch(typeof(UIDate), "SaveTurnChangeEvent")]
+    public static class UIDate_SaveTurnChangeEvent_OnChangeTurn
     {
         private static bool Prefix(UIDate __instance)
         {
@@ -460,8 +462,8 @@ namespace Majordomo
     /// <summary>
     /// Patch: 保存存档时保存数据
     /// </summary>
-    [HarmonyPatch(typeof(SaveDateFile), "SaveSaveDate")]
-    public static class SaveDateFile_SaveSaveDate_SaveData
+    [HarmonyPatch(typeof(DateFile.SaveDate), "FillDate")]
+    public static class DateFile_SaveDate_FillDate_SaveData
     {
         static bool Prefix()
         {

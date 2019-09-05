@@ -375,7 +375,7 @@ namespace Majordomo
                 DateFile.instance.solarTermsDate[DateFile.instance.GetDayTrun()][99],
                 text};
 
-            HomeSystem.instance.AddHomeShopMassage(partId, placeId, buildingIndex, massageDate);
+            DateFile.instance.AddHomeShopMassage(partId, placeId, buildingIndex, massageDate);
 
             // 减少建筑的新消息数量
             if (building[12] > 0) --building[12];
