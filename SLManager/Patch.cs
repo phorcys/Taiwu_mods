@@ -850,30 +850,9 @@ namespace Sth4nothing.SLManager
             {
                 yield return file;
             }
-        }
-
-        /// <summary>
-        /// 获取备份文件列表
-        /// </summary>
-        /// <returns></returns>
-        internal static List<string> GetFilesToBackup()
-        {
-            var files = new List<string>();
-            if (File.Exists(Path.Combine(".", "date.json")))
-            {
-                files.Add(Path.Combine(".", "date.json"));
-            }
-            // var indexPath = ReflectionMethod.Invoke<string>(typeof(SaveGame), "GetSavingIndexPath", DateId);
-            if (File.Exists(Path.Combine(".", "index")))
-            {
-                files.Add(Path.Combine(".", "index"));
-            }
-
-            files.AddRange(Directory.GetFiles(
-                ".",
-                "*.tw*",
-                SearchOption.AllDirectories));
-            return files;
+            var TW_Save_Date_9_Path = Path.Combine(savingSubFolder, "TW_Save_Date_9");
+            if (File.Exists(TW_Save_Date_9_Path))
+                yield return TW_Save_Date_9_Path;
         }
 
         /// <summary>
