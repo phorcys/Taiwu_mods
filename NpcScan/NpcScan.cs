@@ -1,4 +1,5 @@
 using Harmony12;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -85,23 +86,38 @@ namespace NpcScan
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-
             Logger = modEntry.Logger;
-            settings = Settings.Load<Settings>(modEntry);
-            bindingKeys = new bool[settings.keys.Length];
-
-            modEntry.OnToggle = OnToggle;
-            modEntry.OnGUI = OnGUI;
-            modEntry.OnSaveGUI = OnSaveGUI;
-
-            if (!uiIsShow)
+            try
             {
-                UI.Load();
-                uiIsShow = true;
+                var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+                settings = Settings.Load<Settings>(modEntry);
+                bindingKeys = new bool[settings.keys.Length];
+
+                modEntry.OnToggle = OnToggle;
+                modEntry.OnGUI = OnGUI;
+                modEntry.OnSaveGUI = OnSaveGUI;
+
+                if (!uiIsShow)
+                {
+                    UI.Load();
+                    uiIsShow = true;
+                }
+                return true;
             }
-            return true;
+            catch(Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                var inner = ex.InnerException;
+                while(inner != null)
+                {
+                    Logger.Log(inner.ToString());
+                    inner = inner.InnerException;
+                }
+                Debug.LogException(ex);
+                return false;
+            }
         }
 
         private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)

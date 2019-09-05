@@ -97,7 +97,7 @@ namespace NpcScan
                                     : Gender == 1 ? "男" : "女";
 
         /// <summary>健康</summary>
-        public int Health => int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? ActorMenu.instance.Health(npcId) : 0;
+        public int Health => int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0 ? DateFile.instance.Health(npcId) : 0;
         /// <summary>坐标</summary>
         public string Place => stringCache[0] = stringCache[0] ?? GetPlace();
         /// <summary>魅力</summary>
@@ -113,11 +113,11 @@ namespace NpcScan
         /// <summary>身份等级(负数时为因配偶身份获得的等级)</summary>
         public int GangLevel => int.Parse(DateFile.instance.GetActorDate(npcId, 20, false));
         /// <summary>金钱</summary>
-        public int Money => intCache[40] = intCache[40] > -1 ? intCache[40] : ActorMenu.instance.ActorResource(npcId)[5];
+        public int Money => intCache[40] = intCache[40] > -1 ? intCache[40] : DateFile.instance.ActorResource(npcId)[5];
         /// <summary>从属身份对应的数据ID</summary>
         public int GangValueId => DateFile.instance.GetGangValueId(Groupid, GangLevel);
         /// <summary>七元赋性</summary>
-        public int[] ActorResources => actorResourcesCache = actorResourcesCache ?? ActorMenu.instance.GetActorResources(npcId);
+        public int[] ActorResources => actorResourcesCache = actorResourcesCache ?? DateFile.instance.GetActorResources(npcId);
         /// <summary>角色特性</summary>
         public List<int> ActorFeatures { get; private set; }
         /// <summary>综合评价</summary>
@@ -252,7 +252,7 @@ namespace NpcScan
                 additem.Add(GetLevel(i, 0), ref index);
             }
             // 银钱
-            additem.Add(ActorMenu.instance.ActorResource(npcId)[5].ToString(), ref index);
+            additem.Add(DateFile.instance.ActorResource(npcId)[5].ToString(), ref index);
             // 细腻
             additem.Add(ActorResources[0].ToString(), ref index);
             // 聪颖
@@ -716,8 +716,8 @@ namespace NpcScan
             }
             else
             {
-                maxHealth = ActorMenu.instance.MaxHealth(npcId);
-                currentHealth = Mathf.Clamp(ActorMenu.instance.Health(npcId), 0, maxHealth);
+                maxHealth = DateFile.instance.MaxHealth(npcId);
+                currentHealth = Mathf.Clamp(DateFile.instance.Health(npcId), 0, maxHealth);
             }
             healthCache = new[] { currentHealth, maxHealth };
             return healthCache;
@@ -734,7 +734,7 @@ namespace NpcScan
             {
                 return "??? / ???";
             }
-            return $"{ActorMenu.instance.Color3(healthValue[0], healthValue[1])}{healthValue[0]}</color> / {healthValue[1]}";
+            return $"{DateFile.instance.Color3(healthValue[0], healthValue[1])}{healthValue[0]}</color> / {healthValue[1]}";
         }
 
         /// <summary>
@@ -843,7 +843,7 @@ namespace NpcScan
                     if (!CanTeach(key)) return false;
                     Lock();
                     int maxLevel = 0;
-                    try { maxLevel = MassageWindow.instance.GetSkillValue(npcId, key + 501); }
+                    try { maxLevel = MessageEventManager.Instance.GetSkillValue(npcId, key + 501); }
                     finally { Unlock(); }
                     if (maxLevel <= 0) return false;
                 }
@@ -857,7 +857,7 @@ namespace NpcScan
                     {
                         Lock();
                         int maxLevel = 0;
-                        try { maxLevel = MassageWindow.instance.GetSkillValue(npcId, key + 501); }
+                        try { maxLevel = MessageEventManager.Instance.GetSkillValue(npcId, key + 501); }
                         finally { Unlock(); }
                         if (maxLevel > 0) return true;
                     }
@@ -1192,7 +1192,7 @@ namespace NpcScan
                     if (key < 100 && CanTeach(key))
                     {
                         int typ = key + 501;
-                        int maxLevel = Mathf.Min(MassageWindow.instance.GetSkillValue(npcId, typ), 8);
+                        int maxLevel = Mathf.Min(MessageEventManager.Instance.GetSkillValue(npcId, typ), 8);
                         if (maxLevel > 0)
                         {
                             skillMaxCache.Add(maxLevel);
@@ -1220,7 +1220,7 @@ namespace NpcScan
                 if (pair.Key < 100 && CanTeach(pair.Key))
                 {
                     int typ = pair.Key + 501;
-                    int maxLevel = MassageWindow.instance.GetSkillValue(npcId, typ);
+                    int maxLevel = MessageEventManager.Instance.GetSkillValue(npcId, typ);
                     if (maxLevel > 0)
                     {
                         maxLevel = Mathf.Min(maxLevel, 9);
