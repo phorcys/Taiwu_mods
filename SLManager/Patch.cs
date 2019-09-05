@@ -1391,22 +1391,34 @@ namespace Sth4nothing.SLManager
                 _saveCache.StartSetCloneCache(__instance);
             }
         }
-
     }
 
-    [HarmonyPatch(typeof(LoadGame), "LoadedSavedData")]
-    public class LoadGame_LoadedSavedData_Patch
+    // GEvent.OnEvent(eEvents.LoadingProgress, 100)
+    [HarmonyPatch(typeof(GEvent), "OnEvent")]
+    public class GEvent_OnEvent_Patch
     {
-        private static void Postfix(bool __result)
+        private static void Prefix(Enum _em, object[] args)
         {
-            if (!__result) return;
+            if(eEvents.LoadingProgress.Equals(_em) &&
+               100 == (int)args[0])
+            {
 #if DEBUG
-            Main.Logger.Log($"Wait cache finish after LoadEnd");
+                //Main.Logger.Log($"Wait cache finish after LoadingProgress==100");
 #endif
-            SaveCacheFactory.WaitAll();
-            StateHelper.IsQuickLoad = false;
+                SaveCacheFactory.WaitAll();
+                StateHelper.IsQuickLoad = false;
+                if (Main.settings.regenerateRandomSeedAfterLoad)
+                {
+                    UnityEngine.Random.InitState(Environment.TickCount);
+                    DateFile.instance.SetRandSeed(true);
+#if DEBUG
+                    Main.Logger.Log($"重置亂數種子");
+#endif
+                }
+            }
         }
     }
+
 
 
     // 在存檔作業完成前, 確保Cache已建立完成
