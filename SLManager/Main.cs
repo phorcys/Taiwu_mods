@@ -56,7 +56,7 @@ namespace Sth4nothing.SLManager
 
     public static class Main
     {
-        const bool ENABLE_HYPER_LOAD = false;
+        const bool ENABLE_HYPER_LOAD = true;
 
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;

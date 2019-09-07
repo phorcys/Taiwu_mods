@@ -1298,6 +1298,25 @@ namespace Sth4nothing.SLManager
     }
 
 
+    // 攔截存檔時(後)
+    [HarmonyPatch(typeof(DateFile.SaveDate), "FillDate")]
+    public class SaveDate_FillDate_Patch
+    {
+        static SaveCache<DateFile.SaveDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.SaveDate>();
+        private static void Postfix(DateFile.SaveDate __instance)
+        {
+            _saveCache.ExpireCache();
+            if (!Main.Enabled)
+                return;
+            if (Main.settings.enableTurboQuickLoadAfterSave)
+            {
+                _saveCache.StartSetCloneCache(__instance);
+            }
+        }
+    }
+
+    /*
+    // 不知道為什麼會有一些問題, 故不使用 ActorLives 快取
     [HarmonyPatch(typeof(ActorLives), "Load")]
     public class ActorLives_Load_Patch
     {
@@ -1335,25 +1354,6 @@ namespace Sth4nothing.SLManager
         }
     }
 
-
-    // 攔截存檔時(後)
-    [HarmonyPatch(typeof(DateFile.SaveDate), "FillDate")]
-    public class SaveDate_FillDate_Patch
-    {
-        static SaveCache<DateFile.SaveDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.SaveDate>();
-        private static void Postfix(DateFile.SaveDate __instance)
-        {
-            _saveCache.ExpireCache();
-            if (!Main.Enabled)
-                return;
-            if (Main.settings.enableTurboQuickLoadAfterSave)
-            {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                _saveCache.StartSetCloneCache(__instance);
-            }
-        }
-    }
-
     // 攔截存檔時(後)
     [HarmonyPatch(typeof(DateFile.ActorLife), "FillDate")]
     public class ActorLife_FillDate_Patch
@@ -1371,6 +1371,73 @@ namespace Sth4nothing.SLManager
             }
         }
     }
+    */
+
+
+    [HarmonyPatch(typeof(WorldData), "Load")]
+    public class WorldData_Load_Patch
+    {
+        static System.Diagnostics.Stopwatch _stopwatch;
+        static SaveCache<DateFile.WorldDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.WorldDate>();
+
+        private static bool Prefix(ref object __result)
+        {
+            if (!Main.Enabled) return true;
+            _stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            if (!StateHelper.IsQuickLoad ||
+                !StateHelper.IsIntoGame())
+                return true;
+            var data = _saveCache.GetCache();
+            if (data != null)
+            {
+                Main.Logger.Log($"WorldData.Load use cache.");
+                __result = data;
+                return false;
+            }
+            return true;
+        }
+        private static void Postfix(object __result)
+        {
+            if (!Main.Enabled) return;
+            if (Main.settings.enableTurboQuickLoadAfterLoad &&
+                StateHelper.IntoGameIndex > 0)
+            {
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                _saveCache.StartSetCloneCache((DateFile.WorldDate)__result);
+            }
+#if DEBUG
+            Main.Logger.Log($"WorldData.Load: {_stopwatch?.ElapsedMilliseconds} ms");
+#endif
+        }
+    }
+
+    // 攔截存檔時(後)
+    [HarmonyPatch(typeof(DateFile.WorldDate), "FillDate")]
+    public class WorldDate_FillDate_Patch
+    {
+        static SaveCache<DateFile.WorldDate> _saveCache = SaveCacheFactory.GetInstance<DateFile.WorldDate>();
+        private static void Postfix(DateFile.WorldDate __instance)
+        {
+            _saveCache.ExpireCache();
+            if (!Main.Enabled)
+                return;
+            if (Main.settings.enableTurboQuickLoadAfterSave)
+            {
+                _saveCache.StartSetCloneCache(__instance);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(DateFile), "NewDate")]
+    public class DateFile_NewDate_Patch
+    {
+        static public System.Diagnostics.Stopwatch Stopwatch = new System.Diagnostics.Stopwatch();
+        private static void Prefix()
+        {
+            Stopwatch.Restart();
+        }
+    }
+
 
     // GEvent.OnEvent(eEvents.LoadingProgress, 100)
     [HarmonyPatch(typeof(GEvent), "OnEvent")]
@@ -1382,9 +1449,13 @@ namespace Sth4nothing.SLManager
                100 == (int)args[0])
             {
 #if DEBUG
-                //Main.Logger.Log($"Wait cache finish after LoadingProgress==100");
+                Main.Logger.Log($"Loading spends {DateFile_NewDate_Patch.Stopwatch.ElapsedMilliseconds} ms");
 #endif
                 SaveCacheFactory.WaitAll();
+                //var defaultData = new DefaultData(SaveGame.GetLastSavingDir(SaveDateFile.instance.dateId), SaveDateFile.instance.saveDateName);
+                ////var preload_obj = defaultData.DelayLoadAsync(2000);
+                //SingletonObject.getInstance<YieldHelper>().StartYield(defaultData.DelayLoadAsyncYield(2000));
+
                 StateHelper.IsQuickLoad = false;
                 if (Main.settings.regenerateRandomSeedAfterLoad)
                 {
@@ -1415,15 +1486,27 @@ namespace Sth4nothing.SLManager
 
 
     // 攔截讀取並進入遊戲的行為, 用以控制狀態
-    [HarmonyPatch(typeof(MainMenu), "SetLoadIndex")]
-    class MainMenu_SetLoadIndex_Patch
+    [HarmonyPatch(typeof(DateFile), "Initialize", new Type[] { typeof(int), typeof(bool) })]
+    class DateFile_Initialize_Patch
     {
-        private static void Prefix(int index)
+        private static void Prefix(int dateId)
         {
-            StateHelper.IntoGameIndex = index;
+            StateHelper.IntoGameIndex = dateId;
             StateHelper.LoadingState = new object();
         }
     }
+
+    // 攔截讀取並進入遊戲的行為, 用以控制狀態
+    [HarmonyPatch(typeof(DateFile), "Initialize", new Type[] { typeof(BackupItem) })]
+    class DateFile_Initialize2_Patch
+    {
+        private static void Prefix(BackupItem item)
+        {
+            StateHelper.IntoGameIndex = item.DataId;
+            StateHelper.LoadingState = new object();
+        }
+    }
+
 
     [HarmonyPatch(typeof(DateFile), "BackToStartMenu")]
     public class MainMenu_BackToMainWindow_Patch
@@ -1431,6 +1514,7 @@ namespace Sth4nothing.SLManager
         private static void Prefix()
         {
             StateHelper.IntoGameIndex = 0;
+            StateHelper.LoadingState = null;
         }
     }
 }
