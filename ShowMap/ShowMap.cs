@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using Harmony12;
 using UnityModManagerNet;
-using System.Reflection;
 
 namespace ShowMap
 {
@@ -15,27 +8,28 @@ namespace ShowMap
     {
         public static bool enabled;
         public static UnityModManager.ModEntry.ModLogger logger;
-
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
             logger = modEntry.Logger;
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
-
             return true;
         }
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool enable)
         {
-            if (!value) return false;
-            enabled = value;
+            Main.enabled = enable;
+            logger.Log("显示地图MOD已" + (enable ? "开启" : "关闭"));
             return true;
         }
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            if (!Main.enabled)
+            {
+                GUILayout.Label("Mod已关闭!");
+                return;
+            }
             DateFile tbl = DateFile.instance;
             if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
             {
@@ -45,20 +39,21 @@ namespace ShowMap
             {
                 if (GUILayout.Button("显示未探索区域"))
                 {
-                    showAllMap();
+                    ShowAllMap();
                 }
             }
         }
 
-        public static void showAllMap()
+        public static void ShowAllMap()
         {
-            int bianchang = Int32.Parse(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][98]);
-            int placeNum = bianchang * bianchang;
-            for (int j = 0; j < placeNum; j++)
+            if (!Main.enabled) return;
+            int length = Int32.Parse(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][98]);
+            int num = length * length;
+            for (int i = 0; i < num; i++)
             {
-                DateFile.instance.SetMapPlaceShow(DateFile.instance.mianPartId, j, true);
+                DateFile.instance.SetMapPlaceShow(DateFile.instance.mianPartId, i, true);
             }
-            logger.Log(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][0] + "的" + placeNum.ToString() + "个地块已全部点亮");
+            logger.Log(DateFile.instance.partWorldMapDate[DateFile.instance.mianPartId][0] + "的" + num.ToString() + "个地块已全部点亮");
         }
     }
 }
