@@ -39,16 +39,21 @@ namespace Sth4nothing.UseStorageBook
         /// </summary>
         private static List<int> GetBooks()
         {
-            var actorItems =
-                from item in DateFile.instance.GetActorItems(DateFile.instance.mianActorId, 0, false).Keys
-                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == BuildingWindow.instance.studySkillTyp
-                select item;
-            var warehouseItems =
-                from item in DateFile.instance.GetActorItems(-999, 0, false).Keys
-                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == BuildingWindow.instance.studySkillTyp
-                select item;
-            var items = actorItems.Concat(warehouseItems);
-            return DateFile.instance.GetItemSort(items.ToList());
+            var df = DateFile.instance;
+            var mainId = df.mianActorId;
+            var studySkillTyp = BuildingWindow.instance.studySkillTyp;
+            var items = df.GetActorItems(mainId, 5, false).Keys
+                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+                .ToList();
+            for (int i = 0; i < 3; i++)
+            {
+                var x = int.Parse(df.GetActorDate(mainId, 308 + i, addValue: false));
+                if (x > 0 && int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+                items.Add(x);
+            }
+            items.AddRange(df.GetActorItems(-999, 5, false).Keys
+                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp));
+            return df.GetItemSort(items);
         }
 
         /// <summary>
