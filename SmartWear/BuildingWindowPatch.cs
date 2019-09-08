@@ -126,7 +126,6 @@ namespace SmartWear
                 aptitudeType = AptitudeTypeHelper.GetAptitudeTypeByBookId(__instance.readBookId);
             }
 
-            StateManager.RestoreEquip();
             var items = ItemHelper.GetAptitudeUpOrComprehensionUpAccessories(aptitudeType);
             if (Main.settings.AdvancedReadBookMode &&
                 BuildingWindow_GetNeedInt_Patch.LastNeedInt <= 50)

@@ -161,7 +161,7 @@ namespace SmartWear
 
         static public void EquipAccessories(ItemData[] accessories)
         {
-            Equip(accessories.Select(a => a.Id).ToArray(), EquipSlot.Accessory1);
+            Equip(accessories.Select(a => a.Id).Take(3).ToArray(), EquipSlot.Accessory1);
             if (Main.settings.EnabledLog)
             {
                 foreach (var item in accessories.Take(3))
