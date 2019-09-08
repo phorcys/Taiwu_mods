@@ -508,7 +508,7 @@ namespace Sth4nothing.VillageHeadOfTaiwu
             {
                 if (manPool >= manNeed)
                 {
-                    Debug.Log($"开始在{maxPart},{maxPlace}采集{workStr[(int)workType]}");
+                    Debug.Log($"开始在{maxPart},{maxPlace}采集{workStr[(int)workType]}({maxRes}/{manNeed}人力/时节)");
                     ChoosePlaceWindow.Instance.SetPlaceWork(maxPart, maxPlace, (int)workType);
                     UpdateUiManpower();
                 }
@@ -605,53 +605,53 @@ namespace Sth4nothing.VillageHeadOfTaiwu
         }
     }
 
-    /// <summary>
-    /// 修复🍆人力回复列表的bug
-    /// </summary>
-    [HarmonyPatch(typeof(UIDate), "AddBackManpower")]
-    public class UIDate_AddBackManpower_Patch
-    {
-        public static bool Prefix(int partId, int placeId, int menpower)
-        {
-            var df = DateFile.instance;
-            int time = 0;
-            if (placeId != df.mianPlaceId)
-            {
-                time++;
-            }
-            if (partId != int.Parse(df.GetGangDate(16, 3)))
-            {
-                time++;
-            }
-            if (df.GetWorldId(partId) != int.Parse(df.GetGangDate(16, 11)))
-            {
-                time++;
-            }
-            if (time <= 0)
-            {
-                return false;
-            }
-            if (!df.backManpowerList.ContainsKey(partId))
-            {
-                df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
-            }
+    // /// <summary>
+    // /// 修复🍆人力回复列表的bug
+    // /// </summary>
+    // [HarmonyPatch(typeof(UIDate), "AddBackManpower")]
+    // public class UIDate_AddBackManpower_Patch
+    // {
+    //     public static bool Prefix(int partId, int placeId, int menpower)
+    //     {
+    //         var df = DateFile.instance;
+    //         int time = 0;
+    //         if (placeId != df.mianPlaceId)
+    //         {
+    //             time++;
+    //         }
+    //         if (partId != int.Parse(df.GetGangDate(16, 3)))
+    //         {
+    //             time++;
+    //         }
+    //         if (df.GetWorldId(partId) != int.Parse(df.GetGangDate(16, 11)))
+    //         {
+    //             time++;
+    //         }
+    //         if (time <= 0)
+    //         {
+    //             return false;
+    //         }
+    //         if (!df.backManpowerList.ContainsKey(partId))
+    //         {
+    //             df.backManpowerList.Add(partId, new Dictionary<int, int[]>());
+    //         }
 
-            var size = int.Parse(df.partWorldMapDate[partId][98]);
-            while (df.backManpowerList[partId].ContainsKey(placeId))
-            {
-                // 防止key重复。如果在同一地点人力未恢复完成，再次分配人力然后取消，则会出现。
-                placeId += size * size;
-            }
+    //         var size = int.Parse(df.partWorldMapDate[partId][98]);
+    //         while (df.backManpowerList[partId].ContainsKey(placeId))
+    //         {
+    //             // 防止key重复。如果在同一地点人力未恢复完成，再次分配人力然后取消，则会出现。
+    //             placeId += size * size;
+    //         }
 
-            df.backManpowerList[partId].Add(placeId, new int[2]
-            {
-                menpower,
-                time
-            });
+    //         df.backManpowerList[partId].Add(placeId, new int[2]
+    //         {
+    //             menpower,
+    //             time
+    //         });
 
-            return false;
-        }
-    }
+    //         return false;
+    //     }
+    // }
 
     /// <summary>
     /// 返回主界面时关闭窗口
