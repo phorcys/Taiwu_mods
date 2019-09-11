@@ -1,6 +1,7 @@
+using Harmony12;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Harmony12;
 using UnityEngine;
 using UnityModManagerNet;
 
@@ -9,28 +10,35 @@ namespace NpcScan
 
     public class Settings : UnityModManager.ModSettings
     {
-        public override void Save(UnityModManager.ModEntry modEntry)
-        {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
-        }
-        public KeyCode key = KeyCode.F12;
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
+        public KeyCode[] keys = { KeyCode.F3, KeyCode.PageUp, KeyCode.PageDown };
 
         // 每页最多显示的npc数目
-        public int countPerPage = 8;
+        public int countPerPage = 200;
     }
 
     public static class Main
     {
-        public static bool enabled;
-        public static Settings settings;
-        public static bool uiIsShow = false;
-        public static bool bindingKey = false;
-        public static Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
-        public static List<Features> findList = new List<Features>();
-        public static Dictionary<string, int> fNameList = new Dictionary<string, int>();
-        public static List<int> GongFaList = new List<int>();
-        public static Dictionary<string, int> gNameList = new Dictionary<string, int>();
-        public static Dictionary<int, string> textColor = new Dictionary<int, string>()
+        /// <summary>是否启用mod</summary>
+        internal static bool enabled;
+        /// <summary>Mod设置</summary>
+        internal static Settings settings;
+        /// <summary>mod的UI是否已加载</summary>
+        internal static bool uiIsShow = false;
+        /// <summary>是否正在修改热键</summary>
+        internal static bool[] bindingKeys;
+        /// <summary>特性字典</summary>
+        internal static readonly Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
+        /// <summary>特性名称对应特性ID</summary>
+        internal static readonly Dictionary<string, int> featureNameList = new Dictionary<string, int>();
+        /// <summary>功法名字反查ID</summary>
+        internal static readonly Dictionary<string, int> gongFaNameList = new Dictionary<string, int>();
+        /// <summary>技艺名字反查ID</summary>
+        internal static readonly Dictionary<string, int> skillNameList = new Dictionary<string, int>();
+        /// <summary>物品名字反查物品基础ID</summary>
+        internal static readonly Dictionary<string, List<int>> itemNameList = new Dictionary<string, List<int>>();
+        /// <summary>文字颜色</summary>
+        internal static readonly Dictionary<int, string> textColor = new Dictionary<int, string>()
         {
             { 10000,"<color=#323232FF>"},
             { 10001,"<color=#4B4B4BFF>"},
@@ -51,7 +59,8 @@ namespace NpcScan
             { 20010,"<color=#E4504DFF>"}, //一品红
             { 20011,"<color=#EDA723FF>"},
         };
-        public static Dictionary<string,int> colorText = new Dictionary<string,int>()
+        /// <summary>文字颜色反查</summary>
+        public static readonly Dictionary<string, int> colorText = new Dictionary<string, int>()
         {
             { "<color=#323232FF>",10000},
             { "<color=#4B4B4BFF>",10001},
@@ -73,36 +82,45 @@ namespace NpcScan
             { "<color=#EDA723FF>",20011},
         };
 
-        public static UnityModManager.ModEntry.ModLogger Logger;
+        internal static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
-
             Logger = modEntry.Logger;
-            settings = Settings.Load<Settings>(modEntry);
-
-            modEntry.OnToggle = OnToggle;
-            modEntry.OnGUI = OnGUI;
-            modEntry.OnSaveGUI = OnSaveGUI;
-
-            if (!Main.uiIsShow)
+            try
             {
-                UI.Load(modEntry);
-                UI.key = settings.key;
-                // 设置每页最多显示npc的数目
-                if(int.TryParse(settings.countPerPage, out int tmpValue) && tmpValue > 0)
+                var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+
+                settings = Settings.Load<Settings>(modEntry);
+                bindingKeys = new bool[settings.keys.Length];
+
+                modEntry.OnToggle = OnToggle;
+                modEntry.OnGUI = OnGUI;
+                modEntry.OnSaveGUI = OnSaveGUI;
+
+                if (!uiIsShow)
                 {
-                    UI.Instance.countPerPage = tmpValue;
+                    UI.Load();
+                    uiIsShow = true;
                 }
-                Main.uiIsShow = true;
-                //Logger.Log("scan测试");
+                return true;
             }
-            return true;
+            catch(Exception ex)
+            {
+                Logger.Log(ex.ToString());
+                var inner = ex.InnerException;
+                while(inner != null)
+                {
+                    Logger.Log(inner.ToString());
+                    inner = inner.InnerException;
+                }
+                Debug.LogException(ex);
+                return false;
+            }
         }
 
-        public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
+        private static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
             if (!value)
                 return false;
@@ -111,46 +129,89 @@ namespace NpcScan
             return true;
         }
 
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             Event e = Event.current;
             if (e.isKey && Input.anyKeyDown)
             {
-                if (bindingKey)
+                for (int i = 0; i < bindingKeys.Length; i++)
                 {
-                    if ((e.keyCode >= KeyCode.A && e.keyCode <= KeyCode.Z)
-                        || (e.keyCode >= KeyCode.F1 && e.keyCode <= KeyCode.F12)
-                        || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
-                        )
+                    if (bindingKeys[i])
                     {
-                        Main.settings.key = e.keyCode;
+                        if ((e.keyCode >= KeyCode.A && e.keyCode <= KeyCode.Z)
+                            || (e.keyCode >= KeyCode.F1 && e.keyCode <= KeyCode.F12)
+                            || (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha9)
+                            || e.keyCode == KeyCode.PageDown
+                            || e.keyCode == KeyCode.PageUp
+                            )
+                        {
+                            // 若热键被其他功能占用，则交换热键
+                            for (int j = 0; j < settings.keys.Length; j++)
+                            {
+                                if (j != i && settings.keys[j] == e.keyCode)
+                                {
+                                    settings.keys[j] = settings.keys[i];
+                                }
+                            }
+                            settings.keys[i] = e.keyCode;
+                        }
+                        bindingKeys[i] = false;
                     }
-                    bindingKey = false;
                 }
             }
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("设置快捷键： Ctrl +", GUILayout.Width(130));
-            if (GUILayout.Button((bindingKey ? "请按键" : settings.key.ToString()),
-                GUILayout.Width(80)))
-            {
-                bindingKey = !bindingKey;
-            }
-            GUILayout.Label("（支持0-9,A-Z,F1-F12）");
-            GUILayout.EndHorizontal();
-
+            SettingKeys("设置打开/关闭窗口快捷键： ", 0, 160);
+            GUILayout.Label("该功能传统热键Ctrl+F12依然有效");
+            SettingKeys("设置向上翻页快捷键： ", 1, 130);
+            SettingKeys("设置向下翻页快捷键： ", 2, 130);
             GUILayout.BeginHorizontal();
             // 设置每页最多显示npc的数目
-            GUILayout.Label("每页最大显示NPC数量(范围1-50, 数字过大会影响游戏帧率)：",GUILayout.Width(370));
-            int.TryParse(GUILayout.TextArea(Main.settings.countPerPage.ToString(), GUILayout.Width(60)), out Main.settings.countPerPage);
-            Main.settings.countPerPage = Main.settings.countPerPage > 0 && Main.settings.countPerPage < 51 ? Main.settings.countPerPage : 8;
+            GUILayout.Label("每页最大显示NPC数量(1~300)：", GUILayout.Width(370));
+            int.TryParse(GUILayout.TextArea(settings.countPerPage.ToString(), GUILayout.Width(60)), out settings.countPerPage);
+            settings.countPerPage = settings.countPerPage > 0 && settings.countPerPage < 301 ? settings.countPerPage : 200;
             GUILayout.EndHorizontal();
         }
 
-        public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        private static void OnSaveGUI(UnityModManager.ModEntry modEntry) => settings.Save(modEntry);
+
+        /// <summary>
+        /// 设置热键控件
+        /// </summary>
+        /// <param name="text">控件的说明文字</param>
+        /// <param name="index">控件的序号</param>
+        /// <param name="textWidth">控件的说明文字框宽度</param>
+        public static void SettingKeys(string text, int index, float textWidth)
         {
-            // 退出时UMM时恢复countPerPage的值
-            settings.countPerPage = UI.Instance.countPerPage.ToString();
-            settings.Save(modEntry);
+            if (index < bindingKeys.Length)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(text, GUILayout.Width(textWidth > 0 ? textWidth : 130));
+                if (GUILayout.Button((bindingKeys[index] ? "请按键" : settings.keys[index].ToString()),
+                    GUILayout.Width(80)))
+                {
+                    bindingKeys[index] = !bindingKeys[index];
+                }
+                GUILayout.Label("（支持0-9,A-Z,F1-F12,PageDown,PageUp）");
+                GUILayout.EndHorizontal();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 扩展方法
+    /// </summary>
+    internal static class ExtendedMethod
+    {
+        /// <summary>
+        /// 在所给序数位置给数组添加成员并将序数加一
+        /// </summary>
+        /// <typeparam name="T">数组成员类型</typeparam>
+        /// <param name="array">操作的数组</param>
+        /// <param name="data">要添加的数据</param>
+        /// <param name="index">要添加的位置</param>
+        public static void Add<T>(this T[] array, T data, ref int index)
+        {
+            array[index] = data;
+            index++;
         }
     }
 }
