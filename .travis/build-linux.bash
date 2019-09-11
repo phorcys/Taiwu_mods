@@ -1,5 +1,5 @@
 #!/bin/env bash -ex
-DLLPACK_VERSION="190421"
+DLLPACK_VERSION="190831"
 shopt -s nocasematch
 
 cd /build/Taiwu_Mods
@@ -14,7 +14,7 @@ unzip ./dlls-${DLLPACK_VERSION}.zip -d ..
 mkdir -p build ; cd build
 
 cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build .
+cmake --build . -- -k
 
 echo "List builded Mods:"
 ls -al Mods

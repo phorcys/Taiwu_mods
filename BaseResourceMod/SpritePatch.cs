@@ -1,4 +1,4 @@
-﻿using Harmony12;
+using Harmony12;
 using System;
 using System.IO;
 using UnityEngine;
@@ -10,71 +10,78 @@ namespace BaseResourceMod
     ///  dump 读取后的图片文件
     ///  加载自定义图像文件
     /// </summary>
-    public static class SpritePatch
+    internal static class SpritePatch
     {
-        // 在打开游戏第一次进入游戏主菜单时替换Sprite
+        ///<summary>是否已经载入外部贴图</summary>
+        private static bool isLoaded = false;
+
+        public static void InjectData()
+        {
+            if (!Main.enabled)
+            {
+                return;
+            }
+
+            try
+            {
+                if (Directory.Exists(Main.imgresdir))
+                {
+                    //遍历 Texture目录子目录
+                    foreach (string path in Directory.GetDirectories(Main.imgresdir))
+                    {
+                        Main.Logger.Log("[Texture] Found subdir : " + path);
+                        if (Directory.Exists(path))
+                        {
+                            SpriteLoadHelper.GetInstance().ProcessDir(path);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Main.Logger.Log(e.ToString() + "  " + e.Message);
+                Main.Logger.Log(e.StackTrace);
+            }
+
+            try
+            {
+                // 处理其他MOD的替换请求
+                foreach (var kv in Main.mods_sprite_dict)
+                {
+                    Main.Logger.Log("[Texture] Found Mod subdir : " + kv.Value);
+                    if (Directory.Exists(kv.Value))
+                    {
+                        SpriteLoadHelper.GetInstance().ProcessDir(kv.Value);
+                    }
+                    else
+                    {
+                        Main.Logger.Log("[Texture] subdir not exsit : " + kv.Value);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Main.Logger.Log(e.Message);
+                Main.Logger.Log(e.StackTrace);
+            }
+            // 释放资源
+            SpriteLoadHelper.ClearInstance();
+        }
+
+        /// <summary>
+        /// 在打开游戏第一次进入游戏主菜单时替换Sprite,
+        /// </summary>
+        /// <remarks>这个Patch位点不容易随游戏更新而失效(呵护工具人的肝→_→)</remarks>
         [HarmonyPatch(typeof(MainMenu), "Start")]
         private static class MainMenu_Start_Patch
         {
-            public static void PostInjectData()
-            {
-                if (!Main.enabled)
-                {
-                    return;
-                }
-
-                try
-                {
-                    if (Directory.Exists(Main.imgresdir))
-                    {
-                        //遍历 Texture目录子目录
-                        foreach (string path in Directory.GetDirectories(Main.imgresdir))
-                        {
-                            Main.Logger.Log("[Texture] Found subdir : " + path);
-                            if (Directory.Exists(path))
-                            {
-                                SpriteLoadHelper.GetInstance().ProcessDir(path);
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Main.Logger.Log(e.ToString() + "  " + e.Message);
-                    Main.Logger.Log(e.StackTrace);
-                }
-
-                try
-                {
-                    // 处理其他MOD的替换请求
-                    foreach (var kv in Main.mods_sprite_dict)
-                    {
-                        Main.Logger.Log("[Texture] Found Mod subdir : " + kv.Value);
-                        if (Directory.Exists(kv.Value))
-                        {
-                            SpriteLoadHelper.GetInstance().ProcessDir(kv.Value);
-                        }
-                        else
-                        {
-                            Main.Logger.Log("[Texture] subdir not exsit : " + kv.Value);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Main.Logger.Log(e.Message);
-                    Main.Logger.Log(e.StackTrace);
-                }
-                // 释放资源
-                SpriteLoadHelper.ClearInstance();
-            }
-
             private static bool Prefix()
             {
                 // 在打开游戏第一次进入游戏主菜单时替换Sprites
-                if (Main.enabled && !DateFile.instance.openGame)
+                if (Main.enabled && !isLoaded)
                 {
-                    PostInjectData();
+                    isLoaded = true;
+                    InjectData();
                 }
                 return true;
             }
@@ -115,6 +122,8 @@ namespace BaseResourceMod
                 Sprite sprite;
                 if (spriteInfo.Item2 == null)
                 {
+                    if (!File.Exists(spriteInfo.Item1))
+                        return true;
                     // 若没有外部贴图则缓存则从外部读取
                     sprite = CreateSpriteFromImage(spriteInfo.Item1);
                     // 将外部贴图存入缓存，注意ValueTuple是Value Type
@@ -135,12 +144,12 @@ namespace BaseResourceMod
         /// 每次载入新场景时，清理外部贴图缓存
         /// </summary>
         [HarmonyPatch(typeof(ui_Loading), "Show")]
-        private static class Loading_Show_Patch
+        private static class Ui_Loading_Show_Patch
         {
             private static bool Prefix()
             {
                 // 当游戏载入完毕后，每次进入新的场景时清除原有场景里的外部贴图缓存
-                if (Main.enabled && DateFile.instance.openGame && Main.customSpriteInfosDic.Count > 0)
+                if (Main.enabled && isLoaded && Main.customSpriteInfosDic.Count > 0)
                 {
                     foreach (var spriteInfo in Main.customSpriteInfosDic)
                     {

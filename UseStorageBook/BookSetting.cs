@@ -129,24 +129,24 @@ namespace Sth4nothing.UseStorageBook
 
             ShowSetting("背包/仓库", Main.Setting.repo, Main.repo, ref changed);
 
-            if (HomeSystem.instance.studySkillTyp >= 17)
+            if (BuildingWindow.instance.studySkillTyp >= 17)
                 ShowSetting("真传/手抄", Main.Setting.tof, Main.tof, ref changed);
 
             ShowSetting("阅读进度", Main.Setting.read, Main.read, ref changed);
 
             ShowSetting("品级", Main.Setting.pinji, Main.pinji, ref changed);
 
-            if (HomeSystem.instance.studySkillTyp >= 17)
+            if (BuildingWindow.instance.studySkillTyp >= 17)
                 ShowSetting("功法", Main.Setting.gongfa, Main.gongfa, ref changed);
 
-            if (HomeSystem.instance.studySkillTyp >= 17)
+            if (BuildingWindow.instance.studySkillTyp >= 17)
                 ShowSetting("帮派", Main.Setting.gang, Main.gang, ref changed);
 
             GUILayout.EndVertical();
 
             if (changed)
             {
-                HomeSystem_SetBook_Patch.SetBookData();
+                BuildingWindow_SetBook_Patch.SetBookData();
             }
         }
 
@@ -155,7 +155,7 @@ namespace Sth4nothing.UseStorageBook
         /// </summary>
         public void ToggleWindow()
         {
-            if (!HomeSystem.instance.bookWindow.activeSelf && !Open)
+            if (!BuildingWindow.instance.bookWindow.activeSelf && !Open)
             {
                 Main.Logger.Log("bookWindow未启动");
                 return;
