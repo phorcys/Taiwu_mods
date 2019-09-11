@@ -1,7 +1,7 @@
-﻿using Harmony12;
+﻿using GameData;
+using Harmony12;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
@@ -60,11 +60,34 @@ namespace MoreInfo
         public bool showGongFaGang = true;
         /// <summary>强化显示功法进度</summary>
         public bool showGongFaProgress = true;
-
         /// <summary>经历筛选全部显示</summary>
-        public bool showAllMassage = true;
+        public bool showAllMessage = true;
         /// <summary>经历筛选显示, 0:结怨寻仇 1: 师徒亲子 2: 修习功法 3: 资源物品 4: 身份变更 5: 友情爱情 6: 战斗切磋 7: 伤病毒医 8: 寻访追随</summary>
-        public bool[] showMassageType = new bool[] { true, true, true, true, true, true, true, true, true };
+        public bool[] showMessageType = new bool[] { true, true, true, true, true, true, true, true, true };
+        /// <summary>类别名称</summary>
+        public static readonly string[] messsageTypeName = new[]
+        {
+            "结怨寻仇","师徒亲子","修习功法","资源物品","身份变更","友情爱情","战斗切磋","伤病毒医","寻访追随"
+        };
+        /// <summary>
+        /// 经历类型
+        /// </summary>
+        /// <remarks>游戏 V0.2.5.10 人物经历数据缺乏162</remarks>
+        public static readonly List<HashSet<int>> messageTypes = new List<HashSet<int>>() {
+            new HashSet<int>{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
+                77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125,126,127}, //结怨寻仇
+            new HashSet<int>{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
+            new HashSet<int>{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
+            new HashSet<int>{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107,131,137,138139,140,141,142,
+                143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,169,160,161,163,164,165,166,
+                188,189,190},//物品
+            new HashSet<int>{84,112,114,168,169,170},//身份
+            new HashSet<int>{40,41,42,45,46,50,51,52,54,56,57,66,69,72,73,76,90,91,92,96,97,98,99,100,109,125,
+                171,172,173,174},//情爱
+            new HashSet<int>{31,32,33,34,35,36,37,175,176,177,178,179,180,181,182,183,184,185,186,188,189,190,191},//战斗
+            new HashSet<int>{5,6,7,18,19,20,61,62,63,108,109,110,111,122,128,129,130,163,164,167,187},//伤病
+            new HashSet<int>{53,54,55,56,57,58,132,133,134,135,136},//跟随
+        };
         /// <summary>显示奇遇等级</summary>
         public bool showStroyLevel = true;
     }
@@ -74,6 +97,7 @@ namespace MoreInfo
         internal static bool enabled;
         internal static Settings settings;
         internal static UnityModManager.ModEntry.ModLogger Logger;
+        private static bool[] showMessageTypeTmp;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -81,6 +105,10 @@ namespace MoreInfo
             settings = Settings.Load<Settings>(modEntry);
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
+            if (showMessageTypeTmp == null)
+            {
+                showMessageTypeTmp = new bool[settings.showMessageType.Length];
+            }
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
@@ -92,6 +120,7 @@ namespace MoreInfo
             enabled = value;
             return true;
         }
+
 
         private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
@@ -118,7 +147,7 @@ namespace MoreInfo
             settings.showInEquuipBag = GUILayout.Toggle(settings.showInEquuipBag, "装备界面包裹显示", GUILayout.Width(120));
             settings.showInBag = GUILayout.Toggle(settings.showInBag, "包裹中显示", GUILayout.Width(120));
             settings.showInBank = GUILayout.Toggle(settings.showInBank, "仓库中显示", GUILayout.Width(120));
-            settings.showInShop = GUILayout.Toggle(settings.showInShop, "商店中显示<", GUILayout.Width(120));
+            settings.showInShop = GUILayout.Toggle(settings.showInShop, "商店中显示", GUILayout.Width(120));
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -152,17 +181,40 @@ namespace MoreInfo
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
 
-            settings.showAllMassage = GUILayout.Toggle(settings.showAllMassage, "显示所有", GUILayout.Width(120));
-            settings.showMassageType[0] = GUILayout.Toggle(settings.showMassageType[0], "结怨寻仇", GUILayout.Width(80));
-            settings.showMassageType[1] = GUILayout.Toggle(settings.showMassageType[1], "师徒亲子", GUILayout.Width(80));
-            settings.showMassageType[2] = GUILayout.Toggle(settings.showMassageType[2], "修习功法", GUILayout.Width(80));
-            settings.showMassageType[3] = GUILayout.Toggle(settings.showMassageType[3], "资源物品", GUILayout.Width(80));
-            settings.showMassageType[4] = GUILayout.Toggle(settings.showMassageType[4], "身份变更", GUILayout.Width(80));
-            settings.showMassageType[5] = GUILayout.Toggle(settings.showMassageType[5], "友情爱情", GUILayout.Width(80));
-            settings.showMassageType[6] = GUILayout.Toggle(settings.showMassageType[6], "战斗切磋", GUILayout.Width(80));
-            settings.showMassageType[7] = GUILayout.Toggle(settings.showMassageType[7], "伤病毒医", GUILayout.Width(80));
-            settings.showMassageType[8] = GUILayout.Toggle(settings.showMassageType[8], "寻访追随", GUILayout.Width(80));
-
+            var showAllMessageTmp = GUILayout.Toggle(settings.showAllMessage, "显示所有", GUILayout.Width(120));
+            for (int i = 0; i < showMessageTypeTmp.Length; ++i)
+            {
+                showMessageTypeTmp[i] = GUILayout.Toggle(settings.showMessageType[i], Settings.messsageTypeName[i], GUILayout.Width(80));
+                if (showAllMessageTmp != settings.showAllMessage && showAllMessageTmp) // 若勾选显示所有
+                {
+                    showMessageTypeTmp[i] = true; // 将所有类型都选上, 并清空不显示经历类型列表
+                    if (Changer.exclucdedMessageTypes.Count > 0)
+                        Changer.exclucdedMessageTypes.Clear();
+                }
+                else if (showMessageTypeTmp[i] != settings.showMessageType[i]) // 显示的经历类型选择发生变化
+                {
+                    if (!showMessageTypeTmp[i]) // 若某一类型改为不显示
+                    {
+                        showAllMessageTmp = false;  // 去掉勾选显示所有
+                        Changer.exclucdedMessageTypes.UnionWith(Settings.messageTypes[i]); // 将不显示的经历类型加入排除列表
+                    }
+                    else // 若某一类型改为显示
+                    {
+                        if (Changer.exclucdedMessageTypes.Count > 0)
+                        {
+                            // 因为不同经历筛选类型可能含有相同的messageId，故需清空排除列表再重新添加
+                            Changer.exclucdedMessageTypes.Clear();
+                            for (int j = 0; j < showMessageTypeTmp.Length; ++j)
+                            {
+                                if (j != i) // 不添加选择显示的类型
+                                    Changer.exclucdedMessageTypes.UnionWith(Settings.messageTypes[j]);
+                            }
+                        }
+                    }
+                }
+                settings.showMessageType[i] = showMessageTypeTmp[i];
+            }
+            settings.showAllMessage = showAllMessageTmp;
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
@@ -182,51 +234,10 @@ namespace MoreInfo
     /// </summary>
     internal static class Changer
     {
-        /// <summary>
-        /// 经历筛选
-        /// </summary>
-        private static List<int[]> massageBackup = new List<int[]>();
-        private static readonly List<HashSet<int>> messageFilter = new List<HashSet<int>>() {
-            new HashSet<int>{7, 10, 11, 12, 13, 14, 15, 16, 29,30,38,39,48,49,52,53,64,65,67,68,74,75,76,
-                77,78,82,83,96,97,98,99,100,115,116,117,118,119,120,121,122,123,124,125}, //结怨寻仇
-            new HashSet<int>{43,44,47,55,79,80,81,93,94,101,102,103,104,105,106},//子女师徒
-            new HashSet<int>{25,26,27,28,70,71,72,73,74,75,85,86,96,110,113},//修习
-            new HashSet<int>{1,2,3,4,8,9,10,11,12,13,14,15,16,17,21,22,59,60,107},//物品
-            new HashSet<int>{84,112,114},//身份
-            new HashSet<int>{40,41,42,45,46,50,51,52,54,56,57,66,69,72,73,76,90,91,92,96,97,98,99,100,109,125},//情爱
-            new HashSet<int>{31,32,33,34,35,36,37},//战斗
-            new HashSet<int>{5,6,7,18,19,20,61,62,63,108,109,110,111,122},//伤病
-            new HashSet<int>{53,54,55,56,57,58},//跟随
-        };
-
-        private static int backupId = 0;
-        /// <summary>
-        /// 存储数据
-        /// </summary>
-        /// <param name="id"></param>
-        public static void BackupMassage(int id)
-        {
-            backupId = id;
-            massageBackup = DateFile.instance.actorLifeMassage[id];
-        }
-        public static List<int[]> GetBackupMassage() => massageBackup;
-        public static void ResetBackup() => backupId = 0;
-        public static int GetBackupId() => backupId;
+        internal static readonly HashSet<int> exclucdedMessageTypes = new HashSet<int>();
 
         //获取需要显示的经历id列表
-        public static bool MessageTypToShow(int messageTyp)
-        {
-            for (int i = 0; i < Main.settings.showMassageType.Length; i++)
-            {
-                bool show = Main.settings.showMassageType[i];
-                //Main.Logger.Log("getTypeList.step2" + "show:" + show + "index:" + i + "count:" + massageFilter.Count);
-                if (show && i < messageFilter.Count() && messageFilter[i].Contains(messageTyp))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        public static bool MessageTypToShow(int messageTyp) => !exclucdedMessageTypes.Contains(messageTyp);
 
         //50061-50066 膂力- 定力
         //51361-51366 膂力%- 悟性% 
@@ -714,10 +725,10 @@ namespace MoreInfo
     }
 
     // 奇遇选择物品界面设置物品名称
-    [HarmonyPatch(typeof(StorySystem), "GetItem")]
+    [HarmonyPatch(typeof(ToStoryMenu), "GetItem")]
     internal static class StorySystem_GetItem_Patch
     {
-        public static void Postfix(StorySystem __instance, int typ)
+        public static void Postfix(ToStoryMenu __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -727,10 +738,10 @@ namespace MoreInfo
     }
 
     //修习图书界面设置物品名称
-    [HarmonyPatch(typeof(HomeSystem), "SetBook")]
+    [HarmonyPatch(typeof(BuildingWindow), "SetBook")]
     internal static class HomeSystem_SetBook_Patch
     {
-        public static void Postfix(HomeSystem __instance)
+        public static void Postfix(BuildingWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInReadBook)
                 return;
@@ -739,10 +750,10 @@ namespace MoreInfo
     }
 
     //修建界面显示
-    [HarmonyPatch(typeof(HomeSystem), "GetItem")]
+    [HarmonyPatch(typeof(BuildingWindow), "GetItem")]
     internal static class HomeSystem_GetItem_Patch
     {
-        public static void Postfix(HomeSystem __instance)
+        public static void Postfix(BuildingWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -752,10 +763,10 @@ namespace MoreInfo
     }
 
     //战利品界面
-    [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
+    [HarmonyPatch(typeof(BattleEndWindow), "ShowBattleBooty")]
     internal static class BattleSystem_ShowBattleBooty_Patch
     {
-        public static void Postfix(BattleSystem __instance)
+        public static void Postfix(BattleEndWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInStory)
                 return;
@@ -764,10 +775,10 @@ namespace MoreInfo
     }
 
     //赠送礼物界面
-    [HarmonyPatch(typeof(MassageWindow), "GetItem")]
+    [HarmonyPatch(typeof(ui_MessageWindow), "GetItem")]
     internal static class MassageWindow_GetItem_Patch
     {
-        public static void Postfix(MassageWindow __instance)
+        public static void Postfix(ui_MessageWindow __instance)
         {
             if (!Main.enabled || !Main.settings.showInGift)
                 return;
@@ -897,68 +908,75 @@ namespace MoreInfo
     /// <summary>
     /// 经历筛选
     /// </summary>
+    /// <remarks><see cref="ActorMenu.ShowActorMassage"/></remarks>
     [HarmonyPatch(typeof(ActorMenu), "ShowActorMassage")]
     internal static class ActorMenu_ShowActorMassage_Patch
     {
+        private static Action<int> ShowMassage = null;
         /// <summary>
         /// 经历筛选
         /// </summary>
-        public static bool Prefix(int key)
+        public static bool Prefix(int key, ActorMenu __instance, List<string> ___showMassage, ref int ___showMassageIndex)
         {
-            if (!Main.enabled || Main.settings.showAllMassage)
+            if (!Main.enabled || Main.settings.showAllMessage)
                 return true;
 
-            if (!DateFile.instance.actorLifeMassage.TryGetValue(key, out var actorLifeMassage))
-                return true;
-
-            int backupId = Changer.GetBackupId();
-            //Main.Logger.Log("Pre-----" + Changer.GetActorName(key));
-            if (backupId == key)
-                return true;
-            if (backupId != 0)
+            ___showMassage.Clear();
+            int num = DateFile.instance.MianActorID();
+            ___showMassage.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n",
+                                             DateFile.instance.massageDate[8010][1].Split('|')[0],
+                                             DateFile.instance.SetColoer(
+                                                 10002,
+                                                 DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(key, 25, addValue: false))][102]),
+                                             DateFile.instance.massageDate[8010][1].Split('|')[1],
+                                             DateFile.instance.GetActorName(key, realName: false, baseName: true),
+                                             DateFile.instance.massageDate[8010][1].Split('|')[2]));
+            LifeRecords.LifeRecord[] allRecords = LifeRecords.GetAllRecords(key);
+            if (allRecords != null)
             {
-                //Main.Logger.Log("reset-----" + Changer.GetActorName(key) + "Count:" + actorLifeMassage.Count);
-                DateFile.instance.actorLifeMassage[backupId] = Changer.GetBackupMassage();
-                Changer.ResetBackup();
-            }
-
-            Changer.BackupMassage(key);
-            //Main.Logger.Log("setp1" + Changer.GetActorName(key));
-            int count = actorLifeMassage.Count;
-            var newLifeMassage = new List<int[]> { };
-            //Main.Logger.Log("setp2:MaxCount:" + count);
-            for (int i = 0; i < count; i++)
-            {
-                //Main.Logger.Log("setp3:" + i);
-                int messageTyp = actorLifeMassage[i][0];
-                //Main.Logger.Log($"messageTyp: {messageTyp}");
-
-                //根据经历类型ID进行筛选
-                if (Changer.MessageTypToShow(messageTyp))
+                int num2 = Mathf.Max(DateFile.instance.GetActorFavor(isEnemy: false, num, key), 0);
+                for (int i = 0; i < allRecords.Length; i++)
                 {
-                    newLifeMassage.Add(actorLifeMassage[i]);
+                    LifeRecords.LifeRecord record = allRecords[i];
+                    if (!Changer.exclucdedMessageTypes.Contains(record.messageId)
+                        && DateFile.instance.actorMassageDate.ContainsKey(record.messageId))
+                    {
+                        int num3 = int.Parse(DateFile.instance.actorMassageDate[record.messageId][4]);
+                        num3 = 30000 * num3 / 100;
+                        if (key != num && num2 < num3)
+                        {
+                            List<string> list = ___showMassage;
+                            string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n";
+                            string str = DateFile.instance.massageDate[16][1];
+                            DateFile instance = DateFile.instance;
+                            short year = record.year;
+                            list.Add(string.Format(format,
+                                                   str + instance.SetColoer(10002, year.ToString()) + DateFile.instance.massageDate[16][3],
+                                                   DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[record.solarTerm][0]),
+                                                   DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
+                        }
+                        else
+                        {
+                            List<string> list2 = ___showMassage;
+                            string format2 = DateFile.instance.SetColoer(20002, "·")
+                                             + " {0}{1}："
+                                             + DateFile.instance.actorMassageDate[record.messageId][1]
+                                             + "\n";
+                            object[] args = DateFile.instance.GetLifeRecordMassageElements(key, record).ToArray();
+                            list2.Add(string.Format(format2, args));
+                        }
+                    }
                 }
             }
-            DateFile.instance.actorLifeMassage[key] = newLifeMassage;
-            return true;
-        }
-
-        /// <summary>
-        /// 恢复备份的经历
-        /// </summary>
-        public static void Postfix(int key)
-        {
-            if (!Main.enabled || Main.settings.showAllMassage)
-                return;
-            if (!DateFile.instance.actorLifeMassage.ContainsKey(key))
-                return;
-            if (Changer.GetBackupId() == key)
+            ___showMassageIndex = 0;
+            if (ShowMassage == null)
             {
-                //Main.Logger.Log("Exit-----" + "ID:" + key + "Count:" + Changer.GetBackupMassage().Count);
-                DateFile.instance.actorLifeMassage[key] = Changer.GetBackupMassage();
-                //Main.Logger.Log("ExitReset-----" + Changer.GetActorName(key) + "Count:" + DateFile.instance.actorLifeMassage[key].Count);
-                Changer.ResetBackup();
+                var bindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
+                var method = typeof(ActorMenu).GetMethod("ShowMassage", bindingFlags, null, new[] { typeof(int) }, null);
+                ShowMassage = (Action<int>)Delegate.CreateDelegate(typeof(Action<int>), __instance, method, true);
             }
+            ShowMassage(___showMassageIndex);
+            return false;
         }
     }
 }
