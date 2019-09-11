@@ -1,4 +1,4 @@
-﻿using Harmony12;
+using Harmony12;
 using System;
 using System.IO;
 using UnityEngine;

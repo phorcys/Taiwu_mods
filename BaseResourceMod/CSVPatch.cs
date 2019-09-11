@@ -1,4 +1,4 @@
-﻿#define debug
+#define debug
 using Harmony12;
 using LumenWorks.Framework.IO.Csv;
 using System;
