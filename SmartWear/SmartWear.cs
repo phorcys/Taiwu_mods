@@ -143,7 +143,10 @@ namespace SmartWear
     {
         // static Dictionary<int, int> _originEquitments = new Dictionary<int, int>();
         // static List<string> _originEquitments = new List<string>(3);
-        static Dictionary<int, string> _originEquitments = new Dictionary<int, string>();
+        static List<EquipDetails> _originEquitments = new List<EquipDetails>();
+        // static Dictionary<int, EquipDetails> _equitmentsFrom = new Dictionary<int, EquipDetails>();
+        static List<EquipDetails> _equipDetails = new List<EquipDetails>();
+
         static int _originGongFaIndex = -1;
 
         static public void EquipAccessories(int aptitudeType)
@@ -194,12 +197,38 @@ namespace SmartWear
         {
             var df = DateFile.instance;
             var actorDate = df.actorsDate[df.mianActorId];
-            foreach (var kvp in _originEquitments)
+
+            // 裝備歸位
+            foreach (var detail in _equipDetails)
             {
-                actorDate[kvp.Key] = kvp.Value;
+                switch (detail.ItemFrom)
+                {
+                    case ItemFrom.Equip:
+                        continue;
+                    case ItemFrom.Bag:
+                        if (Main.settings.EnabledLog)
+                            Main.Logger.Log($"脫下裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()} to 包裹");
+                        ControlHelper.TakeoffEquip(detail.SlotId);
+                        break;
+                    case ItemFrom.Warehouse:
+                        if (Main.settings.EnabledLog)
+                            Main.Logger.Log($"脫下裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()} to 倉庫");
+                        actorDate[detail.SlotId] = "0";
+                        df.actorItemsDate[-999].Add(detail.ItemId, 1);
+                        break;
+                    case ItemFrom.Unknow:
+                    default:
+                        throw new Exception($"Unknow item from: {detail.ItemId}");
+                }
+            }
+            _equipDetails.Clear();
+
+            foreach (var detail in _originEquitments)
+            {
+                ControlHelper.WearEquip(detail.SlotId, detail.ItemId);
                 if (Main.settings.EnabledLog)
                 {
-                    Main.Logger.Log($"換回裝備:{kvp.Value} ({df.GetItemDate(int.Parse(kvp.Value), 0, false)})@{((ActorsDateKey)kvp.Key).GetDescription()}");
+                    Main.Logger.Log($"換回裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()}");
                 }
             }
             _originEquitments.Clear();
@@ -232,25 +261,45 @@ namespace SmartWear
         }
 
 
+
         static public void Equip(int[] items, EquipSlot startSlot)
         {
+            RestoreEquip();
             var df = DateFile.instance;
             var actorDate = df.actorsDate[df.mianActorId];
             var actorsDateKey = (int)startSlot.ToActorsDateKey();
-            // 紀錄原本的裝備
-            if (_originEquitments.Count == 0)
+            // 紀錄並脫下原本的裝備
+            for (int i = 0; i < items.Length; i++)
             {
-                for (int i = 0; i < items.Length; i++)
-                {
-                    int key = (int)(actorsDateKey + i);
-                    _originEquitments.Add(key, actorDate[key]);
-                }
+                int key = (int)(actorsDateKey + i);
+                int itemId = int.Parse(actorDate[key]);
+                if (itemId == 0) continue;
+                _originEquitments.Add(new EquipDetails(key, itemId, ItemFrom.Equip));
+                ControlHelper.TakeoffEquip(key);
             }
-            // 因為只是暫時的, 裝起來就對了
-            // 不用特別取出
+            // 穿起裝備
+            // 紀錄來源 身上(背包) 或是 倉庫
             foreach (var item in items)
             {
-                actorDate[actorsDateKey++] = item.ToString();
+                if (item == 0) continue;
+                var itemFrom = df.ItemFrom(item);
+                _equipDetails.Add(new EquipDetails(actorsDateKey, item, itemFrom));
+                switch (itemFrom)
+                {
+                    case ItemFrom.Equip:
+                        break;
+                    case ItemFrom.Bag:
+                        ControlHelper.WearEquip(actorsDateKey, item);
+                        break;
+                    case ItemFrom.Warehouse:
+                        df.actorItemsDate[-999].Remove(item);
+                        actorDate[actorsDateKey] = item.ToString();
+                        break;
+                    case ItemFrom.Unknow:
+                    default:
+                        throw new Exception($"Unknow item from: {item}");
+                }
+                actorsDateKey++;
 //#if (DEBUG)
 //                Main.Logger.Log($"Equip:{item}");
 //#endif
@@ -258,7 +307,19 @@ namespace SmartWear
         }
     }
 
+    struct EquipDetails
+    {
+        public int ItemId;
+        public int SlotId;
+        public ItemFrom ItemFrom;
 
+        public EquipDetails(int slotId, int itemId, ItemFrom itemFrom)
+        {
+            SlotId = slotId;
+            ItemId = itemId;
+            ItemFrom = itemFrom;
+        }
+    }
 
 
     public enum ItemSource

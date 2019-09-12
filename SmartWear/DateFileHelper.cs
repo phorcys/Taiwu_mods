@@ -24,6 +24,21 @@ namespace SmartWear
                 return value;
             return 0;
         }
+
+        public static ItemFrom ItemFrom(this DateFile df, int itemId)
+        {
+            if (df.actorItemsDate[-999].ContainsKey(itemId))
+                return SmartWear.ItemFrom.Warehouse;
+            if (df.HasItem(df.mianActorId, itemId))
+                return SmartWear.ItemFrom.Bag;
+            var itemIdStr = itemId.ToString();
+            for (int i = (int)ActorsDateKey.Weapon1; i <= (int)ActorsDateKey.Ququ; i++)
+            {
+                if (df.actorsDate[df.mianActorId][i] == itemIdStr)
+                    return SmartWear.ItemFrom.Equip;
+            }
+            return SmartWear.ItemFrom.Unknow;
+        }
     }
 
     public enum ItemDateKey : int
@@ -210,6 +225,14 @@ namespace SmartWear
         Travel = 311,
         [Description("促织")]
         Ququ = 312,
+    }
+
+    public enum ItemFrom
+    {
+        Unknow,
+        Equip,
+        Bag,
+        Warehouse,
     }
 
     static public class EnumHelper

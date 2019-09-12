@@ -92,5 +92,28 @@ namespace Litfal
             ActorMenu.instance.equipGongFaTypToggle[index].isOn = true; 
             // 直接使用 ActorMenu.instance.ChangeEquipGongFa(index) 會造成功法介面顯示不正常
         }
+
+        public static void TakeoffEquip(int slotKey)
+        {
+            if (slotKey < 301 || slotKey > 312)
+                throw new ArgumentOutOfRangeException($"slotKey must be between 301~312, value={slotKey}");
+            var df = DateFile.instance;
+            var itemId = int.Parse(df.actorsDate[df.mianActorId][slotKey]);
+            df.GetItem(df.mianActorId, itemId, 1, false, -1, 0);
+            df.actorsDate[df.mianActorId][slotKey] = "0";
+        }
+
+        public static bool WearEquip(int slotKey, int itemId)
+        {
+            if (slotKey < 301 || slotKey > 312)
+                throw new ArgumentOutOfRangeException($"slotKey must be between 301~312, value={slotKey}");
+            var df = DateFile.instance;
+            var playerId = df.mianActorId;
+            if (!df.HasItem(playerId, itemId))
+                return false;
+            df.LoseItem(playerId, itemId, 1, false, false, -1);
+            df.actorsDate[playerId][slotKey] = itemId.ToString();
+            return true;
+        }
     }
 }
