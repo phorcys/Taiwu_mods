@@ -59,12 +59,12 @@ namespace Majordomo
         /// <returns></returns>
         public static float GetInjuryRate(int actorId)
         {
-            float hp = ActorMenu.instance.Hp(actorId);
-            float maxHp = ActorMenu.instance.MaxHp(actorId);
+            float hp = DateFile.instance.Hp(actorId);
+            float maxHp = DateFile.instance.MaxHp(actorId);
             float hpInjuryRate = hp / maxHp;
 
-            float sp = ActorMenu.instance.Sp(actorId);
-            float maxSp = ActorMenu.instance.MaxSp(actorId);
+            float sp = DateFile.instance.Sp(actorId);
+            float maxSp = DateFile.instance.MaxSp(actorId);
             float spInjuryRate = sp / maxSp;
 
             return Mathf.Max(hpInjuryRate, spInjuryRate);
@@ -99,8 +99,8 @@ namespace Majordomo
 
             for (int i = 0; i < N_POISON_TYPES; ++i)
             {
-                float poisoning = ActorMenu.instance.Poison(actorId, i);
-                float maxPoisoning = ActorMenu.instance.MaxPoison(actorId, i);
+                float poisoning = DateFile.instance.Poison(actorId, i);
+                float maxPoisoning = DateFile.instance.MaxPoison(actorId, i);
                 maxPoisoningRate = Mathf.Max(poisoning / maxPoisoning, maxPoisoningRate);
             }
 
@@ -116,8 +116,8 @@ namespace Majordomo
         /// <returns></returns>
         public static float GetLifespanDamageRate(int actorId)
         {
-            float health = ActorMenu.instance.Health(actorId);
-            float maxHealth = ActorMenu.instance.MaxHealth(actorId);
+            float health = DateFile.instance.Health(actorId);
+            float maxHealth = DateFile.instance.MaxHealth(actorId);
 
             return (maxHealth - health) / maxHealth;
         }

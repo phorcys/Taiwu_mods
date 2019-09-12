@@ -1,8 +1,8 @@
 ﻿{
   "Id": "ShowMap",
-  "DisplayName": "ShowMap",
-  "Author": "xiaoye1024",
-  "Version": "1.0.0",
+  "DisplayName": "显示地图",
+  "Author": "xiaoye97",
+  "Version": "1.25.0",
   "AssemblyName": "ShowMap.dll",
   "EntryMethod": "ShowMap.Main.Load"
 }

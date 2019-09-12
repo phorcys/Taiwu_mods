@@ -48,8 +48,8 @@ namespace ReadAssistant
 
         public static void GetReadNum()
         {//计算已读页数
-            int bookId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
-            int[] bookPages = (HomeSystem.instance.studySkillTyp != 17)
+            int bookId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32, true));
+            int[] bookPages = (BuildingWindow.instance.studySkillTyp != 17)
                 ? ((!DateFile.instance.skillBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.skillBookPages[bookId])
                 : ((!DateFile.instance.gongFaBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.gongFaBookPages[bookId]);
             Main.readNum = 0;
@@ -137,8 +137,8 @@ namespace ReadAssistant
                 int maxPatience = ReadBook.instance.GetMaxPatience();
                 Type type = ReadBook.instance.GetType();
                 int actorValue = (int)type.InvokeMember("actorValue", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
-                int readSkillId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
-                int needInt = HomeSystem.instance.GetNeedInt(actorValue, readSkillId);
+                int readSkillId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32, true));
+                int needInt = BuildingWindow.instance.GetNeedInt(actorValue, readSkillId);
                 int canUseInt = DateFile.instance.BaseAttr(DateFile.instance.mianActorId, 4, 0) / 2;
                 int cost3 = int.Parse(DateFile.instance.readBookDate[3][1]) * needInt / 100;
                 int incomeBuff = int.Parse(DateFile.instance.readBookDate[3][6]);
@@ -204,8 +204,8 @@ namespace ReadAssistant
             int canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
 
             int actorValue = (int)type.InvokeMember("actorValue", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
-            int readSkillId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
-            int needInt = HomeSystem.instance.GetNeedInt(actorValue, readSkillId);
+            int readSkillId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32, true));
+            int needInt = BuildingWindow.instance.GetNeedInt(actorValue, readSkillId);
 
             if (Main.isRead)
             {
@@ -269,11 +269,11 @@ namespace ReadAssistant
                     ReadBook.instance.UseIntPower(5);
                     canUseInt = (int)type.InvokeMember("canUseInt", BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, ReadBook.instance, null);
                 }
-                int bookId = int.Parse(DateFile.instance.GetItemDate(HomeSystem.instance.readBookId, 32, true));
-                int[] bookPages = (HomeSystem.instance.studySkillTyp != 17)
+                int bookId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32, true));
+                int[] bookPages = (BuildingWindow.instance.studySkillTyp != 17)
                     ? ((!DateFile.instance.skillBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.skillBookPages[bookId])
                     : ((!DateFile.instance.gongFaBookPages.ContainsKey(bookId)) ? new int[10] : DateFile.instance.gongFaBookPages[bookId]);
-                int[] bookPage = DateFile.instance.GetBookPage(HomeSystem.instance.readBookId);
+                int[] bookPage = DateFile.instance.GetBookPage(BuildingWindow.instance.readBookId);
                 if (Main.settings.autoUsePower4 && bookPage[readPageIndex] == 0 && bookPages[readPageIndex] == 0)
                 {
                     if (canUseInt >= (cost4 + cost7 * 2) * needInt / 100 && Main.readNum >= 5)
