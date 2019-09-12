@@ -56,13 +56,11 @@ namespace Sth4nothing.SLManager
 
     public static class Main
     {
-        const bool ENABLE_HYPER_LOAD = true;
-
         public static bool Enabled { get; private set; }
         public static bool ForceSave = false;
         public static bool isBackuping = false;
         private static string logPath;
-        private static readonly string[] _Off_And_On = {"关闭", "启用"};
+        public static readonly string[] Off_And_On = {"关闭", "启用"};
 
         public static Settings settings;
 
@@ -126,34 +124,19 @@ namespace Sth4nothing.SLManager
             GUILayout.BeginHorizontal();
             GUILayout.Label("禁用游戏换季存档", GUILayout.Width(250));
             settings.blockAutoSave = GUILayout.SelectionGrid(settings.blockAutoSave ? 1 : 0,
-                                         _Off_And_On, 2, GUILayout.Width(150)) == 1;
+                                         Off_And_On, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("讀檔後重置亂數種子", GUILayout.Width(250));
             settings.regenerateRandomSeedAfterLoad = GUILayout.SelectionGrid(settings.regenerateRandomSeedAfterLoad ? 1 : 0,
-                                                    _Off_And_On, 2, GUILayout.Width(150)) == 1;
+                                                    Off_And_On, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
-            if (ENABLE_HYPER_LOAD)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("讀檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
-                settings.enableTurboQuickLoadAfterLoad = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterLoad ? 1 : 0,
-                                             _Off_And_On, 2, GUILayout.Width(150)) == 1;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
+            HyperQuickLoad.InitClass.OnGUI(modEntry);
 
-
-                GUILayout.BeginHorizontal();
-                GUILayout.Label("存檔後使用高速快速讀取 (魔改危險)", GUILayout.Width(250));
-                settings.enableTurboQuickLoadAfterSave = GUILayout.SelectionGrid(settings.enableTurboQuickLoadAfterSave ? 1 : 0,
-                                             _Off_And_On, 2, GUILayout.Width(150)) == 1;
-                GUILayout.FlexibleSpace();
-                GUILayout.EndHorizontal();
-            }
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
