@@ -207,7 +207,7 @@ namespace Majordomo
 
         public static SortedList<int, ResourceInfo> GetResourcesInfo()
         {
-            int[] currResources = ActorMenu.instance.ActorResource(DateFile.instance.MianActorID());
+            int[] currResources = DateFile.instance.ActorResource(DateFile.instance.MianActorID());
             int maxResource = 1000 + UIDate.instance.GetMaxResource();
 
             return new SortedList<int, ResourceInfo>
@@ -540,7 +540,7 @@ namespace Majordomo
         {
             bool add = this.pressedButton == PointerEventData.InputButton.Left;
             bool changed = ResourceMaintainer.ChangeResourceIdealHolding(this.resourceId, add, nMultiple);
-            if (changed) DateFile.instance.PlayeSE(2);
+            if (changed) AudioManager.instance.PlaySE("SE_2");
         }
     }
 
@@ -548,8 +548,8 @@ namespace Majordomo
     /// <summary>
     /// Patch: 创建 UI
     /// </summary>
-    [HarmonyPatch(typeof(UIDate), "Start")]
-    public static class UIDate_Start_InitialzeResources
+    [HarmonyPatch(typeof(ui_TopBar), "Awake")]
+    public static class ui_TopBar_Awake_InitialzeResources
     {
         static void Postfix()
         {
@@ -562,9 +562,10 @@ namespace Majordomo
 
     /// <summary>
     /// Patch: 更新 UI
+    /// 因为 ui_TopBar 没有 Update 方法, 所以只好加在生命周期一致的另一个 UI 上
     /// </summary>
-    [HarmonyPatch(typeof(UIDate), "Update")]
-    public static class UIDate_Update_ShowOrHideText
+    [HarmonyPatch(typeof(ui_BottomLeft), "Update")]
+    public static class ui_BottomLeft_Update_ShowOrHideText
     {
         static void Postfix()
         {
