@@ -180,6 +180,8 @@ namespace Majordomo
 
             MajordomoWindow.instance.window.SetActive(false);
             MajordomoWindow.instance.isWindowOpening = false;
+
+            UnityEngine.Debug.Log("Resources of MajordomoWindow registered.");
         }
 
 
@@ -246,10 +248,11 @@ namespace Majordomo
 
         private void CreateWindow()
         {
+            // 此函数的触发条件就是 BuildingWindow.instance 存在
+            var ququBox = BuildingWindow.instance.GetComponentInChildren<QuquBox>();
+
             // clone & modify main window
-            if (!QuquBox.instance.ququBoxWindow) throw new Exception("QuquBox.instance.ququBoxWindow is null");
-            this.window = UnityEngine.Object.Instantiate(
-                QuquBox.instance.ququBoxWindow, QuquBox.instance.ququBoxWindow.transform.parent);
+            this.window = UnityEngine.Object.Instantiate(ququBox.ququBoxWindow, ququBox.ququBoxWindow.transform.parent);
             this.window.SetActive(true);
             this.window.name = "MajordomoWindow";
 
@@ -258,7 +261,7 @@ namespace Majordomo
 
             // modify panel container
             this.panelContainer = Common.GetChild(this.window, "QuquBoxHolder");
-            if (!this.panelContainer) throw new Exception("Failed to get child 'QuquBoxHolder' from QuquBox.instance.ququBoxWindow");
+            if (!this.panelContainer) throw new Exception("Failed to get child 'QuquBoxHolder' from QuquBox.ququBoxWindow");
             this.panelContainer.name = "MajordomoPanelContainer";
 
             // clone & modify menu
@@ -294,7 +297,7 @@ namespace Majordomo
 
             // modify close button
             var goCloseButton = Common.GetChild(this.window, "CloseQuquBoxButton");
-            if (!goCloseButton) throw new Exception("Failed to get child 'CloseQuquBoxButton' from QuquBox.instance.ququBoxWindow");
+            if (!goCloseButton) throw new Exception("Failed to get child 'CloseQuquBoxButton' from QuquBox.ququBoxWindow");
             goCloseButton.name = "MajordomoCloseButton";
 
             var closeButton = Common.RemoveComponent<Button>(goCloseButton, recreate: true);
@@ -306,7 +309,7 @@ namespace Majordomo
 
             // modify summary bar
             this.summaryBar = Common.GetChild(this.window, "AllQuquLevelBack");
-            if (!this.summaryBar) throw new Exception("Failed to get child 'AllQuquLevelBack' from QuquBox.instance.ququBoxWindow");
+            if (!this.summaryBar) throw new Exception("Failed to get child 'AllQuquLevelBack' from QuquBox.ququBoxWindow");
             this.summaryBar.name = "MajordomoSummary";
 
             var horizontalLayoutGroup = this.summaryBar.AddComponent<HorizontalLayoutGroup>();
@@ -364,8 +367,8 @@ namespace Majordomo
         private GameObject CreateMenuButton(string name, UnityEngine.Events.UnityAction callback, string iconPath, string label)
         {
             // clone & modify button
-            if (!HomeSystem.instance.studyActor) throw new Exception("HomeSystem.instance.studyActor is null");
-            var studySkillButton = Common.GetChild(HomeSystem.instance.studyActor, "StudySkill,0");
+            // 此函数的触发条件就是 BuildingWindow.instance 存在
+            var studySkillButton = Common.GetChild(BuildingWindow.instance.studyActor, "StudySkill,0");
             if (!studySkillButton) throw new Exception("Failed to get child 'StudySkill,0' from HomeSystem.instance.studyActor");
 
             var goMenuButton = UnityEngine.Object.Instantiate(studySkillButton, this.menu.transform);
@@ -608,17 +611,25 @@ namespace Majordomo
 
 
     /// <summary>
-    /// Patch: 注册管家界面（在其他 mod 之后注册）
+    /// Patch: 在建筑窗口创建时注册管家界面（在其他 mod 之后注册）
     /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "Start")]
+    [HarmonyPatch(typeof(BuildingWindow), "instance", MethodType.Getter)]
     [HarmonyPriority(Priority.Last)]
-    public static class HomeSystem_Start_RegisterMajordomoWindow
+    public static class BuildingWindow_instance_Getter_RegisterMajordomoWindow
     {
-        static void Postfix()
+        static void Prefix(ref bool __state, BuildingWindow ____inst)
         {
             if (!Main.enabled) return;
 
-            MajordomoWindow.TryRegisterResources();
+            __state = ____inst == null;
+        }
+
+
+        static void Postfix(bool __state)
+        {
+            if (!Main.enabled) return;
+
+            if (__state) MajordomoWindow.TryRegisterResources();
         }
     }
 }
