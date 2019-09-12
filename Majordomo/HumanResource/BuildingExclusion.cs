@@ -27,15 +27,15 @@ namespace Majordomo
             if (Main.settings.excludedBuildings[partId][placeId].Contains(buildingIndex))
             {
                 Main.settings.excludedBuildings[partId][placeId].Remove(buildingIndex);
-                DateFile.instance.PlayeSE(1);
+                AudioManager.instance.PlaySE("SE_1");
             }
             else
             {
                 Main.settings.excludedBuildings[partId][placeId].Add(buildingIndex);
-                DateFile.instance.PlayeSE(7);
+                AudioManager.instance.PlaySE("SE_7");
             }
             
-            HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex);
+            HomeSystemWindow.Instance.UpdateHomePlace(partId, placeId, buildingIndex);
         }
 
 
@@ -58,10 +58,10 @@ namespace Majordomo
     /// <summary>
     /// Patch: 在建筑界面添加鼠标右键事件
     /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "MakeHomeMap")]
-    public static class HomeSystem_MakeHomeMap_RegisterMouseEvent
+    [HarmonyPatch(typeof(HomeSystemWindow), "MakeHomeMap")]
+    public static class HomeSystemWindow_MakeHomeMap_RegisterMouseEvent
     {
-        static void Postfix(HomeSystem __instance)
+        static void Postfix(HomeSystemWindow __instance)
         {
             if (!Main.enabled) return;
 
