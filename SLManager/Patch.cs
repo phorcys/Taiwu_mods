@@ -638,16 +638,20 @@ namespace Sth4nothing.SLManager
         public static void DoLoad(int dataId)
         {
             OnLoad = true;
+            // 先 ChangeGameState , 擠掉之前的 GameState
+            // 避免在 DateFile.instance.Initialize 時觸發 前一個 State 的 OnExit 
+            // 會造成一些問題 (例如讀檔後戰鬥黑屏)
+            Game.Instance.ChangeGameState(eGameState.Login, new object[] { eMainMenuShow.None });
             // 用 GMPanel 的寫法
-            SingletonObject.ClearInstances();
             SubSystems.OnLeaveGame();
+            GameData.Common.OnLeaveGame();
             WorldMapSystem.instance.ResetWorldMap();
             UIManager.Instance.DestroyAllOldPrefabs();
+            SingletonObject.ClearInstances();
             DateFile.instance.Initialize(dataId, DateFile.instance.allMainActors[dataId] == null);
-           
         }
 
-        
+
 
         /// <summary>
         /// 解压存档到游戏存档目录
