@@ -1,12 +1,7 @@
 ﻿using Harmony12;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityModManagerNet;
 
 
@@ -15,39 +10,40 @@ namespace GameSpeeder
 {
     public class Settings : UnityModManager.ModSettings
     {
-        public override void Save(UnityModManager.ModEntry modEntry)
-        {
-            UnityModManager.ModSettings.Save<Settings>(this, modEntry);
-        }
-
-        public bool enabled = true; // 是否生效
-        public float speedScale = 8f;// 速度倍率
-        //public bool stopOnDesperateFight = true; // 死斗时暂停变速
-        public int minJingcunExc = 1; // 最小精纯超出值
-        public bool stopOnHiJingcunEnemy = true; // 面对高精纯敌人时暂停变速
-        public bool stopOnReading = true; // 读书时暂停变速
-        public bool stopOnCatching = true; // 捉蟋蟀时暂停变速
-        public KeyCode hotKeyEnable = KeyCode.N; // 激活变速热键
+        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
+        /// <summary>是否生效</summary>
+        public bool enabled = true;
+        /// <summary>速度倍率</summary>
+        public float speedScale = 8f;
+        /// <summary>死斗时暂停变速</summary>
+        //public bool stopOnDesperateFight = true;  
+        /// <summary>最小精纯超出值</summary>
+        public int minJingcunExc = 1;
+        /// <summary>面对高精纯敌人时暂停变速</summary>
+        public bool stopOnHiJingcunEnemy = true;
+        /// <summary>读书时暂停变速</summary>
+        public bool stopOnReading = true;
+        /// <summary>捉蟋蟀时暂停变速</summary>
+        public bool stopOnCatching = true;
+        /// <summary>激活变速热键</summary>
+        public KeyCode hotKeyEnable = KeyCode.N;
     }
 
-    public class GameSpeeder_Looper : UnityEngine.MonoBehaviour
+    public class GameSpeeder_Looper : MonoBehaviour
     {
-        //void Update() { }
-
-        void LateUpdate()
-        {
-            Main.CheckPerFrame();
-        }
+        private void LateUpdate() => Main.CheckPerFrame();
     }
 
     public static class Main
     {
-        const uint MAX_SPEED = 16;
-        static int ctrlId_hotKeyEnable = int.MinValue;
+        private const uint MAX_SPEED = 16;
+        private static int ctrlId_hotKeyEnable = int.MinValue;
         private static bool _enable;
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
+        /// <summary>当前设定的时间流逝速度</summary>
         public static float lastTimeScale = 1f;
+        /// <summary>游戏中默认的时间流逝速度</summary>
         public static float realTimeScale = 1f;
         private static GameSpeeder_Looper _looper = null;
         private static bool _isHotKeyHangUp = false;
@@ -64,7 +60,7 @@ namespace GameSpeeder
             lastTimeScale = realTimeScale = Time.timeScale;
             if (_looper == null)
             {
-                _looper = (new UnityEngine.GameObject()).AddComponent(
+                _looper = new GameObject().AddComponent(
                     typeof(GameSpeeder_Looper)) as GameSpeeder_Looper;
                 UnityEngine.Object.DontDestroyOnLoad(_looper);
             }
@@ -77,10 +73,7 @@ namespace GameSpeeder
             return true;
         }
 
-        public static bool IsTimePatchEnable()
-        {
-            return lastTimeScale != realTimeScale;
-        }
+        public static bool IsTimePatchEnable() => lastTimeScale != realTimeScale;
 
         public static void ApplyTimeScale(bool enable, bool updateSetting = false)
         {
@@ -90,12 +83,12 @@ namespace GameSpeeder
             if (lastTimeScale != Time.timeScale)
                 realTimeScale = Time.timeScale;
             if (_enable)
-                lastTimeScale = Time.timeScale = realTimeScale * Main.settings.speedScale * 1.00001f; // * 1.00001f方便检测之后游戏逻辑是否对Time.timeScale作了更改
+                lastTimeScale = Time.timeScale = realTimeScale * settings.speedScale * 1.00001f; // * 1.00001f方便检测之后游戏逻辑是否对Time.timeScale作了更改
             else
                 lastTimeScale = Time.timeScale = realTimeScale;
         }
-
-        static bool _keyCurrentlyHeldDown = false;
+        /// <summary>当前状态有按键被按下</summary>
+        private static bool _keyCurrentlyHeldDown = false;
         public static void CheckPerFrame()
         {
             if (lastTimeScale != Time.timeScale) // may be changed in game logic
@@ -120,9 +113,10 @@ namespace GameSpeeder
             }
         }
 
-        static private string _jcExcTxt;
-        static int _jcExcCtrlKb = -1;
-        static void OnGUI(UnityModManager.ModEntry modEntry)
+        private static string _jcExcTxt;
+        private static int _jcExcCtrlKb = -1;
+
+        private static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             Color orgContentColor = GUI.contentColor;
             GUIStyle txtFieldStyle = GUI.skin.textField;
@@ -130,16 +124,16 @@ namespace GameSpeeder
 
             GUILayout.Label("---基本配置---", new GUILayoutOption[0]);
             GUILayout.BeginHorizontal();
-            GUI.contentColor = Main.settings.enabled ? Color.green : Color.red;
-            Main.settings.enabled = GUILayout.Toggle(Main.settings.enabled,
-                Main.settings.enabled ? "变速已激活" : "变速未激活", new GUILayoutOption[0]);
+            GUI.contentColor = settings.enabled ? Color.green : Color.red;
+            settings.enabled = GUILayout.Toggle(settings.enabled,
+                settings.enabled ? "变速已激活" : "变速未激活", new GUILayoutOption[0]);
             GUI.contentColor = orgContentColor;
             GUILayout.Space(40);
 
             GUILayout.Label("倍速", new GUILayoutOption[0]);
-            GUILayout.Label(Main.settings.speedScale.ToString() + "x",
+            GUILayout.Label(settings.speedScale.ToString() + "x",
                 txtFieldStyle, GUILayout.Width(40));
-            int oldPos = (int)(Main.settings.speedScale < 1 ? Main.settings.speedScale * 10 : Main.settings.speedScale * 2 + 9);
+            int oldPos = (int)(settings.speedScale < 1 ? settings.speedScale * 10 : settings.speedScale * 2 + 9);
             int newPos = (int)(GUILayout.HorizontalSlider(oldPos, 1, 10 + MAX_SPEED * 2 - 1, GUILayout.Width(250)));
             if (oldPos != newPos)
             {
@@ -148,7 +142,7 @@ namespace GameSpeeder
                     newScale = 1.5f;
                 else if (newScale > 1)
                     newScale = (float)Math.Floor(newScale / 2);
-                Main.settings.speedScale = newScale;
+                settings.speedScale = newScale;
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -157,14 +151,14 @@ namespace GameSpeeder
             GUILayout.Label("---扩展配置---", new GUILayoutOption[0]);
 
             GUILayout.BeginHorizontal();
-            //Main.settings.stopOnDesperateFight = GUILayout.Toggle(
-            //    Main.settings.stopOnDesperateFight, "死斗开启时自动暂停变速", new GUILayoutOption[0]);
-            Main.settings.stopOnHiJingcunEnemy = GUILayout.Toggle(
-                Main.settings.stopOnHiJingcunEnemy, "战斗首次有高于主角精纯", new GUILayoutOption[0]);
+            //settings.stopOnDesperateFight = GUILayout.Toggle(
+            //    settings.stopOnDesperateFight, "死斗开启时自动暂停变速", new GUILayoutOption[0]);
+            settings.stopOnHiJingcunEnemy = GUILayout.Toggle(
+                settings.stopOnHiJingcunEnemy, "战斗首次有高于主角精纯", new GUILayoutOption[0]);
 
-            GUI.enabled = Main.settings.stopOnHiJingcunEnemy;
+            GUI.enabled = settings.stopOnHiJingcunEnemy;
             if (_jcExcTxt == null)
-                _jcExcTxt = Main.settings.minJingcunExc.ToString();
+                _jcExcTxt = settings.minJingcunExc.ToString();
             _jcExcTxt = GUILayout.TextField(_jcExcTxt, GUILayout.Width(32));
             if (GUI.changed)
             {
@@ -172,9 +166,8 @@ namespace GameSpeeder
             }
             else if (_jcExcCtrlKb != -1 && _jcExcCtrlKb != GUIUtility.keyboardControl)
             {
-                int newJcExc;
-                if (int.TryParse(_jcExcTxt, out newJcExc))
-                    Main.settings.minJingcunExc = Math.Min(100, Math.Max(-99, newJcExc));
+                if (int.TryParse(_jcExcTxt, out int newJcExc))
+                    settings.minJingcunExc = Math.Min(100, Math.Max(-99, newJcExc));
                 _jcExcCtrlKb = -1;
                 _jcExcTxt = null;
             }
@@ -184,13 +177,13 @@ namespace GameSpeeder
 
             GUILayout.FlexibleSpace();
 
-            Main.settings.stopOnReading = GUILayout.Toggle(
-                Main.settings.stopOnReading, "读书开启时自动暂停变速", new GUILayoutOption[0]);
+            settings.stopOnReading = GUILayout.Toggle(
+                settings.stopOnReading, "读书开启时自动暂停变速", new GUILayoutOption[0]);
 
             GUILayout.FlexibleSpace();
 
-            Main.settings.stopOnCatching = GUILayout.Toggle(
-                Main.settings.stopOnCatching, "捕促织时自动暂停变速", new GUILayoutOption[0]);
+            settings.stopOnCatching = GUILayout.Toggle(
+                settings.stopOnCatching, "捕促织时自动暂停变速", new GUILayoutOption[0]);
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -201,10 +194,10 @@ namespace GameSpeeder
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             GUILayout.Label("变速开关热键：", new GUILayoutOption[0]);
-            
+
             const string showTip = "<按键...>";
             bool isReadyToSet = ctrlId_hotKeyEnable == GUIUtility.hotControl;
-            string sShowed = isReadyToSet ? showTip : Main.settings.hotKeyEnable.ToString();
+            string sShowed = isReadyToSet ? showTip : settings.hotKeyEnable.ToString();
             Color setColor = isReadyToSet ? Color.yellow : orgContentColor;
             GUI.contentColor = setColor;
             bool bClick = GUILayout.Button(sShowed, txtFieldStyle, GUILayout.Width(120));
@@ -222,7 +215,7 @@ namespace GameSpeeder
                 {
                     if (KeyCode.Escape != Event.current.keyCode)
                     {
-                        Main.settings.hotKeyEnable = Event.current.keyCode;
+                        settings.hotKeyEnable = Event.current.keyCode;
                     }
                     Event.current.Use();
                     ctrlId_hotKeyEnable = int.MinValue;
@@ -232,15 +225,15 @@ namespace GameSpeeder
             GUILayout.EndHorizontal();
         }
 
-        static void OnSaveGUI(UnityModManager.ModEntry modEntry)
+        private static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
-            Main.settings.speedScale = (float)Math.Round(Main.settings.speedScale, 1);
-            if (Main.settings.speedScale < 0.1f)
-                Main.settings.speedScale = 0.1f;
-            else if (Main.settings.speedScale > MAX_SPEED)
-                Main.settings.speedScale = MAX_SPEED;
+            settings.speedScale = (float)Math.Round(settings.speedScale, 1);
+            if (settings.speedScale < 0.1f)
+                settings.speedScale = 0.1f;
+            else if (settings.speedScale > MAX_SPEED)
+                settings.speedScale = MAX_SPEED;
             settings.Save(modEntry);
-            ApplyTimeScale(Main.settings.enabled);
+            ApplyTimeScale(settings.enabled);
         }
     }
 
@@ -258,7 +251,7 @@ namespace GameSpeeder
     [HarmonyPatch(typeof(BattleSystem), "GetEnemy")]
     public static class ChangeEnemyPatch
     {
-        static bool _thisBattleAlreadySet = false;
+        private static bool _thisBattleAlreadySet = false;
         private static void Postfix(BattleSystem __instance, bool newBattle)
         {
             if (newBattle)
@@ -280,51 +273,44 @@ namespace GameSpeeder
         }
     }
 
-    [HarmonyPatch(typeof(BattleSystem), "SetChooseAttackPart")]
-    public static class SetChooseAttackPartPatch
-    {
-        private static void Postfix(BattleSystem __instance)
-        {
-            Time.timeScale = 0; // Fix变招的逻辑step 1
-        }
-    }
+    // 貌似新版游戏(v0.2.5.x)不需要这个修复了
+    //[HarmonyPatch(typeof(BattleSystem), "SetChooseAttackPart")]
+    //public static class SetChooseAttackPartPatch
+    //{
+    //    private static void Postfix() => Time.timeScale = 0; // Fix变招的逻辑step 1
+    //}
 
-    [HarmonyPatch(typeof(BattleSystem), "AttackPartChooseEnd")]
-    public static class AttackPartChooseEndPatch
-    {
-        private static void Prefix(BattleSystem __instance, ref float waitTime)
-        {
-            waitTime = 0; // Fix变招的逻辑step 2
-        }
-    }
+    //[HarmonyPatch(typeof(BattleSystem), "AttackPartChooseEnd")]
+    //public static class AttackPartChooseEndPatch
+    //{
+    //    private static void Prefix(ref float waitTime) => waitTime = 0; // Fix变招的逻辑step 2
+    //}
 
 
-    [HarmonyPatch(typeof(BattleSystem), "BattleEnd")]
+    [HarmonyPatch(typeof(BattleEndWindow), "BattleEnd")]
     public static class ExitBattlePatch
     {
-        private static void Postfix(BattleSystem __instance)
-        {
+        private static void Postfix() =>
             // Main.Logger.Log("end battle " + StartBattle.instance.battleLoseTyp);
             Main.ApplyTimeScale(Main.settings.enabled);
-        }
     }
 
     // 这个函数产生的协程使用了WaitForSecondsRealtime，timescale无法直接变速，故需patch it
     [HarmonyPatch(typeof(BattleSystem), "TimePause")]
     public static class TimePausePatch
     {
-        private static void Prefix(BattleSystem __instance, ref float autoTime)
+        private static void Prefix(ref float autoTime)
         {
             // 变速配置激活状态且倍速>1才改这个等待时间
             if (Main.settings.enabled && Main.settings.speedScale > 1)
-                autoTime = autoTime / Main.settings.speedScale;
+                autoTime /= Main.settings.speedScale;
         }
     }
 
     [HarmonyPatch(typeof(ReadBook), "SetReadBookWindow")]
     public static class StartReadBook
     {
-        private static void Postfix(ReadBook __instance)
+        private static void Postfix()
         {
             // Main.Logger.Log("start readbook ");
             if (Main.settings.stopOnReading)
@@ -335,17 +321,15 @@ namespace GameSpeeder
     [HarmonyPatch(typeof(ReadBook), "CloseReadBookWindow")]
     public static class EndReadBook
     {
-        private static void Postfix(ReadBook __instance)
-        {
+        private static void Postfix() =>
             // Main.Logger.Log("end readbook " + StartBattle.instance.battleTyp);
             Main.ApplyTimeScale(Main.settings.enabled);
-        }
     }
 
     [HarmonyPatch(typeof(GetQuquWindow), "ShowGetQuquWindow")]
     public static class StartCatching
     {
-        private static void Postfix(GetQuquWindow __instance)
+        private static void Postfix()
         {
             // Main.Logger.Log("start catching ");
             if (Main.settings.stopOnCatching)
@@ -358,19 +342,17 @@ namespace GameSpeeder
     [HarmonyPatch(typeof(GetQuquWindow), "CloseGetQuquWindow")]
     public static class EndCatching
     {
-        private static void Postfix(GetQuquWindow __instance)
-        {
+        private static void Postfix() =>
             // Main.Logger.Log("end catching ");
             Main.ApplyTimeScale(Main.settings.enabled);
-        }
     }
 
     // 使GetQuquWindow受变速影响
     [HarmonyPatch(typeof(GetQuquWindow), "LateUpdate")]
     public static class PatchQuquWindowUpdate
     {
-        static float _fixDeltaTime = 0;
-        static bool _stopPatching = false;
+        private static float _fixDeltaTime = 0;
+        private static bool _stopPatching = false;
 
         private static bool Prefix(GetQuquWindow __instance, MethodBase __originalMethod)
         {
@@ -396,14 +378,11 @@ namespace GameSpeeder
                 __originalMethod.Invoke(__instance, null);
                 _stopPatching = false;
             }
-            
+
             return false;
         }
 
-        public static void Reset()
-        {
-            _fixDeltaTime = 0;
-        }
+        public static void Reset() => _fixDeltaTime = 0;
     }
 }
 
