@@ -19,6 +19,7 @@ namespace TaiwuHentai
         public uint SpouseAge = 14;
         public int GetLoveHaveLover = 2;
         public int GetLoveHaveSpouse = 2;
+        public int FriendNumber = 1;
         public bool MoreLottery = false;
         public bool PeerTeaching = false;
         public override void Save(UnityModManager.ModEntry modEntry)
@@ -84,7 +85,7 @@ namespace TaiwuHentai
             settings.PeerTeaching = GUILayout.Toggle(settings.PeerTeaching, "修改可请教同伴天赋70以上的技艺");
             GUILayout.Label("说明： 选中修改使太吾可以可请教同伴天赋70以上的技艺。");
             GUILayout.EndHorizontal();
-            /*
+
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄");
             var maxBackupsToKeep = GUILayout.TextField(settings.SpouseAge.ToString(), 3);
@@ -92,7 +93,7 @@ namespace TaiwuHentai
             {
                 settings.SpouseAge = 14;
             }
-            GUILayout.EndHorizontal();*/
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal("Box");
             GUILayout.Label("有情人的npc，新欢概率", new GUILayoutOption[0]);
             Main.settings.GetLoveHaveLover = GUILayout.SelectionGrid(Main.settings.GetLoveHaveLover, new string[]
@@ -119,6 +120,17 @@ namespace TaiwuHentai
             settings.MoreLottery = GUILayout.Toggle(settings.MoreLottery, "是否强化无量金刚宗的贡品搜集功能 ");
             GUILayout.Label("说明： 选中以强化无量金刚宗的贡品搜集，使之能搜集生产用的引子。开关此功能需要重启游戏");
             GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal("Box");
+            GUILayout.Label("同道数量", new GUILayoutOption[0]);
+            Main.settings.FriendNumber = GUILayout.SelectionGrid(Main.settings.FriendNumber, new string[]
+            {
+                "1倍",
+                "2倍",
+                "3倍",
+                "4倍",
+                "5倍"
+            }, 5, new GUILayoutOption[0]);
+            GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
         }
@@ -129,7 +141,24 @@ namespace TaiwuHentai
         }
 
     }
+    [HarmonyPatch(typeof(DateFile), "GetMaxFamilySize")]
+    public static class DateFile_GetMaxFamilySize_Patch
+    {
+        private static void Postfix(DateFile __instance, ref int __result)
+        {
 
+            if (!Main.enabled )
+            {
+                return;
+            }
+            if(__result > 0)
+            __result = __result * (Main.settings.FriendNumber+1);
+        }
+
+
+
+
+    }
     [HarmonyPatch(typeof(DateFile), "GetActorDate")]
     public static class DateFile_GetActorDate_Patch
     {
@@ -201,7 +230,7 @@ namespace TaiwuHentai
 
             if ((tips != null))
             {
-                Transform oldMainHoder = WindowManage.instance.informationWindow.transform.Find("AgeMianface");
+                Transform oldMainHoder = WindowManage.instance.informationMassage.GetComponent<RectTransform>().Find("AgeMianface");
                 if (oldMainHoder)
                 {
                     UnityEngine.Object.Destroy(oldMainHoder.gameObject);
@@ -211,16 +240,16 @@ namespace TaiwuHentai
                 {
                     ','
                 });
-                Main.Logger.Log(array[0]);
+                //Main.Logger.Log(array[0]);
                 if (array[0] == "HelpIcon" && Main.settings.displayGlamour)
                 {
-                    int key = ActorMenu.instance.acotrId;
+                    int key = ActorMenu.instance.actorId;
                     bool flageIsShow = false;
                     //Main.Logger.Log(key.ToString());
                     if (DateFile.instance.actorsDate.ContainsKey(key))
                     {
                         flageIsShow = DateFile.instance.actorsDate[key].ContainsKey(997);
-                        Main.Logger.Log(flageIsShow.ToString());
+                        //Main.Logger.Log(flageIsShow.ToString());
                     }
                     if (flageIsShow)
                     {
@@ -289,17 +318,35 @@ namespace TaiwuHentai
 
                         if (array3.Length != 1)
                         {
-                            ActorFace mainHoder = UnityEngine.Object.Instantiate(ActorMenu.instance.mianActorFace, new Vector3(100f, 30f, 1), Quaternion.identity);
-                            mainHoder.transform.SetParent(WindowManage.instance.informationWindow.GetComponent<RectTransform>(), false);
+
+                            //RectTransform component = __instance.informationWindow.GetComponent<RectTransform>();
+                            //ActorFace mainHoder = UnityEngine.Object.Instantiate(ActorMenu.instance.mianActorFace, new Vector3(100f, 30f, 1), Quaternion.identity);
+                            ActorFace mainHoder = Object.Instantiate<ActorFace>(ActorMenu.instance.mianActorFace, new Vector3(110f, -160f, 1f), Quaternion.identity);
+                           // mainHoder.transform.SetParent(__instance.informationWindow.GetComponent<RectTransform>(), false);
                             mainHoder.name = "AgeMianface";
+                            
+                            editFac(ref mainHoder, key, 18, int.Parse(DateFile.instance.GetActorDate(key, 14, false)), int.Parse(DateFile.instance.GetActorDate(key, 17, false)), array3, array4, clotheIndex);
+
+
+                            Main.Logger.Log((mainHoder.GetComponent<RectTransform>() == null).ToString());
+
+                            //mainHoder.transform.localScale = new Vector3(0.73f, 0.73f, 1f);
+                           
+                            
+                            //mainHoder.GetComponent<RectTransform>().sizeDelta = new Vector2(50f, 50f);
+                            mainHoder.transform.SetParent(WindowManage.instance.informationMassage.GetComponent<RectTransform>(), false);
+                            //mainHoder.transform.localScale = new Vector3(scX * 0.3f, scY * 0.45f, 1);
+
                             float scX = mainHoder.transform.parent.localScale.x;
                             float scY = mainHoder.transform.parent.localScale.y;
                             scX = 1 / scX;
                             scY = 1 / scY;
-
-                            mainHoder.transform.localScale = new Vector3(scX * 0.3f, scY * 0.45f, 1);
-
-                            editFac(ref mainHoder, key, 18, int.Parse(DateFile.instance.GetActorDate(key, 14, false)), int.Parse(DateFile.instance.GetActorDate(key, 17, false)), array3, array4, clotheIndex);
+                            mainHoder.transform.localScale = new Vector3(scX * 0.68f, scY * 0.7f, 1f);
+                            //mainHoder.transform.localScale = new Vector3(0.73f, 0.73f, 1f);
+                            //Main.Logger.Log(mainHoder.transform.parent.name);
+                            //mainHoder.GetComponent<RectTransform>().sizeDelta = new Vector2(500f, 500f);
+                            //mainHoder.GetComponent<Graphic>().CrossFadeAlpha(1f, 0.2f, true);
+                            // Main.Logger.Log(mainHoder.body.name);
                         }
 
                     }
@@ -309,64 +356,226 @@ namespace TaiwuHentai
 
         }
         public static bool editFac(ref ActorFace actorFace, int actorId, int age, int gender, int actorGenderChange, int[] faceDate, int[] faceColor, int clotheIndex)
-        {
-            int num = (actorGenderChange == 0) ? (gender - 1) : ((gender != 1) ? 0 : 1);
-            int key2 = Mathf.Min(faceDate[0], int.Parse(GetSprites.instance.actorFaceDate[num][99]) - 1);
-            bool flag = actorId == -1 || int.Parse(DateFile.instance.GetActorDate(actorId, 26, false)) == 0;
-            Dictionary<int, Dictionary<int, List<Sprite[]>>> dictionary2 = (!actorFace.smallSize) ? GetSprites.instance.actorFace : GetSprites.instance.actorFaceSmall;
-            actorFace.ageImage.gameObject.SetActive(flag);
+        { bool flag = faceDate.Length == 1;
+            actorFace.ageImage.gameObject.SetActive(false);
+            actorFace.nose.gameObject.SetActive(false);
+            actorFace.faceOther.gameObject.SetActive(false);
+            actorFace.eye.gameObject.SetActive(false);
+            actorFace.eyePupil.gameObject.SetActive(false);
+            actorFace.eyebrows.gameObject.SetActive(false);
+            actorFace.mouth.gameObject.SetActive(false);
+            actorFace.beard.gameObject.SetActive(false);
+            actorFace.hair1.gameObject.SetActive(false);
+            actorFace.hair2.gameObject.SetActive(false);
+            actorFace.hairOther.gameObject.SetActive(false);
+            actorFace.clothes.gameObject.SetActive(false);
+            actorFace.clothesColor.gameObject.SetActive(false);
             actorFace.body.gameObject.SetActive(true);
-            actorFace.nose.gameObject.SetActive(flag);
-            actorFace.faceOther.gameObject.SetActive(flag);
-            actorFace.eye.gameObject.SetActive(flag);
-            actorFace.eyePupil.gameObject.SetActive(flag);
-            actorFace.eyebrows.gameObject.SetActive(flag);
-            actorFace.mouth.gameObject.SetActive(flag);
-            actorFace.beard.gameObject.SetActive(gender == 1 && num == 0 && age >= 20);
-            actorFace.hair1.gameObject.SetActive(flag || (!flag && faceDate[7] == 15));
-            actorFace.hair2.gameObject.SetActive(flag || (!flag && faceDate[7] == 15));
-            actorFace.hairOther.gameObject.SetActive(flag || (!flag && faceDate[7] == 15));
-            actorFace.clothes.gameObject.SetActive(true);
-            actorFace.clothesColor.gameObject.SetActive(true);
-            actorFace.ageImage.sprite = dictionary2[num][key2][0][0];
-            actorFace.body.sprite = dictionary2[num][key2][1][(!flag) ? 1 : 0];
-            actorFace.nose.sprite = dictionary2[num][key2][2][faceDate[1]];
-            actorFace.faceOther.sprite = dictionary2[num][key2][3][faceDate[2]];
-            actorFace.eye.sprite = dictionary2[num][key2][4][faceDate[3]];
-            actorFace.eyePupil.sprite = dictionary2[num][key2][5][faceDate[3]];
-            actorFace.eyebrows.sprite = dictionary2[num][key2][6][faceDate[4]];
-            actorFace.mouth.sprite = dictionary2[num][key2][7][faceDate[5]];
-            if (actorFace.beard.gameObject.activeSelf)
+            bool flag5 = true;
+            if (flag5)
             {
-                actorFace.beard.sprite = dictionary2[0][key2][8][faceDate[6]];
-            }
-            actorFace.hair1.sprite = dictionary2[num][key2][9][faceDate[7]];
-            actorFace.hair2.sprite = dictionary2[num][key2][12][faceDate[7]];
-            actorFace.hairOther.sprite = dictionary2[num][key2][13][faceDate[7]];
-            if (clotheIndex != -1)
-            {
-                actorFace.clothes.sprite = dictionary2[num][key2][10][clotheIndex];
-                actorFace.clothesColor.sprite = dictionary2[num][key2][11][clotheIndex];
+                actorFace.body.sprite = Resources.Load<Sprite>("Graphics/ActorFaceSmall/NPCFace/NPCFace_Dead");
             }
             else
             {
-                actorFace.clothes.sprite = dictionary2[num][key2][10][0];
-                actorFace.clothesColor.sprite = dictionary2[num][key2][11][0];
+                actorFace.body.sprite = Resources.Load<Sprite>("Graphics/ActorFace/NPCFace/NPCFace_Dead");
             }
-            actorFace.body.color = ((!flag) ? new Color(1f, 1f, 1f, 1f) : DateFile.instance.faceColor[0][faceColor[0]]);
-            actorFace.nose.color = DateFile.instance.faceColor[0][faceColor[0]];
-            actorFace.eyebrows.color = DateFile.instance.faceColor[1][faceColor[1]];
-            actorFace.eyePupil.color = DateFile.instance.faceColor[2][faceColor[2]];
-            actorFace.mouth.color = DateFile.instance.faceColor[3][faceColor[3]];
-            if (actorFace.beard.gameObject.activeSelf)
+            actorFace.body.color = new Color(1f, 1f, 1f, 1f);
+            if (flag)
             {
-                actorFace.beard.color = DateFile.instance.faceColor[4][faceColor[4]];
+                actorFace.ageImage.gameObject.SetActive(false);
+                actorFace.nose.gameObject.SetActive(false);
+                actorFace.faceOther.gameObject.SetActive(false);
+                actorFace.eye.gameObject.SetActive(false);
+                actorFace.eyePupil.gameObject.SetActive(false);
+                actorFace.eyebrows.gameObject.SetActive(false);
+                actorFace.mouth.gameObject.SetActive(false);
+                actorFace.beard.gameObject.SetActive(false);
+                actorFace.hair1.gameObject.SetActive(false);
+                actorFace.hair2.gameObject.SetActive(false);
+                actorFace.hairOther.gameObject.SetActive(false);
+                actorFace.clothes.gameObject.SetActive(false);
+                actorFace.clothesColor.gameObject.SetActive(false);
+                actorFace.body.gameObject.SetActive(true);
+                bool flag2 = actorFace.smallSize;
+                if (flag2)
+                {
+                    actorFace.body.sprite = Resources.Load<Sprite>("Graphics/ActorFaceSmall/NPCFace/NPCFace_" + faceDate[0].ToString());
+                }
+                else
+                {
+                    actorFace.body.sprite = Resources.Load<Sprite>("Graphics/ActorFace/NPCFace/NPCFace_" + faceDate[0].ToString());
+                }
+                actorFace.body.color = new Color(1f, 1f, 1f, 1f);
             }
-            actorFace.hair1.color = DateFile.instance.faceColor[6][faceColor[6]];
-            actorFace.hair2.color = DateFile.instance.faceColor[6][faceColor[6]];
-            actorFace.faceOther.color = DateFile.instance.faceColor[5][faceColor[5]];
-            actorFace.clothesColor.color = DateFile.instance.faceColor[7][faceColor[7]];
-            actorFace.hairOther.color = DateFile.instance.faceColor[7][faceColor[7]];
+            else
+            {
+                bool flag3 = (true || actorId == -1 || int.Parse(DateFile.instance.GetActorDate(actorId, 26, false)) == 0);
+                Main.Logger.Log(flag3.ToString());
+                actorFace.body.color = new Color(1f, 1f, 1f, 1f);
+                int num = (actorGenderChange != 0) ? ((gender == 1) ? 1 : 0) : (gender - 1);
+                int num2 = Mathf.Min(faceDate[0], int.Parse(GetSprites.instance.actorFaceDate[num][98]) - 1);
+                int num3 = Mathf.Min(faceDate[0], int.Parse(GetSprites.instance.actorFaceDate[num][99]) - 1);
+                actorFace.ageImage.gameObject.SetActive(flag3);
+                actorFace.body.gameObject.SetActive(true);
+                actorFace.nose.gameObject.SetActive(flag3);
+                actorFace.faceOther.gameObject.SetActive(flag3);
+                actorFace.eye.gameObject.SetActive(flag3);
+                actorFace.eyePupil.gameObject.SetActive(flag3);
+                actorFace.eyebrows.gameObject.SetActive(flag3);
+                actorFace.mouth.gameObject.SetActive(flag3);
+                actorFace.beard.gameObject.SetActive(gender == 1 && num == 0 && age >= 20);
+                actorFace.hair1.gameObject.SetActive(flag3 || (!flag3 && faceDate[7] == 15));
+                actorFace.hair2.gameObject.SetActive(flag3 || (!flag3 && faceDate[7] == 15));
+                actorFace.hairOther.gameObject.SetActive(flag3 || (!flag3 && faceDate[7] == 15));
+                actorFace.clothes.gameObject.SetActive(true);
+                actorFace.clothesColor.gameObject.SetActive(true);
+                string text2 = actorFace.smallSize ? "actorFaceSmall" : "actorFace";
+                DynamicSetSprite instance2 = SingletonObject.getInstance<DynamicSetSprite>();
+                Image image2 = actorFace.ageImage;
+                string groupName2 = text2;
+                int[] array2 = new int[4];
+                array2[0] = num;
+                array2[1] = num3;
+                instance2.SetImageSprite(image2, groupName2, array2);
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.body, text2, new int[]
+                        {
+                        num,
+                        num3,
+                        1,
+                        flag3 ? 0 : 1
+                        });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.nose, text2, new int[]
+                {
+                        num,
+                        num3,
+                        2,
+                        faceDate[1]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.faceOther, text2, new int[]
+                {
+                        num,
+                        num3,
+                        3,
+                        faceDate[2]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.eye, text2, new int[]
+                {
+                        num,
+                        num3,
+                        4,
+                        faceDate[3]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.eyePupil, text2, new int[]
+                {
+                        num,
+                        num3,
+                        5,
+                        faceDate[3]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.eyebrows, text2, new int[]
+                {
+                        num,
+                        num3,
+                        6,
+                        faceDate[4]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.mouth, text2, new int[]
+                {
+                        num,
+                        num3,
+                        7,
+                        faceDate[5]
+                });
+                bool activeSelf = actorFace.beard.gameObject.activeSelf;
+                if (activeSelf)
+                {
+                    SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.beard, text2, new int[]
+                    {
+                            0,
+                            num3,
+                            8,
+                            faceDate[6]
+                    });
+                }
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.hair1, text2, new int[]
+                {
+                        num,
+                        num3,
+                        9,
+                        faceDate[7]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.hair2, text2, new int[]
+                {
+                        num,
+                        num3,
+                        12,
+                        faceDate[7]
+                });
+                SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.hairOther, text2, new int[]
+                {
+                        num,
+                        num3,
+                        13,
+                        faceDate[7]
+                });
+                bool flag10 = clotheIndex != -1;
+                if (flag10)
+                {
+                    SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.clothes, text2, new int[]
+                    {
+                            num,
+                            num3,
+                            10,
+                            clotheIndex
+                    });
+                    SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(actorFace.clothesColor, text2, new int[]
+                    {
+                            num,
+                            num3,
+                            11,
+                            clotheIndex
+                    });
+                }
+                else
+                {
+                    DynamicSetSprite instance3 = SingletonObject.getInstance<DynamicSetSprite>();
+                    Image image3 = actorFace.clothes;
+                    string groupName3 = text2;
+                    int[] array3 = new int[4];
+                    array3[0] = num;
+                    array3[1] = num3;
+                    array3[2] = 10;
+                    instance3.SetImageSprite(image3, groupName3, array3);
+                    DynamicSetSprite instance4 = SingletonObject.getInstance<DynamicSetSprite>();
+                    Image image4 = actorFace.clothesColor;
+                    string groupName4 = text2;
+                    int[] array4 = new int[4];
+                    array4[0] = num;
+                    array4[1] = num3;
+                    array4[2] = 11;
+                    instance4.SetImageSprite(image4, groupName4, array4);
+                }
+                actorFace.body.color = (flag3 ? DateFile.instance.faceColor[0][faceColor[0]] : new Color(1f, 1f, 1f, 1f));
+                actorFace.nose.color = DateFile.instance.faceColor[0][faceColor[0]];
+                actorFace.eyebrows.color = DateFile.instance.faceColor[1][faceColor[1]];
+                actorFace.eyePupil.color = DateFile.instance.faceColor[2][faceColor[2]];
+                actorFace.mouth.color = DateFile.instance.faceColor[3][faceColor[3]];
+                bool activeSelf3 = actorFace.beard.gameObject.activeSelf;
+                if (activeSelf3)
+                {
+                    actorFace.beard.color = DateFile.instance.faceColor[4][faceColor[4]];
+                }
+                actorFace.hair1.color = DateFile.instance.faceColor[6][faceColor[6]];
+                actorFace.hair2.color = DateFile.instance.faceColor[6][faceColor[6]];
+
+                actorFace.faceOther.color = DateFile.instance.faceColor[5][faceColor[5]];
+                actorFace.clothesColor.color = DateFile.instance.faceColor[7][faceColor[7]];
+                actorFace.hairOther.color = DateFile.instance.faceColor[7][faceColor[7]];
+            }
+
+
+
             return actorFace;
         }
 
@@ -449,28 +658,99 @@ namespace TaiwuHentai
 
 
     }**/
-    [HarmonyPatch(typeof(MassageWindow), "SetMassageWindow")]
-    public static class MassageWindow_SetMassageWindow_Patch
+    [HarmonyPatch(typeof(ui_MessageWindow), "SetMassageWindow")]
+    public static class ui_MessageWindow_SetMassageWindow_Patch
     {
-        public static bool Prefix(ref MassageWindow __instance, int[] baseEventDate, int chooseId, ref Dictionary<int, int> ___massageGetGongFas)
+        private static void SetMassageItem(ref ui_MessageWindow _instance, int eventId)
+        {
+            List<int> list = new List<int>();
+            string[] array = DateFile.instance.eventDate[eventId][4].Split(new char[]
+            {
+        '|'
+            });
+            for (int i = 0; i < array.Length; i++)
+            {
+                int num = int.Parse(array[i]);
+                bool flag = num != 0;
+                if (flag)
+                {
+                    int item = MessageEventManager.Instance.MainEventData[i + 3];
+                    bool flag2 = num == 2;
+                    if (flag2)
+                    {
+                        list.Add(item);
+                        break;
+                    }
+                }
+            }
+            for (int j = 0; j < _instance.eventItemHolder.childCount; j++)
+            {
+                Object.Destroy(_instance.eventItemHolder.GetChild(j).gameObject);
+            }
+            bool flag3 = list.Count > 0;
+            if (flag3)
+            {
+                for (int k = 0; k < list.Count; k++)
+                {
+                    int num2 = list[k];
+                    bool flag4 = num2 > 0;
+                    if (flag4)
+                    {
+                        GameObject gameObject = Object.Instantiate<GameObject>(_instance.eventItemIcon, Vector3.zero, Quaternion.identity);
+                        gameObject.transform.SetParent(_instance.eventItemHolder, false);
+                        gameObject.name = "EventItem," + num2;
+                        Image component = gameObject.transform.Find("ItemBack").GetComponent<Image>();
+                        SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(component, "itemBackSprites", new int[]
+                        {
+                    int.Parse(DateFile.instance.GetItemDate(num2, 4, true))
+                        });
+                        component.color = DateFile.instance.LevelColor(int.Parse(DateFile.instance.GetItemDate(num2, 8, true)));
+                        GameObject gameObject2 = gameObject.transform.Find("ItemIcon").gameObject;
+                        SingletonObject.getInstance<DynamicSetSprite>().SetImageSprite(gameObject2.GetComponent<Image>(), "itemSprites", new int[]
+                        {
+                    int.Parse(DateFile.instance.GetItemDate(num2, 98, true))
+                        });
+                        gameObject2.name = "ItemIcon," + num2;
+                        bool flag5 = int.Parse(DateFile.instance.GetItemDate(num2, 6, true)) > 0;
+                        if (flag5)
+                        {
+                            gameObject.transform.Find("ItemNumberText").GetComponent<Text>().text = "×" + DateFile.instance.GetItemNumber(DateFile.instance.MianActorID(), num2);
+                        }
+                        else
+                        {
+                            int num3 = int.Parse(DateFile.instance.GetItemDate(num2, 901, true));
+                            int num4 = int.Parse(DateFile.instance.GetItemDate(num2, 902, true));
+                            gameObject.transform.Find("ItemNumberText").GetComponent<Text>().text = string.Format("{0}{1}</color>/{2}", DateFile.instance.Color3(num3, num4), num3, num4);
+                        }
+                    }
+                }
+            }
+        }
+        public static bool Prefix(ref ui_MessageWindow __instance, int[] baseEventDate, int chooseId)
         {
             if (chooseId == 901000006 && Main.enabled && Main.settings.PeerTeaching)
             {
+                
                 for (int i = 0; i < __instance.chooseHolder.childCount; i++)
                 {
                     UnityEngine.Object.Destroy(__instance.chooseHolder.GetChild(i).gameObject);
                 }
-                __instance.massageActors.Clear();
-                __instance.mianEventDate = (int[])baseEventDate.Clone();
-                __instance.massageActors.Add(__instance.mianEventDate[1]);
-                int num = __instance.mianEventDate[2];
+                MessageEventManager.Instance.massageActors.Clear();
+                MessageEventManager.Instance.MainEventData = (int[])baseEventDate.Clone();
+                MessageEventManager.Instance.massageActors.Add(MessageEventManager.Instance.MainEventData[1]);
+                int num = MessageEventManager.Instance.MainEventData[2];
+                //__instance.massageActors.Clear();
+                //__instance.mianEventDate = (int[])baseEventDate.Clone();
+                //__instance.massageActors.Add(__instance.mianEventDate[1]);
+                //int num = __instance.mianEventDate[2];
                 int num2 = int.Parse(DateFile.instance.eventDate[num][2]);
                 //太污的id
                 int num3 = DateFile.instance.MianActorID();
                 //目标角色的id
-
-                int num4 = (num2 != 0) ? ((num2 != -1) ? num2 : num3) : __instance.mianEventDate[1];
+               
+                int num4 = (num2 != 0) ? ((num2 != -1) ? num2 : num3) : MessageEventManager.Instance.MainEventData[1];
                 int num5 = int.Parse(DateFile.instance.GetActorDate(num4, 19, false));
+                SetMassageItem(ref __instance, num);
                 List<string> list2 = new List<string>();
                 List<string> list3 = new List<string>();
                 list2.Clear();
@@ -514,7 +794,7 @@ namespace TaiwuHentai
                     // Main.Logger.Log(DateFile.instance.GetActorDate(num4,));
 
                     list2.Add("900700001");
-                    AddToList(ref __instance, ref ___massageGetGongFas, num, num3, num4, list2, list3);
+                    AddToList(ref __instance, num, num3, num4, list2, list3);
                     return false;
                 }
 
@@ -570,21 +850,20 @@ namespace TaiwuHentai
             return true;
         }
 
-        public static void Postfix(ref MassageWindow __instance, int chooseId, ref Dictionary<int, int> ___massageGetGongFas)
+        public static void Postfix(ref ui_MessageWindow __instance, int chooseId)
         {
             if (!Main.enabled)
             {
                 return;
             }
-            int num = __instance.mianEventDate[2];
-
+            int num = MessageEventManager.Instance.MainEventData[2];
             int num2 = int.Parse(DateFile.instance.eventDate[num][2]);
 
             //太污的id
             int num3 = DateFile.instance.MianActorID();
             //目标角色的id
 
-            int num4 = (num2 != 0) ? ((num2 != -1) ? num2 : num3) : __instance.mianEventDate[1];
+            int num4 = (num2 == 0) ? MessageEventManager.Instance.MainEventData[1] : ((num2 == -1) ? num3 : num2);
 
             //目标角色身分组
 
@@ -612,8 +891,8 @@ namespace TaiwuHentai
                     //太污年龄
                     int num18 = int.Parse(DateFile.instance.GetActorDate(num3, 11, false));
                     list2.Clear();
-                    bool flage_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 309, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false, false).Contains(num4));
-                    bool should_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false, false).Contains(num4));
+                    bool flage_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 309, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false).Contains(num4));
+                    bool should_TONGDAO = (flag2 || DateFile.instance.GetActorSocial(num3, 302, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 303, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) || DateFile.instance.GetActorSocial(num3, 310, false).Contains(num4));
 
                     if (!flage_TONGDAO && should_TONGDAO && Main.settings.unrestrainedPartner)
                     {
@@ -626,7 +905,7 @@ namespace TaiwuHentai
 
                     if (flage_QINGMI)
                     {
-                        bool flage_QINGSUAIYI = !DateFile.instance.GetActorSocial(num3, 304, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 308, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 309, false, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 311, false, false).Contains(num4);
+                        bool flage_QINGSUAIYI = !DateFile.instance.GetActorSocial(num3, 304, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 308, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 309, false).Contains(num4) && !DateFile.instance.GetActorSocial(num3, 311, false).Contains(num4);
 
                         if (!(num18 > 14 && num14 > 14 && flage_QINGSUAIYI))
                         {
@@ -635,10 +914,10 @@ namespace TaiwuHentai
                                 list2.Add("900600003");
                             }
                         }
-                        bool flage_GONGJIELIANLI = (DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && DateFile.instance.GetActorSocial(num3, 309, false, false).Count <= 0 && DateFile.instance.GetActorSocial(num4, 309, false, false).Count <= 0 && int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0 && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0);
-                        bool should_GONGJIELIANLI = DateFile.instance.GetActorSocial(num3, 306, false, false).Contains(num4) && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0 && DateFile.instance.GetActorSocial(num4, 309, false, false).Count <= 0;
+                        bool flage_GONGJIELIANLI = (DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && DateFile.instance.GetActorSocial(num3, 309, false).Count <= 0 && DateFile.instance.GetActorSocial(num4, 309, false).Count <= 0 && int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0 && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0);
+                        bool should_GONGJIELIANLI = DateFile.instance.GetActorSocial(num3, 306, false).Contains(num4) && int.Parse(DateFile.instance.GetActorDate(num3, 2, false)) == 0 && int.Parse(DateFile.instance.GetActorDate(num4, 2, false)) == 0 && DateFile.instance.GetActorSocial(num4, 309, false).Count <= 0;
                         bool flage_MENPAIJIANCHA = int.Parse(DateFile.instance.presetGangGroupDateValue[DateFile.instance.GetGangValueId(num5, num17)][803]) != 0;
-                        bool flage_DUOFUDUOQI = DateFile.instance.GetActorSocial(num3, 309, false, false).Count <= 0;
+                        bool flage_DUOFUDUOQI = DateFile.instance.GetActorSocial(num3, 309, false).Count <= 0;
 
                         if (!(num18 > 14 && num14 > 14 && flage_GONGJIELIANLI))
                         {
@@ -675,7 +954,7 @@ namespace TaiwuHentai
                 }
                 if (list2.Count > 0)
                 {
-                    AddToList(ref __instance, ref ___massageGetGongFas, num, num3, num4, list2, list3);
+                    AddToList(ref __instance, num, num3, num4, list2, list3);
                 }
 
 
@@ -683,129 +962,148 @@ namespace TaiwuHentai
 
 
         }
-
-        private static bool AddToList(ref MassageWindow __instance, ref Dictionary<int, int> ___massageGetGongFas, int num, int num3, int num4, List<string> list2, List<string> list3)
+        public static class Reflection
         {
-            
-            int num24 = 0;
-            for (int num25 = 0; num25 < list2.Count; num25++)
+            static MethodInfo getEventIF = typeof(MessageEventManager).GetMethod("GetEventIF", BindingFlags.NonPublic | BindingFlags.Instance);
+            public static bool GetEventIF(int actorId, int eventActor, int eventId)
             {
-                bool flag6 = list3.Contains(list2[num25]);
-                int num26 = int.Parse(list2[num25]);
-                if (!__instance.removeChooseIds.Contains(num26))
+               return (bool)getEventIF.Invoke(MessageEventManager.Instance, new object[] { actorId, eventActor, eventId });
+            }
+            static MethodInfo changeText = typeof(ui_MessageWindow).GetMethod("ChangeText", BindingFlags.NonPublic | BindingFlags.Instance);
+            public static string ChangeText(int eventId, string massageText, bool noChange = false)
+            {
+                return (string)changeText.Invoke(ui_MessageWindow.Instance, new object[] { eventId, massageText, noChange });
+            }
+        }
+            private static bool AddToList(ref ui_MessageWindow __instance, int num, int num3, int num4, List<string> list3, List<string> list4)
+        {
+
+            int num39 = 0;
+            //__instance.chooseCount = list2.Count;
+            for (int num40 = 0; num40 < list3.Count; num40++)
+            {
+                int num41 = int.Parse(list3[num40]);
+                bool flag84 = __instance.removeChooseIds.Contains(num41);
+                if (flag84)
                 {
-                    if (___massageGetGongFas.Count > 0)
+                    //__instance.chooseCount--;
+                }
+                else
+                {
+                    bool flag85 = MessageEventManager.Instance.massageGetGongFas.Count > 0;
+                    if (flag85)
                     {
-                        bool flag7 = false;
-                        string[] array3 = DateFile.instance.eventDate[num26][6].Split(new char[]
+                        bool flag86 = false;
+                        string[] array3 = DateFile.instance.eventDate[num41][6].Split(new char[]
                         {
-                    '&'
+                        '&'
                         });
-                        if (array3[0] == "GTYP")
+                        bool flag87 = array3[0] == "GTYP";
+                        if (flag87)
                         {
-                            int num27 = int.Parse(array3[1]);
-                            List<int> list7 = new List<int>(___massageGetGongFas.Keys);
-                            for (int num28 = 0; num28 < list7.Count; num28++)
+                            int num42 = int.Parse(array3[1]);
+                            List<int> list11 = new List<int>(MessageEventManager.Instance.massageGetGongFas.Keys);
+                            for (int num43 = 0; num43 < list11.Count; num43++)
                             {
-                                int key = list7[num28];
-                                if (int.Parse(DateFile.instance.gongFaDate[key][1]) == num27)
+                                int key = list11[num43];
+                                bool flag88 = int.Parse(DateFile.instance.gongFaDate[key][1]) == num42;
+                                if (flag88)
                                 {
-                                    flag7 = true;
+                                    flag86 = true;
                                     break;
                                 }
                             }
-                            if (!flag7)
+                            bool flag89 = !flag86;
+                            if (flag89)
                             {
-                                goto IL_1B43;
+                                //this.chooseCount--;
+                                goto IL_2310;
                             }
                         }
                     }
-                    int num29 = int.Parse(DateFile.instance.eventDate[num26][2]);
-                    int num30 = num29;
-                    if (num29 == -1)
+                    int num44 = int.Parse(DateFile.instance.eventDate[num41][2]);
+                    int num45 = num44;
+                    bool flag90 = num44 == -1;
+                    if (flag90)
                     {
-                        num30 = num3;
+                        num45 = num3;
                     }
-                    else if (num29 != -99 && num29 < 0)
+                    else
                     {
-                        num30 = __instance.mianEventDate[Mathf.Abs(num29)];
-                    }
-                    int num31 = -1;
-                    GameObject gameObject = Object.Instantiate<GameObject>((num30 == -99) ? __instance.massageChoose2 : __instance.massageChoose1, Vector3.zero, Quaternion.identity);
-                    gameObject.transform.SetParent(__instance.chooseHolder, false);
-                    gameObject.name = "Choose," + num26;
-                    if (num30 != -99)
-                    {
-                        gameObject.transform.Find("NameText").GetComponent<Text>().text = DateFile.instance.GetActorName(num30, false, false) + WindowManage.instance.Mut();
-                        gameObject.transform.Find("FaceHolder").Find("FaceMask").Find("MianActorFace").GetComponent<ActorFace>().SetActorFace(num30, false);
-                        GameObject gameObject2 = gameObject.transform.Find("IconHolder").Find("NeedIcon").gameObject;
-                        string a = DateFile.instance.eventDate[num26][6].Replace("|GN&0", "").Replace("|GN&1", "").Replace("|GN&2", "").Replace("|GN&3", "").Replace("|GN&4", "").Replace("GN&0|", "").Replace("GN&1|", "").Replace("GN&2|", "").Replace("GN&3|", "").Replace("GN&4|", "").Replace("GN&0", "").Replace("GN&1", "").Replace("GN&2", "").Replace("GN&3", "").Replace("GN&4", "");
-                        gameObject2.SetActive(a != "" && a != "0");
-                        gameObject2.name = "NeedIcon," + num26;
-                        a = DateFile.instance.eventDate[num26][6];
-                        if (a != "" && a != "0")
+                        bool flag91 = num44 != -99 && num44 < 0;
+                        if (flag91)
                         {
-                            string[] array4 = DateFile.instance.eventDate[num26][6].Split(new char[]
+                            num45 = MessageEventManager.Instance.MainEventData[Mathf.Abs(num44)];
+                        }
+                    }
+                    int num46 = -1;
+                    GameObject gameObject = Object.Instantiate<GameObject>((num45 != -99) ? __instance.massageChoose1 : __instance.massageChoose2, Vector3.zero, Quaternion.identity);
+                    gameObject.transform.SetParent(__instance.chooseHolder, false);
+                    gameObject.name = "Choose," + num41;
+                    bool flag92 = num45 != -99;
+                    if (flag92)
+                    {
+                        gameObject.transform.Find("NameText").GetComponent<Text>().text = DateFile.instance.GetActorName(num45, false, false) + WindowManage.instance.Mut();
+                        gameObject.transform.Find("FaceHolder").Find("FaceMask").Find("MianActorFace").GetComponent<ActorFace>().SetActorFace(num45, false);
+                        GameObject gameObject2 = gameObject.transform.Find("IconHolder").Find("NeedIcon").gameObject;
+                        string a = DateFile.instance.eventDate[num41][6].Replace("|GN&0", "").Replace("|GN&1", "").Replace("|GN&2", "").Replace("|GN&3", "").Replace("|GN&4", "").Replace("GN&0|", "").Replace("GN&1|", "").Replace("GN&2|", "").Replace("GN&3|", "").Replace("GN&4|", "").Replace("GN&0", "").Replace("GN&1", "").Replace("GN&2", "").Replace("GN&3", "").Replace("GN&4", "");
+                        gameObject2.SetActive(a != "" && a != "0");
+                        gameObject2.name = "NeedIcon," + num41;
+                        a = DateFile.instance.eventDate[num41][6];
+                        bool flag93 = a != "" && a != "0";
+                        if (flag93)
+                        {
+                            string[] array4 = DateFile.instance.eventDate[num41][6].Split(new char[]
                             {
-                        '|'
+                            '|'
                             });
-                            for (int num32 = 0; num32 < array4.Length; num32++)
+                            for (int num47 = 0; num47 < array4.Length; num47++)
                             {
-                                string[] array5 = array4[num32].Split(new char[]
+                                string[] array5 = array4[num47].Split(new char[]
                                 {
-                            '#'
+                                '#'
                                 });
-                                for (int num33 = 0; num33 < array5.Length; num33++)
+                                for (int num48 = 0; num48 < array5.Length; num48++)
                                 {
-                                    string[] array6 = array5[num33].Split(new char[]
+                                    string[] array6 = array5[num48].Split(new char[]
                                     {
-                                '&'
+                                    '&'
                                     });
-                                    string text = array6[0];
-                                    if (text != null)
+                                    string a2 = array6[0];
+                                    if (a2 == "GN")
                                     {
-                                        if (text == "GN")
-                                        {
-                                            num31 = int.Parse(array6[1]);
-                                            gameObject.transform.Find("IconHolder").Find("LikeIcon,774").gameObject.SetActive(DateFile.instance.GetActorGoodness(num3) == num31);
-                                        }
+                                        num46 = int.Parse(array6[1]);
+                                        gameObject.transform.Find("IconHolder").Find("LikeIcon,774").gameObject.SetActive(DateFile.instance.GetActorGoodness(num3) == num46);
                                     }
                                 }
                             }
                         }
                     }
-                    bool flag8 = false;
-                    string[] array7 = DateFile.instance.eventDate[num26][8].Split(new char[]
+                    bool flag94 = false;
+                    string[] array7 = DateFile.instance.eventDate[num41][8].Split(new char[]
                     {
-                '|'
+                    '|'
                     });
-                    for (int num34 = 0; num34 < array7.Length; num34++)
+                    for (int num49 = 0; num49 < array7.Length; num49++)
                     {
-                        if (array7[num34] == "RM")
+                        bool flag95 = array7[num49] == "RM";
+                        if (flag95)
                         {
-                            flag8 = true;
+                            flag94 = true;
                             break;
                         }
                     }
-                    if (flag6)
+                    string text = Reflection.ChangeText(num, DateFile.instance.eventDate[num41][3], true);
+                    bool flag96 = num46 >= 0;
+                    if (flag96)
                     {
-
-                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance,num, DateFile.instance.eventDate[num26][3], true)), false);
-                        gameObject.GetComponent<Button>().interactable = false;
-                    }
-                    else if (GetEventIF(ref __instance, num30, num4, num26))
-                    {
-                       
-                        string text2 = ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true);
-                        if (num31 >= 0)
+                        text = string.Format("{2}{0}{3}{1}", new object[]
                         {
-                            text2 = string.Format("{2}{0}{3}{1}", new object[]
-                            {
                         DateFile.instance.massageDate[9][0].Split(new char[]
                         {
                             '|'
-                        })[num31],
-                        text2,
+                        })[num46],
+                        text,
                         DateFile.instance.massageDate[10][0].Split(new char[]
                         {
                             '|'
@@ -814,430 +1112,46 @@ namespace TaiwuHentai
                         {
                             '|'
                         })[1]
-                            });
-                        }
-                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer((!flag8) ? 20003 : 20005, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], text2), false);
-                        gameObject.GetComponent<Button>().interactable = true;
-
+                        });
+                    }
+                    bool flag97 = list4.Contains(list3[num40]);
+                    if (flag97)
+                    {
+                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", MessageEventManager.Instance.massageKeyCodeName[num39], text), false);
+                        gameObject.GetComponent<Button>().interactable = false;
                     }
                     else
                     {
-
-                        gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", __instance.massageKeyCodeName[num24], ChangeText(ref __instance, num, DateFile.instance.eventDate[num26][3], true)), false);
-                        gameObject.GetComponent<Button>().interactable = false;
+                        bool eventIF = MessageEventManager.Instance.GetEventIF(num45, num4, num41);
+                        if (eventIF)
+                        {
+                            bool activeInHierarchy = __instance.inputTextField.gameObject.activeInHierarchy;
+                            if (activeInHierarchy)
+                            {
+                                gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", MessageEventManager.Instance.massageKeyCodeName[num39], text), false);
+                                gameObject.GetComponent<Button>().interactable = false;
+                            }
+                            else
+                            {
+                                gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(flag94 ? 20005 : 20003, string.Format("({0}).{1}", MessageEventManager.Instance.massageKeyCodeName[num39], text), false);
+                                gameObject.GetComponent<Button>().interactable = true;
+                            }
+                        }
+                        else
+                        {
+                            gameObject.transform.Find("MassageChooseText").GetComponent<Text>().text = DateFile.instance.SetColoer(10001, string.Format("({0}).{1}", MessageEventManager.Instance.massageKeyCodeName[num39], text), false);
+                            gameObject.GetComponent<Button>().interactable = false;
+                        }
                     }
-                    num24++;
+                    num39++;
                 }
-                IL_1B43:;
+                IL_2310:;
             }
             return true;
         }
 
-        private static bool GetEventIF(ref MassageWindow __instance, int actorId, int eventActor, int eventId)
-        {
-            bool result;
-            if (__instance.testAllChoose)
-            {
-                result = true;
-            }
-            else
-            {
-                bool flag = true;
-                string a = DateFile.instance.eventDate[eventId][6];
-                if (a != "" && a != "0")
-                {
-                    flag = true;
-                    string[] array = DateFile.instance.eventDate[eventId][6].Split(new char[]
-                    {
-                    '|'
-                    });
-                    bool[] array2 = new bool[array.Length];
-                    for (int i = 0; i < array.Length; i++)
-                    {
-                        string[] array3 = array[i].Split(new char[]
-                        {
-                        '#'
-                        });
-                        bool[] array4 = new bool[array3.Length];
-                        for (int j = 0; j < array3.Length; j++)
-                        {
-                            array4[j] = true;
-                            string[] array5 = array3[j].Split(new char[]
-                            {
-                            '&'
-                            });
-                            string text = array5[0];
-                            switch (text)
-                            {
-                                case "ATTR":
-                                    {
-                                        int index = int.Parse(array5[1]);
-                                        int num2 = int.Parse(array5[2]);
-                                        int num3 = int.Parse(array5[3]);
-                                        int num4 = int.Parse(DateFile.instance.GetActorDate(actorId, index, true));
-                                        if (num4 < num2 || num4 > num3)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "ATTB":
-                                    {
-                                        int index2 = int.Parse(array5[1]);
-                                        int num5 = int.Parse(array5[2]);
-                                        if (int.Parse(DateFile.instance.GetActorDate(actorId, index2, true)) != num5)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "ATTMAX":
-                                    {
-                                        int index3 = int.Parse(array5[1]);
-                                        int num6 = int.Parse(array5[2]);
-                                        if (int.Parse(DateFile.instance.GetActorDate(actorId, index3, true)) < num6)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "ATTMIN":
-                                    {
-                                        int index4 = int.Parse(array5[1]);
-                                        int num7 = int.Parse(array5[2]);
-                                        if (int.Parse(DateFile.instance.GetActorDate(actorId, index4, true)) > num7)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "AGV":
-                                    {
-                                        int id = int.Parse(DateFile.instance.GetActorDate(__instance.mianEventDate[1], 19, false));
-                                        if (DateFile.instance.GetBasePartValue(int.Parse(DateFile.instance.GetGangDate(id, 11)), int.Parse(DateFile.instance.GetGangDate(id, 3))) < int.Parse(array5[1]))
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "GF":
-                                    {
-                                        int num8 = int.Parse(array5[1]);
-                                        int num9 = (array5.Length <= 2) ? -99 : int.Parse(array5[2]);
-                                        int num10 = (array5.Length <= 3) ? -99 : int.Parse(array5[3]);
-                                        if (num9 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaLevel(actorId, num8, 0) < num9)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        if (num10 != -99 && DateFile.instance.actorGongFas[actorId].ContainsKey(num8) && DateFile.instance.GetGongFaFLevel(actorId, num8, false) < num10)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "FGF":
-                                    {
-                                        int typ = int.Parse(array5[1]);
-                                        int num11 = int.Parse(array5[2]);
-                                        if (DateFile.instance.GetFamilyGongFaLevel(actorId, typ, false) < num11)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "SKILL":
-                                    {
-                                        int skillId = int.Parse(array5[1]);
-                                        int num12 = (array5.Length <= 2) ? -99 : int.Parse(array5[2]);
-                                        int num13 = (array5.Length <= 3) ? -99 : int.Parse(array5[3]);
-                                        if (num12 != -99 && DateFile.instance.GetSkillLevel(skillId) < num12)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        if (num13 != -99 && DateFile.instance.GetSkillFLevel(skillId) < num13)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "FSKILL":
-                                    {
-                                        int typ2 = int.Parse(array5[1]);
-                                        int num14 = int.Parse(array5[2]);
-                                        if (DateFile.instance.GetFamilySkillLevel(typ2, false) < num14)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "ITEM":
-                                    {
-                                        int num15 = int.Parse(array5[1]);
-                                        int num16 = int.Parse(array5[2]);
-                                        array4[j] = false;
-                                        List<int> list = new List<int>(DateFile.instance.actorItemsDate[actorId].Keys);
-                                        for (int k = 0; k < list.Count; k++)
-                                        {
-                                            int num17 = list[k];
-                                            int num18 = int.Parse(DateFile.instance.GetItemDate(num17, 999, true));
-                                            if (num18 == num15 && DateFile.instance.GetItemNumber(actorId, num17) >= num16)
-                                            {
-                                                array4[j] = true;
-                                                break;
-                                            }
-                                        }
-                                        break;
-                                    }
-                                case "FA":
-                                    {
-                                        int num19 = int.Parse(array5[1]);
-                                        int num20 = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), __instance.mianEventDate[1], true, false);
-                                        if (num20 < num19)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "TIME":
-                                    {
-                                        int num21 = int.Parse(array5[1]);
-                                        int dayTime = DateFile.instance.dayTime;
-                                        if (dayTime < num21)
-                                        {
-                                            array4[j] = false;
-                                        }
-                                        break;
-                                    }
-                                case "MFS":
-                                    if (DateFile.instance.GetFamily(true, true).Count >= DateFile.instance.GetMaxFamilySize())
-                                    {
-                                        array4[j] = false;
-                                    }
-                                    break;
-                                case "BHS":
-                                    if (DateFile.instance.GetActorSocial(actorId, 308, false, false).Count >= 9)
-                                    {
-                                        array4[j] = false;
-                                    }
-                                    break;
-                                case "NOF":
-                                    if (DateFile.instance.GetFamily(true, true).Contains(eventActor))
-                                    {
-                                        array4[j] = false;
-                                    }
-                                    break;
-                                case "SHOPV":
-                                    if (DateFile.instance.storyShopLevel[int.Parse(array5[1])] >= 5000 * DateFile.instance.GetMaxWorldValue() / 1000)
-                                    {
-                                        array4[j] = false;
-                                    }
-                                    break;
-                            }
-                        }
-                        array2[i] = false;
-                        for (int l = 0; l < array4.Length; l++)
-                        {
-                            if (array4[l])
-                            {
-                                array2[i] = true;
-                                break;
-                            }
-                        }
-                    }
-                    for (int m = 0; m < array2.Length; m++)
-                    {
-                        if (!array2[m])
-                        {
-                            flag = false;
-                            break;
-                        }
-                    }
-                }
-                result = flag;
-            }
-            return result;
-        }
 
-        private static string ChangeText(ref MassageWindow __instance, int eventId, string massageText, bool noChange = false)
-        {
-            int num = DateFile.instance.MianActorID();
-            int num2 = int.Parse(DateFile.instance.GetActorDate(num, 11, false));
-            int num3 = Mathf.Max(int.Parse(DateFile.instance.GetActorDate(num, 14, false)) - 1, 0);
-            int key = int.Parse(DateFile.instance.allWorldDate[DateFile.instance.mianWorldId][401]);
-            int key2 = int.Parse(DateFile.instance.allWorldDate[DateFile.instance.mianWorldId][402]);
-            string text = massageText.Replace("GANG", DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate((__instance.mianEventDate[1] <= 0) ? num : __instance.mianEventDate[1], 19, false)), 0)).Replace("MN", DateFile.instance.GetActorName(0, false, false)).Replace("BN", DateFile.instance.GetActorName(__instance.mianEventDate[1], false, false)).Replace("GN_R", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[(num2 >= 30) ? ((num2 >= 40) ? 3 : 2) : 1].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_0", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[0].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_1", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[1].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_2", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[2].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_3", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[3].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_4", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[4].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_5", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[5].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("GN_6", DateFile.instance.massageDate[5][1].Split(new char[]
-            {
-        '|'
-            })[6].Split(new char[]
-            {
-        '&'
-            })[num3]).Replace("MCITY", DateFile.instance.placeWorldDate[key][0]).Replace("MGNG", DateFile.instance.placeWorldDate[key2][0]);
-            string[] array = DateFile.instance.eventDate[eventId][4].Split(new char[]
-            {
-        '|'
-            });
-            for (int i = 0; i < array.Length; i++)
-            {
-                int num4 = int.Parse(array[i]);
-                if (num4 != 0)
-                {
-                    int num5 = __instance.mianEventDate[i + 3];
-                    switch (num4)
-                    {
-                        case 1:
-                            text = text.Replace(string.Format("D{0}", i), DateFile.instance.GetActorName(num5, false, false));
-                            break;
-                        case 2:
-                            {
-                                string str = DateFile.instance.GetItemDate(num5, 0, false).Replace(DateFile.instance.massageDate[11][4].Split(new char[]
-                                {
-                    '|'
-                                })[0], "").Replace(DateFile.instance.massageDate[11][4].Split(new char[]
-                                {
-                    '|'
-                                })[1], "");
-                                text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num5, 8, true)), DateFile.instance.massageDate[10][0].Split(new char[]
-                                {
-                    '|'
-                                })[0] + str + DateFile.instance.massageDate[10][0].Split(new char[]
-                                {
-                    '|'
-                                })[1], noChange));
-                                break;
-                            }
-                        case 3:
-                            text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.gongFaDate[num5][2]), DateFile.instance.massageDate[11][4].Split(new char[]
-                            {
-                    '|'
-                            })[0] + DateFile.instance.gongFaDate[num5][0] + DateFile.instance.massageDate[11][4].Split(new char[]
-                            {
-                    '|'
-                            })[1], noChange));
-                            text = text.Replace(string.Format("GFM{0}", i), DateFile.instance.gongFaDate[num5][99].Replace("“", "‘").Replace("”", "’").Replace("。", "……"));
-                            break;
-                        case 4:
-                            text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20008, DateFile.instance.resourceDate[num5][0], noChange));
-                            break;
-                        case 5:
-                            {
-                                string str2 = DateFile.instance.GetItemDate(num5, 0, false).Replace(DateFile.instance.massageDate[11][4].Split(new char[]
-                                {
-                    '|'
-                                })[0], "").Replace(DateFile.instance.massageDate[11][4].Split(new char[]
-                                {
-                    '|'
-                                })[1], "");
-                                text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num5, 8, true)), DateFile.instance.massageDate[10][0].Split(new char[]
-                                {
-                    '|'
-                                })[0] + str2 + DateFile.instance.massageDate[10][0].Split(new char[]
-                                {
-                    '|'
-                                })[1], noChange));
-                                break;
-                            }
-                        case 6:
-                            text = text.Replace(string.Format("D{0}", i), DateFile.instance.massageDate[10][0].Split(new char[]
-                            {
-                    '|'
-                            })[0] + DateFile.instance.baseSkillDate[num5][0] + DateFile.instance.massageDate[10][0].Split(new char[]
-                            {
-                    '|'
-                            })[1]);
-                            break;
-                        case 7:
-                            text = text.Replace(string.Format("D{0}", i), num5.ToString());
-                            break;
-                        case 8:
-                            text = text.Replace(string.Format("D{0}", i), DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.skillDate[num5][2]), DateFile.instance.massageDate[11][4].Split(new char[]
-                            {
-                    '|'
-                            })[0] + DateFile.instance.skillDate[num5][0] + DateFile.instance.massageDate[11][4].Split(new char[]
-                            {
-                    '|'
-                            })[1], noChange));
-                            text = text.Replace(string.Format("SFM{0}", i), DateFile.instance.skillDate[num5][99].Replace("“", "‘").Replace("”", "’").Replace("。", "……"));
-                            break;
-                        case 9:
-                            {
-                                int num6 = __instance.mianEventDate[4];
-                                text = text.Replace(string.Format("D{0}", i), DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[0] + DateFile.instance.massageDate[25][2].Split(new char[]
-                                {
-                    '|'
-                                })[num6] + DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[1]);
-                                break;
-                            }
-                        case 10:
-                            {
-                                int num7 = DateFile.instance.GetActorFavor(false, num, __instance.mianEventDate[1], false, false);
-                                text = text.Replace(string.Format("D{0}", i), (num7 == -1) ? (DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[0] + DateFile.instance.SetColoer(20002, DateFile.instance.massageDate[303][2], noChange) + DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[1]) : (DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[0] + ActorMenu.instance.Color5(num7, true, -1) + DateFile.instance.massageDate[11][3].Split(new char[]
-                                {
-                    '|'
-                                })[1]));
-                                break;
-                            }
-                    }
-                }
-            }
-            return text;
-        }
+        
 
     }
 
@@ -1262,11 +1176,11 @@ namespace TaiwuHentai
         }
     }
 
-    [HarmonyPatch(typeof(MassageWindow), "EndEvent9010_1")]
+    [HarmonyPatch(typeof(MessageEventManager), "EndEvent9010_1")]
     public static class MassageWindow_EndEvent9010_1_Patch
     {
 
-        private static bool Prefix(ref MassageWindow __instance)
+        private static bool Prefix(ref MessageEventManager __instance)
         {
             if (!Main.enabled)
             {
@@ -1275,7 +1189,7 @@ namespace TaiwuHentai
 
 
             int actorId = DateFile.instance.MianActorID();
-            int num = __instance.eventValue[1];
+            int num = __instance.EventValue[1];
             int level = UnityEngine.Random.Range(0, 64);
             String strlevel = Convert.ToString(level, 2).PadLeft(6, '0');
             int z = 0;
