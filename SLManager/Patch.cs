@@ -648,7 +648,7 @@ namespace Sth4nothing.SLManager
             WorldMapSystem.instance.ResetWorldMap();
             UIManager.Instance.DestroyAllOldPrefabs();
             SingletonObject.ClearInstances();
-            DateFile.instance.Initialize(dataId, DateFile.instance.allMainActors[dataId] == null);
+            DateFile.instance.Initialize(dataId, false);
         }
 
 
