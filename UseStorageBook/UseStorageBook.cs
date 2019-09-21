@@ -53,6 +53,7 @@ namespace Sth4nothing.UseStorageBook
             }
             items.AddRange(df.GetActorItems(-999, 5, false).Keys
                 .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp));
+            Debug.Log("共找到满足条件的功法OR技艺书籍: " + items.Count);
             return df.GetItemSort(items);
         }
 
@@ -115,11 +116,12 @@ namespace Sth4nothing.UseStorageBook
         }
     }
 
-    [HarmonyPatch(typeof(ui_TopBar), "Awake")]
-    public class ui_TopBar_Awake_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public class BuildingWindow_Start_Patch
     {
         static void Postfix()
         {
+            if (!Main.Enabled) return;
             BuildingWindow_SetChooseBookWindow_Patch.hasInit = false;
 
             if (BookSetting.Instance == null)
@@ -137,6 +139,7 @@ namespace Sth4nothing.UseStorageBook
 
         static void Prefix(HomeSystem __instance)
         {
+            if (!Main.Enabled) return;
             var bookViewBack = BuildingWindow.instance.bookHolder.parent.gameObject;
             if (bookViewBack.GetComponent<NewBookView>() == null)
             {
@@ -169,6 +172,7 @@ namespace Sth4nothing.UseStorageBook
     {
         static void Prefix()
         {
+            if (!Main.Enabled) return;
             var df = DateFile.instance;
             var bookId = BuildingWindow.instance.readBookId;
             if (df.itemsDate.ContainsKey(bookId))
@@ -200,6 +204,7 @@ namespace Sth4nothing.UseStorageBook
         /// <param name="__state"></param>
         static void Prefix(ref int itemId, ref int __state)
         {
+            if (!Main.Enabled) return;
             if (DateFile.instance.actorItemsDate[-999].ContainsKey(itemId))
             {
                 DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Add(itemId, 1);
@@ -217,6 +222,7 @@ namespace Sth4nothing.UseStorageBook
         /// <param name="__state"></param>
         static void Postfix(ref int __state)
         {
+            if (!Main.Enabled) return;
             if (__state > 0)
             {
                 DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Remove(__state);
