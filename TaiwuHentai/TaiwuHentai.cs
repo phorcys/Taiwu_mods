@@ -87,7 +87,7 @@ namespace TaiwuHentai
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄");
+            GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄,对婴儿不起作用");
             var maxBackupsToKeep = GUILayout.TextField(settings.SpouseAge.ToString(), 3);
             if (GUI.changed && !uint.TryParse(maxBackupsToKeep, out settings.SpouseAge))
             {
@@ -217,9 +217,41 @@ namespace TaiwuHentai
 
 
     }
+
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
+        static public List<int> GetActorFeature(int key)
+        {
+            List<int> result;
+
+
+
+            List<int> list = new List<int>();
+            string[] array = DateFile.instance.GetActorDate(key, 101, false).Split(new char[]
+            {
+                '|'
+            });
+
+
+            int j = 0;
+            while (j < array.Length)
+            {
+                int num4 = int.Parse(array[j]);
+                if (num4 != 0)
+                {
+                    list.Add(num4);
+                }
+
+                j++;
+
+
+            }
+
+            result = list;
+
+            return result;
+        }
         // Token: 0x06000008 RID: 8 RVA: 0x00002168 File Offset: 0x00000368
         private static void Postfix(WindowManage __instance, ref GameObject tips, ref Text ___itemMoneyText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
         {
@@ -275,7 +307,7 @@ namespace TaiwuHentai
                         text2.text += "18岁时:\n魅力：" + charmText + "\n";
 
 
-                        List<int> featureIDs = DateFile.instance.GetActorFeature(key);
+                        List<int> featureIDs = GetActorFeature(key);
                         for (int i = 0; i < featureIDs.Count; i++)
                         {
 
