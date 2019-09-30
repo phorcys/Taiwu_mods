@@ -15,13 +15,13 @@ using UnityModManagerNet;
 namespace Majordomo
 {
     /// <summary>
-    /// ±¾Éí¾ÍÊÇÓÎÏ·Ô­ÓĞÂß¼­£¬»òÕßºÍÓÎÏ·Ô­ÓĞÂß¼­¹ØÁª½ôÃÜµÄ·½·¨
-    /// Ã¿´ÎÓÎÏ·°æ±¾¸üĞÂ£¬ÕâÀïµÄ·½·¨¶¼Òª¼ì²éÒ»±é
+    /// æœ¬èº«å°±æ˜¯æ¸¸æˆåŸæœ‰é€»è¾‘ï¼Œæˆ–è€…å’Œæ¸¸æˆåŸæœ‰é€»è¾‘å…³è”ç´§å¯†çš„æ–¹æ³•
+    /// æ¯æ¬¡æ¸¸æˆç‰ˆæœ¬æ›´æ–°ï¼Œè¿™é‡Œçš„æ–¹æ³•éƒ½è¦æ£€æŸ¥ä¸€é
     /// </summary>
     public class Original
     {
-        // »ñÈ¡µ±Ç°¾İµãµÄ¹¤×÷ÈËÔ±ÁĞ±í
-        // *** Ä¿Ç°Ö»ÊÊÓÃÓÚ¾İµãÎªÌ«Îá´åµÄÇéĞÎ ***
+        // è·å–å½“å‰æ®ç‚¹çš„å·¥ä½œäººå‘˜åˆ—è¡¨
+        // *** ç›®å‰åªé€‚ç”¨äºæ®ç‚¹ä¸ºå¤ªå¾æ‘çš„æƒ…å½¢ ***
         public static List<int> GetWorkerIds(int partId, int placeId)
         {
             List<int> workerIds = new List<int>();
@@ -34,7 +34,7 @@ namespace Majordomo
             {
                 if (teammates.Contains(actorId)) continue;
 
-                int age = int.Parse(DateFile.instance.GetActorDate(actorId, 11, addValue: false));
+                int age = int.Parse(DateFile.instance.GetActorDate(actorId, 11, false));
                 if (age <= 14) continue;
 
                 workerIds.Add(actorId);
@@ -45,8 +45,8 @@ namespace Majordomo
 
 
         /// <summary>
-        /// ÇåÀíËùÓĞ½¨ÖşÄÚµÄ¹¤×÷ÈËÔ±£¨ÅÅ³ıÁĞ±íÖĞµÄ³ıÍâ£©
-        /// Èç¹ûÄ³¸ö½¨ÖşÔÚÅÅ³ıÁĞ±íÖĞ£¬ÄÇÃ´ÆäÖĞµÄ¹¤×÷ÈËÔ±Ò²»áÍ¬Ê±Ìí¼Óµ½ÅÅ³ıÁĞ±íÖĞ
+        /// æ¸…ç†æ‰€æœ‰å»ºç­‘å†…çš„å·¥ä½œäººå‘˜ï¼ˆæ’é™¤åˆ—è¡¨ä¸­çš„é™¤å¤–ï¼‰
+        /// å¦‚æœæŸä¸ªå»ºç­‘åœ¨æ’é™¤åˆ—è¡¨ä¸­ï¼Œé‚£ä¹ˆå…¶ä¸­çš„å·¥ä½œäººå‘˜ä¹Ÿä¼šåŒæ—¶æ·»åŠ åˆ°æ’é™¤åˆ—è¡¨ä¸­
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -89,7 +89,7 @@ namespace Majordomo
 
 
         /// <summary>
-        /// ÎªÖ¸¶¨½¨Öş·ÖÅäÖ¸¶¨¹¤×÷ÈËÔ±
+        /// ä¸ºæŒ‡å®šå»ºç­‘åˆ†é…æŒ‡å®šå·¥ä½œäººå‘˜
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -108,7 +108,7 @@ namespace Majordomo
 
 
         /// <summary>
-        /// ÒÆ³ıÖ¸¶¨½¨ÖşÄÚµÄ¹¤×÷ÈËÔ±
+        /// ç§»é™¤æŒ‡å®šå»ºç­‘å†…çš„å·¥ä½œäººå‘˜
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -132,14 +132,14 @@ namespace Majordomo
         }
 
 
-        // ¼ÆËã½¨Öş¹¤×÷Ğ§ÂÊÊ±£¬¶ÔºÃ¸ĞµÈ¼¶µÄËõ·ÅÆ½ÒÆ
+        // è®¡ç®—å»ºç­‘å·¥ä½œæ•ˆç‡æ—¶ï¼Œå¯¹å¥½æ„Ÿç­‰çº§çš„ç¼©æ”¾å¹³ç§»
         public static int GetScaledFavor(int favorLevel)
         {
             return 40 + favorLevel * 10;
         }
 
 
-        // ¼ÆËã½¨Öş¹¤×÷Ğ§ÂÊÊ±£¬ĞÄÇé¶ÔºÃ¸ĞµÄÓ°Ïì
+        // è®¡ç®—å»ºç­‘å·¥ä½œæ•ˆç‡æ—¶ï¼Œå¿ƒæƒ…å¯¹å¥½æ„Ÿçš„å½±å“
         public static int AdjustScaledFavorWithMood(int scaledFavor, int mood)
         {
             if (mood <= 0)
@@ -173,9 +173,9 @@ namespace Majordomo
         }
 
 
-        // »ñÈ¡¸÷½¨ÖşÊÕ»ñÎïÀàĞÍ
+        // è·å–å„å»ºç­‘æ”¶è·ç‰©ç±»å‹
         // @return:         baseBuildingId -> {harvestType, }
-        // harvestType:     1: ×ÊÔ´, 2: ÎïÆ·, 3: ÈË²Å, 4: òĞòĞ
+        // harvestType:     1: èµ„æº, 2: ç‰©å“, 3: äººæ‰, 4: è›è›
         public static Dictionary<int, HashSet<int>> GetBuildingsHarvestTypes()
         {
             var buildingsHarvestTypes = new Dictionary<int, HashSet<int>>();
@@ -210,13 +210,13 @@ namespace Majordomo
 
 
         /// <summary>
-        /// ·µ»Ø¶ÔÓÚÖ¸¶¨½¨Öş£¬ÔÚ±ê×¼×´Ì¬ÏÂ£¬ĞèÒª¶àÉÙ¶ÔÓ¦×ÊÖÊÒÔ´ïµ½ 50% / 100% ¹¤×÷Ğ§ÂÊ
+        /// è¿”å›å¯¹äºæŒ‡å®šå»ºç­‘ï¼Œåœ¨æ ‡å‡†çŠ¶æ€ä¸‹ï¼Œéœ€è¦å¤šå°‘å¯¹åº”èµ„è´¨ä»¥è¾¾åˆ° 50% / 100% å·¥ä½œæ•ˆç‡
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
         /// <param name="withAdjacentBedrooms"></param>
-        /// <param name="getStandardAttrValue">ÊÇ·ñ·µ»Ø±ê×¼»¯µÄÄÜÁ¦Öµ</param>
+        /// <param name="getStandardAttrValue">æ˜¯å¦è¿”å›æ ‡å‡†åŒ–çš„èƒ½åŠ›å€¼</param>
         /// <returns></returns>
         public static int[] GetRequiredAttributeValues(int partId, int placeId, int buildingIndex,
             bool withAdjacentBedrooms = true, bool getStandardAttrValue = false)
@@ -249,8 +249,8 @@ namespace Majordomo
         }
 
 
-        // »ñÈ¡Ö¸¶¨½¨ÖşµÄ¹¤×÷ÄÑ¶È
-        // ´Óµ±Ç°Êı¾İÀ´¿´£¬¹¤×÷ÄÑ¶ÈÈ¡Öµ·¶Î§ [1, 119]
+        // è·å–æŒ‡å®šå»ºç­‘çš„å·¥ä½œéš¾åº¦
+        // ä»å½“å‰æ•°æ®æ¥çœ‹ï¼Œå·¥ä½œéš¾åº¦å–å€¼èŒƒå›´ [1, 119]
         public static int GetWorkDifficulty(int partId, int placeId, int buildingIndex)
         {
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
@@ -265,8 +265,8 @@ namespace Majordomo
 
 
         /// <summary>
-        /// »ñÈ¡Ö¸¶¨ÈËÎïÔÚÖ¸¶¨½¨ÖşÄÚµÄ¹¤×÷Ğ§ÂÊ
-        /// ´ó²¿·ÖÕÕ³­ HomeSystem::GetBuildingLevelPct ·½·¨
+        /// è·å–æŒ‡å®šäººç‰©åœ¨æŒ‡å®šå»ºç­‘å†…çš„å·¥ä½œæ•ˆç‡
+        /// å¤§éƒ¨åˆ†ç…§æŠ„ HomeSystem::GetBuildingLevelPct æ–¹æ³•
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -279,7 +279,7 @@ namespace Majordomo
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int baseBuildingId = building[0];
             int requiredAttrId = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][33]);
-            int mood = int.Parse(DateFile.instance.GetActorDate(actorId, 4, addValue: false));
+            int mood = int.Parse(DateFile.instance.GetActorDate(actorId, 4, false));
             int favorLevel = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, getLevel: true);
             int scaledFavor = Original.GetScaledFavor(favorLevel);
             scaledFavor = Original.AdjustScaledFavorWithMood(scaledFavor, mood);
@@ -299,7 +299,7 @@ namespace Majordomo
 
 
         /// <summary>
-        /// »ñÈ¡ÁÚ½ÓÏá·¿¶ÔÖ¸¶¨½¨ÖşµÄÄÜÁ¦¼Ó³É
+        /// è·å–é‚»æ¥å¢æˆ¿å¯¹æŒ‡å®šå»ºç­‘çš„èƒ½åŠ›åŠ æˆ
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
@@ -330,33 +330,33 @@ namespace Majordomo
 
 
         /// <summary>
-        /// ´ÓÔ­Ê¼ÄÜÁ¦Öµ×ª»»µ½±ê×¼»¯µÄ£¨¿ÉÒÔºÍËùÓĞÆäËûÄÜÁ¦ÀàĞÍ±È½ÏµÄ£©ÄÜÁ¦Öµ
+        /// ä»åŸå§‹èƒ½åŠ›å€¼è½¬æ¢åˆ°æ ‡å‡†åŒ–çš„ï¼ˆå¯ä»¥å’Œæ‰€æœ‰å…¶ä»–èƒ½åŠ›ç±»å‹æ¯”è¾ƒçš„ï¼‰èƒ½åŠ›å€¼
         /// </summary>
         /// <param name="attrId"></param>
         /// <param name="attrValue"></param>
         /// <returns></returns>
         public static int ToStandardAttrValue(int attrId, int attrValue)
         {
-            // Ö»ÓĞÃûÓşĞèÒª×ª»»
+            // åªæœ‰åèª‰éœ€è¦è½¬æ¢
             return attrId == 18 ? attrValue + 100 : attrValue;
         }
 
 
         /// <summary>
-        /// ´Ó±ê×¼»¯µÄ£¨¿ÉÒÔºÍËùÓĞÆäËûÄÜÁ¦ÀàĞÍ±È½ÏµÄ£©ÄÜÁ¦Öµ×ª»»µ½Ô­Ê¼ÄÜÁ¦Öµ
+        /// ä»æ ‡å‡†åŒ–çš„ï¼ˆå¯ä»¥å’Œæ‰€æœ‰å…¶ä»–èƒ½åŠ›ç±»å‹æ¯”è¾ƒçš„ï¼‰èƒ½åŠ›å€¼è½¬æ¢åˆ°åŸå§‹èƒ½åŠ›å€¼
         /// </summary>
         /// <param name="attrId"></param>
         /// <param name="standardAttrValue"></param>
         /// <returns></returns>
         public static int FromStandardAttrValue(int attrId, int standardAttrValue)
         {
-            // Ö»ÓĞÃûÓşĞèÒª×ª»»
+            // åªæœ‰åèª‰éœ€è¦è½¬æ¢
             return attrId == 18 ? standardAttrValue - 100 : standardAttrValue;
         }
 
 
         /// <summary>
-        /// ÅĞ¶Ï½¨ÖşÊÇ·ñĞèÒª¹¤×÷ÈËÔ±£¨½¨Öş±¾ÉíĞèÒª¹¤×÷ÈËÔ±£¬ÇÒ²»´¦ÓÚĞÂ½¨¡¢²ğ³ı×´Ì¬£©
+        /// åˆ¤æ–­å»ºç­‘æ˜¯å¦éœ€è¦å·¥ä½œäººå‘˜ï¼ˆå»ºç­‘æœ¬èº«éœ€è¦å·¥ä½œäººå‘˜ï¼Œä¸”ä¸å¤„äºæ–°å»ºã€æ‹†é™¤çŠ¶æ€ï¼‰
         /// </summary>
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
