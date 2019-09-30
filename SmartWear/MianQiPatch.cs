@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace SmartWear
 {
-    // DateFile.instance.MianQiAutoChange
-    [HarmonyPatch(typeof(DateFile), "MianQiAutoChange")]
-    public class DateFile_MianQiAutoChange_Patch
+    // AI.CharacterAge.UpdateInnerBreathDisorder
+    [HarmonyPatch(typeof(AI.CharacterAge), "UpdateInnerBreathDisorder")]
+    public class CharacterAge_UpdateInnerBreathDisorder_Patch
     {
 
-        private static void Prefix(int key)
+        private static void Prefix(int charId)
         {
             var df = DateFile.instance;
-            if (key != df.mianActorId) return;
+            if (charId != df.mianActorId) return;
 //#if (DEBUG)
-//            Main.Logger.Log($"現在內息: {df.GetActorMianQi(key)}");
+//            Main.Logger.Log($"現在內息: {df.GetActorMianQi(charId)}");
 //#endif 
             if (!Main.Enabled) return;
 
@@ -47,12 +47,12 @@ namespace SmartWear
 
         }
 
-        private static void Postfix(int key)
+        private static void Postfix(int charId, AI.AgeChangeModifiedData modifiedData)
         {
-            if (key != DateFile.instance.mianActorId) return;
-//#if (DEBUG)
-//            Main.Logger.Log($"恢復後內息: {DateFile.instance.GetActorMianQi(key)}");
-//#endif
+            if (charId != DateFile.instance.mianActorId) return;
+#if (DEBUG)
+            Main.Logger.Log($"內息變化量: {modifiedData?.ChangeMianQi.LastOrDefault().Value }");
+#endif
             if (Main.Enabled)
                 StateManager.RestoreAll();
         }

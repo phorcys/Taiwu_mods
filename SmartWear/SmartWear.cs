@@ -184,7 +184,8 @@ namespace SmartWear
                 Main.Logger.Log($"切換功法: {gongFaIndex}");
             }
             _originGongFaIndex = currentGongFaIndex;
-            ActorMenu.instance.ChangeEquipGongFa(gongFaIndex);
+            ControlHelper.ChangeGongFaTemporarily(gongFaIndex);
+            // ActorMenu.instance.ChangeEquipGongFa(gongFaIndex);
         }
 
         static public void RestoreAll()
@@ -196,7 +197,6 @@ namespace SmartWear
         public static void RestoreEquip()
         {
             var df = DateFile.instance;
-            var actorDate = df.actorsDate[df.mianActorId];
 
             // 裝備歸位
             foreach (var detail in _equipDetails)
@@ -208,13 +208,12 @@ namespace SmartWear
                     case ItemFrom.Bag:
                         if (Main.settings.EnabledLog)
                             Main.Logger.Log($"脫下裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()} to 包裹");
-                        ControlHelper.TakeoffEquip(detail.SlotId);
+                        ControlHelper.TakeoffEquipToBag(detail.SlotId);
                         break;
                     case ItemFrom.Warehouse:
                         if (Main.settings.EnabledLog)
                             Main.Logger.Log($"脫下裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()} to 倉庫");
-                        actorDate[detail.SlotId] = "0";
-                        df.actorItemsDate[-999].Add(detail.ItemId, 1);
+                        ControlHelper.TakeoffEquipToWarehouse(detail.SlotId);
                         break;
                     case ItemFrom.Unknow:
                     default:
@@ -225,7 +224,7 @@ namespace SmartWear
 
             foreach (var detail in _originEquitments)
             {
-                ControlHelper.WearEquip(detail.SlotId, detail.ItemId);
+                ControlHelper.WearEquipFromBag(detail.SlotId, detail.ItemId);
                 if (Main.settings.EnabledLog)
                 {
                     Main.Logger.Log($"換回裝備:{detail.ItemId} ({df.GetItemDate(detail.ItemId, 0, false)})@{((ActorsDateKey)detail.SlotId).GetDescription()}");
@@ -245,7 +244,8 @@ namespace SmartWear
                     {
                         Main.Logger.Log($"換回功法: {_originGongFaIndex}");
                     }
-                    ActorMenu.instance.ChangeEquipGongFa(_originGongFaIndex);
+                    // ActorMenu.instance.ChangeEquipGongFa(_originGongFaIndex);
+                    ControlHelper.ChangeGongFaTemporarily(_originGongFaIndex);
                 }
                 _originGongFaIndex = -1;
             }
@@ -266,16 +266,16 @@ namespace SmartWear
         {
             RestoreEquip();
             var df = DateFile.instance;
-            var actorDate = df.actorsDate[df.mianActorId];
+            var playerId = df.mianActorId;
             var actorsDateKey = (int)startSlot.ToActorsDateKey();
             // 紀錄並脫下原本的裝備
             for (int i = 0; i < items.Length; i++)
             {
                 int key = (int)(actorsDateKey + i);
-                int itemId = int.Parse(actorDate[key]);
+                int itemId = int.Parse(GameData.Characters.GetCharProperty(playerId, key));
                 if (itemId == 0) continue;
                 _originEquitments.Add(new EquipDetails(key, itemId, ItemFrom.Equip));
-                ControlHelper.TakeoffEquip(key);
+                ControlHelper.TakeoffEquipToBag(key);
             }
             // 穿起裝備
             // 紀錄來源 身上(背包) 或是 倉庫
@@ -289,11 +289,10 @@ namespace SmartWear
                     case ItemFrom.Equip:
                         break;
                     case ItemFrom.Bag:
-                        ControlHelper.WearEquip(actorsDateKey, item);
+                        ControlHelper.WearEquipFromBag(actorsDateKey, item);
                         break;
                     case ItemFrom.Warehouse:
-                        df.actorItemsDate[-999].Remove(item);
-                        actorDate[actorsDateKey] = item.ToString();
+                        ControlHelper.WearEquipFromWarehouse(actorsDateKey, item);
                         break;
                     case ItemFrom.Unknow:
                     default:
@@ -532,11 +531,9 @@ namespace SmartWear
 
         static public IEnumerable<KeyValuePair<int, int>> GetEquipItems()
         {
-            var df = DateFile.instance;
-            var playerActorData = df.actorsDate[df.mianActorId];
             for (int i = (int)ActorsDateKey.Weapon1; i <= (int)ActorsDateKey.Accessory3; i++)
             {
-                string itemIdStr = playerActorData[i];
+                string itemIdStr = GameData.Characters.GetCharProperty(DateFile.instance.mianActorId, i);
                 if (itemIdStr != "0")
                 {
                     int itemId = int.Parse(itemIdStr);
