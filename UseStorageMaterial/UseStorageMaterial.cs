@@ -107,7 +107,7 @@ namespace UseStorageMaterial
             Invoke(ins, "RemoveMianItem");
 
             int num = DateFile.instance.MianActorID();
-            List<int> list = new List<int>(ActorMenu.instance.GetActorItems(num, 0, false).Keys);
+            List<int> list = new List<int>(DateFile.instance.GetActorItems(num, 0, false).Keys);
             for (int i = 0; i < 12; i++)
             {
                 int num2 = int.Parse(DateFile.instance.GetActorDate(num, 301 + i, addValue: false));
@@ -116,7 +116,7 @@ namespace UseStorageMaterial
                     list.Add(num2);
                 }
             }
-            list.AddRange(ActorMenu.instance.GetActorItems(-999, 0, false).Keys);
+            list.AddRange(DateFile.instance.GetActorItems(-999, 0, false).Keys);
 
             list = DateFile.instance.GetItemSort(list);
 

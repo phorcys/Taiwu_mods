@@ -1,8 +1,0 @@
-﻿{
-    "Id": "TaiwuBaseClass",
-    "DisplayName": "基础类",
-    "Author": "sth4nothing",
-    "Version": "0.0.0",
-    "AssemblyName": "TaiwuBaseClass.dll",
-    "EntryMethod": "TaiwuBaseClass.Main.Load"
-}

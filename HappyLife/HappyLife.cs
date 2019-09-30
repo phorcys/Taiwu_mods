@@ -210,24 +210,11 @@ namespace HappyLife
         }
     }
 
-    [HarmonyPatch(typeof(MainMenu), "CloseStartMask")]
-    public static class MainMenu_CloseStartMask_Patch
-    {
-        static void Prefix(MainMenu __instance, ref bool ___showStartMassage)
-        {
-            if (!Main.enabled || !Main.settings.skip)
-            {
-                return;
-            }
-            ___showStartMassage = false;
-        }
-    }
-
 
     [HarmonyPatch(typeof(HomeSystem), "GetBuildingNeighbor")]
     public static class HomeSystem_GetBuildingNeighbor_Patch
     {
-        static void Postfix(HomeSystem __instance, ref int partId, ref int placeId, ref int buildingIndex, int ___buildingId, ref int[] __result)
+        static void Postfix(HomeSystem __instance, ref int partId, ref int placeId, ref int buildingIndex, ref int[] __result)
         {
             if (!Main.enabled || !Main.settings.unBuildLimit)
             {
@@ -241,6 +228,7 @@ namespace HappyLife
             }
             Checkchange(partId, placeId);
             List<int> list = __result.ToList();
+            int ___buildingId = (int)typeof(BuildingWindow).GetField("buildingId").GetValue(BuildingWindow.instance);
             if (___buildingId != 0) //物品建筑不为0
             {
                 bool buildon = false;
@@ -352,8 +340,8 @@ namespace HappyLife
         //private static MethodInfo MakeSystem_RemoveAllUseResourceLevel = typeof(MakeSystem).GetMethod("RemoveAllUseResourceLevel", BindingFlags.NonPublic | BindingFlags.Instance);
     }
 
-    [HarmonyPatch(typeof(HomeSystem), "SetWorkingActor")]
-    public static class HomeSystem_SetWorkingActor_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "SetWorkingActor")]
+    public static class BuildingWindow_SetWorkingActor_Patch
     {
         static bool Prefix(HomeSystem __instance,ref int key,ref int ___workingActorId,ref Button ___canChanageActorButton)
         {
@@ -367,10 +355,10 @@ namespace HappyLife
         }
     }
 
-    [HarmonyPatch(typeof(HomeSystem), "ChanageWorkingAcotr")]
-    public static class HomeSystem_ChanageWorkingAcotr_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "ChanageWorkingAcotr")]
+    public static class BuildingWindow_ChanageWorkingAcotr_Patch
     {
-        static void Prefix(HomeSystem __instance,int ___workingActorId)
+        static void Prefix(BuildingWindow __instance,int ___workingActorId)
         {
             if (!Main.enabled || !Main.settings.forcechange)
             {
@@ -379,12 +367,12 @@ namespace HappyLife
             var array = DateFile.instance.ActorIsWorking(___workingActorId);
             if (array != null)
             {
-                var dic=DateFile.instance.actorsWorkingDate[array[0]][array[1]];
+                var dic = DateFile.instance.actorsWorkingDate[array[0]][array[1]];
                 foreach (int key in dic.Keys)
                 {
                     if (dic[key]== ___workingActorId)
                     {
-                        __instance.RemoveWorkingActor(array[0], array[1], key);
+                        DateFile.instance.RemoveWorkingActor(array[0], array[1], key);
                         break;
                     }
                 } 
