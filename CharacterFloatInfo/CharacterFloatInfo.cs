@@ -130,7 +130,6 @@ namespace CharacterFloatInfo
                     var patchedPostfix = new HarmonyMethod(typeof(ActorMenu_Awake_Patch), "Postfix", new[] { typeof(ActorMenu) });
                     harmony.Patch(actorMenuAwake, null, patchedPostfix);
                     postFixes = harmony.GetPatchInfo(actorMenuAwake)?.Postfixes;
-                    Main.Logger.Log($"Hi: {postFixes == null} {postFixes?.Count}");
                 }
                 modEntry.OnToggle = OnToggle;
                 modEntry.OnGUI = OnGUI;
@@ -554,7 +553,7 @@ namespace CharacterFloatInfo
                 {
                     id = GetId(tips);
                     //建筑/地图左边的列表
-                    if (array[0] == "PlaceActor(Clone)" && tips.transform.parent.name == "ActorHolder" && DateFile.instance.actorsDate.ContainsKey(id))
+                    if (array[0] == "PlaceActor(Clone)" && tips.transform.parent.name == "ActorHolder" && Characters.HasChar(id))
                     {
                         Main.Logger.Log("Hi there"); // debug
                         if (WorldMapSystem.instance.choosePlaceId == DateFile.instance.mianPlaceId) //当前格显示
