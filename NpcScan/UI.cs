@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using GameData;
 
 
 namespace NpcScan
@@ -275,6 +276,8 @@ namespace NpcScan
         public bool ItemDead { get; private set; }
         /// <summary>最高查询品级</summary>
         public int HighestLevel { get; private set; } = 1;
+        /// <summary>是否开启门派识别</summary>
+        public bool TarIsGang { get; private set; } = false;
         /// <summary>仅搜索门派</summary>
         public bool IsGang { get; private set; } = false;
         /// <summary>姓名(包括前世)</summary>
@@ -590,6 +593,8 @@ namespace NpcScan
             IsGetReal = GUILayout.Toggle(IsGetReal, "基础值", toggleStyle, GUILayout.Width(55 * widthRatio));
             GUILayout.Space(5 * widthRatio);
             Rankmode = GUILayout.Toggle(Rankmode, "排行模式", toggleStyle, GUILayout.Width(65 * widthRatio));
+            GUILayout.Space(5 * widthRatio);
+            HighestLevel = AddLabelAndTextField("最高查询品级", ref currentwidth, (80 + 30 + 5) * widthRatio, 80 * widthRatio, 30 * widthRatio, HighestLevel);
             GUILayout.EndHorizontal();
         }
         /// <summary>
@@ -628,6 +633,8 @@ namespace NpcScan
             GangLevelText = AddLabelAndTextField("身份", ref currentwidth, 90 * widthRatio, 30 * widthRatio, 60 * widthRatio, GangLevelText);
             //商会
             AShopName = AddLabelAndTextField("商会", ref currentwidth, 90 * widthRatio, 30 * widthRatio, 60 * widthRatio, AShopName);
+            AddHorizontal(ref currentwidth, (100) * widthRatio);
+            TarIsGang = GUILayout.Toggle(TarIsGang, "开启识别门派", toggleStyle, GUILayout.Width(100 * widthRatio));
             AddHorizontal(ref currentwidth, (65 + 20) * widthRatio);
             IsGang = GUILayout.Toggle(IsGang, "仅搜门派", toggleStyle, GUILayout.Width(65 * widthRatio));
             GUILayout.Space(20);
@@ -640,8 +647,7 @@ namespace NpcScan
             // 婚姻
             GUILayout.Label("婚姻:", labelStyle, GUILayout.Width(30 * widthRatio));
             Marriage = MultiChoices(marriage, marriageChoiceText, Marriage, marriageChoiceWidth);
-            GUILayout.Space(20 * widthRatio);
-            HighestLevel = AddLabelAndTextField("最高查询品级", ref currentwidth, (80 + 30) * widthRatio, 80 * widthRatio, 30 * widthRatio, HighestLevel);
+            //GUILayout.Space(20 * widthRatio);            
             GUILayout.EndHorizontal();
         }
         /// <summary>
@@ -1068,7 +1074,15 @@ namespace NpcScan
                 {
                     var feature = new Features(pair.Key, pair.Value);
                     Main.featuresList.Add(pair.Key, feature);
-                    Main.featureNameList.Add(colorTagRegex.Replace(feature.Name, ""), pair.Key);
+                    var featureName = colorTagRegex.Replace(feature.Name, "");
+                    if (Main.featureNameList.TryGetValue(featureName, out int value))
+                    {
+                        Main.multinameFeatureGroupIdSet.Add(feature.Group);
+                        if (value != feature.Group)
+                            Main.featureNameList[featureName] = feature.Group;
+                    }
+                    else
+                        Main.featureNameList.Add(featureName, pair.Key);
                 }
             }
 
@@ -1144,7 +1158,7 @@ namespace NpcScan
             int locker = 0;
             // 启用线程安全补丁
             Patch.StartGetFeaturePatch();
-            Parallel.ForEach(DateFile.instance.actorsDate.Keys, (npcId) =>
+            Parallel.ForEach(Characters.GetAllCharIds(), (npcId) =>
             {
                 try
                 {
@@ -1242,7 +1256,7 @@ namespace NpcScan
             {
                 var npcId = actorList[itemIndex].npcId;
                 // 为防止游戏npc数据改变之后而玩家没有重新搜索导致出错，做几步验证，而且过世的NPC的窗口没法打开
-                if (DateFile.instance.actorsDate.ContainsKey(npcId)
+                if (Characters.HasChar(npcId)
                     && int.Parse(DateFile.instance.GetActorDate(npcId, 26, false)) == 0
                     && actorList[itemIndex].ActorName == DateFile.instance.GetActorName(npcId))
                 {
@@ -1359,17 +1373,25 @@ namespace NpcScan
             {
                 if (Main.featureNameList.TryGetValue(s.Trim(), out int key))
                 {
-                    if (!TarFeaure)
+                    Features f = Main.featuresList[key];
+                    // 如果该名称对应多个特性ID, 则只添加特性组ID
+                    if (Main.multinameFeatureGroupIdSet.Contains(f.Group))
                     {
-                        Features f = Main.featuresList[key];
-                        int plus = f.Plus;
-                        if (plus == 3 || plus == 4)
-                        {
-                            featureSearchSet.Add(f.Group);
-                            continue;
-                        }
+                        featureSearchSet.Add(f.Group);
                     }
-                    featureSearchSet.Add(key);
+                    else
+                    {
+                        if (!TarFeaure)
+                        {
+                            int Category = f.Category;
+                            if (Category == 3 || Category == 4)
+                            {
+                                featureSearchSet.Add(f.Group);
+                                continue;
+                            }
+                        }
+                        featureSearchSet.Add(key);
+                    }
                 }
             }
         }

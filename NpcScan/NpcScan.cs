@@ -31,6 +31,8 @@ namespace NpcScan
         internal static readonly Dictionary<int, Features> featuresList = new Dictionary<int, Features>();
         /// <summary>特性名称对应特性ID</summary>
         internal static readonly Dictionary<string, int> featureNameList = new Dictionary<string, int>();
+        /// <summary>特性搜索条件中，一个名称对应多个特性ID的特性组别ID列表</summary>
+        internal static readonly HashSet<int> multinameFeatureGroupIdSet = new HashSet<int>();
         /// <summary>功法名字反查ID</summary>
         internal static readonly Dictionary<string, int> gongFaNameList = new Dictionary<string, int>();
         /// <summary>技艺名字反查ID</summary>
@@ -60,7 +62,7 @@ namespace NpcScan
             { 20011,"<color=#EDA723FF>"},
         };
         /// <summary>文字颜色反查</summary>
-        public static readonly Dictionary<string, int> colorText = new Dictionary<string, int>()
+        internal static readonly Dictionary<string, int> colorText = new Dictionary<string, int>()
         {
             { "<color=#323232FF>",10000},
             { "<color=#4B4B4BFF>",10001},
