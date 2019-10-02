@@ -21,7 +21,7 @@ namespace Sth4nothing.DynamicExecutor
         /// MsBuild路径
         /// </summary>
         public string msbuildPath =
-            @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MsBuild.exe";
+            @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MsBuild.exe";
         public string dllsPath = @"D:\Desktop\Work\Taiwu_mods\build\dlls";
         public override void Save(UMM.ModEntry modEntry)
         {

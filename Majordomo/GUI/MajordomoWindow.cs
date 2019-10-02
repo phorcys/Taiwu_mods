@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using Harmony12;
 using Newtonsoft.Json;
 using System;

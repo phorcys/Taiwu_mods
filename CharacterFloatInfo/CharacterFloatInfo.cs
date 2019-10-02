@@ -1,4 +1,4 @@
-using GameData;
+﻿using GameData;
 using Harmony12;
 using System;
 using System.Collections.Generic;
@@ -8,8 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.TextCore;
-using UnityEngine.TextCore.LowLevel;
 using UnityModManagerNet;
 
 namespace CharacterFloatInfo
@@ -301,7 +299,6 @@ namespace CharacterFloatInfo
         }
     }
 
-
     /// <summary>
     /// 工作间正在工作的村民
     /// </summary>
@@ -370,7 +367,6 @@ namespace CharacterFloatInfo
             }
         }
     }
-
 
     /// <summary>
     /// 只有当载入存档成功后才激活浮动窗口
@@ -523,7 +519,7 @@ namespace CharacterFloatInfo
             }
             else
             //人物訊息內的關係頁及輪迴前世
-            if (tips.transform.parent.name == "ActorListHolder" || (amInst.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
+            if (tips.transform.parent.name == "ActorListHolder" || (ActorMenu.instance.actorMenu.activeSelf && tips.transform.parent.name == "ActorHolder"))
             {
                 needShow = Main.settings.enableRI;
                 id = needShow ? GetId(tips) : 0;
@@ -1094,7 +1090,7 @@ namespace CharacterFloatInfo
                     }
                     if (DateFile.instance.actorFeaturesDate[featureID][95] != "1" || Main.settings.showIV) //判斷是否顯示隱藏的特性
                     {
-                        Transform actorFeature = UnityEngine.Object.Instantiate(amInst.actorFeature, Vector3.zero, Quaternion.identity).transform;
+                        Transform actorFeature = UnityEngine.Object.Instantiate(ActorMenu.instance.actorFeature, Vector3.zero, Quaternion.identity).transform;
                         actorFeature.Find("ActorFeatureNameText").GetComponent<Text>().text = DateFile.instance.actorFeaturesDate[featureID][0];
                         Transform actorFeatureStarHolder = actorFeature.Find("ActorFeatureStarHolder");
                         // 攻击倾向
@@ -2104,7 +2100,7 @@ namespace CharacterFloatInfo
                 {
                     count = allRecords.Length;
                     index = count >= shownum ? count - shownum : 0;
-                    foreach(LifeRecords.LifeRecord record in allRecords)
+                    for (int i = index; i < count; i++)
                     {
                         var record = allRecords[i];
                         if (DateFile.instance.actorMassageDate.TryGetValue(record.messageId, out var msgData))
@@ -2280,7 +2276,7 @@ namespace CharacterFloatInfo
             Transform resourceHolder = WindowManage.instance.informationMassage.transform.Find("ResourceHolder");
             if (resourceHolder == null)
             {
-                resourceHolder = UnityEngine.Object.Instantiate(amInst.teamResourcesText[0].transform.parent, new Vector3(0, -y, 1), Quaternion.identity);
+                resourceHolder = UnityEngine.Object.Instantiate(ActorMenu.instance.teamResourcesText[0].transform.parent, new Vector3(0, -y, 1), Quaternion.identity);
                 resourceHolder.name = "ResourceHolder";
                 resourceHolder.SetParent(WindowManage.instance.informationMassage.GetComponent<RectTransform>(), false);
             }
