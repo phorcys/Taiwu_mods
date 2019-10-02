@@ -216,7 +216,7 @@ namespace Majordomo
             foreach (int adjacentBuildingIndex in adjacentBuildingIndexes)
             {
                 if (!DateFile.instance.homeBuildingsDate[partId][placeId].ContainsKey(adjacentBuildingIndex)) continue;
-                if (!Bedroom.IsBedroom(partId, placeId, buildingIndex)) continue;
+                if (!Bedroom.IsBedroom(partId, placeId, adjacentBuildingIndex)) continue;
                 adjacentBedrooms.Add(adjacentBuildingIndex);
             }
 

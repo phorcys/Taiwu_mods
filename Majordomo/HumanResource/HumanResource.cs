@@ -1,6 +1,7 @@
-﻿using Harmony12;
+using Harmony12;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -14,11 +15,23 @@ using UnityModManagerNet;
 
 namespace Majordomo
 {
+    public enum BuildingType
+    {
+        Bedroom = 0,
+        Hospital = 1,
+        Recruitment = 2,
+        GettingResource = 3,
+        GettingItem = 4,
+        GettingCricket = 5,
+        Unknown = 6,
+    }
+
+
     public class BuildingWorkInfo
     {
         public int buildingIndex;           // 建筑在所在地域中的 ID
         public int requiredAttrId;          // 工作所需资质类型
-        public int priority;                // 安排工作人员的优先级
+        public float priority;              // 安排工作人员的优先级
         public int halfWorkingAttrValue;    // 半进度工作时所需资质（标准心情好感、无邻接厢房）
         public int fullWorkingAttrValue;    // 满进度工作时所需资质（标准心情好感、无邻接厢房）
 
@@ -40,28 +53,18 @@ namespace Majordomo
 
     public class HumanResource
     {
-        public const int BASE_BUILDING_ID_BEDROOM = 1003;
-        public const int BASE_BUILDING_ID_HOSPITAL = 2904;
-        public const int BASE_BUILDING_ID_DETOXIFICATION = 3004;
-
-        public const int HARVEST_TYPE_RESOURCE = 1;
-        public const int HARVEST_TYPE_ITEM = 2;
-        public const int HARVEST_TYPE_CHARACTER = 3;
-        public const int HARVEST_TYPE_CRICKET = 4;
-
         public const int STANDARD_MOOD = 80;            // 心情：欢喜
-        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：喜爱左右
+        public const int STANDARD_FAVOR_LEVEL = 5;      // 好感：亲密左右
 
         public const int WORK_EFFECTIVENESS_HALF = 100;
         public const int WORK_EFFECTIVENESS_FULL = 200;
-
-        public const int WORKING_PRIORITY_STEP_SIZE = 120;      // 每个建筑优先级之间的差距
 
         // 计算厢房工作人员的统合能力值时，单项能力百分比的阈值。只要达到这个值，单项能力就是满分。
         public const float ATTR_INTEGRATION_THRESHOLD = 0.6f;
 
         private readonly int partId;
         private readonly int placeId;
+        private readonly TaiwuDate currDate;
 
         // baseBuildingId -> {harvestType, }
         private static readonly Dictionary<int, HashSet<int>> buildingsHarvestTypes = Original.GetBuildingsHarvestTypes();
@@ -81,28 +84,52 @@ namespace Majordomo
         {
             this.partId = partId;
             this.placeId = placeId;
+            this.currDate = new TaiwuDate();
 
-            this.excludedBuildings = new HashSet<int>();
+            if (Main.settings.excludedBuildings.ContainsKey(partId) &&
+                Main.settings.excludedBuildings[partId].ContainsKey(placeId))
+                this.excludedBuildings = new HashSet<int>(Main.settings.excludedBuildings[partId][placeId]);
+            else
+                this.excludedBuildings = new HashSet<int>();
+
             this.excludedWorkers = new HashSet<int>();
         }
 
 
         /// <summary>
-        /// 自动指派工作人员
+        /// 为太吾村指派工作人员（静态方法）
+        /// </summary>
+        public static void AssignBuildingWorkersForTaiwuVillage()
+        {
+            int mainPartId = int.Parse(DateFile.instance.GetGangDate(16, 3));
+            int mainPlaceId = int.Parse(DateFile.instance.GetGangDate(16, 4));
+            HumanResource hr = new HumanResource(mainPartId, mainPlaceId);
+            hr.AssignBuildingWorkers();
+        }
+
+
+        /// <summary>
+        /// 指派工作人员
         /// </summary>
         public void AssignBuildingWorkers()
         {
-            Main.Logger.Log($"自动指派前综合工作指数: {HumanResource.GetComprehensiveWorkIndex(this.partId, this.placeId)}");
+            var workingStats = HumanResource.GetWorkingStats(this.partId, this.placeId);
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "开始指派工作人员") + "　-　" +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, workingStats.compositeWorkIndex.ToString()));
 
             Original.RemoveWorkersFromBuildings(this.partId, this.placeId, this.excludedBuildings, this.excludedWorkers);
 
-            Main.Logger.Log("开始第一轮指派……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始第一轮指派……"));
 
             this.AssignBuildingWorkers_PrepareData();
 
             this.AssignBedroomWorkers();
 
-            Main.Logger.Log("开始第二轮指派……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始第二轮指派……"));
 
             // 指派完厢房后，重新计算
             this.AssignBuildingWorkers_PrepareData();
@@ -111,12 +138,65 @@ namespace Majordomo
 
             Original.UpdateAllBuildings(this.partId, this.placeId);
 
-            Main.Logger.Log($"自动指派后综合工作指数: {HumanResource.GetComprehensiveWorkIndex(this.partId, this.placeId)}");
+            var workerStats = HumanResource.GetWorkerStats(this.partId, this.placeId);
+            MajordomoWindow.instance.SetWorkerStats(this.currDate, workerStats);
+
+            workingStats = HumanResource.GetWorkingStats(this.partId, this.placeId);
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_NORMAL,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_BLUE, "结束指派工作人员") + "　-　" +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_BROWN, "综合工作指数") + ": " +
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, workingStats.compositeWorkIndex.ToString()));
+            MajordomoWindow.instance.SetWorkingStats(this.currDate, workingStats);
         }
 
 
         /// <summary>
-        /// 计算指定地区的综合工作指数
+        /// 计算指定地区的工作人员统计信息
+        /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
+        /// <returns></returns>
+        public static WorkerStats GetWorkerStats(int partId, int placeId)
+        {
+            int mainActorId = DateFile.instance.MianActorID();
+            List<int> workerIds = Original.GetWorkerIds(partId, placeId);
+            var stats = new WorkerStats();
+
+            foreach (int workerId in workerIds)
+            {
+                stats.avgHealthInjury += 1f - TaiwuCommon.GetInjuryRate(workerId);
+                stats.avgHealthCirculating += 1f - TaiwuCommon.GetCirculatingBlockingRate(workerId);
+                stats.avgHealthPoison += 1f - TaiwuCommon.GetPoisoningRate(workerId);
+                stats.avgHealthLifespan += 1f - TaiwuCommon.GetLifespanDamageRate(workerId);
+
+                int mood = int.Parse(DateFile.instance.GetActorDate(workerId, 4, false));
+                int favor = DateFile.instance.GetActorFavor(false, mainActorId, workerId);
+                int favorLevel = DateFile.instance.GetActorFavor(false, mainActorId, workerId, getLevel: true);
+                int scaledFavor = Original.GetScaledFavor(favorLevel);
+                scaledFavor = Original.AdjustScaledFavorWithMood(scaledFavor, mood);
+                stats.avgMood += mood;
+                stats.avgFriendliness += favor;
+                stats.avgWorkMotivation += Mathf.Max(scaledFavor, 0) / 100f;
+            }
+
+            if (workerIds.Count > 0)
+            {
+                stats.nWorkers = workerIds.Count;
+                stats.avgHealthInjury /= workerIds.Count;
+                stats.avgHealthCirculating /= workerIds.Count;
+                stats.avgHealthPoison /= workerIds.Count;
+                stats.avgHealthLifespan /= workerIds.Count;
+                stats.avgCompositeHealth = (stats.avgHealthInjury + stats.avgHealthCirculating + stats.avgHealthPoison + stats.avgHealthLifespan) / 4;
+                stats.avgMood /= workerIds.Count;
+                stats.avgFriendliness /= workerIds.Count;
+                stats.avgWorkMotivation /= workerIds.Count;
+            }
+            return stats;
+        }
+
+
+        /// <summary>
+        /// 计算指定地区的工作统计信息
         /// 
         /// 综合工作指数 = SUM(缩放平移过的建筑工作效率 * 建筑优先级)
         /// 厢房效率不计入统计
@@ -126,14 +206,16 @@ namespace Majordomo
         /// <param name="partId"></param>
         /// <param name="placeId"></param>
         /// <returns></returns>
-        private static float GetComprehensiveWorkIndex(int partId, int placeId)
+        private static WorkingStats GetWorkingStats(int partId, int placeId)
         {
-            float comprehensiveWorkIndex = 0.0f;
+            var stats = new WorkingStats();
 
             // 统计所有建筑的工作效率（厢房效率不计入统计）
             var buildings = DateFile.instance.homeBuildingsDate[partId][placeId];
             foreach (int buildingIndex in buildings.Keys)
             {
+                if (!Original.BuildingNeedsWorker(partId, placeId, buildingIndex)) continue;
+
                 if (Bedroom.IsBedroom(partId, placeId, buildingIndex)) continue;
 
                 if (DateFile.instance.actorsWorkingDate.ContainsKey(partId) &&
@@ -143,13 +225,16 @@ namespace Majordomo
                     int workerId = DateFile.instance.actorsWorkingDate[partId][placeId][buildingIndex];
                     int workEffectiveness = Original.GetWorkEffectiveness(partId, placeId, buildingIndex, workerId);
                     float scaledWorkEffectiveness = (workEffectiveness - 100f) / 100f;
-                    int priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex);
+                    float priority = HumanResource.GetBuildingWorkingPriority(partId, placeId, buildingIndex, withAdjacentBedrooms: false);
 
-                    comprehensiveWorkIndex += scaledWorkEffectiveness * priority;
+                    ++stats.nProductiveBuildings;
+                    stats.avgWorkEffectiveness += workEffectiveness / 200f;
+                    stats.compositeWorkIndex += scaledWorkEffectiveness * priority;
                 }
             }
 
-            return comprehensiveWorkIndex;
+            if (stats.nProductiveBuildings > 0) stats.avgWorkEffectiveness /= stats.nProductiveBuildings;
+            return stats;
         }
 
 
@@ -194,6 +279,8 @@ namespace Majordomo
 
         /// <summary>
         /// 为所有厢房安排工作人员
+        /// 
+        /// 建筑类型优先级因子中的厢房因子不能控制此处的厢房指派优先级，此处所有厢房必定优先于其他建筑指派。
         /// </summary>
         private void AssignBedroomWorkers()
         {
@@ -203,23 +290,23 @@ namespace Majordomo
                 this.buildings, this.attrCandidates, this.workerAttrs);
 
             // 更新辅助类厢房的优先级
-            // 辅助类厢房优先级 = 基础优先级 + SUM(辅助建筑优先级)
+            // 辅助类厢房优先级 = SUM(相关建筑优先级)
             // bedroomIndex -> priority
-            var auxiliaryBedroomsPriorities = new Dictionary<int, int>();
+            var auxiliaryBedroomsPriorities = new Dictionary<int, float>();
 
             foreach (var entry in bedroomsForWork)
             {
                 int bedroomIndex = entry.Key;
                 var relatedBuildings = entry.Value;
 
-                int basePriority = 7;
-                int priority = basePriority * WORKING_PRIORITY_STEP_SIZE + relatedBuildings.Select(info => info.priority).Sum();
+                float priority = relatedBuildings.Select(info => info.priority).Sum();
 
                 auxiliaryBedroomsPriorities[bedroomIndex] = priority;
             }
 
             // 对于辅助类厢房，按优先级依次分配合适的人选
-            Main.Logger.Log("开始指派辅助类厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派辅助类厢房……"));
 
             var sortedAuxiliaryBedrooms = auxiliaryBedroomsPriorities.OrderByDescending(entry => entry.Value).Select(entry => entry.Key);
             foreach (int bedroomIndex in sortedAuxiliaryBedrooms)
@@ -228,11 +315,12 @@ namespace Majordomo
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, bedroomIndex, selectedWorkerId);
 
                 Output.LogAuxiliaryBedroomAndWorker(bedroomIndex, bedroomsForWork[bedroomIndex],
-                    auxiliaryBedroomsPriorities[bedroomIndex], selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                    auxiliaryBedroomsPriorities[bedroomIndex], selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs);
             }
 
             // 对于一般厢房，按优先级依次分配合适的人选
-            Main.Logger.Log("开始指派一般厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派一般厢房……"));
 
             var sortedBedrooms = this.buildings.Where(entry => entry.Value.IsBedroom())
                 .OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
@@ -243,7 +331,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: true);
             }
         }
 
@@ -344,7 +433,7 @@ namespace Majordomo
         /// <returns></returns>
         private static int GetLackedMoodAndFavor(int actorId)
         {
-            int currMood = int.Parse(DateFile.instance.GetActorDate(actorId, 4, addValue: false));
+            int currMood = int.Parse(DateFile.instance.GetActorDate(actorId, 4, false));
             int currFavorLevel = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), actorId, getLevel: true);
             int currScaledFavor = Original.GetScaledFavor(currFavorLevel);
             currScaledFavor = Original.AdjustScaledFavorWithMood(currScaledFavor, currMood);
@@ -424,29 +513,23 @@ namespace Majordomo
             {
                 int buildingIndex = entry.Key;
                 int[] building = entry.Value;
+
+                if (!Original.BuildingNeedsWorker(this.partId, this.placeId, buildingIndex)) continue;
+                
                 int baseBuildingId = building[0];
-
                 var baseBuilding = DateFile.instance.basehomePlaceDate[baseBuildingId];
-                bool needWorker = int.Parse(baseBuilding[3]) == 1;
-                if (!needWorker) continue;
-
                 int requiredAttrId = int.Parse(baseBuilding[33]);
+
+                int[] requiredAttrValues = Original.GetRequiredAttributeValues(this.partId, this.placeId, buildingIndex);
 
                 BuildingWorkInfo info = new BuildingWorkInfo
                 {
                     buildingIndex = buildingIndex,
                     requiredAttrId = requiredAttrId,
-                    priority = HumanResource.GetBuildingWorkingPriority(this.partId, this.placeId, buildingIndex),
-                    halfWorkingAttrValue = 0,
-                    fullWorkingAttrValue = 0,
+                    priority = HumanResource.GetBuildingWorkingPriority(this.partId, this.placeId, buildingIndex, withAdjacentBedrooms: true),
+                    halfWorkingAttrValue = requiredAttrValues[0],
+                    fullWorkingAttrValue = requiredAttrValues[1],
                 };
-
-                if (requiredAttrId != 0)
-                {
-                    int[] requiredAttrValues = Original.GetRequiredAttributeValues(this.partId, this.placeId, buildingIndex);
-                    info.halfWorkingAttrValue = requiredAttrValues[0];
-                    info.fullWorkingAttrValue = requiredAttrValues[1];
-                }
 
                 if (!attrBuildings.ContainsKey(requiredAttrId)) attrBuildings[requiredAttrId] = new List<BuildingWorkInfo>();
                 attrBuildings[requiredAttrId].Add(info);
@@ -457,53 +540,88 @@ namespace Majordomo
 
 
         /// <summary>
-        /// 返回建筑安排工作人员的优先级。优先级越高，越优先安排高能力的工作人员。
-        /// 返回值越大，优先级越高；为负数时（因用户配置而排除），不参与人员分配。
-        /// 目前固定优先级为：厢房 > 病坊、密医 > 收获人才建筑 > 收获资源建筑 > 收获物品建筑 > 收获蛐蛐建筑
-        /// 同一类别中，工作难度越高，优先级越高
+        /// 返回建筑指派工作人员的优先级
+        /// 
+        /// 优先级 = 建筑种类因子 * 标准状态下满效率需求的标准化能力值
+        /// 对于厢房，“标准状态下满效率需求的标准化能力值” 即为其等级
+        /// 虽然这会导致方向的优先级和其他建筑没有可比性，但是厢房优先级本来就不会与其他建筑比较，所以没有问题
         /// </summary>
+        /// <param name="partId"></param>
+        /// <param name="placeId"></param>
         /// <param name="buildingIndex"></param>
+        /// <param name="withAdjacentBedrooms">是否考虑邻接厢房的影响</param>
         /// <returns></returns>
-        private static int GetBuildingWorkingPriority(int partId, int placeId, int buildingIndex)
+        private static float GetBuildingWorkingPriority(int partId, int placeId, int buildingIndex, bool withAdjacentBedrooms)
         {
+            int[] requiredAttrValues = Original.GetRequiredAttributeValues(partId, placeId, buildingIndex,
+                withAdjacentBedrooms, getStandardAttrValue: true);
+            int fullWorkingAttrValue = requiredAttrValues[1];
+
+            // 对于厢房，“标准状态下满效率需求的标准化能力值” 即为其等级
             int[] building = DateFile.instance.homeBuildingsDate[partId][placeId][buildingIndex];
             int baseBuildingId = building[0];
+            int buildingLevel = building[1];
+            int requiredAttrId = int.Parse(DateFile.instance.basehomePlaceDate[baseBuildingId][33]);
+            if (requiredAttrId <= 0)
+                fullWorkingAttrValue = buildingLevel;
 
-            int basePriority;
+            float typeFactor = HumanResource.GetBuildingPriorityFactor(baseBuildingId);
+            return typeFactor * fullWorkingAttrValue;
+        }
 
-            if (baseBuildingId == BASE_BUILDING_ID_BEDROOM)
+
+        /// <summary>
+        /// 获取指定建筑的优先级因子
+        /// 
+        /// 根据不同的建筑类型优先级因子排序，同一建筑的因子会产生变化，
+        /// 比如某个建筑同时产出物品和金钱，如果物品的优先级因子更大，那么该建筑就被认定为产出物品，返回物品优先级因子。
+        /// </summary>
+        /// <param name="baseBuildingId"></param>
+        /// <returns></returns>
+        private static float GetBuildingPriorityFactor(int baseBuildingId)
+        {
+            var sortedFactors = Main.settings.buildingTypePriorityFactors.OrderByDescending(entry => entry.Value);
+
+            HashSet<int> harvestTypes = null;
+            if (HumanResource.buildingsHarvestTypes.ContainsKey(baseBuildingId))
+                harvestTypes = HumanResource.buildingsHarvestTypes[baseBuildingId];
+
+            foreach (var entry in sortedFactors)
             {
-                basePriority = 6;
-            }
-            else if (baseBuildingId == BASE_BUILDING_ID_HOSPITAL || baseBuildingId == BASE_BUILDING_ID_DETOXIFICATION)
-            {
-                basePriority = 5;
-            }
-            else
-            {
-                var harvestTypes = HumanResource.buildingsHarvestTypes[baseBuildingId];
-                if (harvestTypes.Contains(HARVEST_TYPE_CHARACTER))
+                var type = entry.Key;
+                var factor = entry.Value;
+
+                switch (type)
                 {
-                    basePriority = 4;
-                }
-                else if (harvestTypes.Contains(HARVEST_TYPE_RESOURCE))
-                {
-                    basePriority = 3;
-                }
-                else if (harvestTypes.Contains(HARVEST_TYPE_ITEM))
-                {
-                    basePriority = 2;
-                }
-                else
-                {
-                    basePriority = 1;
+                    case BuildingType.Bedroom:
+                        // 厢房
+                        if (baseBuildingId == 1003) return factor;
+                        break;
+                    case BuildingType.Hospital:
+                        // 病坊，密医
+                        if (baseBuildingId == 2904 || baseBuildingId == 3004) return factor;
+                        break;
+                    case BuildingType.Recruitment:
+                        // 收获类型包含人才
+                        if (harvestTypes != null && harvestTypes.Contains(3)) return factor;
+                        break;
+                    case BuildingType.GettingResource:
+                        // 收获类型包含资源
+                        if (harvestTypes != null && harvestTypes.Contains(1)) return factor;
+                        break;
+                    case BuildingType.GettingItem:
+                        // 收获类型包含物品
+                        if (harvestTypes != null && harvestTypes.Contains(2)) return factor;
+                        break;
+                    case BuildingType.GettingCricket:
+                        // 收获类型包含蛐蛐
+                        if (harvestTypes != null && harvestTypes.Contains(4)) return factor;
+                        break;
                 }
             }
 
-            int workDifficulty = Original.GetWorkDifficulty(partId, placeId, buildingIndex);
-            int priority = basePriority * WORKING_PRIORITY_STEP_SIZE + workDifficulty;
-
-            return priority;
+            // 建筑无法被归为任意有效类时，即为未知类
+            return Main.settings.buildingTypePriorityFactors[BuildingType.Unknown];
         }
 
 
@@ -511,28 +629,33 @@ namespace Majordomo
         /// 指派完厢房之后，继续指派其他建筑
         /// 
         /// 其实本轮指派开始时仍有可能包含厢房，本轮临近结束时也仍有可能尚未指派厢房。
-        /// 本轮开始的厢房指派按一般厢房指派规则进行。
         /// 本轮最后厢房指派，不考虑是否达到心情好感阈值，只要还有人就往里放。
-        /// 第一次分配完后还有厢房剩下的原因：人太少，辅助性厢房装不满；心情都挺好，一般厢房装不满。
-        /// 第二次分配完后还有厢房剩下的原因：人太少。
+        /// 上次分配后还有厢房剩下的原因：人太少，辅助性厢房装不满；心情都挺好，一般厢房装不满。
+        /// 本次分配后还有厢房剩下的原因：人太少。
+        /// 
+        /// 建筑类型优先级因子中的厢房因子依然不能控制此处的厢房指派优先级，所有厢房在最后阶段指派。
         /// </summary>
         private void AssignLeftBuildings()
         {
-            Main.Logger.Log("开始指派主要建筑……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派主要建筑……"));
 
             var sortedBuildings = this.buildings.OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
             foreach (var info in sortedBuildings)
             {
                 if (this.excludedBuildings.Contains(info.buildingIndex)) continue;
+                if (info.IsBedroom()) continue;
 
                 int selectedWorkerId = this.SelectBuildingWorker(info.buildingIndex, info.requiredAttrId);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: false);
             }
 
             // 最后指派尚未指派的厢房
-            Main.Logger.Log("开始指派尚未指派的厢房……");
+            MajordomoWindow.instance.AppendMessage(this.currDate, Message.IMPORTANCE_LOWEST,
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "开始指派尚未指派的厢房……"));
 
             sortedBuildings = this.buildings.OrderByDescending(entry => entry.Value.priority).Select(entry => entry.Value);
             foreach (var info in sortedBuildings)
@@ -543,7 +666,8 @@ namespace Majordomo
                 int selectedWorkerId = this.SelectLeftBedroomWorker(info.buildingIndex);
                 if (selectedWorkerId >= 0) Original.SetBuildingWorker(this.partId, this.placeId, info.buildingIndex, selectedWorkerId);
 
-                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.workerAttrs);
+                Output.LogBuildingAndWorker(info, selectedWorkerId, this.partId, this.placeId, this.currDate, this.workerAttrs,
+                    suppressNoWorkerWarnning: false);
             }
         }
 

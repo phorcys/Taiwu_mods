@@ -1,0 +1,7 @@
+﻿{
+  "Id": "GuiMartialArts",
+  "DisplayName": "鬼的战斗艺术",
+  "Version": "2.1.0",
+  "AssemblyName": "GuiMartialArts.dll",
+  "EntryMethod": "GuiMartialArts.Main.Load"
+}

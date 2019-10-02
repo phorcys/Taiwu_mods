@@ -1,0 +1,7 @@
+﻿{
+  "Id": "GuiTest",
+  "DisplayName": "鬼的测试",
+  "Version": "1.0.0",
+  "AssemblyName": "GuiTest.dll",
+  "EntryMethod": "GuiTest.Main.Load"
+}

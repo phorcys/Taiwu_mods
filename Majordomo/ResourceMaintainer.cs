@@ -182,6 +182,13 @@ namespace Majordomo
         public const int RES_ID_SILK = 3;
         public const int RES_ID_HERBAL = 4;
         public const int RES_ID_MONEY = 5;
+        public const int RES_ID_FAME = 6;
+        public const int RES_ID_HUMAN = 7;
+        public const int RES_ID_CULTURE = 8;
+        public const int RES_ID_STABLE = 9;
+
+        public const float EXCHANGE_RATE_FAME = 15;
+        public const float EXCHANGE_RATE_DEFAULT = 1;
 
         public const int RESOURCE_PACK_SIZE = 480;
 
@@ -200,7 +207,7 @@ namespace Majordomo
 
         public static SortedList<int, ResourceInfo> GetResourcesInfo()
         {
-            int[] currResources = ActorMenu.instance.ActorResource(DateFile.instance.MianActorID());
+            int[] currResources = DateFile.instance.ActorResource(DateFile.instance.MianActorID());
             int maxResource = 1000 + UIDate.instance.GetMaxResource();
 
             return new SortedList<int, ResourceInfo>
@@ -289,19 +296,27 @@ namespace Majordomo
 
             if (ResourceMaintainer.spentMoney > 0)
             {
-                text += "花费银钱\u00A0" + ResourceMaintainer.spentMoney + "\u00A0，购入了";
+                text += "花费" + TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, "银钱") + "\u00A0" +
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, ResourceMaintainer.spentMoney.ToString()) + "\u00A0，购入了";
 
                 foreach (var entry in ResourceMaintainer.boughtResources)
                 {
                     int resourceId = entry.Key;
                     int nResources = entry.Value;
                     string name = DateFile.instance.resourceDate[resourceId][1];
-                    text += name + "\u00A0" + nResources + "、";
+                    text += TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, name) + "\u00A0" +
+                        TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, nResources.ToString()) + "、";
                 }
                 text = text.Substring(0, text.Length - 1) + "。\n";
             }
 
             ResourceMaintainer.shoppingRecord = text;
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                string recordingMessage = "管家" + text.Replace("\n", "");
+                MajordomoWindow.instance.AppendMessage(new TaiwuDate(), Message.IMPORTANCE_HIGH, recordingMessage);
+            }
         }
 
 
@@ -317,17 +332,23 @@ namespace Majordomo
                 if (resourceInfo.current < -resourceInfo.consumed * Main.settings.resMinHolding)
                 {
                     string name = DateFile.instance.resourceDate[(int)resourceId][1];
-                    text += name + "、";
+                    text += TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, name) + "、";
                 }
             }
+
             if (text.Length > 0)
             {
-                text = "以下资源库存不足：" +
-                    text.Substring(0, text.Length - 1) + "。\n需要尽快补充，否则将导致建筑损坏。\n";
-                text = DateFile.instance.SetColoer(20009, text);  // 橙色文字
+                text = "以下资源库存不足：" + text.Substring(0, text.Length - 1) + "。\n需要尽快补充，否则将导致建筑损坏。\n";
+                text = TaiwuCommon.SetColor(TaiwuCommon.COLOR_RED, text);
             }
 
             ResourceMaintainer.resourceWarning = text;
+
+            if (!string.IsNullOrEmpty(text))
+            {
+                string recordingMessage = text.Replace("\n", "");
+                MajordomoWindow.instance.AppendMessage(new TaiwuDate(), Message.IMPORTANCE_HIGHEST, recordingMessage);
+            }
         }
 
 
@@ -430,7 +451,7 @@ namespace Majordomo
             outline.useGraphicAlpha = true;
 
             var textTransform = textGO.GetComponent<RectTransform>();
-            textTransform.localPosition = new Vector3(-9.0f, -18.0f, 0.0f);
+            textTransform.localPosition = new Vector3(35.0f, -18.0f, 0.0f);
             textTransform.sizeDelta = new Vector2(110.0f, 30.0f);
 
             ResourceMaintainer.resIdealHoldingText[resourceId] = text;
@@ -519,7 +540,55 @@ namespace Majordomo
         {
             bool add = this.pressedButton == PointerEventData.InputButton.Left;
             bool changed = ResourceMaintainer.ChangeResourceIdealHolding(this.resourceId, add, nMultiple);
-            if (changed) DateFile.instance.PlayeSE(2);
+            if (changed) AudioManager.instance.PlaySE("SE_2");
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 创建 UI
+    /// </summary>
+    [HarmonyPatch(typeof(ui_TopBar), "Awake")]
+    public static class ui_TopBar_Awake_InitialzeResources
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+
+            ResourceMaintainer.InitialzeResourcesIdealHolding();
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 更新 UI
+    /// 因为 ui_TopBar 没有 Update 方法, 所以只好加在生命周期一致的另一个 UI 上
+    /// </summary>
+    [HarmonyPatch(typeof(ui_BottomLeft), "Update")]
+    public static class ui_BottomLeft_Update_ShowOrHideText
+    {
+        static void Postfix()
+        {
+            if (!Main.enabled) return;
+
+            ResourceMaintainer.ShowResourceIdealHoldingText();
+        }
+    }
+
+
+    /// <summary>
+    /// Patch: 禁止显示浮窗
+    /// </summary>
+    [HarmonyPatch(typeof(WindowManage), "LateUpdate")]
+    public static class WindowManage_LateUpdate_ShowOrHideFloatWindow
+    {
+        static bool Prefix(WindowManage __instance)
+        {
+            if (!Main.enabled) return true;
+
+            ResourceMaintainer.InterfereFloatWindow(__instance);
+
+            return true;
         }
     }
 }

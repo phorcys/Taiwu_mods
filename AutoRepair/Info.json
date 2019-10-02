@@ -1,0 +1,8 @@
+﻿{
+  "Id": "AutoRepair",
+  "DisplayName": "自动修理",
+  "Author": "Koketsu",
+  "Version": "1.0.0",
+  "AssemblyName": "AutoRepair.dll",
+  "EntryMethod": "AutoRepair.Main.Load"
+}

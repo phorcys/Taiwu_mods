@@ -9,7 +9,7 @@ using UnityModManagerNet;
 
 namespace MoveBuilding
 {
-    public class ModSettings : UnityModManager.ModSettings
+    public class Settings : UnityModManager.ModSettings
     {
         public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
 
@@ -20,7 +20,7 @@ namespace MoveBuilding
         public static bool enabled;
 
         public static readonly string[] buttons = new string[] { "右键", "中键" };
-        public static ModSettings Settings { get; private set; }
+        public static Settings Settings { get; private set; }
         public static UnityModManager.ModEntry.ModLogger Logger;
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
@@ -30,7 +30,7 @@ namespace MoveBuilding
             modEntry.OnGUI = OnGUI;
             modEntry.OnSaveGUI = OnSaveGUI;
 
-            Settings = ModSettings.Load<ModSettings>(modEntry);
+            Settings = Settings.Load<Settings>(modEntry);
             HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
             return true;
         }
@@ -70,7 +70,11 @@ namespace MoveBuilding
             {
                 ___buildingButton.AddComponent<DropablePlace>();
             }
-            else if (buildingType[0] >= 1002 && ___buildingButton.GetComponent<DraggingObject>() == null) // 人工建築
+            //Modify By InpayH Start
+            //else if (buildingType[0] >= 1002 && ___buildingButton.GetComponent<DraggingObject>() == null) // 人工建築
+            // 判定：当前建筑不为太污村 且 该对象元素不为空
+            else if (buildingType[0] != 1001 && ___buildingButton.GetComponent<DraggingObject>() == null)
+            //Modify By InpayH End
             {
                 ___buildingButton.AddComponent<DraggingObject>();
             }
@@ -134,7 +138,9 @@ namespace MoveBuilding
         {
             if (!DraggingBuilding.Instance.isDragging) return;
             buildingDummy.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Delete By InpayH Start
+            //transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            //Delete By InpayH End
         }
 
         public void OnEndDrag(PointerEventData eventData)

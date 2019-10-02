@@ -18,6 +18,7 @@ namespace StorageCheck
         public bool displaybag = true;
         public bool displaywarehouse = true;
         public bool displaybookinfo = true;
+        public bool showGoodPage = true;//是否把真传手抄一起算然后页数后加上手抄还是真传
 
         public override void Save(UnityModManager.ModEntry modEntry)
         {
@@ -65,7 +66,7 @@ namespace StorageCheck
             settings.displaybag = GUILayout.Toggle(settings.displaybag, "是否显示 背包内是否有此物品 ");
             settings.displaywarehouse = GUILayout.Toggle(settings.displaywarehouse, "是否显示 仓库内是否有此物品 ");
             settings.displaybookinfo = GUILayout.Toggle(settings.displaybookinfo, "是否显示 功法书籍比对信息 ");
-
+            settings.showGoodPage = GUILayout.Toggle(settings.showGoodPage, "是否显示 功法已有书页为真传或手抄 （不显示则“已有书页”仅为同为真传或手抄的已有页数）");
             GUILayout.Label("说明： 点击是否启用对应功能。");
             GUILayout.EndVertical();
         }
@@ -82,7 +83,7 @@ namespace StorageCheck
     ///  物品tips 显示，查询是否需要插入 背包/仓库是否有此物品显示
     /// </summary>
     [HarmonyPatch(typeof(WindowManage), "ShowItemMassage")]
-    public static class WindowManage_ShowItemMassage_Patch
+    public static class StorageCheck_WindowManage_ShowItemMassage_Patch
     {
 
         public static  int localGetItemNumber(int actorId, int itemId)
@@ -156,6 +157,7 @@ namespace StorageCheck
                 {
                     text += DateFile.instance.SetColoer(20008, string.Format("\n 仓库数量: {0}  总耐久: {1}/{2}", num, usecount, totalcount));
                 }
+                text += "\n\n";
             }
 
             ___baseWeaponMassage = text;
@@ -170,7 +172,7 @@ namespace StorageCheck
     ///  物品tips 显示，查询是否需要插入 背包/仓库是否有此物品显示
     /// </summary>
     [HarmonyPatch(typeof(WindowManage), "ShowBookMassage")]
-    public static class WindowManage_ShowBookMassage_Patch
+    public static class StorageCheck_WindowManage_ShowBookMassage_Patch
     {
 
         public static string getBookInfo(WindowManage __instance, int itemId)
@@ -205,13 +207,16 @@ namespace StorageCheck
 
                 int[] curbookPage = DateFile.instance.GetBookPage(itemId);
                 int itemtypeid = int.Parse(DateFile.instance.GetItemDate(itemId, 999, true));
+                int itemSkillid = int.Parse(DateFile.instance.GetItemDate(itemId, 32, true));
                 //每页可读共计有几页
                 int[] bagpages = new int[10];
+                bool[] GoodPage = new bool[10];
+                bool[] BadPage = new bool[10];
                 foreach (int actorid in new int[] { DateFile.instance.MianActorID(), -999 })
                 {
                     foreach (int key in DateFile.instance.actorItemsDate[actorid].Keys)
                     {
-                        if (DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString())
+                        if (DateFile.instance.GetItemDate(key, 999, true) == itemtypeid.ToString() || (Main.settings.showGoodPage && int.Parse(DateFile.instance.GetItemDate(key, 32, true)) == itemSkillid))
                         {
                             var pages = DateFile.instance.GetBookPage(key);
                             for (int z = 0; z < 10; z++)
@@ -219,6 +224,17 @@ namespace StorageCheck
                                 if (pages[z] != 0)
                                 {
                                     bagpages[z]++;
+                                    if(Main.settings.showGoodPage)
+                                    {
+                                        if (int.Parse(DateFile.instance.GetItemDate(key, 31, true)) == 17 && int.Parse(DateFile.instance.GetItemDate(key, 35, true)) == 0)
+                                        {
+                                            GoodPage[z] = true;
+                                        }
+                                        else if (int.Parse(DateFile.instance.GetItemDate(key, 35, true)) == 1)
+                                        {
+                                            BadPage[z] = true;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -229,17 +245,28 @@ namespace StorageCheck
                     text += "背包功法页已读统计:\n";
                     for (int i = 0; i < curbookPage.Length; i++)
                     {
+                        string zero = "";
+                        if(Mathf.Abs(playerlearned[i]) < 10)
+                        {
+                            zero = "<color=#00000000>00</color>";
+                        }
+                        else if (Mathf.Abs(playerlearned[i]) < 100)
+                        {
+                            zero = "<color=#00000000>0</color>";
+                        }
+                        string ReadingPercent = zero + Mathf.Abs(playerlearned[i]).ToString() + "%";
                         text += string.Format("{0}{1}{2}{3}{4}", new object[]
                         {
                         DateFile.instance.massageDate[10][2],
                         DateFile.instance.massageDate[8][2].Split('|')[i],
                         (curbookPage[i] != 1) ? DateFile.instance.SetColoer(20010, DateFile.instance.massageDate[7010][4].Split('|')[0], false)
                                                   : DateFile.instance.SetColoer(20004, DateFile.instance.massageDate[7010][4].Split('|')[1], false),
-                        (playerlearned[i] != 1) ? DateFile.instance.SetColoer(20002, string.Format("  ({0})",
-                                                          DateFile.instance.massageDate[7009][4].Split('|')[2]), false)
-                                                   : DateFile.instance.SetColoer(20005, string.Format("  ({0})",
-                                                          DateFile.instance.massageDate[7009][4].Split('|')[3]), false),
-                        (bagpages[i] >= 1) ? DateFile.instance.SetColoer(20004, string.Format("  ○已有{0}页\n",bagpages[i]))
+
+                        (playerlearned[i] != 1&& playerlearned[i] > -100) ? (DateFile.instance.SetColoer(20002, string.Format("  ({0})",
+                                                          DateFile.instance.massageDate[7009][4].Split('|')[2]), false)+ DateFile.instance.SetColoer(10001, "  " + ReadingPercent, false))
+                                                   : (DateFile.instance.SetColoer(20005, string.Format("  ({0})",
+                                                          DateFile.instance.massageDate[7009][4].Split('|')[3]), false) + DateFile.instance.SetColoer(10001, "  100%", false)),
+                        (bagpages[i] >= 1) ? DateFile.instance.SetColoer(20004, string.Format("  ○已有{0}页",bagpages[i])) + ((GoodPage[i] == true) ?  (DateFile.instance.SetColoer(20004, "真传", false) + ((BadPage[i] == true) ? DateFile.instance.SetColoer(20010, "/手抄", false): "" )) : (BadPage[i] == true) ? DateFile.instance.SetColoer(20010, "手抄", false) : "") + "\n"
                                                    : DateFile.instance.SetColoer(20010, string.Format("  ×无此页\n"))
                         });
                     }
@@ -292,7 +319,7 @@ namespace StorageCheck
                 injectedCodes.Add(new CodeInstruction(OpCodes.Beq_S,  7));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_0));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ldarg_1));
-                injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(WindowManage_ShowBookMassage_Patch).GetMethod("getBookInfo")));
+                injectedCodes.Add(new CodeInstruction(OpCodes.Call, typeof(StorageCheck_WindowManage_ShowBookMassage_Patch).GetMethod("getBookInfo")));
                 injectedCodes.Add(new CodeInstruction(OpCodes.Ret));
 
                 codes.InsertRange(startIndex, injectedCodes);

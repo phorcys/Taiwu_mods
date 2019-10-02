@@ -1,46 +1,46 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace NpcScan
 {
-    public class Features
+    internal class Features
     {
-        public int Key = 0;
-        public int Level = 0;
-        public int Group = 0;
-        public string Name = "";
-        public int Plus = 0;
-        public string Color = "";
-        public string tarColor = "";
+        /// <summary>特性ID</summary>
+        public int Key { get; private set; }
+        /// <summary>特性等级</summary>
+        public int Level { get; private set; }
+        /// <summary>特性组别</summary>
+        public int Group { get; private set; }
+        /// <summary>特性名称</summary>
+        public string Name { get; private set; }
+        /// <summary>特性类型</summary>
+        public int Category { get; private set; }
+        /// <summary>显示颜色</summary>
+        public string Color { get; private set; }
+        /// <summary>搜索命中的特性颜色</summary>
+        public string TarColor { get; private set; }
 
-        public Features(int i)
+        public Features(int i, Dictionary<int, string> featureData)
         {
-            this.Key = i;
-            this.Level = int.Parse(DateFile.instance.actorFeaturesDate[i][4]);
-            this.Group = int.Parse(DateFile.instance.actorFeaturesDate[i][5]);
-            this.Name = DateFile.instance.actorFeaturesDate[i][0];
-            this.Plus = int.Parse(DateFile.instance.actorFeaturesDate[i][8]);
-            switch (Plus)
+            Key = i;
+            // 特性等级
+            Level = int.Parse(featureData[4]);
+            Group = int.Parse(featureData[5]);
+            Name = featureData[0];
+            Category = int.Parse(featureData[8]);
+            switch (Category)
             {
-                case 0:
-                    this.Color = Main.textColor[20003];
+                default:
+                    Color = Main.textColor[20003];
                     break;
                 case 3:
-                    this.Color = Main.textColor[20006];
+                    Color = Main.textColor[20006];
                     break;
                 case 4:
-                    this.Color = Main.textColor[10004];
+                    Color = Main.textColor[10004];
                     break;
             }
-            this.tarColor = Main.textColor[20004];
-        }
-
-        public Features()
-        {
-
+            TarColor = Main.textColor[20004];
         }
     }
-
 }

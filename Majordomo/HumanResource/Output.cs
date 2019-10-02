@@ -17,7 +17,8 @@ namespace Majordomo
     public class Output
     {
         public static void LogBuildingAndWorker(BuildingWorkInfo info, int selectedWorkerId,
-            int partId, int placeId, Dictionary<int, Dictionary<int, int>> workerAttrs)
+            int partId, int placeId, TaiwuDate currDate, Dictionary<int, Dictionary<int, int>> workerAttrs,
+            bool suppressNoWorkerWarnning)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][info.buildingIndex];
             int baseBuildingId = building[0];
@@ -28,35 +29,49 @@ namespace Majordomo
 
             string attrName = Output.GetRequiredAttrName(info.requiredAttrId);
 
-            string logText = $"{info.priority}\t" +
-                    $"{buildingName} ({buildingLevel}): " +
-                    $"{attrName} [{info.halfWorkingAttrValue}, {info.fullWorkingAttrValue}] - ";
+            string logText = string.Format("{0}Ôºö{1} ({2})„ÄÄ{3} [{4}, {5}]„ÄÄ-„ÄÄ",
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(info.priority.ToString("F0").PadLeft(4))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(buildingName.PadRight(5))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(buildingLevel.ToString().PadLeft(2))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_RICE_WHITE, Common.ToFullWidth(attrName.PadRight(2))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(info.halfWorkingAttrValue.ToString().PadLeft(3))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(info.fullWorkingAttrValue.ToString().PadLeft(3))));
 
             if (selectedWorkerId >= 0)
             {
                 string workerName = DateFile.instance.GetActorName(selectedWorkerId);
                 int attrValue = info.requiredAttrId != 0 ? workerAttrs[selectedWorkerId][info.requiredAttrId] : -1;
-                int mood = int.Parse(DateFile.instance.GetActorDate(selectedWorkerId, 4, addValue: false));
+                int mood = int.Parse(DateFile.instance.GetActorDate(selectedWorkerId, 4, false));
                 int favor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), selectedWorkerId, getLevel: true);
 
-                // ’‚¿Ôµƒπ§◊˜–ß¬ ≤¢≤ª“ª∂®µ»”⁄◊Ó÷’π§◊˜–ß¬ £¨“ÚŒ™ø…ƒ‹ªπ”–œ·∑øŒ¥∑÷≈‰
+                // ËøôÈáåÁöÑÂ∑•‰ΩúÊïàÁéáÂπ∂‰∏ç‰∏ÄÂÆöÁ≠â‰∫éÊúÄÁªàÂ∑•‰ΩúÊïàÁéáÔºåÂõ†‰∏∫ÂèØËÉΩËøòÊúâÂé¢ÊàøÊú™ÂàÜÈÖç
                 int workEffectiveness = info.requiredAttrId != 0 ?
                     Original.GetWorkEffectiveness(partId, placeId, info.buildingIndex, selectedWorkerId) : -1;
                 string workEffectivenessStr = workEffectiveness >= 0 ? workEffectiveness / 2 + "%" : "N/A";
 
-                Main.Logger.Log(logText +
-                    $"{workerName}, ◊ ÷ : {attrValue}, –ƒ«È: {mood}, ∫√∏–: {favor}, π§◊˜–ß¬ : {workEffectivenessStr}");
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW, logText + string.Format(
+                    "{0}„ÄÄËµÑË¥®: {1}„ÄÄÂøÉÊÉÖ: {2}„ÄÄÂ•ΩÊÑü: {3}„ÄÄÂ∑•‰ΩúÊïàÁéá: {4}",
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(workerName.PadRight(5))),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(attrValue.ToString().PadLeft(3))),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(mood.ToString().PadLeft(4))),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(favor.ToString().PadLeft(2))),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_WHITE, Common.ToFullWidth(workEffectivenessStr.PadLeft(4)))));
             }
             else
             {
-                Main.Logger.Log(logText + "<Œﬁ∫œ  »À—°>");
+                if (suppressNoWorkerWarnning)
+                    MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW,
+                        logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "Êó†ÂêàÈÄÇ‰∫∫ÈÄâ"));
+                else
+                    MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_HIGH,
+                        logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_RED, "Êó†ÂêàÈÄÇ‰∫∫ÈÄâ"));
             }
         }
 
 
         public static void LogAuxiliaryBedroomAndWorker(int bedroomIndex, List<BuildingWorkInfo> relatedBuildings,
-            int priority, int selectedWorkerId,
-            int partId, int placeId, Dictionary<int, Dictionary<int, int>> workerAttrs)
+            float priority, int selectedWorkerId,
+            int partId, int placeId, TaiwuDate currDate, Dictionary<int, Dictionary<int, int>> workerAttrs)
         {
             var building = DateFile.instance.homeBuildingsDate[partId][placeId][bedroomIndex];
             int baseBuildingId = building[0];
@@ -67,11 +82,16 @@ namespace Majordomo
 
             var attrNames = new List<string>();
             foreach (var info in relatedBuildings)
-                attrNames.Add(Output.GetRequiredAttrName(info.requiredAttrId));
+            {
+                string attrName = Common.ToFullWidth(Output.GetRequiredAttrName(info.requiredAttrId).PadRight(2));
+                attrNames.Add(TaiwuCommon.SetColor(TaiwuCommon.COLOR_RICE_WHITE, attrName));
+            }
 
-            string attrNamesStr = String.Join(", ", attrNames.ToArray());
-
-            string logText = $"{priority}\t{buildingName} ({buildingLevel}): ({attrNamesStr}) - ";
+            string logText = string.Format("{0}Ôºö{1} ({2})„ÄÄ[{3}]„ÄÄ-„ÄÄ",
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(priority.ToString("F0").PadLeft(4))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(buildingName.PadRight(5))),
+                TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(buildingLevel.ToString().PadLeft(2))),
+                string.Join(", ", attrNames.ToArray()));
 
             if (selectedWorkerId >= 0)
             {
@@ -79,18 +99,25 @@ namespace Majordomo
 
                 var attrValues = new List<string>();
                 foreach (var info in relatedBuildings)
-                    attrValues.Add(workerAttrs[selectedWorkerId][info.requiredAttrId].ToString());
+                {
+                    string attrValue = Common.ToFullWidth(workerAttrs[selectedWorkerId][info.requiredAttrId].ToString().PadLeft(3));
+                    attrValues.Add(TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, attrValue));
+                }
 
-                string attrValuesStr = String.Join(", ", attrValues.ToArray());
-
-                int mood = int.Parse(DateFile.instance.GetActorDate(selectedWorkerId, 4, addValue: false));
+                int mood = int.Parse(DateFile.instance.GetActorDate(selectedWorkerId, 4, false));
                 int favor = DateFile.instance.GetActorFavor(false, DateFile.instance.MianActorID(), selectedWorkerId, getLevel: true);
 
-                Main.Logger.Log(logText + $"{workerName}, ◊ ÷ : ({attrValuesStr}), –ƒ«È: {mood}, ∫√∏–: {favor}");
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW, logText + string.Format(
+                    "{0}„ÄÄËµÑË¥®: [{1}]„ÄÄÂøÉÊÉÖ: {2}„ÄÄÂ•ΩÊÑü: {3}",
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_YELLOW, Common.ToFullWidth(workerName.PadRight(5))),
+                    string.Join(", ", attrValues.ToArray()),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(mood.ToString().PadLeft(4))),
+                    TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, Common.ToFullWidth(favor.ToString().PadLeft(2)))));
             }
             else
             {
-                Main.Logger.Log(logText + "<Œﬁ∫œ  »À—°>");
+                MajordomoWindow.instance.AppendMessage(currDate, Message.IMPORTANCE_LOW,
+                    logText + TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "Êó†ÂêàÈÄÇ‰∫∫ÈÄâ"));
             }
         }
 
@@ -100,9 +127,9 @@ namespace Majordomo
             switch (requiredAttrId)
             {
                 case 0:
-                    return "<Œﬁ>";
+                    return "Êó†";
                 case 18:
-                    return "√˚”˛";
+                    return "ÂêçË™â";
                 default:
                     return DateFile.instance.actorAttrDate[requiredAttrId][0];
             }

@@ -5,16 +5,15 @@ using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityModManagerNet;
 
 namespace Sth4nothing.UseStorageBook
 {
-    [HarmonyPatch(typeof(HomeSystem), "SetBook")]
-    public static class HomeSystem_SetBook_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "SetBook")]
+    public static class BuildingWindow_SetBook_Patch
     {
         /// <summary>
-        /// 将HomeSystem.SetBook 修改为 NewSetBook
+        /// 将BuildingWindow.SetBook 修改为 NewSetBook
         /// </summary>
         static bool Prefix()
         {
@@ -32,7 +31,7 @@ namespace Sth4nothing.UseStorageBook
         public static void SetBookData()
         {
             var list = GetBooks();
-            HomeSystem_SetChooseBookWindow_Patch.bookView.Data = list.Where(CheckBook).ToArray();
+            BuildingWindow_SetChooseBookWindow_Patch.bookView.Data = list.Where(CheckBook).ToArray();
         }
 
         /// <summary>
@@ -40,16 +39,22 @@ namespace Sth4nothing.UseStorageBook
         /// </summary>
         private static List<int> GetBooks()
         {
-            var actorItems =
-                from item in ActorMenu.instance.GetActorItems(DateFile.instance.mianActorId, 0, false).Keys
-                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
-                select item;
-            var warehouseItems =
-                from item in ActorMenu.instance.GetActorItems(-999, 0, false).Keys
-                where int.Parse(DateFile.instance.GetItemDate(item, 31, true)) == HomeSystem.instance.studySkillTyp
-                select item;
-            var items = actorItems.Concat(warehouseItems);
-            return DateFile.instance.GetItemSort(items.ToList());
+            var df = DateFile.instance;
+            var mainId = df.mianActorId;
+            var studySkillTyp = BuildingWindow.instance.studySkillTyp;
+            var items = df.GetActorItems(mainId, 5, false).Keys
+                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+                .ToList();
+            for (int i = 0; i < 3; i++)
+            {
+                var x = int.Parse(df.GetActorDate(mainId, 308 + i, addValue: false));
+                if (x > 0 && int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+                items.Add(x);
+            }
+            items.AddRange(df.GetActorItems(-999, 5, false).Keys
+                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp));
+            Debug.Log("共找到满足条件的功法OR技艺书籍: " + items.Count);
+            return df.GetItemSort(items);
         }
 
         /// <summary>
@@ -81,7 +86,7 @@ namespace Sth4nothing.UseStorageBook
             // Main.Logger.Log($"类型: {itemType}");
             // 阅读
             int pages = 0;
-            if (HomeSystem.instance.studySkillTyp >= 17)
+            if (BuildingWindow.instance.studySkillTyp >= 17)
                 pages = df.gongFaBookPages.ContainsKey(gongfaId) ? df.gongFaBookPages[gongfaId].Sum() : 0; // 阅读总页数
             else
                 pages = df.skillBookPages.ContainsKey(gongfaId) ? df.skillBookPages[gongfaId].Sum() : 0;
@@ -111,12 +116,13 @@ namespace Sth4nothing.UseStorageBook
         }
     }
 
-    [HarmonyPatch(typeof(WorldMapSystem), "Start")]
-    public class WorldMapSystem_Start_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public class BuildingWindow_Start_Patch
     {
         static void Postfix()
         {
-            HomeSystem_SetChooseBookWindow_Patch.hasInit = false;
+            if (!Main.Enabled) return;
+            BuildingWindow_SetChooseBookWindow_Patch.hasInit = false;
 
             if (BookSetting.Instance == null)
             {
@@ -125,15 +131,16 @@ namespace Sth4nothing.UseStorageBook
         }
     }
 
-    [HarmonyPatch(typeof(HomeSystem), "SetChooseBookWindow")]
-    public class HomeSystem_SetChooseBookWindow_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "SetChooseBookWindow")]
+    public class BuildingWindow_SetChooseBookWindow_Patch
     {
         public static bool hasInit;
         public static NewBookView bookView;
 
         static void Prefix(HomeSystem __instance)
         {
-            var bookViewBack = HomeSystem.instance.bookHolder.parent.gameObject;
+            if (!Main.Enabled) return;
+            var bookViewBack = BuildingWindow.instance.bookHolder.parent.gameObject;
             if (bookViewBack.GetComponent<NewBookView>() == null)
             {
                 bookView = bookViewBack.AddComponent<NewBookView>();
@@ -147,8 +154,8 @@ namespace Sth4nothing.UseStorageBook
         }
     }
 
-    [HarmonyPatch(typeof(HomeSystem), "CloseBookWindow")]
-    public class HomeSystem_CloseBookWindow_Patch
+    [HarmonyPatch(typeof(BuildingWindow), "CloseBookWindow")]
+    public class BuildingWindow_CloseBookWindow_Patch
     {
         static void Prefix()
         {
@@ -165,8 +172,9 @@ namespace Sth4nothing.UseStorageBook
     {
         static void Prefix()
         {
+            if (!Main.Enabled) return;
             var df = DateFile.instance;
-            var bookId = HomeSystem.instance.readBookId;
+            var bookId = BuildingWindow.instance.readBookId;
             if (df.itemsDate.ContainsKey(bookId))
             {
                 if (df.actorItemsDate[-999].ContainsKey(bookId))
@@ -196,6 +204,7 @@ namespace Sth4nothing.UseStorageBook
         /// <param name="__state"></param>
         static void Prefix(ref int itemId, ref int __state)
         {
+            if (!Main.Enabled) return;
             if (DateFile.instance.actorItemsDate[-999].ContainsKey(itemId))
             {
                 DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Add(itemId, 1);
@@ -213,6 +222,7 @@ namespace Sth4nothing.UseStorageBook
         /// <param name="__state"></param>
         static void Postfix(ref int __state)
         {
+            if (!Main.Enabled) return;
             if (__state > 0)
             {
                 DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Remove(__state);
@@ -222,6 +232,7 @@ namespace Sth4nothing.UseStorageBook
 
     public class Settings : UnityModManager.ModSettings
     {
+        [XmlElement]
         public MyDict gang = new MyDict();
         public MyDict gongfa = new MyDict();
         public MyDict pinji = new MyDict();

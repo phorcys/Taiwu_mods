@@ -1,8 +1,8 @@
 ﻿{
     "Id": "MoreInfo",
     "DisplayName": "信息增强",
-    "Author": "ignaz_chou",
-    "Version": "1.5.2",
+    "Author": "ignaz_chou/ciwei100000",
+    "Version": "1.5.7",
     "AssemblyName": "MoreInfo.dll",
     "EntryMethod": "MoreInfo.Main.Load",
     "Repository": "https://raw.githubusercontent.com/phorcys/Taiwu_mods/master/Repository.json"

@@ -57,7 +57,7 @@ namespace Sth4nothing.UseStorageBook
             rItemCell.SetParent(transform, false);
             rItemCell.anchoredPosition = new Vector2(10000, 10000);
 
-            GameObject prefab = HomeSystem.instance.bookIcon;
+            GameObject prefab = BuildingWindow.instance.bookIcon;
 
             for (int i = 0; i < columns; i++)
             {
@@ -77,7 +77,7 @@ namespace Sth4nothing.UseStorageBook
             bigDataScroll.Init(scrollRect, bookCell, SetCell);
             bigDataScroll.cellHeight = size.x / columns + 35f;
 
-            ScrollRect scroll = HomeSystem.instance.bookHolder.parent.parent.GetComponent<ScrollRect>();
+            ScrollRect scroll = BuildingWindow.instance.bookHolder.parent.parent.GetComponent<ScrollRect>();
             if (scroll != null)
             {
                 if (scroll.verticalScrollbar != null)

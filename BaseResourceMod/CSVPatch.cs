@@ -1,314 +1,471 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+#define debug
 using Harmony12;
-using UnityModManagerNet;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using System.IO;
-using System.Security.Cryptography;
-using Newtonsoft.Json;
-using System.Reflection.Emit;
-using System.Text.RegularExpressions;
 using LumenWorks.Framework.IO.Csv;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using UnityEngine;
+
 namespace BaseResourceMod
 {
-    /// <summary>
-    ///  基础数据CSV读取Hook
-    /// </summary>
-    [HarmonyPatch(typeof(GetSprites), "GetDate")]
-    public static class GetSprites_GetDate_Patch
+    internal static class CSVPatch
     {
-        static public void new_GetData(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
+        /// <summary>正在加载自定义配置</summary>
+        // 目前的作用只用于预防propAllText还未载入完时被读取
+        private static int isLoading;
+
+        /// <summary>
+        /// 处理CSV格式文本
+        /// </summary>
+        /// <param name="dataList">目标数据字典</param>
+        /// <param name="text">要处理的csv文本</param>
+        /// <param name="passDateIndex">需要跳过的数据字段</param>
+        /// <param name="path">文本来源路径，仅用于输出Debug信息</param>
+        /// <returns>在目标字典中增加的记录数</returns>
+        private static int TextProcessor(Dictionary<int, Dictionary<int, string>> dataList, string text, int passDateIndex = -1, string path = "")
         {
-            dateList.Clear();
-
-            string path = string.Format("{0}/Data/{1}.txt", ".", dateName);
-
-            Debug.Log("processing " + path);
-            //打开文件
-            string text = "";
-            if (File.Exists(path))
-            {
-                text = File.OpenText(path).ReadToEnd();
-            }
-            else
-            {
-                text = GetSprites.instance.baseGameDate[dateName];
-            }
-            //处理替换
-            string ns = Regex.Replace(text, "\r", "");
-            ns = Regex.Replace(ns, "C_D", "</color>");
-            ns = Regex.Replace(ns, @"C_\d\d\d\d\d", delegate (Match match)
-            {
-                string v = match.ToString();
-                int colorkey = int.Parse(v.Substring(2));
-                return Main.textcolor.ContainsKey(colorkey) ? Main.textcolor[colorkey] : v;
-            });
-            ns = "index" + ns.Substring(1);
-
-            //解析csv
-            using (CsvReader csv = new CsvReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(ns))), true))
-            {
-                int fieldCount = csv.FieldCount;
-
-                string[] headers = csv.GetFieldHeaders();
-                headers[0] = "#";
-
-                //Debug.Log("processing  header " + string.Join("", headers));
-                int[] headerint = new int[headers.Length];
-                for (int z = 1; z < headers.Length; z++)
-                {
-                    if (headers[z] != "#" && headers[z] != "")
-                    {
-                        headerint[z] = int.Parse(headers[z]);
-                    }
-                    else
-                    {
-                        headerint[z] = -1000;
-                    }
-                }
-                try
-                {
-                    while (csv.ReadNextRecord())
-                    {
-                        if (csv[0] == null || csv[0] == "")
-                        {
-                            //Debug.Log(" empty line :"+ csv );
-                            continue;
-                        }
-                        Dictionary<int, string> dictionary = new Dictionary<int, string>();
-                        for (int j = 0; j < fieldCount; j++)
-                        {
-                            if (headers[j] != "#" && headers[j] != "" && headerint[j] != passDateIndex)
-                            {
-                                dictionary.Add(headerint[j], Regex.Unescape(csv[j]));
-                            }
-                        }
-                        dateList.Add(int.Parse(csv[0]), dictionary);
-                    }
-
-                    if (Main.settings.save_config == true)
-                    {
-
-                        string savepath = string.Format("{0}/{1}.txt", Main.backupdir, dateName);
-
-                        var arr = Newtonsoft.Json.JsonConvert.SerializeObject(dateList);
-                        System.IO.File.WriteAllText(savepath, text);
-                        System.IO.File.WriteAllText(savepath + ".json", arr);
-                    }
-
-
-                }
-                catch (Exception e)
-                {
-                    Debug.Log(e.Message);
-                    Debug.Log(e.StackTrace);
-                }
-
-            }
-        }
-
-        static bool Prefix(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
-        {
-            if (!Main.enabled)
-                return true;
-            new_GetData(dateName, dateList, passDateIndex);
-            return false;
-        }
-    }
-
-
-    /// <summary>
-    ///  读取基础数据完毕后，读取自定义数据
-    /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
-    public static class Loading_LoadBaseDate_Patch
-    {
-        public static void do_inject_data_to_dict(string path, Dictionary<int, Dictionary<int, string>> dict, int passDateIndex = -1)
-        {
-            Debug.Log("Injecting processing " + path);
+            if (dataList == null && text == null)
+                return 0;
+            // 统计新增多少条信息
             int counter = 0;
-            //打开文件
-            string text = "";
-            if (File.Exists(path))
+            // 转换为Unix风格的换行符
+            string ns = text.Replace("\r", "");
+            // 添加字体颜色格式，<color=AABBCCFF>文字</color>
+            ns = ns.Replace("C_D", "</color>");
+            ns = Regex.Replace(ns, @"C_(\d{5})", delegate (Match match)
             {
-                text = File.OpenText(path).ReadToEnd();
-            }
-            else
-            {
-                return;
-            }
-            //处理替换
-            string ns = Regex.Replace(text, "\r", "");
-            ns = Regex.Replace(ns, "C_D", "</color>");
-            ns = Regex.Replace(ns, @"C_\d\d\d\d\d", delegate (Match match)
-            {
-                string v = match.ToString();
-                int colorkey = int.Parse(v.Substring(2));
-                return Main.textcolor.ContainsKey(colorkey) ? Main.textcolor[colorkey] : v;
+                string v = match.Groups[0].Value;
+                int colorkey = int.Parse(match.Groups[1].Value);
+                return Main.textcolor.TryGetValue(colorkey, out var colorTag) ? colorTag : v;
             });
             ns = "index" + ns.Substring(1);
 
-            //解析csv
-            using (CsvReader csv = new CsvReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(ns))), true))
+            // 解析csv
+            using (var csv = new CsvReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(ns))), true))
             {
                 int fieldCount = csv.FieldCount;
 
                 string[] headers = csv.GetFieldHeaders();
+#if debug
+                Main.Logger.Log("processing  header " + string.Join("", headers));
+#endif
                 headers[0] = "#";
-
-                //Debug.Log("processing  header " + string.Join("", headers));
+                
                 int[] headerint = new int[headers.Length];
                 for (int z = 1; z < headers.Length; z++)
                 {
-                    if (headers[z] != "#" && headers[z] != "")
+                    if (headers[z] != "#" && headers[z] != "" && int.TryParse(headers[z], out var value))
                     {
-                        headerint[z] = int.Parse(headers[z]);
+                        headerint[z] = value;
                     }
                     else
                     {
                         headerint[z] = -1000;
                     }
                 }
+
+                while (csv.ReadNextRecord())
+                {
+                    if (csv[0] == null || csv[0] == "")
+                    {
+                        continue;
+                    }
+                    if (!int.TryParse(csv[0], out var dkey))
+                    {
+                        Main.Logger.Log($"Illegal Primary Key, FileName: {path} Key: {csv[0]}");
+                        continue;
+                    }
+                    var dictionary = new Dictionary<int, string>();
+                    for (int j = 0; j < fieldCount; j++)
+                    {
+                        if (headers[j] != "#" && headers[j] != "" && headerint[j] != passDateIndex)
+                        {
+                            dictionary[headerint[j]] = Regex.Unescape(csv[j]);
+                        }
+                    }
+
+                    
+                    dataList[dkey] = dictionary;
+                    counter++;
+                }
+            }
+            return counter;
+        }
+
+        /// <summary>
+        ///  基础数据CSV读取Hook
+        /// </summary>
+        [HarmonyPatch(typeof(GetSprites), "GetDate")]
+        private static class GetSprites_GetDate_Patch
+        {
+            private static void NewGetData(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
+            {
+                dateList.Clear();
+                // 载入路径
+                string path = $"{"."}/Data/{dateName}.txt";
+
+                //打开文件
+                string text;
+                // 开启MOD增量功能时屏蔽系统自带的加载功能
+                if (!Main.settings.load_custom_config && File.Exists(path))
+                {
+                    if (Main.settings.detailed_custom_config_log)
+                        Main.Logger.Log("processing " + path);
+                    using (var fs = File.OpenText(path))
+                    {
+                        text = fs.ReadToEnd();
+                    }
+                }
+                else
+                {
+                    // 此处更改路径仅用于在出现bug时输出问题路径
+                    path = dateName;
+                    if (Main.settings.detailed_custom_config_log)
+                        Main.Logger.Log("processing " + dateName);
+                    text = GetSprites.instance.baseGameDate[dateName];
+                }
+
                 try
                 {
-                    while (csv.ReadNextRecord())
+                    TextProcessor(dateList, text, passDateIndex, path);
+                    // 保存设置
+                    if (Main.settings.save_config)
                     {
-                        if (csv[0] == null || csv[0] == "")
-                        {
-                            continue;
-                        }
-                        Dictionary<int, string> dictionary = new Dictionary<int, string>();
-                        for (int j = 0; j < fieldCount; j++)
-                        {
-                            if (headers[j] != "#" && headers[j] != "" && headerint[j] != passDateIndex)
-                            {
-                                dictionary.Add(headerint[j], Regex.Unescape(csv[j]));
-                            }
-                        }
-
-                        int dkey = int.Parse(csv[0]);
-                        dict[dkey] = dictionary;
-                        counter = counter + 1;
+                        string savepath = $"{Main.backupdir}/{dateName}.txt";
+                        var arr = Newtonsoft.Json.JsonConvert.SerializeObject(dateList);
+                        File.WriteAllText(savepath, text);
+                        File.WriteAllText(savepath + ".json", arr);
                     }
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e.Message);
-                    Debug.Log(e.StackTrace);
+                    Main.Logger.Log(e.Message);
+                    Main.Logger.Log(e.StackTrace);
                 }
-                Main.Logger.Log(String.Format("Ijected  {0} line from  {1} ", counter, path));
+
+            }
+
+            private static bool Prefix(string dateName, Dictionary<int, Dictionary<int, string>> dateList, int passDateIndex)
+            {
+                if (!Main.enabled)
+                    return true;
+                NewGetData(dateName, dateList, passDateIndex);
+                return false;
             }
         }
 
-        public static void processDir(string path)
+        /// <summary>
+        /// 读取基础数据完毕后，读取自定义数据
+        /// </summary>
+        [HarmonyPatch(typeof(ArchiveSystem.LoadGame), "LoadReadonlyData")]
+        private static class ArchiveSystem_LoadGame_LoadReadonlyData_Patch
         {
-            Dictionary<string, Dictionary<int, string>> allfiles = new Dictionary<string, Dictionary<int, string>>();
-            // 遍历该目录及子目录下所有 txt 文件
-            foreach (string fname in Directory.GetFiles(path, "*.txt", SearchOption.AllDirectories))
+            /// <summary>
+            /// 将自定义数据文件信息载入字典中
+            /// </summary>
+            /// <param name="path">自定义数据文件路径</param>
+            /// <param name="dict">目标字典</param>
+            /// <param name="passDateIndex">跳过的字段</param>
+            private static void DoInjectDataToDict(string path, Dictionary<int, Dictionary<int, string>> dict, int passDateIndex = -1)
             {
+                if (Main.settings.detailed_custom_config_log)
+                    Main.Logger.Log("Injecting processing " + path);
+                //打开文件
+                if (!File.Exists(path))
+                    return;
 
-                string filename = Path.GetFileName(fname);
-                string ufname = fname.Replace("\\", "/");
-                Main.Logger.Log(String.Format("Found {0} in subdir {1}", ufname, path));
+                string text;
+                using (var fs = File.OpenText(path))
+                {
+                    text = fs.ReadToEnd();
+                }
+
+                int counter = 0;
                 try
                 {
-                    if (File.Exists(ufname))
-                    {
-                        string ftype = filename.Substring(0, filename.IndexOf('.')).ToLower();
-                        int num = 1000;
-                        var m = Regex.Match(filename, @"\.txt\.(\d+)\.txt", RegexOptions.IgnoreCase);
-                        if (m != null && m.Length > 0)
-                        {
-                            string snum = m.Value.Substring(5, m.Value.Length - 9);
-                            num = int.Parse(snum);
-                        }
-                        if (!allfiles.ContainsKey(ftype))
-                        {
-                            allfiles[ftype] = new Dictionary<int, string>();
-                        }
-                        allfiles[ftype].Add(num, ufname);
-                        Main.Logger.Log(String.Format("add {0} in subdir {1} to  parsing queue", ufname, path));
-                    }
-                    else
-                    {
-                        Main.Logger.Log(String.Format("file not exsit {0} in subdir {1}", ufname, path));
-                    }
+                    counter = TextProcessor(dict, text, passDateIndex, path);
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e.Message);
-                    Debug.Log(e.StackTrace);
+                    Main.Logger.Log(e.Message);
+                    Main.Logger.Log(e.StackTrace);
                 }
-
+                // 将所有通过基本资源框架成功加载的txt文件计数
+                Interlocked.Increment(ref Main.csvFilesCounter[1]);
+                if (Main.settings.detailed_custom_config_log)
+                    Main.Logger.Log($"Ijected  {counter} line from  {path} ");
             }
 
-            foreach (var kv in allfiles)
+            /// <summary>
+            /// 处理自定义数据文件
+            /// </summary>
+            /// <param name="path"></param>
+            private static void ProcessDir(string path)
             {
-                Main.Logger.Log("begin cate  : " + kv.Key);
-                foreach (var vv in kv.Value.OrderBy(o => o.Key)
-                    .ToDictionary((KeyValuePair<int, string> o) => o.Key, (KeyValuePair<int, string> p) => p.Value))
+                var allfiles = new Dictionary<string, SortedDictionary<int, string>>();
+                // 获取该目录及子目录下所有 txt 文件
+                var fnames = Directory.GetFiles(path, "*.txt", SearchOption.AllDirectories);
+                // 将所有即将通过基本资源框架加载的txt文件计数（包括其他的mod的加载请求）
+                Interlocked.Add(ref Main.csvFilesCounter[0], fnames.Length);
+                // 遍历该目录及子目录下所有 txt 文件
+                foreach (string fname in fnames)
                 {
+                    string filename = Path.GetFileName(fname);
+                    string ufname = fname.Replace("\\", "/");
+                    if (Main.settings.detailed_custom_config_log)
+                        Main.Logger.Log($"Found {ufname} in subdir {path}");
                     try
                     {
-                        Main.Logger.Log("begin cate  file : " + vv.Value);
-                        var dict = Main.getCSVDictRef(kv.Key);
-                        if (dict != null)
+                        if (File.Exists(ufname))
                         {
-                            do_inject_data_to_dict(vv.Value, dict);
+                            // 获取数据类型，如ItemDate.txt.123.txt中的ItemDate
+                            string ftype = filename.Substring(0, filename.IndexOf('.')).ToLower();
+                            int num = 1000;
+                            // 获得文件名中的序号, 如ItemDate.txt.123.txt中的123
+                            var m = Regex.Match(filename, @"(?<=\.txt\.)\d{3}(?=\.txt)", RegexOptions.IgnoreCase);
+                            if (m != null && m.Length > 0 && int.TryParse(m.Value, out var value) && value > 0)
+                            {
+                                num = value;
+                                Main.Logger.Log($"num: {num}");
+                            }
+                            // 是否有该类型数据被添加
+                            if (!allfiles.TryGetValue(ftype, out var file))
+                            {
+                                file = new SortedDictionary<int, string>();
+                                allfiles[ftype] = file;
+                            }
+                            // 已经存在的文件不再重复加,在日志中记录
+                            if (file.Count > 0 && file.ContainsKey(num))
+                            {
+                                Main.Logger.Log($"{ufname}: serial number {num} of data type {ftype} already exists");
+                                continue;
+                            }
+                            file.Add(num, ufname);
+                            if (Main.settings.detailed_custom_config_log)
+                                Main.Logger.Log($"add {ufname} in subdir {path} to  parsing queue");
                         }
                         else
                         {
-                            Main.Logger.Log("Error  cate " + kv.Key + "  file : " + vv.Value);
+                            Main.Logger.Log($"file not exsit {ufname} in subdir {path}");
                         }
                     }
                     catch (Exception e)
                     {
-                        Debug.Log(e.Message);
-                        Debug.Log(e.StackTrace);
+                        Main.Logger.Log(e.Message);
+                        Main.Logger.Log(e.StackTrace);
                     }
                 }
-            }
-        }
 
-        public static void post_InjectData()
-        {
-            if (Directory.Exists(Main.resdir))
-            {
-                //遍历 Date目录子目录
-                foreach (string path in Directory.GetDirectories(Main.resdir))
+                // 处理添加好的文件
+                foreach (var kv in allfiles)
                 {
-                    Main.Logger.Log("Found subdir : " + path);
-                    if (Directory.Exists(path))
+                    if (Main.settings.detailed_custom_config_log)
+                        Main.Logger.Log("begin cate  : " + kv.Key);
+                    try
                     {
-                        processDir(path);
+                        // 获取数据文件对应的游戏数据字典
+                        var dict = Main.GetCSVDictRef(kv.Key);
+                        foreach (var vv in kv.Value)
+                        {
+                            if (Main.settings.detailed_custom_config_log)
+                                Main.Logger.Log("begin cate  file : " + vv.Value);
+                            if (dict != null)
+                            {
+                                DoInjectDataToDict(vv.Value, dict);
+                            }
+                            else if (kv.Key.Equals("propalltext"))
+                            {
+                                // 单独处理"propAllText"
+                                StringCenter_GetValue_Patch.DoInjectStringData(vv.Value);
+                            }
+                            else
+                            {
+                                Main.Logger.Log("Error  cate " + kv.Key + "  file : " + vv.Value);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Main.Logger.Log(e.Message);
+                        Main.Logger.Log(e.StackTrace);
                     }
                 }
             }
 
-
-            foreach (var kv in Main.mods_res_dict)
+            /// <summary>
+            /// 添加自定义数据
+            /// </summary>
+            private static void InjectData()
             {
-                Main.Logger.Log("Found Mod subdir : " + kv.Value);
-                if (Directory.Exists(kv.Value))
+                try
                 {
-                    processDir(kv.Value);
+                    Interlocked.Exchange(ref isLoading, 1);
+                    if (Directory.Exists(Main.resdir))
+                    {
+                        //遍历 Date目录子目录
+                        foreach (string path in Directory.GetDirectories(Main.resdir))
+                        {
+                            Main.Logger.Log("Found subdir : " + path);
+                            if (Directory.Exists(path))
+                            {
+                                ProcessDir(path);
+                            }
+                        }
+                    }
+
+                    // 处理其他MOD的请求
+                    foreach (var kv in Main.mods_res_dict)
+                    {
+                        Main.Logger.Log("Found Mod subdir : " + kv.Value);
+                        if (Directory.Exists(kv.Value))
+                        {
+                            ProcessDir(kv.Value);
+                        }
+                        else
+                        {
+                            Main.Logger.Log("subdir not exsit : " + kv.Value);
+                        }
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Main.Logger.Log("subdir not exsit : " + kv.Value);
+                    Main.Logger.Log(ex.ToString());
                 }
+                Interlocked.Exchange(ref isLoading, 0);
+            }
+
+            public static void Postfix()
+            {
+                if (!Main.enabled)
+                    return;
+
+                if (Main.settings.load_custom_config)
+                    InjectData();
             }
         }
 
-        static void Postfix()
+        /// <summary>
+        /// 加载自定义propAllText配置
+        /// </summary>
+        [HarmonyPatch(typeof(StringCenter), "GetValue")]
+        internal static class StringCenter_GetValue_Patch
         {
-            if (Main.enabled)
-                post_InjectData();
+            /// <summary>外部propAllText配置</summary>
+            private static Dictionary<string, string> allStrings;
+
+            /// <summary>
+            /// 加载外部propAllText配置
+            /// </summary>
+            /// <param name="path"></param>
+            /// <remarks><see cref="StringCenter.Init()"/></remarks>
+            public static void DoInjectStringData(string path)
+            {
+                if (!File.Exists(path))
+                    return;
+
+                if (Main.settings.detailed_custom_config_log)
+                    Main.Logger.Log("Injecting processing " + path);
+                try
+                {
+                    string text;
+                    using (var fs = File.OpenText(path))
+                    {
+                        text = fs.ReadToEnd();
+                    }
+                    if (!text.IsNullOrEmpty())
+                    {
+                        allStrings = allStrings ?? new Dictionary<string, string>();
+                        var list = new List<string>(text.Split('\n'));
+                        int i = 0;
+                        string[] array = new string[2];
+                        for (int count = list.Count; i < count; i++)
+                        {
+                            list[i] = list[i].Replace("\r", "");
+                            if (!list[i].IsNullOrEmpty() && !list[i].StartsWith("//"))
+                            {
+                                int num = list[i].IndexOf('=');
+                                if (num > -1)
+                                {
+                                    array[0] = list[i].Substring(0, num).Trim();
+                                    array[1] = list[i].Substring(num + 1, list[i].Length - num - 1);
+                                    array[1] = Regex.Replace(array[1], @"(?><hc=(\d+)>)", (Match match) =>
+                                    {
+                                        if (int.TryParse(match.Groups[1].Value, out int result))
+                                        {
+                                            return new string('\n', result);
+                                        }
+                                        return "";
+                                    });
+                                    if (!array[0].IsNullOrEmpty() && !array[1].IsNullOrEmpty())
+                                    {
+                                        allStrings[array[0]] = array[1];
+                                    }
+                                }
+                            }
+                        }
+                        Interlocked.Increment(ref Main.csvFilesCounter[1]);
+                    }
+                    else
+                    {
+                        Main.Logger.Log($"File {path} is empty!");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Main.Logger.Log(ex.ToString());
+                }
+            }
+
+            private static bool Prefix(string key, ref string __result)
+            {
+                // 若还未加载完数据则不进行替换, 预防出现race condition
+                if (!Main.enabled || isLoading == 1 || allStrings == null || allStrings.Count == 0)
+                    return true;
+
+                key = key.Trim();
+                // 用外部配置文件的设置替换
+                if (allStrings.TryGetValue(key, out var text))
+                {
+                    __result = text;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 导出propAllText
+        /// </summary>
+        [HarmonyPatch(typeof(StringCenter), "Init")]
+        private static class StringCenter_Init_Patch
+        {
+            /// <summary>是否已经导出propAllText</summary>
+            private static bool isDumped;
+
+            /// <summary>
+            /// 导出propAllText
+            /// </summary>
+            /// <remarks><see cref="StringCenter.Init()"/></remarks>
+            private static void DoDumpStringData()
+            {
+                if (Main.settings.detailed_custom_config_log)
+                    Main.Logger.Log("processing propAllText");
+                TextAsset textAsset = Resources.Load<TextAsset>("Data/propAllText");
+                string savepath = $"{Main.backupdir}/propAllText.txt";
+                File.WriteAllText(savepath, textAsset.text);
+            }
+
+            public static void Postfix()
+            {
+                if (Main.enabled && Main.settings.save_config && !isDumped)
+                {
+                    DoDumpStringData();
+                    isDumped = true;
+                }
+            }
         }
     }
 }
