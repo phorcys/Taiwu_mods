@@ -18,5 +18,5 @@
 - 程序的入口为Sth4nothing.Execute.Main
 - class Execute不能为静态类
 - Execute.Main必须为静态方法，返回类型任意，可为void
-- 已支持其他的Mod调用
+- 支持其他的Mod调用
 - 输出大量数据推荐使用Debug.Log来记录，结果查看output_log.txt即可

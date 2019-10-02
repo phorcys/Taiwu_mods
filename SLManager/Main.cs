@@ -18,7 +18,41 @@ namespace Sth4nothing.SLManager
         public bool blockAutoSave = false;
         public int maxBackupToLoad = 8;
         public int maxBackupsToKeep = 1000;
+        public bool enableTurboQuickLoadAfterLoad = false;
+        public bool enableTurboQuickLoadAfterSave = false;
+        public bool regenerateRandomSeedAfterLoad = false;
     }
+
+
+    public class ThreadSafeLogger 
+    {
+        UnityModManager.ModEntry.ModLogger _baseLogger;
+        private object _writeLock = new object();
+
+        public ThreadSafeLogger(UnityModManager.ModEntry.ModLogger baseLogger)
+        {
+            _baseLogger = baseLogger;
+        }
+
+
+        public virtual void Critical(string str)
+        {
+            lock (_writeLock) _baseLogger.Critical(str);
+        }
+        public virtual void Error(string str)
+        {
+            lock (_writeLock) _baseLogger.Error(str);
+        }
+        public virtual void Log(string str)
+        {
+            lock (_writeLock) _baseLogger.Log(str);
+        }
+        public virtual void Warning(string str)
+        {
+            lock (_writeLock) _baseLogger.Warning(str);
+        }
+    }
+
 
     public static class Main
     {
@@ -26,22 +60,32 @@ namespace Sth4nothing.SLManager
         public static bool ForceSave = false;
         public static bool isBackuping = false;
         private static string logPath;
-        private static readonly string[] AutoSaveState = {"关闭", "启用"};
+        public static readonly string[] Off_And_On = {"关闭", "启用"};
 
         public static Settings settings;
 
-        public static UnityModManager.ModEntry.ModLogger Logger;
+        public static ThreadSafeLogger Logger;
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            var userProfile = System.Environment.GetEnvironmentVariable("USERPROFILE");
-            logPath = Path.Combine(userProfile,
-                @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
-            );
+            Logger = new ThreadSafeLogger(modEntry.Logger);
+            try
+            {
+                var userProfile = System.Environment.GetEnvironmentVariable("USERPROFILE");
+                logPath = Path.Combine(userProfile,
+                    @"AppData\LocalLow\Conch Ship Game\The Scroll Of Taiwu Alpha V1.0\output_log.txt"
+                );
+                settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
+                HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
 
-            Logger = modEntry.Logger;
-            settings = UnityModManager.ModSettings.Load<Settings>(modEntry);
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
+                throw;
+            }
+
+
 
             modEntry.OnToggle = OnToggle;
             modEntry.OnGUI = OnGUI;
@@ -78,11 +122,21 @@ namespace Sth4nothing.SLManager
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("禁用游戏换季存档", GUILayout.Width(200));
+            GUILayout.Label("禁用游戏换季存档", GUILayout.Width(250));
             settings.blockAutoSave = GUILayout.SelectionGrid(settings.blockAutoSave ? 1 : 0,
-                                         AutoSaveState, 2, GUILayout.Width(150)) == 1;
+                                         Off_And_On, 2, GUILayout.Width(150)) == 1;
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("讀檔後重置亂數種子", GUILayout.Width(250));
+            settings.regenerateRandomSeedAfterLoad = GUILayout.SelectionGrid(settings.regenerateRandomSeedAfterLoad ? 1 : 0,
+                                                    Off_And_On, 2, GUILayout.Width(150)) == 1;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            HyperQuickLoad.InitClass.OnGUI(modEntry);
+
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("打印log", GUILayout.Width(100)))
@@ -172,6 +226,21 @@ namespace Sth4nothing.SLManager
         {
             return (T2) typeof(T1).GetMethod(method, Flags)?.Invoke(instance, args);
         }
+
+        /// <summary>
+        /// 反射执行方法 (静态型別)
+        /// </summary>
+        /// <param name="instance">类实例(静态方法则为null)</param>
+        /// <param name="method">方法名</param>
+        /// <param name="args">方法的参数类型列表</param>
+        /// <typeparam name="T1">类</typeparam>
+        /// <typeparam name="T2">返回值类型</typeparam>
+        /// <returns></returns>
+        public static T2 Invoke<T2>(Type type, string method, params object[] args)
+        {
+            return (T2)type.GetMethod(method, Flags)?.Invoke(null, args);
+        }
+
         /// <summary>
         /// 反射执行方法
         /// </summary>

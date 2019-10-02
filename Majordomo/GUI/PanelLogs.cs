@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -9,6 +9,7 @@ namespace Majordomo
     public class PanelLogs : ITaiwuWindow
     {
         public const int N_MESSAGES_PER_CONTENT_ITEM = 10;
+        private const int MESSAGE_MAX_LENGTH = 1000;
 
         private GameObject parent;
         private GameObject panel;
@@ -200,7 +201,13 @@ namespace Majordomo
                 var record = this.history[date];
                 var messages = record.messages
                     .Where(message => message.importance >= Main.settings.messageImportanceThreshold)
-                    .Select(message => TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "·") + " " + message.content)
+                    .Select(message => {
+                        var content = message.content.Length > MESSAGE_MAX_LENGTH ?
+                            message.content.Substring(0, MESSAGE_MAX_LENGTH) +
+                                TaiwuCommon.SetColor(TaiwuCommon.COLOR_DARK_GRAY, "……") :
+                            message.content;
+                        return TaiwuCommon.SetColor(TaiwuCommon.COLOR_LIGHT_GRAY, "·") + " " + content;
+                        })
                     .ToList();
                 this.CreateMessageContentItems(messages);
             }
