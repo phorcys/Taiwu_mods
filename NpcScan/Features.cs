@@ -14,7 +14,7 @@ namespace NpcScan
         /// <summary>特性名称</summary>
         public string Name { get; private set; }
         /// <summary>特性类型</summary>
-        public int Plus { get; private set; }
+        public int Category { get; private set; }
         /// <summary>显示颜色</summary>
         public string Color { get; private set; }
         /// <summary>搜索命中的特性颜色</summary>
@@ -27,8 +27,8 @@ namespace NpcScan
             Level = int.Parse(featureData[4]);
             Group = int.Parse(featureData[5]);
             Name = featureData[0];
-            Plus = int.Parse(featureData[8]);
-            switch (Plus)
+            Category = int.Parse(featureData[8]);
+            switch (Category)
             {
                 default:
                     Color = Main.textColor[20003];
