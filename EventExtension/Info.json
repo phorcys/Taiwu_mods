@@ -1,0 +1,9 @@
+﻿{
+  "Id": "Ju.EventExtension",
+  "DisplayName": "扩充事件",
+  "Description":"扩充现有事件和选项",
+  "Author": "Ju",
+  "Version": "0.0.1",
+  "AssemblyName": "EventExtension.dll",
+  "EntryMethod": "Ju.EventExtension.Main.Load"
+}
