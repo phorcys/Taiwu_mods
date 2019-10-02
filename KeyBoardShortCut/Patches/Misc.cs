@@ -13,246 +13,298 @@ using UnityModManagerNet;
 
 namespace KeyBoardShortCut
 {
-    /// <summary>
-    /// 通用选择框：确认
-    /// </summary>
-    [HarmonyPatch(typeof(YesOrNoWindow), "Start")]
+    // 测试
+    [HarmonyPatch(typeof(ui_SystemSetting), "OnInit")]
+    public static class Test_Patch
+    {
+        private static void Postfix(ui_SystemSetting __instance)
+        {
+            Main.Logger.Error("ui_SystemSetting OnInit");
+            Utils.isUIActive("ui_SystemSetting");
+        }
+    }
+
+    // 通用选择框：确认
+    [HarmonyPatch(typeof(YesOrNoWindow), "Awake")]
     public static class YesOrNoWindow_Confirm_Patch
     {
         private static void Postfix(YesOrNoWindow __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
-
-            // 为通用选择框设置正确的初始状态，防止出现 bug
-            OnClick.instance.Over = true;
-
-            var confirmComp = __instance.yesOrNoWindow.gameObject.AddComponent<ConfirmComponent>();
-            confirmComp.SetActionOnConfirm(() =>
-            {
-                if (!YesOrNoWindow.instance.yesOrNoWindow.gameObject.activeInHierarchy) return;
-                if (OnClick.instance.Over) return;
-                DateFile.instance.PlayeSE(2);
-                OnClick.instance.Index();
-                YesOrNoWindow.instance.CloseYesOrNoWindow();
-            });
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.yes);
         }
     }
 
-
-    /// <summary>
-    /// 产业地图：关闭
-    /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "Start")]
-    public static class HomeSystem_CloseHomeSystem_Patch
+    // 事件选择窗口 右键默认选项
+    [HarmonyPatch(typeof(ui_MessageWindow), "Awake")]
+    public static class MessageWindow_Close_Patch
     {
-        private static void Postfix(HomeSystem __instance)
+        private static void Postfix(ui_MessageWindow __instance)
         {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close) return;
-
-            var comp = __instance.homeSystem.AddComponent<CloseComponent>();
-            comp.SetActionOnClose(() =>
-            {
-                if (!HomeSystem.instance.homeSystem.activeInHierarchy) return;
-
-                // 依次检测子窗口,顺序很重要
-                // 制造界面
-                if (MakeSystem.instance.makeWindowBack.gameObject.activeInHierarchy) return;
-                // 商店界面
-                if (ShopSystem.instance.shopWindow.activeInHierarchy) return;
-                // 交换藏书界面
-                if (BookShopSystem.instance.shopWindow.activeInHierarchy) return;
-                // 配置界面
-                if (SystemSetting.instance.SystemSettingWindow.activeInHierarchy) return;
-                // 仓库界面
-                if (Warehouse.instance.warehouseWindow.activeInHierarchy) return;
-                // bookWindow
-                if (HomeSystem.instance.bookWindow.activeInHierarchy) return;
-                // setStudyWindow
-                if (HomeSystem.instance.setStudyWindow.gameObject.activeInHierarchy) return;
-                // studyWindow
-                if (HomeSystem.instance.studyWindow.activeInHierarchy) return;
-                // 角色列表界面
-                if (HomeSystem.instance.actorListWindow.activeInHierarchy) return;
-                // 蛐蛐盒界面
-                if (QuquBox.instance.ququBoxWindow.activeInHierarchy) return;
-                // 建筑界面
-                if (HomeSystem.instance.buildingWindow.gameObject.activeInHierarchy) return;
-
-                DateFile.instance.PlayeSE(3);
-                HomeSystem.instance.CloseHomeSystem();
-            });
+            if (!Main.on) return;
+            __instance.gameObject.AddComponent<ActionsComponent>()
+                .OnCheck(CHECK_TYPE.CLOSE)
+                .OnCheck((_) => ui_MessageWindow.Exists)
+                .OnCheck((_) => ui_MessageWindow.Instance.gameObject.activeInHierarchy)
+                .AddAction(() => {
+                    var holder = __instance.chooseHolder;
+                    var count = holder.childCount;
+                    var child = holder.GetChild(count- 1);
+                    var button = child.gameObject.GetComponent<Button>();
+                    button.onClick.Invoke();
+                });
         }
     }
 
-
-    /// <summary>
-    /// 产业地图 - 派遣列表：确认
-    /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "Start")]
-    public static class HomeSystem_ConfirmActorListWindow_Patch
+    // 设置快捷键关闭 太吾/本地 产地   关闭技能建筑浏览
+    [HarmonyPatch(typeof(HomeSystemWindow), "Awake")]
+    public static class HomeSystemWindow_Awake_Patch
     {
-        private static void Postfix(HomeSystem __instance)
+        private static void Postfix(HomeSystemWindow __instance)
+        {
+            if (!Main.on) return;
+             __instance.gameObject.AddComponent<ActionsComponent>()
+                .OnCheck(CHECK_TYPE.CLOSE)
+                .AddAction(() => {
+                    if (HomeSystemWindow.Instance.skillView.activeInHierarchy)
+                    {
+                        var homeViewButtom = Utils.GetUI("ui_HomeViewBottom");
+                        if (homeViewButtom)
+                        {
+                            HomeSystemWindow.Instance.ShowSkillView();
+                            Traverse.Create(homeViewButtom).Method("ToggleZoomButtons").GetValue();
+                        }
+                    } else
+                    {
+                        Utils.CloseHomeSystemWindow();
+                    }
+                });
+        }
+    }
+
+    // 设置快捷键打开 太吾/本地 产地
+    [HarmonyPatch(typeof(WorldMapSystem), "Update")]
+    public static class WorldMapSystem_Update_Patch
+    {
+        private static void Postfix(WorldMapSystem __instance)
         {
             if (!Main.enabled || Main.binding_key) return;
-
-            var comp = __instance.actorListWindow.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
+            if (UIManager.Instance.curState == UIState.MainWorld)
             {
-                if (!HomeSystem.instance.actorListWindow.activeInHierarchy) return;
-                if (!HomeSystem.instance.canChanageActorButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                HomeSystem.instance.ChanageWorkingAcotr();
-            });
+                if (Main.GetKeyDown(HK_TYPE.VILLAGE_LOCAL))
+                {
+                    Utils.ShowLocalHomeSystem();
+                }
+                else if (Main.GetKeyDown(HK_TYPE.VILLAGE))
+                {
+                    Utils.ShowHomeSystem();
+                }
+            } else if (UIManager.Instance.curState == UIState.HomeSystem)
+            {
+                if (Main.GetKeyDown(HK_TYPE.VILLAGE_LOCAL) || Main.GetKeyDown(HK_TYPE.VILLAGE))
+                {
+                    Utils.CloseHomeSystemWindow();
+                }
+            }
         }
     }
 
-
-    /// <summary>
-    /// 奇遇进入界面：确认
-    /// </summary>
-    [HarmonyPatch(typeof(StorySystem), "Start")]
-    public static class StorySystem_ConfirmToStoryMenu_Patch
+    // 建筑界面 新建 升级 人力调整
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public static class BuildingWindow_Up_Patch
     {
-        private static void Postfix(StorySystem __instance)
+        private static void Postfix(BuildingWindow __instance)
         {
             if (!Main.enabled || Main.binding_key) return;
+            Refers component = BuildingWindow.instance.GetComponent<Refers>();
 
-            var comp = __instance.toStoryMenu.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!StorySystem.instance.toStoryMenu.activeInHierarchy) return;
-                if (!StorySystem.instance.toStoryIsShow) return;
-                if (!StorySystem.instance.openStoryButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                StorySystem.instance.OpenStory();
-            });
+            // 新建 人力调整
+            Utils.ButtonHK(component.CGet<Button>("NewBuildingManpowerDownButton"), HK_TYPE.DECREASE);
+            Utils.ButtonHK(component.CGet<Button>("NewBuildingManpowerUpButton"), HK_TYPE.INCREASE);
+
+            // 新建 确定
+            Utils.ButtonConfirm(component.CGet<Button>("NewBuildingButton"));
+
+            // 升级 人力调整
+            Utils.ButtonHK(component.CGet<Button>("UpBuildingManpowerDownButton"), HK_TYPE.DECREASE);
+            Utils.ButtonHK(component.CGet<Button>("UpBuildingManpowerUpButton"), HK_TYPE.INCREASE);
+
+            // 升级 确定
+            Utils.ButtonConfirm(component.CGet<Button>("UpBuildingButton"));
+
+            // 移除 人力调整
+            Utils.ButtonHK(component.CGet<Button>("RemoveBuildingManpowerDownButton"), HK_TYPE.DECREASE);
+            Utils.ButtonHK(component.CGet<Button>("RemoveBuildingManpowerUpButton"), HK_TYPE.INCREASE);
+
+            // 移除 确定
+            Utils.ButtonConfirm(component.CGet<Button>("RemoveBuildingButton"));
         }
     }
 
-
-    /// <summary>
-    /// 过月事件窗口：确认
-    /// </summary>
-    [HarmonyPatch(typeof(UIDate), "Start")]
-    public static class UIDate_ConfirmTrunChangeWindow_Patch
+    // 功法书籍选择确认
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public static class BuildingWindow_ChooseBookConfirm_Patch
     {
-        private static void Postfix(UIDate __instance)
+        private static void Postfix(BuildingWindow __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
-
-            var comp = __instance.trunChangeWindow.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!UIDate.instance.trunChangeWindow.activeInHierarchy) return;
-                DateFile.instance.PlayeSE(2);
-                UIDate.instance.CloseTrunChangeWindow();
-            });
+            if (!Main.on) return;
+            // 研读
+            Utils.ButtonConfirm(__instance.chooseBookButton);
+            // 修习， 突破
+            Utils.ButtonConfirm(__instance.setGongFaButton);
         }
     }
 
-
-    /// <summary>
-    /// 建筑新建、增筑、拆除界面：确认
-    /// </summary>
-    [HarmonyPatch(typeof(HomeSystem), "Start")]
-    public static class HomeSystem_ConfirmBuilding_Patch
+    // 移除 功法书籍
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public static class BuildingWindow_RemoveStudyItem_Patch
     {
-        private static void Postfix(HomeSystem __instance)
+        private static void Postfix(BuildingWindow __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
-
-            var comp = __instance.newBuildingWindowBack.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!HomeSystem.instance.newBuildingWindowBack.activeInHierarchy) return;
-                if (!HomeSystem.instance.canBuildingButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                HomeSystem.instance.StartNewBuilding();
+            if (!Main.on) return;
+            var studyChooseTyp = Traverse.Create(BuildingWindow.instance).Field("studyChooseTyp");
+            // 修习
+            Utils.ButtonHK(__instance.removeGongFaButton, HK_TYPE.REMOVE_ITEM, (b) => {
+                return 0 == studyChooseTyp.GetValue<int>();
             });
-
-            comp = __instance.buildingUPWindowBack.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!HomeSystem.instance.buildingUPWindowBack.activeInHierarchy) return;
-                if (!HomeSystem.instance.buildingUpCanBuildingButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                HomeSystem.instance.StartBuildingUp();
+            // 突破
+            Utils.ButtonHK(__instance.removeLevelUPButton, HK_TYPE.REMOVE_ITEM, (b) => {
+                return 1 == studyChooseTyp.GetValue<int>();
             });
-
-            comp = __instance.removeBuildingWindowBack.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!HomeSystem.instance.removeBuildingWindowBack.activeInHierarchy) return;
-                if (!HomeSystem.instance.buildingRemoveCanBuildingButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                HomeSystem.instance.StartBuildingRemove();
+            // 研读
+            Utils.ButtonHK(__instance.removeReadBookButton, HK_TYPE.REMOVE_ITEM, (b) => {
+                return 2 == studyChooseTyp.GetValue<int>();
             });
         }
     }
 
+    // 建筑 功能 菜单切换
+    [HarmonyPatch(typeof(BuildingWindow), "Start")]
+    public static class BuildingWindow_Toggle_Type_Patch
+    {
+        private static void Postfix(BuildingWindow __instance)
+        {
+            if (!Main.on) return;
+            Utils.ToggleSwitch(__instance.buildingTypHolder);
+        }
+    }
 
-    /// <summary>
-    /// 商店界面：确认
-    /// </summary>
+    // 更新信息窗口
+    [HarmonyPatch(typeof(MainMenu), "Awake")]
+    public static class MainMenu_StartMessage_Confirm_Patch
+    {
+        private static void Postfix(MainMenu __instance)
+        {
+            if (!Main.on) return;
+            Transform welcome = __instance.transform.Find("WelcomeDialog");
+            Refers refer = welcome.GetComponent<Refers>();
+            Utils.ButtonConfirm(refer.CGet<CButton>("ConfirmBtn"));
+        }
+    }
+
+    // 商店确认
     [HarmonyPatch(typeof(ShopSystem), "Start")]
-    public static class ShopSystem_ConfirmShopWindow_Patch
+    public static class ShopSystem_Confirm_Patch
     {
         private static void Postfix(ShopSystem __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
-
-            var comp = __instance.shopWindow.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!ShopSystem.instance.shopWindow.activeInHierarchy) return;
-                if (!ShopSystem.instance.shopOkButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                ShopSystem.instance.ShopOK();
-            });
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.shopOkButton);
         }
     }
 
 
-    /// <summary>
-    /// 交换藏书界面：确认
-    /// </summary>
-    [HarmonyPatch(typeof(BookShopSystem), "Start")]
-    public static class BookShopSystem_ConfirmBookShopWindow_Patch
+    // 过月事件窗口：确认
+    [HarmonyPatch(typeof(ui_TurnChange), "Awake")]
+    public static class UI_TurnChange_ConfirmTrunChangeWindow_Patch
     {
-        private static void Postfix(BookShopSystem __instance)
+        private static void Postfix(ui_TurnChange __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
-
-            var comp = __instance.shopWindow.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!BookShopSystem.instance.shopWindow.activeInHierarchy) return;
-                if (!BookShopSystem.instance.shopOkButton.interactable) return;
-                DateFile.instance.PlayeSE(2);
-                BookShopSystem.instance.ShopOK();
-            });
+            if (!Main.on) return;
+            Utils.ButtonConfirm(Traverse.Create(__instance).Field<CButton>("closeBtn").Value);
         }
     }
 
+    // 人物界面 打开
+    [HarmonyPatch(typeof(ui_BottomLeft), "Awake")]
+    public static class ActorMenu_Open_Patch
+    {
+        private static void Postfix(ui_BottomLeft __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(__instance.CGet<CButton>("PlayerFaceButton"), HK_TYPE.ACTORMENU);
+        }
+    }
 
-    /// <summary>
-    /// 较艺界面：结束确认
-    /// </summary>
-    [HarmonyPatch(typeof(SkillBattleSystem), "Start")]
+    // 人物界面 切换
+    [HarmonyPatch(typeof(ActorMenu), "Awake")]
+    public static class ActorMenu_Toggle_Type_Patch
+    {
+        private static void Postfix(ActorMenu __instance)
+        {
+            if (!Main.on) return;
+            Utils.ToggleSwitch(__instance.actorTeamToggle.group);
+        }
+    }
+
+    // 人物界面 功法确认
+    [HarmonyPatch(typeof(ActorMenu), "Awake")]
+    public static class ActorMenu_Gongfa_Confirm_Patch
+    {
+        private static void Postfix(ActorMenu __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.equipGongFaViewButton.GetComponent<Button>());
+            Utils.ButtonHK(__instance.removeGongFaViewButton.GetComponent<Button>(), HK_TYPE.REMOVE_ITEM);
+        }
+    }
+
+    // 较艺界面：结束确认
+    [HarmonyPatch(typeof(SkillBattleSystem), "Awake")]
     public static class SkillBattleSystem_ConfirmEnd_Patch
     {
         private static void Postfix(SkillBattleSystem __instance)
         {
-            if (!Main.enabled || Main.binding_key) return;
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.closeBattleButton.GetComponent<Button>());
+        }
+    }
 
-            var comp = __instance.battleEndWindow.AddComponent<ConfirmComponent>();
-            comp.SetActionOnConfirm(() =>
-            {
-                if (!SkillBattleSystem.instance.battleEndWindow.activeInHierarchy) return;
-                if (!SkillBattleSystem.instance.closeBattleButton.activeInHierarchy) return;
-                DateFile.instance.PlayeSE(2);
-                SkillBattleSystem.instance.CloseSkillBattleWindow();
-            });
+
+    // 制作确认得到物品
+    [HarmonyPatch(typeof(MakeSystem), "Awake")]
+    public static class MakeSystem_ConfirmEnd_Patch
+    {
+        private static void Postfix(MakeSystem __instance)
+        {
+            if (!Main.on) return;
+            Refers component = __instance.GetComponent<Refers>();
+            Utils.ButtonConfirm(component.CGet<Button>("StartMakeButton"));
+            Utils.ButtonConfirm(component.CGet<Button>("StartFixButton"));
+            Utils.ButtonConfirm(component.CGet<Button>("GetItemButton"));
+        }
+    }
+
+    // 战斗界面：结束确认
+    [HarmonyPatch(typeof(BattleEndWindow), "Awake")]
+    public static class BattleEndWindow_ConfirmEnd_Patch
+    {
+        private static void Postfix(BattleEndWindow __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.closeBattleEndWindowButton);
+        }
+    }
+
+    // 书籍 购买确认
+    [HarmonyPatch(typeof(BookShopSystem), "Start")]
+    public static class BookShopSystem_Ok_Patch
+    {
+        private static void Postfix(BookShopSystem __instance)
+        {
+            if (!Main.on) return;
+            Refers component = __instance.GetComponent<Refers>();
+            Utils.ButtonConfirm(component.CGet<Button>("ShopOkButton"));
         }
     }
 }
