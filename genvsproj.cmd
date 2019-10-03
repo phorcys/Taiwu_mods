@@ -67,10 +67,10 @@ call "%_VSCOMNTOOLS%\VsDevCmd.bat" > nul
 :RunVCVars
 if "%VisualStudioVersion%"=="16.0" (
     echo Visual Studio 2019
-    cmake .. -G "Visual Studio 16 2019" -DSTEAMDIR=%STEAMDIR%
+    cmake .. -G "Visual Studio 16 2019" -DSTEAMDIR=!TAIWUDIR!
 ) else if "%VisualStudioVersion%"=="15.0" (
     echo Visual Studio 2017
-    cmake .. -G "Visual Studio 15 2017" -DSTEAMDIR=%STEAMDIR%
+    cmake .. -G "Visual Studio 15 2017" -DSTEAMDIR=!TAIWUDIR!
 ) else (
 :MissingVersion
     echo "cannot find Visual Studio 2017 or later version"
