@@ -2,7 +2,7 @@
   "Id": "TaiwuHentai",
   "DisplayName": "太污绅士",
   "Author": "FD",
-  "Version": "0.0.9",
+  "Version": "0.0.10.1",
   "AssemblyName": "TaiwuHentai.dll",
   "EntryMethod": "TaiwuHentai.Main.Load"
 }
