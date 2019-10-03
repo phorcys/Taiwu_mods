@@ -326,7 +326,7 @@ using System.Runtime.Versioning\;
 		${moddir}/Info.json
 		)
 	#项目版本 .net 4.6
-	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.6")
+	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_TARGET_FRAMEWORK_VERSION "v4.7.2")
 	#项目基础引用
 	set_property(TARGET ${moddir} PROPERTY VS_DOTNET_REFERENCES
 		"System"
