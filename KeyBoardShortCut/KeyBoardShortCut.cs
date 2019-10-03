@@ -38,6 +38,9 @@ namespace KeyBoardShortCut
         ACTORMENU,
         VILLAGE,
         VILLAGE_LOCAL,
+        WORLD_MAP,
+        STORY,
+        NAME_SCAN,
 
     };
 
@@ -60,10 +63,13 @@ namespace KeyBoardShortCut
                 {HK_TYPE.ACTORMENU, "打开人物界面"},
                 {HK_TYPE.VILLAGE, "打开太吾村产业地图"},
                 {HK_TYPE.VILLAGE_LOCAL, "打开本地产业地图"},
+                {HK_TYPE.WORLD_MAP, "打开世界地图"},
+                {HK_TYPE.STORY, "打开本地奇遇"},
+                {HK_TYPE.NAME_SCAN, "打开人名搜索"},
 
         };
 
-        public static readonly int nHotkeys = 11;
+        public static readonly int nHotkeys = hotkeyNames.Count;
 
         public SerializableDictionary<HK_TYPE, KeyCode> hotkeys = Settings.GetDefaultHotKeys();
 
@@ -105,6 +111,9 @@ namespace KeyBoardShortCut
                 {HK_TYPE.ACTORMENU,  KeyCode.C},
                 {HK_TYPE.VILLAGE,  KeyCode.Q},
                 {HK_TYPE.VILLAGE_LOCAL,  KeyCode.E},
+                {HK_TYPE.WORLD_MAP,  KeyCode.M},
+                {HK_TYPE.STORY,  KeyCode.K},
+                {HK_TYPE.NAME_SCAN,  KeyCode.N},
 
             };
 
