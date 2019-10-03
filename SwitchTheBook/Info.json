@@ -2,7 +2,7 @@
   "Id": "SwitchTheBook",
   "DisplayName": "功法书籍能够单击切换真传和手抄",
   "Author": "ANDSORA",
-  "Version": "1.0.1",
+  "Version": "1.0.5",
   "AssemblyName": "SwitchTheBook.dll",
   "EntryMethod": "SwitchTheBook.Main.Load"
 }

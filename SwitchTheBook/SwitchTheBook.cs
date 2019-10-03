@@ -83,6 +83,7 @@ namespace SwitchTheBook
     {
         Text _text;
         int _itemid;
+        int _actorid;
         public void OnPointerClick(PointerEventData eventData)
         {
             //将该书籍的真传和手抄属性进行切换
@@ -93,26 +94,35 @@ namespace SwitchTheBook
             if (newItemTrueID == -1)
                 Main.Logger.Error("We fail to get the GongFa ID:" + _text.text);
             else
-                DateFile.instance.itemsDate[_itemid][999] = newItemTrueID.ToString();
-            
+                // DateFile.instance.itemsDate[_itemid][999] = newItemTrueID.ToString();
+                GameData.Items.SetItemProperty(_itemid, 999, newItemTrueID.ToString());
+            // DateFile.instance.ChangItemDate(_itemid, 999, newItemTrueID, true);
+
+            DateFile.instance.GetItem(_actorid, _itemid, 1, false, 0, 0);
+            // GameData.Items.GetItem(_itemid);
+
+            Main.Logger.Log("We may complete the book switch.");
+
+            // ActorMenu.instance.UpdateItemInformation(_itemid);
             //if (isPirate > 0)
             //    DateFile.instance.itemsDate[_itemid][999] = (itemTrueID - 200000).ToString();
             //else
             //    DateFile.instance.itemsDate[_itemid][999] = (itemTrueID + 200000).ToString();
         }
 
-        public void setParam(Text text, int itemid)
+        public void SetParam(Text text, int itemid, int actorid)
         {
             _text = text;
             _itemid = itemid;
+            _actorid = actorid;
         }
     }
 
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
+    [HarmonyPatch(typeof(DateFile), "LoadDate")]
     public static class Loading_and_construct_GongFaDict
     {
 
-        static void Postfix()
+        static void Prefix()
         {
             if (Main.enabled)
             {
@@ -148,25 +158,11 @@ namespace SwitchTheBook
             }
         }
     }
-
-
-    //将人物包裹中的功法书籍通过点击进行真传和手抄的切换
-    [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
-    public static class SetItem_SetActorMenuItemIcon_Patch
+    public class SwitchBook
     {
-        static void Postfix(SetItem __instance, int actorId, int itemId, int actorFavor, int injuryTyp)
+        //进行具体的切换行为
+        static void DoSwitch(SetItem __instance, int itemId)
         {
-            if (!Main.enabled)
-                return;
-
-            //Dictionary<int, int> gg = new Dictionary<int, int>();
-            //int cc = gg[1];
-
-            //Main.Logger.Log("We get in for " + __instance.itemNumber.text);
-
-            if (!GongFaDict.IsDictLoaded)
-                return;
-
             bool actionFlag = false;
 
             //Main.Logger.Log("Lets start to switch for " + __instance.itemNumber.text);
@@ -184,11 +180,74 @@ namespace SwitchTheBook
                 return;
 
             //添加相应处理Component,注入参数
+            int actorId = DateFile.instance.mianActorId;
             var iconobj = __instance.gameObject;
-            var actionstub = iconobj.AddComponent<ClickAction>();
-            actionstub.setParam(__instance.itemNumber, itemId);
+            var clickActions = iconobj.GetComponents<ClickAction>();
+            if (clickActions.Length >= 1)//避免重复添加
+            {
+                clickActions[0].SetParam(__instance.itemNumber, itemId, actorId);
+            }
+            else
+            {
+                var actionstub = iconobj.AddComponent<ClickAction>();
+                actionstub.SetParam(__instance.itemNumber, itemId, actorId);
+            }
+            // var actionstub = iconobj.AddComponent<ClickAction>();
+            // actionstub.setParam(__instance.itemNumber, itemId);
+        }
+
+        //将人物包裹中的功法书籍通过点击进行真传和手抄的切换
+        [HarmonyPatch(typeof(SetItem), "SetActorMenuItemIcon")]
+        public static class SetItem_SetActorMenuItemIcon_Patch
+        {
+            static void Postfix(SetItem __instance, int actorId, int itemId, int actorFavor, int injuryTyp)
+            {
+                if (!Main.enabled)
+                    return;
+
+                //Dictionary<int, int> gg = new Dictionary<int, int>();
+                //int cc = gg[1];
+
+                //Main.Logger.Log("We get in for " + __instance.itemNumber.text);
+
+                if (!GongFaDict.IsDictLoaded)
+                    return;
+
+                if (actorId != DateFile.instance.mianActorId)
+                    return;
 
 
+                DoSwitch(__instance, itemId);
+                
+            }
+        }
+
+
+        //将人物装备中的功法书籍通过点击进行真传和手抄的切换
+        [HarmonyPatch(typeof(SetItem), "SetActorEquipIcon")]
+        public static class SetItem_SetActorEquipIcon_Patch
+        {
+            static void Postfix(SetItem __instance, int itemId)
+            {
+                if (!Main.enabled)
+                    return;
+
+                //Dictionary<int, int> gg = new Dictionary<int, int>();
+                //int cc = gg[1];
+
+                //Main.Logger.Log("We get in for " + __instance.itemNumber.text);
+
+                if (!GongFaDict.IsDictLoaded)
+                    return;
+
+                if (ActorMenu.instance.actorId != DateFile.instance.mianActorId)
+                    return;
+
+                DoSwitch(__instance, itemId);
+
+            }
         }
     }
+
+    
 }

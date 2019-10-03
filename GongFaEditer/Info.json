@@ -1,0 +1,9 @@
+﻿{
+  "Id": "Ju.GongFaEditer",
+  "DisplayName": "功法编辑器",
+  "Description":"简单的编辑一下功法咯",
+  "Author": "Ju",
+  "Version": "0.0.1",
+  "AssemblyName": "GongFaEditer.dll",
+  "EntryMethod": "Ju.GongFaEditer.Main.Load"
+}
