@@ -1,6 +1,6 @@
 @echo off
 ::set STEAMDIR="C:\Program Files (x86)\Steam\\steamapps\common\The Scroll Of Taiwu\"
-set STEAMDIR="C:\Game\Steam\steamapps\common\The Scroll Of Taiwu"
+set STEAMDIR="F:\Game\SteamLibrary\steamapps\common\The Scroll Of Taiwu"
 if not exist "%~dp0\build" (mkdir "%~dp0\build")
 set "PWD=%CD%"
 cd "%~dp0\build"
