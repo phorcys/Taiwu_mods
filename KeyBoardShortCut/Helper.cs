@@ -234,6 +234,17 @@ namespace KeyBoardShortCut
                 .OnCheck(check)
                 .AddAction(() => ClickButton(button));
         }
+        public static void ButtonRemove(Button button, Func<System.Object, bool> check = null)
+        {
+            if (button == null) return;
+            button.gameObject
+                .AddComponent<ActionsComponent>()
+                .With(button)
+                .OnCheck(CHECK_TYPE.REMOVE)
+                .OnCheck((b) => CheckSelectable((Button)b))
+                .OnCheck(check)
+                .AddAction(() => ClickButton(button));
+        }
 
         public static bool CheckSelectable(Selectable button)
         {
