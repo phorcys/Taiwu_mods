@@ -142,7 +142,6 @@ namespace KeyBoardShortCut
             var ui = GetUI(name);
             bool isNull = ui == null;
             bool isActive = ui && ui.gameObject.activeInHierarchy;
-            Main.Logger.Log(name + " " + isNull + " " + isActive);
             return ui && ui.gameObject.activeInHierarchy;
         }
 

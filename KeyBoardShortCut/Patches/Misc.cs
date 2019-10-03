@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityModManagerNet;
+using System.Threading.Tasks;
 
 namespace KeyBoardShortCut
 {
@@ -24,14 +25,37 @@ namespace KeyBoardShortCut
         }
     }
 
+    // 通用选择框：确认延迟
+    [HarmonyPatch(typeof(YesOrNoWindow), "ShowYesOrNoWindow")]
+    public static class YesOrNoWindow_Confirm_Wait_Patch
+    {
+        private static void Prefix(bool show, bool backMask, bool canClose)
+        {
+            if (!Main.on) return;
+            if (show && !YesOrNoWindow.instance.yesOrNoIsShow) Wait();
+        }
+
+        public static async void Wait()
+        {
+            YesOrNoWindow_Confirm_Patch.canYes = false;
+            await Task.Delay(300);
+            YesOrNoWindow_Confirm_Patch.canYes = true;
+        }
+    }
+
     // 通用选择框：确认
     [HarmonyPatch(typeof(YesOrNoWindow), "Awake")]
     public static class YesOrNoWindow_Confirm_Patch
     {
+        public static bool canYes = true;
         private static void Postfix(YesOrNoWindow __instance)
         {
             if (!Main.on) return;
-            Utils.ButtonConfirm(__instance.yes);
+            Utils.ButtonConfirm(__instance.yes, (_) => 
+                canYes && 
+                __instance.yesOrNoIsShow && 
+                __instance.yesOrNoWindow.gameObject.activeInHierarchy
+            );
         }
     }
 
@@ -349,11 +373,11 @@ namespace KeyBoardShortCut
         {
             if (!Main.on) return;
             // 选择物品
-            Utils.ButtonConfirm(__instance.useItemButton);
+            Utils.ButtonConfirm(__instance.useItemButton, (_) => ToStoryMenu.toStoryIsShow);
             // 进入奇遇
-            Utils.ButtonConfirm(__instance.openStoryButton);
+            Utils.ButtonConfirm(__instance.openStoryButton, (_) => ToStoryMenu.toStoryIsShow);
             // 移除物品
-            Utils.ButtonRemove(__instance.removeItemButton);
+            Utils.ButtonRemove(__instance.removeItemButton, (_) => ToStoryMenu.toStoryIsShow);
         }
     }
     
@@ -364,10 +388,8 @@ namespace KeyBoardShortCut
         private static bool Prefix(UIDate __instance)
         {
             if (!Main.on) return true;
-            if (ToStoryMenu.Instance.gameObject.activeInHierarchy) return false;
+            if (ToStoryMenu.toStoryIsShow) return false;
             return true;
         }
     }
-
-
 }
