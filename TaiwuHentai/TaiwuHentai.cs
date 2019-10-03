@@ -175,8 +175,7 @@ namespace TaiwuHentai
             if (key == 15)
             {
                 string text = (!__instance.presetActorDate.ContainsKey(actorId) || !__instance.presetActorDate[actorId].ContainsKey(key)) ? "0" : __instance.presetActorDate[actorId][key];
-                string charProperty = Characters.GetCharProperty(actorId, key);
-                bool flag2 = charProperty == null;
+                
                 if (Characters.HasChar(actorId))
                 {
                     //    if (__instance.actorsDate[actorId].ContainsKey(key))
@@ -198,25 +197,31 @@ namespace TaiwuHentai
                    
                     id = ((charProperty2 != null) ? int.Parse(charProperty2) : actorId);
                 }
-                if (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(key))
-                            {
-                                __result = "0";
-                            }
+                string charProperty = Characters.GetCharProperty(id, key);
+                bool flag2 = charProperty == null;
+                if (!flag2)
+                {
+                    if (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(key))
+                    {
+                        __result = "0";
+                    }
                     int num = 0;
 
-                int num2 = Mathf.Clamp(int.Parse((num != 0) ? (int.Parse(charProperty) + num).ToString() : charProperty), 0, 900);
+                    int num2 = Mathf.Clamp(int.Parse((num != 0) ? (int.Parse(charProperty) + num).ToString() : charProperty), 0, 900);
 
-                if (applyBonus)
-                {
-                    bool flag9 = int.Parse(__instance.GetActorDate(actorId, 8, false)) == 1 && int.Parse(__instance.GetActorDate(actorId, 305, false)) == 0;
-                    if (flag9)
+                    if (applyBonus)
                     {
-                        __result = (num2 * 50 / 100).ToString();
+                        bool flag9 = int.Parse(__instance.GetActorDate(actorId, 8, false)) == 1 && int.Parse(__instance.GetActorDate(actorId, 305, false)) == 0;
+                        if (flag9)
+                        {
+                            __result = (num2 * 50 / 100).ToString();
+                        }
+
+
                     }
-
-
+                    __result = num2.ToString();
                 }
-                __result = num2.ToString();
+
             }
         }
 
