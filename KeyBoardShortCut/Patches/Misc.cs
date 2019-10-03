@@ -307,4 +307,67 @@ namespace KeyBoardShortCut
             Utils.ButtonConfirm(component.CGet<Button>("ShopOkButton"));
         }
     }
+
+    // 进入奇遇
+    [HarmonyPatch(typeof(ChoosePlaceWindow), "Awake")]
+    public static class ChoosePlaceWindow_ToStory_Patch
+    {
+        private static void Postfix(ChoosePlaceWindow __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(__instance.openToStoryButton, HK_TYPE.STORY);
+        }
+    }
+
+    // 进入人物搜索
+    [HarmonyPatch(typeof(ui_MiniMap), "Awake")]
+    public static class ui_MiniMap_ToNameScan_Patch
+    {
+        private static void Postfix(ui_MiniMap __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(Traverse.Create(__instance).Field<CButton>("SearchNpc").Value, HK_TYPE.NAME_SCAN);
+        }
+    }
+
+    // 进入世界地图
+    [HarmonyPatch(typeof(ui_MiniMap), "Awake")]
+    public static class ui_MiniMap_ToWorldMap_Patch
+    {
+        private static void Postfix(ui_MiniMap __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(Traverse.Create(__instance).Field<CButton>("ShowMap").Value, HK_TYPE.WORLD_MAP);
+        }
+    }
+
+    // 奇遇前选择菜单
+    [HarmonyPatch(typeof(ToStoryMenu), "Awake")]
+    public static class ToStoryMenu_Comfirm_Patch
+    {
+        private static void Postfix(ToStoryMenu __instance)
+        {
+            if (!Main.on) return;
+            // 选择物品
+            Utils.ButtonConfirm(__instance.useItemButton);
+            // 进入奇遇
+            Utils.ButtonConfirm(__instance.openStoryButton);
+            // 移除物品
+            Utils.ButtonRemove(__instance.removeItemButton);
+        }
+    }
+    
+    // 修复 奇遇菜单中可以过月
+    [HarmonyPatch(typeof(UIDate), "ChangeTrunButton")]
+    public static class UIDate_Month_Change_Fix_Patch
+    {
+        private static bool Prefix(UIDate __instance)
+        {
+            if (!Main.on) return true;
+            if (ToStoryMenu.Instance.gameObject.activeInHierarchy) return false;
+            return true;
+        }
+    }
+
+
 }
