@@ -25,6 +25,24 @@ namespace KeyBoardShortCut
         }
     }
 
+    // 关闭延迟
+    [HarmonyPatch(typeof(UIState), "Back")]
+    public static class UIState_Close_Wait_Patch
+    {
+        private static void Prefix()
+        {
+            if (!Main.on) return;
+            Wait();
+        }
+
+        public static async void Wait()
+        {
+            Utils.canClose = false;
+            await Task.Delay(300);
+            Utils.canClose = true;
+        }
+    }
+
     // 通用选择框：确认延迟
     [HarmonyPatch(typeof(YesOrNoWindow), "ShowYesOrNoWindow")]
     public static class YesOrNoWindow_Confirm_Wait_Patch
@@ -70,12 +88,16 @@ namespace KeyBoardShortCut
                 .OnCheck(CHECK_TYPE.CLOSE)
                 .OnCheck((_) => ui_MessageWindow.Exists)
                 .OnCheck((_) => ui_MessageWindow.Instance.gameObject.activeInHierarchy)
+                .OnCheck((_) => UIManager.Instance.curState != UIState.ActorMenu)
+                .OnCheck((_) => Utils.canClose)
                 .AddAction(() => {
                     var holder = __instance.chooseHolder;
                     var count = holder.childCount;
                     var child = holder.GetChild(count- 1);
                     var button = child.gameObject.GetComponent<Button>();
-                    button.onClick.Invoke();
+                    // 唯我选项
+                    if (button.name.EndsWith("20700007")) return;
+                        button.onClick.Invoke();
                 });
         }
     }
@@ -392,4 +414,5 @@ namespace KeyBoardShortCut
             return true;
         }
     }
+
 }
