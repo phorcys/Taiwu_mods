@@ -77,8 +77,20 @@ namespace KeyBoardShortCut
         }
     }
 
-    // 事件选择窗口 右键默认选项
+    // 事件选择 使用物品 人物 确认
     [HarmonyPatch(typeof(ui_MessageWindow), "Awake")]
+    public static class MessageWindow_Confirm_Patch
+    {
+        private static void Postfix(ui_MessageWindow __instance) {
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.useItemButton);
+            Utils.ButtonConfirm(__instance.useActorButton);
+        }
+    }
+
+
+    // 事件选择窗口 右键默认选项
+        [HarmonyPatch(typeof(ui_MessageWindow), "Awake")]
     public static class MessageWindow_Close_Patch
     {
         private static void Postfix(ui_MessageWindow __instance)
@@ -97,6 +109,21 @@ namespace KeyBoardShortCut
                     var button = child.gameObject.GetComponent<Button>();
                     // 唯我选项
                     if (button.name.EndsWith("20700007")) return;
+                    if (button.name.EndsWith("21000005")) return;
+                    if (button.name.EndsWith("21500006")) return;
+                    if (button.name.EndsWith("20300005")) return;
+                    if (button.name.EndsWith("22800005")) return;
+                    if (button.name.EndsWith("104600005")) return;
+                    if (button.name.EndsWith("105000005")) return;
+                    if (button.name.EndsWith("1700005")) return;
+                    if (button.name.EndsWith("106500005")) return;
+                    if (button.name.EndsWith("107600005")) return;
+                    if (button.name.EndsWith("210100005")) return;
+                    if (button.name.EndsWith("128200005")) return;
+                    if (button.name.EndsWith("25200005")) return;
+                    if (button.name.EndsWith("28000005")) return;
+                    if (button.name.EndsWith("1212000005")) return;
+                    if (button.name.EndsWith("000005")) return;
                         button.onClick.Invoke();
                 });
         }
@@ -194,30 +221,58 @@ namespace KeyBoardShortCut
         private static void Postfix(BuildingWindow __instance)
         {
             if (!Main.on) return;
-            // 研读
-            Utils.ButtonConfirm(__instance.chooseBookButton);
             // 修习， 突破
             Utils.ButtonConfirm(__instance.setGongFaButton);
+            // 研读
+            Utils.ButtonConfirm(__instance.chooseBookButton);
         }
     }
 
-    // 移除 功法书籍
+    // 添加 移除 功法书籍
     [HarmonyPatch(typeof(BuildingWindow), "Start")]
     public static class BuildingWindow_RemoveStudyItem_Patch
     {
         private static void Postfix(BuildingWindow __instance)
         {
             if (!Main.on) return;
+            Refers component = __instance.GetComponent<Refers>();
             var studyChooseTyp = Traverse.Create(BuildingWindow.instance).Field("studyChooseTyp");
             // 修习
+            Utils.ButtonConfirm(component.CGet<Button>("AddStudySkillButton"), (b) => {
+                return 0 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.setStudyWindow.gameObject.activeInHierarchy && 
+                    Traverse.Create(__instance).Field<int>("studySkillId").Value == 0;
+            });
+            Utils.ButtonConfirm(component.CGet<Button>("StudySkillUpButton"), (b) => {
+                return 0 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.setStudyWindow.gameObject.activeInHierarchy;
+            });
             Utils.ButtonHK(__instance.removeGongFaButton, HK_TYPE.REMOVE_ITEM, (b) => {
                 return 0 == studyChooseTyp.GetValue<int>();
             });
             // 突破
+            Utils.ButtonConfirm(component.CGet<Button>("AddSkillLevelUpButton"), (b) => {
+                return 1 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.setStudyWindow.gameObject.activeInHierarchy && 
+                    __instance.levelUPSkillId == 0;
+            });
+            Utils.ButtonConfirm(component.CGet<Button>("StartSkillLevelUpButton"), (b) => {
+                return 1 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.setStudyWindow.gameObject.activeInHierarchy;
+            });
             Utils.ButtonHK(__instance.removeLevelUPButton, HK_TYPE.REMOVE_ITEM, (b) => {
                 return 1 == studyChooseTyp.GetValue<int>();
             });
             // 研读
+            Utils.ButtonConfirm(component.CGet<Button>("AddReadBookButton"), (b) => {
+                return 2 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.bookWindow.activeInHierarchy &&
+                    __instance.readBookId == 0;
+            });
+            Utils.ButtonConfirm(component.CGet<Button>("StartReadBookButton"), (b) => {
+                return 2 == studyChooseTyp.GetValue<int>() && 
+                    !__instance.bookWindow.activeInHierarchy;
+            });
             Utils.ButtonHK(__instance.removeReadBookButton, HK_TYPE.REMOVE_ITEM, (b) => {
                 return 2 == studyChooseTyp.GetValue<int>();
             });
@@ -411,6 +466,8 @@ namespace KeyBoardShortCut
         {
             if (!Main.on) return true;
             if (ToStoryMenu.toStoryIsShow) return false;
+            if (ShopSystem.Exists) return false;
+            if (YesOrNoWindow.instance.yesOrNoIsShow) return false;
             return true;
         }
     }
