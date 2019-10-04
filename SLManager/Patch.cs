@@ -838,6 +838,11 @@ namespace Sth4nothing.SLManager
             return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
         }
 
+        static readonly HashSet<string> ExcludedFileNames = new HashSet<string>()
+        {
+
+        };
+
         /// <summary>
         /// 获取备份文件列表
         /// </summary>
@@ -847,16 +852,11 @@ namespace Sth4nothing.SLManager
             var indexPath = ReflectionMethod.Invoke<string>(typeof(SaveGame), "GetSavingIndexPath", dataId);
             if (File.Exists(indexPath))
                 yield return indexPath;
-            foreach (var file in Directory.EnumerateFiles(
-                savingSubFolder,
-                "*.tw*",
-                SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.EnumerateFiles(savingSubFolder, "*", SearchOption.TopDirectoryOnly))
             {
-                yield return file;
+                if (!ExcludedFileNames.Contains(file))
+                    yield return file;
             }
-            var TW_Save_Date_9_Path = Path.Combine(savingSubFolder, "TW_Save_Date_9");
-            if (File.Exists(TW_Save_Date_9_Path))
-                yield return TW_Save_Date_9_Path;
         }
 
         /// <summary>
