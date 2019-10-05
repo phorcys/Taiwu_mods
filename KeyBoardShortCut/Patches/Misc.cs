@@ -258,7 +258,8 @@ namespace KeyBoardShortCut
             });
             Utils.ButtonConfirm(component.CGet<Button>("StartSkillLevelUpButton"), (b) => {
                 return 1 == studyChooseTyp.GetValue<int>() && 
-                    !__instance.setStudyWindow.gameObject.activeInHierarchy;
+                    !__instance.setStudyWindow.gameObject.activeInHierarchy &&
+                    !StudyWindow.instance.gameObject.activeInHierarchy;
             });
             Utils.ButtonHK(__instance.removeLevelUPButton, HK_TYPE.REMOVE_ITEM, (b) => {
                 return 1 == studyChooseTyp.GetValue<int>();
@@ -271,7 +272,8 @@ namespace KeyBoardShortCut
             });
             Utils.ButtonConfirm(component.CGet<Button>("StartReadBookButton"), (b) => {
                 return 2 == studyChooseTyp.GetValue<int>() && 
-                    !__instance.bookWindow.activeInHierarchy;
+                    !__instance.bookWindow.activeInHierarchy && 
+                    !ReadBook.instance.gameObject.activeInHierarchy;
             });
             Utils.ButtonHK(__instance.removeReadBookButton, HK_TYPE.REMOVE_ITEM, (b) => {
                 return 2 == studyChooseTyp.GetValue<int>();
@@ -468,6 +470,7 @@ namespace KeyBoardShortCut
             if (ToStoryMenu.toStoryIsShow) return false;
             if (ShopSystem.Exists) return false;
             if (YesOrNoWindow.instance.yesOrNoIsShow) return false;
+            if (Utils.isUIActive("ui_Dialog")) return false;
             return true;
         }
     }
