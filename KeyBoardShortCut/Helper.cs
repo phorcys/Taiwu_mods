@@ -222,6 +222,7 @@ namespace KeyBoardShortCut
                 .AddAction(() => ClickButton(button));
         }
 
+        public static bool canClose = true;
         public static void ButtonClose(Button button, Func<System.Object, bool> check = null)
         {
             if (button == null) return;
@@ -229,6 +230,7 @@ namespace KeyBoardShortCut
                 .AddComponent<ActionsComponent>()
                 .With(button)
                 .OnCheck(CHECK_TYPE.CLOSE)
+                .OnCheck((_) => canClose)
                 .OnCheck((b) => CheckSelectable((Button)b))
                 .OnCheck(check)
                 .AddAction(() => ClickButton(button));
