@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -403,7 +403,7 @@ namespace Majordomo
         /// <returns></returns>
         private static bool TryFilterNewActorCharm(int actorId)
         {
-            int charm = int.Parse(DateFile.instance.actorsDate[actorId][15]);
+            int charm = int.Parse(GameData.Characters.GetCharProperty(actorId, 15));
             return charm < Main.settings.newActorCharmFilterThreshold;
         }
 
@@ -427,13 +427,14 @@ namespace Majordomo
         /// <returns></returns>
         private static bool TryFilterNewActorAttribute(int actorId)
         {
-            var actor = DateFile.instance.actorsDate[actorId];
             int maxAttr = -1;
 
             // 技艺资质
-            for (int i = 501; i <= 516; ++i) maxAttr = Mathf.Max(maxAttr, int.Parse(actor[i]));
+            for (int i = 501; i <= 516; ++i)
+                maxAttr = Mathf.Max(maxAttr, int.Parse(GameData.Characters.GetCharProperty(actorId, i)));
             // 武学资质
-            for (int i = 601; i <= 614; ++i) maxAttr = Mathf.Max(maxAttr, int.Parse(actor[i]));
+            for (int i = 601; i <= 614; ++i)
+                maxAttr = Mathf.Max(maxAttr, int.Parse(GameData.Characters.GetCharProperty(actorId, i)));
 
             return maxAttr < Main.settings.newActorAttrFilterThreshold;
         }
@@ -445,7 +446,7 @@ namespace Majordomo
         /// <param name="actorId"></param>
         private static void LogNewVillagerMerchantType(int actorId)
         {
-            int gangType = int.Parse(DateFile.instance.GetActorDate(actorId, 9, addValue: false));
+            int gangType = int.Parse(DateFile.instance.GetActorDate(actorId, 9, false));
             int merchantType = int.Parse(DateFile.instance.GetGangDate(gangType, 16));
             string merchantTypeName = DateFile.instance.storyShopDate[merchantType][0];
             Main.Logger.Log($"新村民：{DateFile.instance.GetActorName(actorId)}，潜在商队：{merchantTypeName}");

@@ -288,7 +288,7 @@ namespace NpcScan
         {
             // 997为人物模板, 当大于100是特殊剧情人物，跳过不处理, 详见TextAsset中的PresetActor_Date
             // 如: 2001:莫女 2002:大岳瑶常 2003:九寒 2004:金凰儿 2005:衣以候 2006:卫起 2007:以向 2008:血枫 2009:术方
-            if (int.Parse(DateFile.instance.actorsDate[npcId][997]) > 100) return;
+            if (int.Parse(DateFile.instance.GetActorDate(npcId, 997, false)) > 100) return;
             // 健康
             if (_ui.HealthValue > 0)
             {
@@ -427,12 +427,16 @@ namespace NpcScan
                 if (result) return;
             }
 
-            // 仅搜索门派
-            if (_ui.IsGang)
+            // 门派识别和搜门派
+            // 如果未开启门派搜索 直接通过
+            // (groupid >= 1 && groupid <= 15)结果为门派中人
+            // _ui.isGang = true 仅搜索门派：(groupid > 15)=true 排除
+            // _ui.isGang = false 仅搜索非门派：(groupid > 15)=false 排除
+            if (_ui.TarIsGang)
             {
                 bool result = false;
                 Lock();
-                try { result = Groupid > 15; }
+                try { result = _ui.IsGang == Groupid > 15; }
                 finally { Unlock(); }
                 if (result) return;
             }
@@ -446,7 +450,7 @@ namespace NpcScan
                 if (result) return;
             }
             // 婚姻
-            if(_ui.Marriage > 0)
+            if (_ui.Marriage > 0)
             {
                 bool result = false;
                 Lock();
@@ -782,28 +786,36 @@ namespace NpcScan
             {
                 return false;
             }
-            var actorFeature = new HashSet<int>(ActorFeatures.Count);
+            var actorFeatureRule = new HashSet<int>(ActorFeatures.Count);
             foreach (int key in ActorFeatures)
             {
-                if (!tarFeature)
+                Features f = Main.featuresList[key];
+                if(Main.multinameFeatureGroupIdSet.Contains(f.Group))
                 {
-                    int plus = Main.featuresList[key].Plus;
-                    if (plus == 3 || plus == 4)
-                    {
-                        //组查找 记录组ID
-                        actorFeature.Add(Main.featuresList[key].Group);
-                        continue;
-                    }
+                    actorFeatureRule.Add(f.Group);
                 }
-                //精确查找记录特性
-                actorFeature.Add(key);
+                else
+                {
+                    if (!tarFeature)
+                    {
+                        int category = f.Category;
+                        if (category == 3 || category == 4)
+                        {
+                            //组查找 记录组ID
+                            actorFeatureRule.Add(Main.featuresList[key].Group);
+                            continue;
+                        }
+                    }
+                    //精确查找记录特性
+                    actorFeatureRule.Add(key);
+                }                
             }
 
             if (!tarFeatureOr)   //与查找
             {
                 foreach (int key in searchSet)
                 {
-                    if (!actorFeature.Contains(key))
+                    if (!actorFeatureRule.Contains(key))
                     {
                         return false;
                     }
@@ -814,7 +826,7 @@ namespace NpcScan
             {
                 foreach (int key in searchSet)
                 {
-                    if (actorFeature.Contains(key))
+                    if (actorFeatureRule.Contains(key))
                     {
                         return true;
                     }
@@ -1043,7 +1055,7 @@ namespace NpcScan
                 Features f = Main.featuresList[key];
                 if (!tarFeature)
                 {
-                    if (f.Plus == 3 || f.Plus == 4)
+                    if (f.Category == 3 || f.Category == 4)
                     {
                         // 不要求精确特性时，将与搜索条件中的特性的同类特性全部标识
                         featureList.Add((_ui.featureSearchSet.Contains(f.Group) ? f.TarColor : f.Color)

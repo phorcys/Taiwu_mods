@@ -273,18 +273,28 @@ namespace GameSpeeder
         }
     }
 
-    // 貌似新版游戏(v0.2.5.x)不需要这个修复了
-    //[HarmonyPatch(typeof(BattleSystem), "SetChooseAttackPart")]
-    //public static class SetChooseAttackPartPatch
-    //{
-    //    private static void Postfix() => Time.timeScale = 0; // Fix变招的逻辑step 1
-    //}
+    /// <summary>
+    /// 解决某些情况下变招成功无法触发变招效果的问题
+    /// </summary>
+    /// <remarks>
+    /// 猜测原作者此修复的原理:
+    /// 游戏中<see cref="BattleSystem.AttackPartChooseEnd"/>是个协程，第一次运行时会等待现实时间的0.2s后继续执行，
+    /// 加速后0.2s会发生很多游戏战斗事件，可能会在<see cref="BattleSystem.AttackPartChooseEnd"/>继续执行(触发
+    /// 变招效果)之前覆盖变招效果，导致变招效果再也没机会触发。此修复是将<see cref="Time.timeScale"/> 设为0，此时
+    /// 游戏中除frame rate dependent的事件外，全部事件暂停，协程<see cref="BattleSystem.AttackPartChooseEnd"/>
+    /// 等待时间改为0，即为等待一帧后继续执行，可以避免变招效果在等待期间被覆盖。
+    /// </remarks>
+    [HarmonyPatch(typeof(BattleSystem), "SetChooseAttackPart")]
+    public static class SetChooseAttackPartPatch
+    {
+        private static void Postfix() => Time.timeScale = 0; // Fix变招的逻辑step 1
+    }
 
-    //[HarmonyPatch(typeof(BattleSystem), "AttackPartChooseEnd")]
-    //public static class AttackPartChooseEndPatch
-    //{
-    //    private static void Prefix(ref float waitTime) => waitTime = 0; // Fix变招的逻辑step 2
-    //}
+    [HarmonyPatch(typeof(BattleSystem), "AttackPartChooseEnd")]
+    public static class AttackPartChooseEndPatch
+    {
+        private static void Prefix(ref float waitTime) => waitTime = 0; // Fix变招的逻辑step 2
+    }
 
 
     [HarmonyPatch(typeof(BattleEndWindow), "BattleEnd")]

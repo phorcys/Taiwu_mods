@@ -47,12 +47,13 @@ namespace NpcScan
                     return false;
 
                 var list = new List<int>();
-                string[] actorFeatures = DateFile.instance.GetActorDate(key, 101, addValue: false).Split('|');
+                string actorData = DateFile.instance.GetActorDate(key, 101, false);
+                string[] actorFeatures = actorData.IsNullOrEmpty() ? new string[0] : actorData.Split('|');
 
                 for (int j = 0; j < actorFeatures.Length; j++)
                 {
                     int fetureKey = int.Parse(actorFeatures[j]);
-                    if (fetureKey > 0)
+                    if (fetureKey != 0 && DateFile.instance.actorFeaturesDate.ContainsKey(fetureKey))
                         list.Add(fetureKey);
                 }
                 actorsFeatureCache.TryAdd(key, list);

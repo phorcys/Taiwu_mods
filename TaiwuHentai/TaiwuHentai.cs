@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System;
 using Object = UnityEngine.Object;
+using GameData;
 
 namespace TaiwuHentai
 {
@@ -87,7 +88,7 @@ namespace TaiwuHentai
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal("Box");
-            GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄");
+            GUILayout.Label("提前求爱与求婚的年龄，大于切不等于该年龄的npc能求婚当然太污自己也要大于这个年龄,对婴儿不起作用");
             var maxBackupsToKeep = GUILayout.TextField(settings.SpouseAge.ToString(), 3);
             if (GUI.changed && !uint.TryParse(maxBackupsToKeep, out settings.SpouseAge))
             {
@@ -162,54 +163,65 @@ namespace TaiwuHentai
     [HarmonyPatch(typeof(DateFile), "GetActorDate")]
     public static class DateFile_GetActorDate_Patch
     {
-        private static void Postfix(DateFile __instance, ref string __result, int id, int index, bool addValue = true)
+
+        private static void Postfix(DateFile __instance, ref string __result, int actorId, int key, bool applyBonus = true)
         {
 
             if (!Main.enabled || !Main.settings.displayGlamour)
             {
                 return;
             }
-            if (index == 15)
+            int id;
+            if (key == 15)
             {
-                string text = (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(index)) ? "0" : __instance.presetActorDate[id][index];
-                if (__instance.actorsDate.ContainsKey(id))
+                string text = (!__instance.presetActorDate.ContainsKey(actorId) || !__instance.presetActorDate[actorId].ContainsKey(key)) ? "0" : __instance.presetActorDate[actorId][key];
+                
+                if (Characters.HasChar(actorId))
                 {
-                    if (__instance.actorsDate[id].ContainsKey(index))
+                    //    if (__instance.actorsDate[actorId].ContainsKey(key))
+                    //    {
+                    //        text = __instance.[actorId][key];
+                    //    }
+                    //    else
+                    //    {
+                    //        int pId = (!__instance.actorsDate[actorId].ContainsKey(997)) ? actorId : int.Parse(__instance.actorsDate[actorId][997]);
+                    //     
+                    //        text = __instance.presetActorDate[pId][key];
+                    //    }
+
+                    id = actorId;
+                }
+                else
+                {
+                    string charProperty2 = Characters.GetCharProperty(actorId, 997);
+                   
+                    id = ((charProperty2 != null) ? int.Parse(charProperty2) : actorId);
+                }
+                string charProperty = Characters.GetCharProperty(id, key);
+                bool flag2 = charProperty == null;
+                if (!flag2)
+                {
+                    if (!__instance.presetActorDate.ContainsKey(id) || !__instance.presetActorDate[id].ContainsKey(key))
                     {
-                        text = __instance.actorsDate[id][index];
+                        __result = "0";
                     }
-                    else
+                    int num = 0;
+
+                    int num2 = Mathf.Clamp(int.Parse((num != 0) ? (int.Parse(charProperty) + num).ToString() : charProperty), 0, 900);
+
+                    if (applyBonus)
                     {
-                        int key = (!__instance.actorsDate[id].ContainsKey(997)) ? id : int.Parse(__instance.actorsDate[id][997]);
-                        if (!__instance.presetActorDate.ContainsKey(key) || !__instance.presetActorDate[key].ContainsKey(index))
+                        bool flag9 = int.Parse(__instance.GetActorDate(actorId, 8, false)) == 1 && int.Parse(__instance.GetActorDate(actorId, 305, false)) == 0;
+                        if (flag9)
                         {
-                            __result = "0";
+                            __result = (num2 * 50 / 100).ToString();
                         }
-                        text = __instance.presetActorDate[key][index];
+
+
                     }
+                    __result = num2.ToString();
                 }
 
-                int num = 0;
-                if (addValue)
-                {
-                    Type type = __instance.GetType();
-                    object[] temp = new object[] { id, index };
-                    BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
-                    var m = type.GetMethod("ActorAddValue", flags);
-                    num = (int)m.Invoke(__instance, temp);
-                    if (int.Parse(__instance.GetActorDate(id, 8, false)) == 1 && int.Parse(__instance.GetActorDate(id, 305, false)) == 0)
-                    {
-                        __result = (int.Parse((num == 0) ? text : (int.Parse(text) + num).ToString()) * 50 / 100).ToString();
-                    }
-                    else
-                    {
-
-                        string text2 = (num == 0) ? text : (int.Parse(text) + num).ToString();
-
-                        __result = text2;
-                    }
-
-                }
             }
         }
 
@@ -217,9 +229,41 @@ namespace TaiwuHentai
 
 
     }
+
     [HarmonyPatch(typeof(WindowManage), "WindowSwitch")]
     public static class WindowManage_WindowSwitch_Patch
     {
+        static public List<int> GetActorFeature(int key)
+        {
+            List<int> result;
+
+
+
+            List<int> list = new List<int>();
+            string[] array = DateFile.instance.GetActorDate(key, 101, false).Split(new char[]
+            {
+                '|'
+            });
+
+
+            int j = 0;
+            while (j < array.Length)
+            {
+                int num4 = int.Parse(array[j]);
+                if (num4 != 0)
+                {
+                    list.Add(num4);
+                }
+
+                j++;
+
+
+            }
+
+            result = list;
+
+            return result;
+        }
         // Token: 0x06000008 RID: 8 RVA: 0x00002168 File Offset: 0x00000368
         private static void Postfix(WindowManage __instance, ref GameObject tips, ref Text ___itemMoneyText, ref Text ___informationMassage, ref Text ___informationName, ref bool ___anTips)
         {
@@ -244,13 +288,9 @@ namespace TaiwuHentai
                 if (array[0] == "HelpIcon" && Main.settings.displayGlamour)
                 {
                     int key = ActorMenu.instance.actorId;
-                    bool flageIsShow = false;
+                    bool flageIsShow = true;
                     //Main.Logger.Log(key.ToString());
-                    if (DateFile.instance.actorsDate.ContainsKey(key))
-                    {
-                        flageIsShow = DateFile.instance.actorsDate[key].ContainsKey(997);
-                        //Main.Logger.Log(flageIsShow.ToString());
-                    }
+
                     if (flageIsShow)
                     {
 
@@ -275,7 +315,7 @@ namespace TaiwuHentai
                         text2.text += "18岁时:\n魅力：" + charmText + "\n";
 
 
-                        List<int> featureIDs = DateFile.instance.GetActorFeature(key);
+                        List<int> featureIDs = GetActorFeature(key);
                         for (int i = 0; i < featureIDs.Count; i++)
                         {
 
@@ -322,17 +362,17 @@ namespace TaiwuHentai
                             //RectTransform component = __instance.informationWindow.GetComponent<RectTransform>();
                             //ActorFace mainHoder = UnityEngine.Object.Instantiate(ActorMenu.instance.mianActorFace, new Vector3(100f, 30f, 1), Quaternion.identity);
                             ActorFace mainHoder = Object.Instantiate<ActorFace>(ActorMenu.instance.mianActorFace, new Vector3(110f, -160f, 1f), Quaternion.identity);
-                           // mainHoder.transform.SetParent(__instance.informationWindow.GetComponent<RectTransform>(), false);
+                            // mainHoder.transform.SetParent(__instance.informationWindow.GetComponent<RectTransform>(), false);
                             mainHoder.name = "AgeMianface";
-                            
+
                             editFac(ref mainHoder, key, 18, int.Parse(DateFile.instance.GetActorDate(key, 14, false)), int.Parse(DateFile.instance.GetActorDate(key, 17, false)), array3, array4, clotheIndex);
 
 
                             Main.Logger.Log((mainHoder.GetComponent<RectTransform>() == null).ToString());
 
                             //mainHoder.transform.localScale = new Vector3(0.73f, 0.73f, 1f);
-                           
-                            
+
+
                             //mainHoder.GetComponent<RectTransform>().sizeDelta = new Vector2(50f, 50f);
                             mainHoder.transform.SetParent(WindowManage.instance.informationMassage.GetComponent<RectTransform>(), false);
                             //mainHoder.transform.localScale = new Vector3(scX * 0.3f, scY * 0.45f, 1);
