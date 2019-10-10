@@ -484,6 +484,23 @@ namespace KeyBoardShortCut
             if (Utils.isUIActive("ui_Dialog")) return false;
             return true;
         }
+    }    
+    // 蛐蛐战斗 选择蛐蛐 蛐蛐结束
+    [HarmonyPatch(typeof(QuquBattleSystem), "Start")]
+    public static class QuquBattleSystem_UseQUQU_Patch
+    {
+        private static void Postfix(QuquBattleSystem __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonConfirm(__instance.useItemButton);
+            foreach(var b in __instance.nextButton)
+            {
+                Utils.ButtonConfirm(b);
+            }
+            Utils.ButtonConfirm(__instance.closeBattleButton.GetComponent<Button>());
+        }
     }
+
+
 
 }
