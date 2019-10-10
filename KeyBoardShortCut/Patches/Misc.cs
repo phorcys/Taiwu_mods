@@ -422,6 +422,17 @@ namespace KeyBoardShortCut
         }
     }
 
+    // 进入主界面功法树
+    [HarmonyPatch(typeof(ChoosePlaceWindow), "Awake")]
+    public static class ChoosePlaceWindow_ToGongfaTree_Patch
+    {
+        private static void Postfix(ChoosePlaceWindow __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(__instance.showGongFaTreeButton, HK_TYPE.GONGFA_TREE, (_) => !Utils.isUIActive("ui_PartWorldMap"));
+        }
+    }
+
     // 进入人物搜索
     [HarmonyPatch(typeof(ui_MiniMap), "Awake")]
     public static class ui_MiniMap_ToNameScan_Patch
