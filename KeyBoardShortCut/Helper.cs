@@ -124,6 +124,12 @@ namespace KeyBoardShortCut
         {
             return Main.GetKeyDown(HK_TYPE.REMOVE_ITEM);
         }
+
+        public static bool HasDialog() {
+            if (YesOrNoWindow.instance.yesOrNoIsShow) return true;
+            if (Utils.isUIActive("ui_Dialog")) return true;
+            return false;
+        }
     }
 
 

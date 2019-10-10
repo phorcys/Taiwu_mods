@@ -39,6 +39,7 @@ namespace KeyBoardShortCut
         VILLAGE,
         VILLAGE_LOCAL,
         WORLD_MAP,
+        GONGFA_TREE,
         STORY,
         NAME_SCAN,
 
@@ -64,6 +65,7 @@ namespace KeyBoardShortCut
                 {HK_TYPE.VILLAGE, "打开太吾村产业地图"},
                 {HK_TYPE.VILLAGE_LOCAL, "打开本地产业地图"},
                 {HK_TYPE.WORLD_MAP, "打开世界地图"},
+                {HK_TYPE.GONGFA_TREE, "打开功法树"},
                 {HK_TYPE.STORY, "打开本地奇遇"},
                 {HK_TYPE.NAME_SCAN, "打开人名搜索"},
 
@@ -106,12 +108,13 @@ namespace KeyBoardShortCut
                 {HK_TYPE.NAV_RIGHT, KeyCode.E},
                 {HK_TYPE.NAV_LEFT,  KeyCode.Q},
 
-                {HK_TYPE.REMOVE_ITEM, KeyCode.F},
+                {HK_TYPE.REMOVE_ITEM, KeyCode.R},
 
                 {HK_TYPE.ACTORMENU,  KeyCode.C},
                 {HK_TYPE.VILLAGE,  KeyCode.Q},
                 {HK_TYPE.VILLAGE_LOCAL,  KeyCode.E},
                 {HK_TYPE.WORLD_MAP,  KeyCode.M},
+                {HK_TYPE.GONGFA_TREE,  KeyCode.F},
                 {HK_TYPE.STORY,  KeyCode.K},
                 {HK_TYPE.NAME_SCAN,  KeyCode.N},
 
