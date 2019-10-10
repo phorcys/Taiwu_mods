@@ -382,7 +382,7 @@ namespace KeyBoardShortCut
         {
             if (!Main.on) return;
             Refers component = __instance.GetComponent<Refers>();
-            Utils.ButtonConfirm(component.CGet<Button>("StartMakeButton"));
+            Utils.ButtonConfirm(component.CGet<Button>("StartMakeButton"), (_) => !Checks.HasDialog() && !__instance.makeingImage.activeInHierarchy);
             Utils.ButtonConfirm(component.CGet<Button>("StartFixButton"));
             Utils.ButtonConfirm(component.CGet<Button>("GetItemButton"));
         }
@@ -441,6 +441,17 @@ namespace KeyBoardShortCut
         {
             if (!Main.on) return;
             Utils.ButtonHK(Traverse.Create(__instance).Field<CButton>("ShowMap").Value, HK_TYPE.WORLD_MAP);
+        }
+    }
+
+    // 进入功法树
+    [HarmonyPatch(typeof(ui_PartWorldMap), "Awake")]
+    public static class ui_PartWorldMap_ToGongFaTree_Patch
+    {
+        private static void Postfix(ui_PartWorldMap __instance)
+        {
+            if (!Main.on) return;
+            Utils.ButtonHK(Traverse.Create(__instance).Field<CButton>("ShowGongFaTree").Value, HK_TYPE.GONGFA_TREE);
         }
     }
 

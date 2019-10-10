@@ -2,7 +2,7 @@
   "Id": "KeyBoardShortCut",
   "DisplayName": "键盘快捷键",
   "Author": "leaderOne",
-  "Version": "1.5.4",
+  "Version": "1.6.0",
   "AssemblyName": "KeyBoardShortCut.dll",
   "EntryMethod": "KeyBoardShortCut.Main.Load"
 }
