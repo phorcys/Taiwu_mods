@@ -43,6 +43,8 @@ namespace KeyBoardShortCut
         STORY,
         NAME_SCAN,
 
+        MAP_MOVE,
+
     };
 
     public class Settings : UnityModManager.ModSettings
@@ -68,6 +70,8 @@ namespace KeyBoardShortCut
                 {HK_TYPE.GONGFA_TREE, "打开功法树"},
                 {HK_TYPE.STORY, "打开本地奇遇"},
                 {HK_TYPE.NAME_SCAN, "打开人名搜索"},
+
+                {HK_TYPE.MAP_MOVE, "继续移动"},
 
         };
 
@@ -115,8 +119,10 @@ namespace KeyBoardShortCut
                 {HK_TYPE.VILLAGE_LOCAL,  KeyCode.E},
                 {HK_TYPE.WORLD_MAP,  KeyCode.M},
                 {HK_TYPE.GONGFA_TREE,  KeyCode.F},
-                {HK_TYPE.STORY,  KeyCode.K},
+                {HK_TYPE.STORY,  KeyCode.Tab},
                 {HK_TYPE.NAME_SCAN,  KeyCode.N},
+
+                {HK_TYPE.MAP_MOVE,  KeyCode.G},
 
             };
 
