@@ -513,5 +513,40 @@ namespace KeyBoardShortCut
     }
 
 
+    // 地图继续移动
+    [HarmonyPatch(typeof(WorldMapSystem), "ShowChoosePlaceMenu")]
+    public static class WorldMapSystem_ShowChoosePlaceMenu_Patch
+    {
+        private static void Prefix(int worldId, int partId, int placeId, Transform placeImage)
+        {
+            if (!Main.on) return;
+            WorldMapSystem_KeepMove_Patch.worldId = worldId;
+            WorldMapSystem_KeepMove_Patch.partId = partId;
+            WorldMapSystem_KeepMove_Patch.placeId = placeId;
+            WorldMapSystem_KeepMove_Patch.placeImage = placeImage;
+        }
+    }
 
+    // 地图继续移动
+    [HarmonyPatch(typeof(WorldMapSystem), "Awake")]
+    public static class WorldMapSystem_KeepMove_Patch
+    {
+        public static int worldId;
+        public static int partId;
+        public static int placeId;
+        public static Transform placeImage;
+        
+        private static void Postfix(WorldMapSystem __instance)
+        {
+            if (!Main.on) return;
+            __instance.gameObject
+                .AddComponent<ActionsComponent>()
+                .OnCheck(HK_TYPE.MAP_MOVE)
+                .OnCheck(_ => DateFile.instance.mianWorldId == worldId)
+                .OnCheck(_ => DateFile.instance.mianPartId == partId)
+                .OnCheck(_ => __instance.worldMapPlaces[placeId] != null)
+                .OnCheck(_ => __instance.worldMapPlaces[placeId].gameObject.activeInHierarchy)
+                .AddAction(() => __instance.ShowChoosePlaceMenu(worldId, partId, placeId, placeImage));
+        }
+    }
 }
