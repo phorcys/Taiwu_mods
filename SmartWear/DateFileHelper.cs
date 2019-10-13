@@ -27,14 +27,15 @@ namespace SmartWear
 
         public static ItemFrom ItemFrom(this DateFile df, int itemId)
         {
-            if (df.actorItemsDate[-999].ContainsKey(itemId))
+            if (df.HasItem(-999, itemId))
                 return SmartWear.ItemFrom.Warehouse;
             if (df.HasItem(df.mianActorId, itemId))
                 return SmartWear.ItemFrom.Bag;
             var itemIdStr = itemId.ToString();
             for (int i = (int)ActorsDateKey.Weapon1; i <= (int)ActorsDateKey.Ququ; i++)
             {
-                if (df.actorsDate[df.mianActorId][i] == itemIdStr)
+                // if (df.actorsDate[df.mianActorId][i] == itemIdStr)
+                if (GameData.Characters.GetCharProperty(df.mianActorId, i) == itemIdStr)
                     return SmartWear.ItemFrom.Equip;
             }
             return SmartWear.ItemFrom.Unknow;

@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
+using GameData;
 using Harmony12;
 using UnityEngine;
 using UnityModManagerNet;
@@ -237,8 +238,8 @@ namespace LKX_NewGameActor
     /// <summary>
     /// 读取基础数据的时候，现在发现有其他接口可以直接取，不用拆了。
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
-    public static class GetTempItemsId_For_Loading_LoadGameBaseDateStart
+    [HarmonyPatch(typeof(MainMenu), "Start")]
+    public static class GetTempItemsId_For_MainMenu_Start
     {
 
         static void Postfix()
@@ -247,15 +248,14 @@ namespace LKX_NewGameActor
             {
                 //获取index 5和index 8的key
                 List<string> keys = new List<string>(GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(','));
-                int indexTypeNum = keys.IndexOf("5");
-                int indexLevelNum = keys.IndexOf("8");
 
                 //遍历，符合的就加入字典
-                foreach (string items in GetSprites.instance.baseGameDate["Item_Date"].Trim().Split(new string[] { "\r\n" }, StringSplitOptions.None))
+                foreach (KeyValuePair<int, Dictionary<int, string>> items in DateFile.instance.presetitemDate)
                 {
-                    string[] theItemParams = items.Trim().Split(',');
-                    if (theItemParams[indexLevelNum] == "9" && theItemParams[indexTypeNum] == "13")
-                            Main.tempItemsId[int.Parse(theItemParams[0])] = theItemParams[2];
+                    if (items.Value[8] == "9" && items.Value[5] == "13")
+                    {
+                        Main.tempItemsId[int.Parse(items.Value[999])] = items.Value[0];
+                    }
                 }
             }
         }
@@ -333,7 +333,7 @@ namespace LKX_NewGameActor
     /// 加入见经识经这个特质
     /// 点击开始新游戏的时候可以用，根据字面意思理解就是被点击的时候才会执行。
     /// </summary>
-    [HarmonyPatch(typeof(NewGame), "Awake")]
+    [HarmonyPatch(typeof(NewGame), "Start")]
     public static class AddTalent_For_NewGame_ToNewGame
     {
         static void Prefix()
@@ -353,10 +353,11 @@ namespace LKX_NewGameActor
         }
     }
 
+    /*
     /// <summary>
     /// 下面的postfix换到这里Patch
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadEnd")]
+    [HarmonyPatch(typeof(Game), "Update")]
     public static class FeatureType_For_Loading_LoadEnd
     {
 
@@ -401,6 +402,7 @@ namespace LKX_NewGameActor
             }
         }
     }
+    */
 
     /// <summary>
     /// 开始新游戏创建人物后执行
@@ -415,7 +417,7 @@ namespace LKX_NewGameActor
         /// <param name="___chooseAbility">NewGame的私有变量，三个下划线取得。</param>
         static void Postfix(ref List<int> ___chooseAbility)
         {
-            if (Main.enabled && false)
+            if (Main.enabled)
             {
 
                 //处理特性
@@ -477,9 +479,14 @@ namespace LKX_NewGameActor
                         if (Main.settings.isStepfatherCreate)
                         {
                             int itemDurable = int.Parse(DateFile.instance.GetItemDate(int.Parse(DateFile.instance.GetItemDate(itemMake, 999, true)), 902, true)) * 2;
-                            DateFile.instance.itemsDate[itemMake][901] = itemDurable.ToString();
-                            DateFile.instance.itemsDate[itemMake][902] = itemDurable.ToString();
-                            DateFile.instance.itemsDate[itemMake][504] = "50001";
+
+                            Dictionary<int, string> item = Items.GetItem(itemMake);
+                            
+                            item[901] = itemDurable.ToString();
+                            item[902] = itemDurable.ToString();
+                            item[504] = "50001";
+
+                            Items.SetItem(itemMake, item);
                         }
                     }
                 }
@@ -500,9 +507,14 @@ namespace LKX_NewGameActor
                         if (Main.settings.isStepfatherCreate)
                         {
                             int itemDurable = int.Parse(DateFile.instance.GetItemDate(int.Parse(DateFile.instance.GetItemDate(itemMake, 999, true)), 902, true)) * 2;
-                            DateFile.instance.itemsDate[itemMake][901] = itemDurable.ToString();
-                            DateFile.instance.itemsDate[itemMake][902] = itemDurable.ToString();
-                            DateFile.instance.itemsDate[itemMake][504] = "50001";
+
+                            Dictionary<int, string> item = Items.GetItem(itemMake);
+
+                            item[901] = itemDurable.ToString();
+                            item[902] = itemDurable.ToString();
+                            item[504] = "50001";
+
+                            Items.SetItem(itemMake, item);
                         }
                     }
                 }
@@ -515,14 +527,15 @@ namespace LKX_NewGameActor
         /// <param name="actorId">游戏人物的ID</param>
         public static void ProcessingDevelopmentDate(int actorId)
         {
-            Dictionary<int, string> actor;
             //551是技艺，651是武学
-            if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
+            if (Main.settings.developmentActor > 1)
             {
+                
                 int randDevelopment = Main.settings.developmentActor;
                 if (Main.settings.developmentActor == 1) randDevelopment = UnityEngine.Random.Range(2, 4);
-                actor[551] = randDevelopment.ToString();
-                actor[651] = randDevelopment.ToString();
+                Characters.SetCharProperty(actorId, 551, randDevelopment.ToString());
+                Characters.SetCharProperty(actorId, 651, randDevelopment.ToString());
+
             }
         }
 
@@ -534,12 +547,7 @@ namespace LKX_NewGameActor
         {
             Dictionary<int, string> actor;
             
-            if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
-            {
-                //先天悟性100
-                actor[65] = "500";
-            }
-
+            Characters.SetCharProperty(actorId, 65, "100");
         }
 
         /// <summary>
@@ -549,18 +557,15 @@ namespace LKX_NewGameActor
         /// <param name="file">自定义特性文件路径</param>
         public static void ProcessingFeatureDate(int actorId, string file = "")
         {
-            Dictionary<int, string> actor, array = new Dictionary<int, string>();
+            Dictionary<int, string> array = new Dictionary<int, string>();
             array = file == "" ? GetAllFeature() : GetFileValue(file);
-            
-            if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
+
+            string featureDefault = Characters.GetCharProperty(actorId, 101);
+            string[] features = featureDefault.Split('|');
+            foreach (string feature in features)
             {
-                
-                string[] features = actor[101].Split('|');
-                foreach (string feature in features)
-                {
-                    int key = int.Parse(feature.Trim());
-                    if (array.ContainsKey(key)) array.Remove(key);
-                }
+                int key = int.Parse(feature.Trim());
+                if (array.ContainsKey(key)) array.Remove(key);
             }
 
             //删去身怀六甲和相怄真身
@@ -568,13 +573,12 @@ namespace LKX_NewGameActor
             array.Remove(10011);
             foreach (int item in array.Keys)
             {
-                Main.logger.Log("查找到的：" + item.ToString());
-                actor[101] += "|" + item.ToString();
+                featureDefault += "|" + item.ToString();
             }
-            Main.logger.Log("人物id：" + actorId.ToString() + "结束");
+            //添加到属性里去。
+            Characters.SetCharProperty(actorId, 101, featureDefault);
             //刷新特性缓存，要不然游戏不生效
-            DateFile.instance.actorsFeatureCache.Remove(actorId);
-            
+            DateFile.instance.ActorFeaturesCacheReset();
         }
 
         /// <summary>

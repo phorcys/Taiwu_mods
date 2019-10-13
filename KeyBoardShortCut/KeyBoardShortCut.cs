@@ -22,139 +22,63 @@ namespace KeyBoardShortCut
 
     public enum HK_TYPE
     {
-        HK_NONE = 0,
-        HK_CLOSE = 1,
-        HK_COMFIRM,
-        HK_CONFIRM2,
+        NONE = 0,
+        CLOSE = 1,
+        COMFIRM,
+        CONFIRM2,
 
-        HK_UP,
-        HK_LEFT,
-        HK_DOWN,
-        HK_RIGHT,
-        HK_UP2,
-        HK_LEFT2,
-        HK_DOWN2,
-        HK_RIGHT2,
+        INCREASE,
+        DECREASE,
 
-        HK_ACTORMENU,
-        HK_VILLAGE,
-        HK_VILLAGE_LOCAL,
-        HK_WORLDMAP,
+        NAV_RIGHT,
+        NAV_LEFT,
 
-        HK_HEAL,
-        HK_POISON,
-        HK_GATHER_FOOD,
-        HK_GATHER_MINERAL,
-        HK_GATHER_HERB,
-        HK_GATHER_MONEY,
-        HK_GATHER_CLOTH,
-        HK_GATHER_WOOD,
-        HK_VISITEVENT,
+        REMOVE_ITEM,
 
-        HK_BATTEL_QINGGONG_1,
-        HK_BATTEL_QINGGONG_2,
-        HK_BATTEL_QINGGONG_3,
-        HK_BATTEL_QINGGONG_4,
-        HK_BATTEL_QINGGONG_5,
-        HK_BATTEL_QINGGONG_6,
-        HK_BATTEL_QINGGONG_7,
-        HK_BATTEL_QINGGONG_8,
-        HK_BATTEL_QINGGONG_9,
+        ACTORMENU,
+        VILLAGE,
+        VILLAGE_LOCAL,
+        WORLD_MAP,
+        GONGFA_TREE,
+        STORY,
+        NAME_SCAN,
 
-        HK_BATTEL_SKILL_1,
-        HK_BATTEL_SKILL_2,
-        HK_BATTEL_SKILL_3,
-        HK_BATTEL_SKILL_4,
-        HK_BATTEL_SKILL_5,
-        HK_BATTEL_SKILL_6,
-        HK_BATTEL_SKILL_7,
-        HK_BATTEL_SKILL_8,
-        HK_BATTEL_SKILL_9,
+        MAP_MOVE,
 
-        HK_BATTEL_SPECIAL_1,
-        HK_BATTEL_SPECIAL_2,
-        HK_BATTEL_SPECIAL_3,
-        HK_BATTEL_SPECIAL_4,
-        HK_BATTEL_SPECIAL_5,
-        HK_BATTEL_SPECIAL_6,
-        HK_BATTEL_SPECIAL_7,
-        HK_BATTEL_SPECIAL_8,
-        HK_BATTEL_SPECIAL_9
     };
-
 
     public class Settings : UnityModManager.ModSettings
     {
         public static readonly Dictionary<HK_TYPE, string> hotkeyNames = new Dictionary<HK_TYPE, string>()
         {
-                {HK_TYPE.HK_CLOSE, "关闭窗口快捷键"},
-                {HK_TYPE.HK_COMFIRM, "确认按键1"},
-                {HK_TYPE.HK_CONFIRM2, "确认按键2"},
+                {HK_TYPE.CLOSE, "关闭窗口快捷键"},
+                {HK_TYPE.COMFIRM, "确认按键1"},
+                {HK_TYPE.CONFIRM2, "确认按键2"},
 
-                {HK_TYPE.HK_UP, "向上移动"},
-                {HK_TYPE.HK_LEFT, "向左移动"},
-                {HK_TYPE.HK_DOWN, "向下移动"},
-                {HK_TYPE.HK_RIGHT, "向右移动"},
-                {HK_TYPE.HK_UP2, "向上移动2"},
-                {HK_TYPE.HK_LEFT2, "向左移动2"},
-                {HK_TYPE.HK_DOWN2, "向下移动2"},
-                {HK_TYPE.HK_RIGHT2, "向右移动2"},
+                {HK_TYPE.INCREASE, "增加"},
+                {HK_TYPE.DECREASE, "减少"},
 
-                {HK_TYPE.HK_ACTORMENU, "打开人物界面"},
-                {HK_TYPE.HK_VILLAGE, "打开太吾村产业地图"},
-                {HK_TYPE.HK_VILLAGE_LOCAL, "打开本地产业地图"},
-                {HK_TYPE.HK_WORLDMAP, "打开世界地图"},
+                {HK_TYPE.NAV_RIGHT, "下一个子页面"},
+                {HK_TYPE.NAV_LEFT, "上一个子页面"},
 
-                {HK_TYPE.HK_HEAL, "进行治疗"},
-                {HK_TYPE.HK_POISON, "进行驱毒"},
-                {HK_TYPE.HK_GATHER_FOOD, "收集食材"},
-                {HK_TYPE.HK_GATHER_MINERAL, "收集金石"},
-                {HK_TYPE.HK_GATHER_HERB, "收集草药"},
-                {HK_TYPE.HK_GATHER_MONEY, "收集银钱"},
-                {HK_TYPE.HK_GATHER_CLOTH, "收集织物"},
-                {HK_TYPE.HK_GATHER_WOOD, "收集木材"},
-                {HK_TYPE.HK_VISITEVENT, "访问奇遇"},
+                {HK_TYPE.REMOVE_ITEM, "移除当前物品/功法"},
 
-                {HK_TYPE.HK_BATTEL_QINGGONG_1, "施放轻功技能1"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_2, "施放轻功技能2"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_3, "施放轻功技能3"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_4, "施放轻功技能4"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_5, "施放轻功技能5"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_6, "施放轻功技能6"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_7, "施放轻功技能7"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_8, "施放轻功技能8"},
-                {HK_TYPE.HK_BATTEL_QINGGONG_9, "施放轻功技能9"},
+                {HK_TYPE.ACTORMENU, "打开人物界面"},
+                {HK_TYPE.VILLAGE, "打开太吾村产业地图"},
+                {HK_TYPE.VILLAGE_LOCAL, "打开本地产业地图"},
+                {HK_TYPE.WORLD_MAP, "打开世界地图"},
+                {HK_TYPE.GONGFA_TREE, "打开功法树"},
+                {HK_TYPE.STORY, "打开本地奇遇"},
+                {HK_TYPE.NAME_SCAN, "打开人名搜索"},
 
-                {HK_TYPE.HK_BATTEL_SKILL_1, "施放战斗技能1"},
-                {HK_TYPE.HK_BATTEL_SKILL_2, "施放战斗技能2"},
-                {HK_TYPE.HK_BATTEL_SKILL_3, "施放战斗技能3"},
-                {HK_TYPE.HK_BATTEL_SKILL_4, "施放战斗技能4"},
-                {HK_TYPE.HK_BATTEL_SKILL_5, "施放战斗技能5"},
-                {HK_TYPE.HK_BATTEL_SKILL_6, "施放战斗技能6"},
-                {HK_TYPE.HK_BATTEL_SKILL_7, "施放战斗技能7"},
-                {HK_TYPE.HK_BATTEL_SKILL_8, "施放战斗技能8"},
-                {HK_TYPE.HK_BATTEL_SKILL_9, "施放战斗技能9"},
+                {HK_TYPE.MAP_MOVE, "继续移动"},
 
-                {HK_TYPE.HK_BATTEL_SPECIAL_1, "施放特殊技能1"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_2, "施放特殊技能2"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_3, "施放特殊技能3"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_4, "施放特殊技能4"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_5, "施放特殊技能5"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_6, "施放特殊技能6"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_7, "施放特殊技能7"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_8, "施放特殊技能8"},
-                {HK_TYPE.HK_BATTEL_SPECIAL_9, "施放特殊技能9"},
         };
 
-        public static readonly int nHotkeys = 51;
+        public static readonly int nHotkeys = hotkeyNames.Count;
 
         public SerializableDictionary<HK_TYPE, KeyCode> hotkeys = Settings.GetDefaultHotKeys();
-        public MODIFIER_KEY_TYPE qinggong_modifier_key = MODIFIER_KEY_TYPE.MKT_SHIFT;
-        public MODIFIER_KEY_TYPE special_modifierkey = MODIFIER_KEY_TYPE.MKT_ALT;
-        public bool escAsLastOption = true;
-        public bool useNumpadKeysInMessageWindow = false;
 
-        public bool enable_close = true;
         [XmlIgnore]
         public UnityModManager.ModEntry modee;
 
@@ -179,67 +103,28 @@ namespace KeyBoardShortCut
         {
             var hotkeys = new SerializableDictionary<HK_TYPE, KeyCode>()
             {
-                {HK_TYPE.HK_CLOSE, KeyCode.Escape},
-                {HK_TYPE.HK_COMFIRM, KeyCode.Space},
-                {HK_TYPE.HK_CONFIRM2,  KeyCode.Return},
+                {HK_TYPE.CLOSE, KeyCode.Escape},
+                {HK_TYPE.COMFIRM, KeyCode.Space},
+                {HK_TYPE.CONFIRM2,  KeyCode.Return},
 
-                {HK_TYPE.HK_UP, KeyCode.W},
-                {HK_TYPE.HK_LEFT,  KeyCode.A},
-                {HK_TYPE.HK_DOWN,  KeyCode.S},
-                {HK_TYPE.HK_RIGHT,  KeyCode.D},
-                {HK_TYPE.HK_UP2, KeyCode.UpArrow},
-                {HK_TYPE.HK_LEFT2,  KeyCode.LeftArrow},
-                {HK_TYPE.HK_DOWN2,  KeyCode.DownArrow},
-                {HK_TYPE.HK_RIGHT2,  KeyCode.RightArrow},
+                {HK_TYPE.INCREASE, KeyCode.D},
+                {HK_TYPE.DECREASE,  KeyCode.A},
+                {HK_TYPE.NAV_RIGHT, KeyCode.E},
+                {HK_TYPE.NAV_LEFT,  KeyCode.Q},
 
-                {HK_TYPE.HK_ACTORMENU,  KeyCode.C},
-                {HK_TYPE.HK_VILLAGE,  KeyCode.P},
-                {HK_TYPE.HK_VILLAGE_LOCAL,  KeyCode.L},
-                {HK_TYPE.HK_WORLDMAP,  KeyCode.M},
+                {HK_TYPE.REMOVE_ITEM, KeyCode.R},
 
-                {HK_TYPE.HK_HEAL,  KeyCode.H},
-                {HK_TYPE.HK_POISON,  KeyCode.J},
-                {HK_TYPE.HK_GATHER_FOOD,  KeyCode.E},
-                {HK_TYPE.HK_GATHER_MINERAL,  KeyCode.R},
-                {HK_TYPE.HK_GATHER_HERB,  KeyCode.T},
-                {HK_TYPE.HK_GATHER_MONEY,  KeyCode.Y},
-                {HK_TYPE.HK_GATHER_CLOTH,  KeyCode.U},
-                {HK_TYPE.HK_GATHER_WOOD,  KeyCode.I},
-                {HK_TYPE.HK_VISITEVENT,  KeyCode.F},
+                {HK_TYPE.ACTORMENU,  KeyCode.C},
+                {HK_TYPE.VILLAGE,  KeyCode.Q},
+                {HK_TYPE.VILLAGE_LOCAL,  KeyCode.E},
+                {HK_TYPE.WORLD_MAP,  KeyCode.M},
+                {HK_TYPE.GONGFA_TREE,  KeyCode.F},
+                {HK_TYPE.STORY,  KeyCode.Tab},
+                {HK_TYPE.NAME_SCAN,  KeyCode.N},
 
-                {HK_TYPE.HK_BATTEL_QINGGONG_1,  KeyCode.Alpha1},
-                {HK_TYPE.HK_BATTEL_QINGGONG_2,  KeyCode.Alpha2},
-                {HK_TYPE.HK_BATTEL_QINGGONG_3,  KeyCode.Alpha3},
-                {HK_TYPE.HK_BATTEL_QINGGONG_4,  KeyCode.Alpha4},
-                {HK_TYPE.HK_BATTEL_QINGGONG_5,  KeyCode.Alpha5},
-                {HK_TYPE.HK_BATTEL_QINGGONG_6,  KeyCode.Alpha6},
-                {HK_TYPE.HK_BATTEL_QINGGONG_7,  KeyCode.Alpha7},
-                {HK_TYPE.HK_BATTEL_QINGGONG_8,  KeyCode.Alpha8},
-                {HK_TYPE.HK_BATTEL_QINGGONG_9,  KeyCode.Alpha9},
+                {HK_TYPE.MAP_MOVE,  KeyCode.G},
 
-                {HK_TYPE.HK_BATTEL_SKILL_1,  KeyCode.Alpha1},
-                {HK_TYPE.HK_BATTEL_SKILL_2,  KeyCode.Alpha2},
-                {HK_TYPE.HK_BATTEL_SKILL_3,  KeyCode.Alpha3},
-                {HK_TYPE.HK_BATTEL_SKILL_4,  KeyCode.Alpha4},
-                {HK_TYPE.HK_BATTEL_SKILL_5,  KeyCode.Alpha5},
-                {HK_TYPE.HK_BATTEL_SKILL_6,  KeyCode.Alpha6},
-                {HK_TYPE.HK_BATTEL_SKILL_7,  KeyCode.Alpha7},
-                {HK_TYPE.HK_BATTEL_SKILL_8,  KeyCode.Alpha8},
-                {HK_TYPE.HK_BATTEL_SKILL_9,  KeyCode.Alpha9},
-
-                {HK_TYPE.HK_BATTEL_SPECIAL_1,  KeyCode.Alpha1},
-                {HK_TYPE.HK_BATTEL_SPECIAL_2,  KeyCode.Alpha2},
-                {HK_TYPE.HK_BATTEL_SPECIAL_3,  KeyCode.Alpha3},
-                {HK_TYPE.HK_BATTEL_SPECIAL_4,  KeyCode.Alpha4},
-                {HK_TYPE.HK_BATTEL_SPECIAL_5,  KeyCode.Alpha5},
-                {HK_TYPE.HK_BATTEL_SPECIAL_6,  KeyCode.Alpha6},
-                {HK_TYPE.HK_BATTEL_SPECIAL_7,  KeyCode.Alpha7},
-                {HK_TYPE.HK_BATTEL_SPECIAL_8,  KeyCode.Alpha8},
-                {HK_TYPE.HK_BATTEL_SPECIAL_9,  KeyCode.Alpha9},
             };
-
-            foreach (var kv in hotkeys)
-                Main.Logger.Log($"Hotkey: {kv.Key}, key: {kv.Value}, desc: {Settings.hotkeyNames[kv.Key]}");
 
             return hotkeys;
         }
@@ -261,44 +146,6 @@ namespace KeyBoardShortCut
 
     public static class Main
     {
-        public static List<HK_TYPE> mainskilllist = new List<HK_TYPE>()
-        {
-            HK_TYPE.HK_BATTEL_SKILL_1,
-            HK_TYPE.HK_BATTEL_SKILL_2,
-            HK_TYPE.HK_BATTEL_SKILL_3,
-            HK_TYPE.HK_BATTEL_SKILL_4,
-            HK_TYPE.HK_BATTEL_SKILL_5,
-            HK_TYPE.HK_BATTEL_SKILL_6,
-            HK_TYPE.HK_BATTEL_SKILL_7,
-            HK_TYPE.HK_BATTEL_SKILL_8,
-            HK_TYPE.HK_BATTEL_SKILL_9,
-        };
-
-        public static List<HK_TYPE> qinggongskilllist = new List<HK_TYPE>()
-        {
-            HK_TYPE.HK_BATTEL_QINGGONG_1,
-            HK_TYPE.HK_BATTEL_QINGGONG_2,
-            HK_TYPE.HK_BATTEL_QINGGONG_3,
-            HK_TYPE.HK_BATTEL_QINGGONG_4,
-            HK_TYPE.HK_BATTEL_QINGGONG_5,
-            HK_TYPE.HK_BATTEL_QINGGONG_6,
-            HK_TYPE.HK_BATTEL_QINGGONG_7,
-            HK_TYPE.HK_BATTEL_QINGGONG_8,
-            HK_TYPE.HK_BATTEL_QINGGONG_9,
-        };
-
-        public static List<HK_TYPE> specialskilllist = new List<HK_TYPE>()
-        {
-            HK_TYPE.HK_BATTEL_SPECIAL_1,
-            HK_TYPE.HK_BATTEL_SPECIAL_2,
-            HK_TYPE.HK_BATTEL_SPECIAL_3,
-            HK_TYPE.HK_BATTEL_SPECIAL_4,
-            HK_TYPE.HK_BATTEL_SPECIAL_5,
-            HK_TYPE.HK_BATTEL_SPECIAL_6,
-            HK_TYPE.HK_BATTEL_SPECIAL_7,
-            HK_TYPE.HK_BATTEL_SPECIAL_8,
-            HK_TYPE.HK_BATTEL_SPECIAL_9,
-        };
 
         public static bool enabled;
         public static Settings settings;
@@ -309,8 +156,13 @@ namespace KeyBoardShortCut
         public static UnityModManager.ModEntry.ModLogger Logger;
 
         public static bool binding_key = false;
-        static HK_TYPE current_binding_key = HK_TYPE.HK_NONE;
+        static HK_TYPE current_binding_key = HK_TYPE.NONE;
         static KeyCode last_key_code = KeyCode.None;
+
+        public static bool on
+        {
+            get { return enabled && !binding_key; }
+        }
 
 
         public static bool Load(UnityModManager.ModEntry modEntry)
@@ -324,13 +176,11 @@ namespace KeyBoardShortCut
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Main.Logger.Log("Hotkey count: " + Main.settings.hotkeys.Count);
             if (Main.settings.hotkeys.Count != Settings.nHotkeys)
             {
                 Main.settings.hotkeys = Settings.GetDefaultHotKeys();
                 notify_reset_key = true;
                 Main.settings.Save();
-                Main.Logger.Log("Hotkeys reinitialized: " + Main.settings.hotkeys.Count);
             }
             return true;
         }
@@ -347,19 +197,6 @@ namespace KeyBoardShortCut
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
             processKeyPress();
-            GUILayout.BeginVertical("box");
-            settings.enable_close = GUILayout.Toggle(settings.enable_close, "是否使用本Mod的Esc/鼠标右键关闭功能（需要重启游戏生效）");
-            settings.escAsLastOption = GUILayout.Toggle(settings.escAsLastOption, "是否在对话窗口使用Esc/鼠标右键选择最后一个选项");
-            settings.useNumpadKeysInMessageWindow = GUILayout.Toggle(settings.useNumpadKeysInMessageWindow, "是否在对话窗口增加小键盘选择功能");
-
-            GUILayout.Label("战斗中释放轻功技能的装饰键");
-            settings.qinggong_modifier_key = (MODIFIER_KEY_TYPE)GUILayout.SelectionGrid((int)settings.qinggong_modifier_key,
-                new string[] { "Shift", "Ctrl", "Alt" }, 3);
-            GUILayout.Label("战斗中释放绝技的装饰键");
-            settings.special_modifierkey = (MODIFIER_KEY_TYPE)GUILayout.SelectionGrid((int)settings.special_modifierkey,
-                new string[] { "Shift", "Ctrl", "Alt" }, 3);
-            GUILayout.EndVertical();
-
             GUILayout.BeginVertical("box", new GUILayoutOption[] { GUILayout.MinWidth(700.0f), GUILayout.MaxWidth(700.0f) });
             var keys = settings.hotkeys.Keys.ToArray();
 
@@ -369,7 +206,7 @@ namespace KeyBoardShortCut
                 KeyCode keyCode = settings.hotkeys[key];
                 string desc = Settings.hotkeyNames[key];
                 // Do not allow modifying the close key 
-                if (key == HK_TYPE.HK_CLOSE)
+                if (key == HK_TYPE.CLOSE)
                 {
                     settings.hotkeys[key] = KeyCode.Escape;
                 }
@@ -393,14 +230,14 @@ namespace KeyBoardShortCut
             {
                 if (Main.binding_key)
                 {
-                    Main.Logger.Log("Detected key while binding key, key code: " + e.keyCode);
+                    //Main.Logger.Log("Detected key while binding key, key code: " + e.keyCode);
                     if (Settings.hotkeyNames.ContainsKey(Main.current_binding_key))
                     {
                         Main.settings.hotkeys[Main.current_binding_key] = e.keyCode;
                     }
                     else
                     {
-                        Main.Logger.Log("Error finding hotkey for " + Main.current_binding_key);
+                        //Main.Logger.Log("Error finding hotkey for " + Main.current_binding_key);
                     }
                     Main.binding_key = false;
                     Main.settings.Save();
@@ -483,19 +320,6 @@ namespace KeyBoardShortCut
             return -1;
         }
 
-
-        public static string getmainskill_keystr(int index)
-        {
-            string ret = "";
-            if (index < mainskilllist.Count)
-            {
-                ret = settings.hotkeys[mainskilllist[index]].ToString();
-                ret = ret.Replace("Alpha", "");
-            }
-            return ret;
-        }
-
-
         public static string getmodifyerstr(MODIFIER_KEY_TYPE mkt)
         {
             switch (mkt)
@@ -510,95 +334,8 @@ namespace KeyBoardShortCut
                     return "";
             }
         }
-
-
-        public static string getqinggongskill_keystr(int index)
-        {
-            string ret = "";
-            ret = ret + getmodifyerstr(Main.settings.qinggong_modifier_key);
-            if (index < qinggongskilllist.Count)
-            {
-                ret = settings.hotkeys[mainskilllist[index]].ToString();
-                ret = ret.Replace("Alpha", "");
-            }
-            return ret;
-        }
-
-
-        public static string getspecialskill_keystr(int index)
-        {
-            string ret = "";
-            ret = ret + getmodifyerstr(Main.settings.special_modifierkey);
-            if (index < mainskilllist.Count)
-            {
-                ret = settings.hotkeys[mainskilllist[index]].ToString();
-                ret = ret.Replace("Alpha", "");
-            }
-            return ret;
-        }
+        
     }
 
 
-    public class CloseComponent : MonoBehaviour
-    {
-        private Action OnClose = null;
-
-
-        public void SetActionOnClose(Action OnClose)
-        {
-            this.OnClose = OnClose;
-        }
-
-
-        public void Update()
-        {
-            if (!Main.enabled || Main.binding_key || !Main.settings.enable_close) return;
-            if (this.OnClose == null) return;
-            if (!Main.GetKeyDown(HK_TYPE.HK_CLOSE) && !Input.GetMouseButtonDown(1)) return;
-
-            this.OnClose();
-        }
-    }
-
-
-    public class ConfirmComponent : MonoBehaviour
-    {
-        private Action OnConfirm = null;
-
-
-        public void SetActionOnConfirm(Action OnConfirm)
-        {
-            this.OnConfirm = OnConfirm;
-        }
-
-
-        public void Update()
-        {
-            if (!Main.enabled || Main.binding_key) return;
-            if (this.OnConfirm == null) return;
-            if (!Main.GetKeyDown(HK_TYPE.HK_COMFIRM) && !Main.GetKeyDown(HK_TYPE.HK_CONFIRM2)) return;
-
-            this.OnConfirm();
-        }
-    }
-
-
-    /// <summary>
-    ///  重置配置提醒
-    /// </summary>
-    [HarmonyPatch(typeof(MainMenu), "CloseStartMask")]
-    public static class MainMenu_CloseStartMask_Patch
-    {
-        private static void Prefix()
-        {
-            if (!Main.enabled) return;
-
-            if (Main.notify_reset_key)
-            {
-                Main.notify_reset_key = false;
-                Main.Logger.Log("display keyboard shotcut reset message...");
-                DateFile.instance.massageDate[8013][0] = "键盘快捷键配置更新|由于键盘快捷键升级，配置文件已经重置为默认，如有需要请重新配置快捷键";
-            }
-        }
-    }
 }

@@ -44,7 +44,8 @@ namespace Litfal
                 if (df.mainActorequipConfig == null) return;
                 int mainActorId = df.MianActorID();
                 Dictionary<int, int> currentEquipConfig = df.mainActorequipConfig[df.nowEquipConfigIndex];
-                Dictionary<int, string> playerActorsData = df.actorsDate[mainActorId];
+                var playerId = df.mianActorId;
+                // Dictionary<int, string> playerActorsData = df.actorsDate[mainActorId];
 
                 // 脫下現在的裝備, 移動到身上(行李)
                 foreach (KeyValuePair<int, int> slotItemPair in currentEquipConfig)
@@ -52,10 +53,10 @@ namespace Litfal
                     int itemId = slotItemPair.Value;
                     int slot = slotItemPair.Key;
                     if (itemId != 0 &&
-                        itemId.ToString() == playerActorsData[slotItemPair.Key])
+                        itemId.ToString() == GameData.Characters.GetCharProperty(playerId, slotItemPair.Key))
                     {
                         df.GetItem(mainActorId, itemId, 1, false, -1, 0);
-                        playerActorsData[slot] = "0";
+                        GameData.Characters.SetCharProperty(playerId, slot, "0");
                     }
                 }
 
@@ -69,7 +70,7 @@ namespace Litfal
                         df.HasItem(mainActorId, itemId))
                     {
                         df.LoseItem(mainActorId, itemId, 1, false, false);
-                        playerActorsData[slot] = itemId.ToString();
+                        GameData.Characters.SetCharProperty(playerId, slot, itemId.ToString());
 
                     }
                 }
@@ -93,27 +94,139 @@ namespace Litfal
             // 直接使用 ActorMenu.instance.ChangeEquipGongFa(index) 會造成功法介面顯示不正常
         }
 
-        public static void TakeoffEquip(int slotKey)
+        /// <summary>
+        /// 暫時改變使用的功法
+        /// 不處理UI與事件, 避免跨執行續控制UI
+        /// 但記得要換回來, 否則UI會顯示dirty data (顯示和實際資料不同步)
+        /// </summary>
+        /// <param name="index"></param>
+        public static void ChangeGongFaTemporarily(int index)
         {
-            if (slotKey < 301 || slotKey > 312)
-                throw new ArgumentOutOfRangeException($"slotKey must be between 301~312, value={slotKey}");
-            var df = DateFile.instance;
-            var itemId = int.Parse(df.actorsDate[df.mianActorId][slotKey]);
-            df.GetItem(df.mianActorId, itemId, 1, false, -1, 0);
-            df.actorsDate[df.mianActorId][slotKey] = "0";
+            if (index < 0 || index >= 9) throw new ArgumentOutOfRangeException("index");
+
+            var currnetGongFa = DateFile.instance.mianActorEquipGongFaIndex;
+            if (currnetGongFa == index) return;
+            DateFile.instance.mianActorEquipGongFaIndex = index;
+            DateFile.instance.GetMianActorEquipGongFa(index);
         }
 
-        public static bool WearEquip(int slotKey, int itemId)
+
+        /// <summary>
+        /// toActorId = mianActorId 代表脫下裝備並放到包裹裡
+        /// toActorId = -999 代表脫下裝備並放到倉庫裡
+        /// 當然也可以指定其他的actorId, 不過可能會有不合理的情況
+        /// </summary>
+        /// <param name="slotKey"></param>
+        /// <param name="toActorId"></param>
+        private static void TakeoffEquipTo(int slotKey, int toActorId)
         {
             if (slotKey < 301 || slotKey > 312)
                 throw new ArgumentOutOfRangeException($"slotKey must be between 301~312, value={slotKey}");
             var df = DateFile.instance;
-            var playerId = df.mianActorId;
-            if (!df.HasItem(playerId, itemId))
+            var itemId = int.Parse(GameData.Characters.GetCharProperty(df.mianActorId, slotKey));
+            GetItemFromTakeoffEquip(toActorId, itemId);
+            GameData.Characters.SetCharProperty(df.mianActorId, slotKey, "0");
+        }
+
+        /// <summary>
+        /// 脫下裝備, 並將物品放到包裹裡
+        /// </summary>
+        /// <param name="slotKey"></param>
+        public static void TakeoffEquipToBag(int slotKey)
+            => TakeoffEquipTo(slotKey, DateFile.instance.mianActorId);
+
+        /// <summary>
+        /// 脫下裝備, 並將物品放到倉庫裡
+        /// </summary>
+        /// <param name="slotKey"></param>
+        public static void TakeoffEquipToWarehouse(int slotKey)
+            => TakeoffEquipTo(slotKey, -999);
+
+        /// <summary>
+        /// 脫下裝備後, 將裝備放入包裹的函數
+        /// 由於直接用 GetItem 會觸發 GEvent.OnEvent
+        /// 會導致非主執行續控制UI錯誤
+        /// 這個函數擷取自 DateFile.GetItem() 
+        /// 直接針對裝備類, 控制 actorItemsDate
+        /// 避免後續呼叫 GEvent.OnEvent
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <param name="itemId"></param>
+        public static void GetItemFromTakeoffEquip(int actorId, int itemId)
+        {
+            /*
+            // 擷取自
+            bool flag3 = int.Parse(this.GetItemDate(itemId, 6, true)) == 0;  // 是否可堆疊
+			if (flag3)
+			{
+				bool flag4 = !this.actorItemsDate[actorId].ContainsKey(itemId); // 檢查相同 裝備Id 是否已在身上, 不在才加入
+				if (flag4)
+				{
+					this.actorItemsDate[actorId].Add(itemId, 1);                
+				}
+			}
+             */
+            // 因為裝備必定不可堆疊, 不需要檢查可否堆疊, 
+            // 也不需要檢查是否已在身上
+            // 反正在也是數量1, 不在也是變成數量1 
+            DateFile.instance.actorItemsDate[actorId][itemId] = 1;
+        }
+
+        /// <summary>
+        /// fromActorId = mianActorId 代表從包裹拿出裝備並穿上
+        /// fromActorId = -999 代表從倉庫拿出裝備並穿上
+        /// 當然也可以指定其他的actorId, 不過可能會有不合理的情況
+        /// </summary>
+        /// <param name="slotKey"></param>
+        /// <param name="itemId"></param>
+        /// <param name="fromActorId"></param>
+        /// <returns></returns>
+        public static bool WearEquipFrom(int slotKey, int itemId, int fromActorId)
+        {
+            if (slotKey < 301 || slotKey > 312)
+                throw new ArgumentOutOfRangeException($"slotKey must be between 301~312, value={slotKey}");
+            var df = DateFile.instance;
+            if (!df.HasItem(fromActorId, itemId))
                 return false;
-            df.LoseItem(playerId, itemId, 1, false, false, -1);
-            df.actorsDate[playerId][slotKey] = itemId.ToString();
+            LostItemToWearEquip(fromActorId, itemId);
+            GameData.Characters.SetCharProperty(df.mianActorId, slotKey, itemId.ToString());
             return true;
+        }
+
+        /// <summary>
+        /// 從包裹拿出裝備並穿上
+        /// </summary>
+        /// <param name="slotKey"></param>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
+        public static bool WearEquipFromBag(int slotKey, int itemId)
+            => WearEquipFrom(slotKey, itemId, DateFile.instance.mianActorId);
+
+        /// <summary>
+        /// 從倉庫拿出裝備並穿上
+        /// </summary>
+        /// <param name="slotKey"></param>
+        /// <param name="itemId"></param>
+        /// <returns></returns>
+        public static bool WearEquipFromWarehouse(int slotKey, int itemId)
+            => WearEquipFrom(slotKey, itemId, -999);
+
+        /// <summary>
+        /// 穿上裝備, 由包裹移除裝備的函數
+        /// 由於直接用 LoseItem 會觸發 GEvent.OnEvent
+        /// 會導致非主執行續控制UI錯誤
+        /// 這個函數擷取自 DateFile.LoseItem() 
+        /// 直接針對裝備類, 控制 actorItemsDate
+        /// 避免後續呼叫 GEvent.OnEvent
+        /// </summary>
+        /// <param name="actorId"></param>
+        /// <param name="itemId"></param>
+        public static void LostItemToWearEquip(int actorId, int itemId)
+        {
+            // 因為裝備必定不可堆疊, 不需要檢查可否堆疊, 
+            // 也不需要檢查是否已在身上
+            DateFile.instance.actorItemsDate[actorId].Remove(itemId);
+            // 似乎也能避免一些奇書的問題
         }
     }
 }

@@ -36,24 +36,35 @@ namespace SkipEnemy
 
     // 攔截遭遇逃亡小怪事件
     [HarmonyPatch(typeof(ui_MessageWindow), "SetEventWindow")]
-    public class MassageWindow_SetEventWindow_Patch
+    public class ui_MessageWindow_SetEventWindow_Patch
     {
         private static void Postfix(ui_MessageWindow __instance, int[] eventDate)
         {
             if (Main.Enabled && eventDate.Length == 4 && eventDate[2] == 112)
             {
+                GameObject choose = UnityEngine.Object.Instantiate<GameObject>(__instance.massageChoose1, Vector3.zero, Quaternion.identity);
+                choose.name = "Choose,11200002";
+                choose.GetComponent<Button>().onClick.Invoke();
+                UnityEngine.Object.Destroy(choose);
 
-                var skipBtn = __instance.GetComponentsInChildren<Button>().FirstOrDefault(btn => btn.name == "Choose,11200002");
-                if(skipBtn == null)
-                {
-                    Main.Logger.Log("Could't find the skip choose!");
-                    return;
-                }
 #if (DEBUG)
                 Main.Logger.Log("Skip");
 #endif
-                skipBtn.onClick.Invoke();
             }
         }
+
+        private static Button GetSkipButtonFromComponets(ui_MessageWindow instance)
+        {
+            var skipBtn = instance.GetComponentsInChildren<Button>().FirstOrDefault(btn => btn.name == "Choose,11200002");
+            if (skipBtn == null)
+            {
+                Main.Logger.Log("Could't find the skip choose!");
+                return null;
+            }
+
+            return skipBtn;
+        }
+
+        
     }
 }

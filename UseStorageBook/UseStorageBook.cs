@@ -40,19 +40,19 @@ namespace Sth4nothing.UseStorageBook
         private static List<int> GetBooks()
         {
             var df = DateFile.instance;
-            var mainId = df.mianActorId;
+            var mainId = df.MianActorID();
             var studySkillTyp = BuildingWindow.instance.studySkillTyp;
-            var items = df.GetActorItems(mainId, 5, false).Keys
-                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+            var items = df.GetActorItems(mainId, 5).Keys
+                .Where(x => int.Parse(df.GetItemDate(x, 31)) == studySkillTyp)
                 .ToList();
             for (int i = 0; i < 3; i++)
             {
-                var x = int.Parse(df.GetActorDate(mainId, 308 + i, addValue: false));
-                if (x > 0 && int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp)
+                var x = int.Parse(df.GetActorDate(mainId, 308 + i, true));
+                if (x > 0 && int.Parse(df.GetItemDate(x, 31)) == studySkillTyp)
                 items.Add(x);
             }
             items.AddRange(df.GetActorItems(-999, 5, false).Keys
-                .Where(x => int.Parse(df.GetItemDate(x, 31, true)) == studySkillTyp));
+                .Where(x => int.Parse(df.GetItemDate(x, 31)) == studySkillTyp));
             Debug.Log("共找到满足条件的功法OR技艺书籍: " + items.Count);
             return df.GetItemSort(items);
         }
@@ -66,16 +66,16 @@ namespace Sth4nothing.UseStorageBook
         {
             var df = DateFile.instance;
             // 背包
-            if (!Main.Setting.repo[0] && df.actorItemsDate[df.mianActorId].ContainsKey(id))
+            if (!Main.Setting.repo[0] && df.GetActorItems(df.MianActorID()).ContainsKey(id))
             {
                 return false;
             }
             // 仓库
-            if (!Main.Setting.repo[1] && df.actorItemsDate[-999].ContainsKey(id))
+            if (!Main.Setting.repo[1] && df.GetActorItems(-999).ContainsKey(id))
             {
                 return false;
             }
-            int itemId = int.Parse(df.itemsDate[id][999]);
+            int itemId = int.Parse(df.GetItemDate(id, 999));
             int gongfaId = int.Parse(df.presetitemDate[itemId][32]);
             // 品级
             int pinji = int.Parse(df.presetitemDate[itemId][8]) - 1;
@@ -175,15 +175,15 @@ namespace Sth4nothing.UseStorageBook
             if (!Main.Enabled) return;
             var df = DateFile.instance;
             var bookId = BuildingWindow.instance.readBookId;
-            if (df.itemsDate.ContainsKey(bookId))
+            if (Main.ContainsItem(bookId))
             {
-                if (df.actorItemsDate[-999].ContainsKey(bookId))
+                if (df.GetActorItems(-999).ContainsKey(bookId))
                 {
-                    var hp = int.Parse(df.itemsDate[bookId][901]);
+                    var hp = int.Parse(df.GetItemDate(bookId, 901));
                     if (hp <= 1)
                     {
-                        df.actorItemsDate[-999].Remove(bookId);
-                        df.actorItemsDate[df.mianActorId].Add(bookId, 1);
+                        df.GetActorItems(-999).Remove(bookId);
+                        df.GetActorItems(df.MianActorID()).Add(bookId, 1);
                     }
                 }
             }
@@ -205,9 +205,9 @@ namespace Sth4nothing.UseStorageBook
         static void Prefix(ref int itemId, ref int __state)
         {
             if (!Main.Enabled) return;
-            if (DateFile.instance.actorItemsDate[-999].ContainsKey(itemId))
+            if (DateFile.instance.GetActorItems(-999).ContainsKey(itemId))
             {
-                DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Add(itemId, 1);
+                DateFile.instance.GetActorItems(DateFile.instance.MianActorID()).Add(itemId, 1);
                 __state = itemId;
             }
             else
@@ -225,7 +225,7 @@ namespace Sth4nothing.UseStorageBook
             if (!Main.Enabled) return;
             if (__state > 0)
             {
-                DateFile.instance.actorItemsDate[DateFile.instance.MianActorID()].Remove(__state);
+                DateFile.instance.GetActorItems(DateFile.instance.MianActorID()).Remove(__state);
             }
         }
     }
@@ -396,6 +396,18 @@ namespace Sth4nothing.UseStorageBook
         public static void OnSaveGUI(UnityModManager.ModEntry modEntry)
         {
             Setting.Save(modEntry);
+        }
+
+        public static bool ContainsItem(int id)
+        {
+            try
+            {
+                return GameData.Items.GetItem(id) != null;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
     }
 }
