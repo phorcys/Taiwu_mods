@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Reflection.Emit;
+using GameData;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
@@ -198,7 +199,13 @@ namespace LKX_CheatMaxPeople
                     if(!Main.teamActorId.Contains(family)) Main.teamActorId.Add(family);
                 }
             }
+            
+            if (GUILayout.Button("测试状态"))
+            {
+                
+            }
 
+            /*
             if (GUILayout.Button("测试传剑"))
             {
                 ActorMenu.instance.acotrId = Main.selectActorId;
@@ -209,6 +216,7 @@ namespace LKX_CheatMaxPeople
             {
                 ActorScore.instance.ShowActorScoreWindow(DateFile.instance.mianActorId);
             }
+            */
             GUILayout.EndHorizontal();
 
             if (Main.teamActorId.Count > 0)
@@ -339,6 +347,24 @@ namespace LKX_CheatMaxPeople
         }
     }
 
+    [HarmonyPatch(typeof(NewGame), "SetNewGameDate")]
+    public class CeshiNewGame_SetNewGameDate
+    {
+        static void Prefix()
+        {
+
+        }
+    }
+
+    [HarmonyPatch(typeof(NewGame), "Start")]
+    public class CeshiUiLoading_Show
+    {
+        static void Prefix()
+        {
+
+        }
+    }
+
     [HarmonyPatch(typeof(UIDate), "GetMaxManpower")]
     public class MaxPeople_For_UIDate_GetBaseMaxManpower
     {
@@ -393,6 +419,7 @@ namespace LKX_CheatMaxPeople
         /// </summary>
         public static void FoodMergeCheat()
         {
+            /*
             DateFile df = DateFile.instance;
             Dictionary<int, Dictionary<int, string>> foods = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
@@ -424,6 +451,7 @@ namespace LKX_CheatMaxPeople
             }
             Main.logger.Log("合并了" + foods.Count.ToString());
             if (foods.Count > 0) MakeFoods(foods);
+            */
         }
 
         /// <summary>
@@ -459,6 +487,7 @@ namespace LKX_CheatMaxPeople
         /// <param name="foods">合并好的食物字典</param>
         static void MakeFoods(Dictionary<int, Dictionary<int, string>> foods)
         {
+            /*
             DateFile df = DateFile.instance;
             foreach (KeyValuePair<int, Dictionary<int, string>> food in foods)
             {
@@ -469,6 +498,7 @@ namespace LKX_CheatMaxPeople
                     df.itemsDate[makeItemId][pair.Key] = pair.Value;
                 }
             }
+            */
         }
     }
 
@@ -496,9 +526,18 @@ namespace LKX_CheatMaxPeople
             }
         }
     }
+    
+    [HarmonyPatch(typeof(DateFile), "GetMaxItemSize")]
+    public class LKXSetGetMaxItemSize_For_DateFile_GetMaxItemSize
+    {
+        static void Postfix(ref int __result)
+        {
+            if (Main.enabled && Main.settings.cheatWarehouseMaxSize) __result = 100000000;
+        }
+    }
 
-    [HarmonyPatch(typeof(Warehouse), "GetWarehouseMaxSize")]
-    public class LKXSetWarehouseMaxSize_For_Warehouse_GetWarehouseMaxSize
+    [HarmonyPatch(typeof(DateFile), "GetWarehouseMaxSize")]
+    public class LKXSetWarehouseMaxSize_For_DateFile_GetWarehouseMaxSize
     {
         static void Postfix(ref int __result)
         {
