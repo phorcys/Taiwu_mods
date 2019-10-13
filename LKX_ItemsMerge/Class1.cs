@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using GameData;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
@@ -253,21 +254,28 @@ namespace LKX_ItemsMerge
                 {
                     foreach (KeyValuePair<int, int> item in items)
                     {
-                        Dictionary<int, string> baseItem = df.itemsDate[item.Value];
+                        //Dictionary<int, string> baseItem = df.itemsDate[item.Value];
+                        Dictionary<int, string> baseItem = Items.GetItem(item.Value);
                         int size = int.Parse(Main.settings.drugsSize.ToString()) + 1;
                         if (Main.settings.drugsSize <= 1) size = 2;
                         if (Main.settings.drugsSize > 5) size = 5;
 
                         for (int i = 0; i < Main.settings.drugsCount; i++)
                         {
-                            if (int.Parse(df.itemsDate[item.Value][901]) == size || int.Parse(df.itemsDate[item.Value][901]) < size) break;
+                            //if (int.Parse(df.itemsDate[item.Value][901]) == size || int.Parse(df.itemsDate[item.Value][901]) < size) break;
+                            if (int.Parse(df.GetItemDate(item.Value, 901)) == size || int.Parse(df.GetItemDate(item.Value, 901)) < size) break;
 
                             int makeItemId = df.MakeNewItem(item.Key);
                             df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                            df.itemsDate[makeItemId][901] = size.ToString();
-                            df.itemsDate[makeItemId][902] = size.ToString();
-                            df.itemsDate[item.Value][901] = (int.Parse(df.itemsDate[item.Value][901]) - size).ToString();
-                            df.itemsDate[item.Value][902] = (int.Parse(df.itemsDate[item.Value][902]) - size).ToString();
+                            Items.SetItemProperty(makeItemId, 901, size.ToString());
+                            Items.SetItemProperty(makeItemId, 902, size.ToString());
+                            string itemString = (int.Parse(df.GetItemDate(item.Value, 901)) - size).ToString();
+                            Items.SetItemProperty(item.Value, 901, itemString);
+                            Items.SetItemProperty(item.Value, 902, itemString);
+                            //df.itemsDate[makeItemId][901] = size.ToString();
+                            //df.itemsDate[makeItemId][902] = size.ToString();
+                            //df.itemsDate[item.Value][901] = (int.Parse(df.itemsDate[item.Value][901]) - size).ToString();
+                            //df.itemsDate[item.Value][902] = (int.Parse(df.itemsDate[item.Value][902]) - size).ToString();
                         }
                     }
                     Main.logger.Log("拆分成功。");
@@ -356,21 +364,27 @@ namespace LKX_ItemsMerge
                         //耐久小于或者等于最大耐久就走最后一个，结束循环。
                         if (itemNaiJiu <= 0)
                         {
-                            df.itemsDate[makeItemId][901] = "0";
-                            df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
+                            Items.SetItemProperty(makeItemId, 901, "0");
+                            Items.SetItemProperty(makeItemId, 902, itemMaxNaiJiu.ToString());
+                            //df.itemsDate[makeItemId][901] = "0";
+                            //df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
                             break;
                         }
                         else if(itemNaiJiu > Main.settings.itemsSize)
                         {
-                            df.itemsDate[makeItemId][901] = Main.settings.itemsSize.ToString();
-                            df.itemsDate[makeItemId][902] = Main.settings.itemsSize.ToString();
+                            Items.SetItemProperty(makeItemId, 901, Main.settings.itemsSize.ToString());
+                            Items.SetItemProperty(makeItemId, 902, Main.settings.itemsSize.ToString());
+                            //df.itemsDate[makeItemId][901] = Main.settings.itemsSize.ToString();
+                            //df.itemsDate[makeItemId][902] = Main.settings.itemsSize.ToString();
                             itemNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
                             itemMaxNaiJiu -= int.Parse(Main.settings.itemsSize.ToString());
                         }
                         else
                         {
-                            df.itemsDate[makeItemId][901] = itemNaiJiu.ToString();
-                            df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
+                            Items.SetItemProperty(makeItemId, 901, itemNaiJiu.ToString());
+                            Items.SetItemProperty(makeItemId, 902, itemMaxNaiJiu.ToString());
+                            //df.itemsDate[makeItemId][901] = itemNaiJiu.ToString();
+                            //df.itemsDate[makeItemId][902] = itemMaxNaiJiu.ToString();
                             break;
                         }
                     }
@@ -380,8 +394,10 @@ namespace LKX_ItemsMerge
                     //不拆直接创建。
                     int makeItemId = df.MakeNewItem(item.Key);
                     df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                    df.itemsDate[makeItemId][901] = item.Value[0].ToString();
-                    df.itemsDate[makeItemId][902] = item.Value[1].ToString();
+                    Items.SetItemProperty(makeItemId, 901, item.Value[0].ToString());
+                    Items.SetItemProperty(makeItemId, 902, item.Value[1].ToString());
+                    //df.itemsDate[makeItemId][901] = item.Value[0].ToString();
+                    //df.itemsDate[makeItemId][902] = item.Value[1].ToString();
                 }
             }
         }

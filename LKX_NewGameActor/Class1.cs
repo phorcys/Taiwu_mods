@@ -545,8 +545,6 @@ namespace LKX_NewGameActor
         /// <param name="actorId">游戏人物的ID</param>
         public static void ProcessingAbilityDate(int actorId)
         {
-            Dictionary<int, string> actor;
-            
             Characters.SetCharProperty(actorId, 65, "100");
         }
 

@@ -240,8 +240,8 @@ namespace LKX_GongFaSizeToOne
     /// <summary>
     /// 点击人物读取游戏时载入。
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadGameDateStart2")]
-    public static class SetGongFaSizeToOne_For_Loading_LoadGameDateStart2
+    [HarmonyPatch(typeof(MainMenu), "Start")]
+    public static class SetGongFaSizeToOne_For_MainMenu_Start
     {
 
         /// <summary>

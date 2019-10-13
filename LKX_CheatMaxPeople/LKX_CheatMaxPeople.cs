@@ -393,8 +393,10 @@ namespace LKX_CheatMaxPeople
         /// </summary>
         public static void QuQuCheat()
         {
+            /*
             DateFile df = DateFile.instance;
             List<int> boxQuQu = new List<int>();
+
             foreach (int[] box in df.cricketBoxDate.Values)
             {
                 if (box[0] != -97) boxQuQu.Add(box[0]);
@@ -412,6 +414,18 @@ namespace LKX_CheatMaxPeople
                     if (item.Value[901] != "0" && item.Value[2007] != "0") item.Value[2007] = "0";
                 }
             }
+            */
+
+            int[] ququIds = Items.GetAllAliveCricketIds();
+            for (int i = 0; i < ququIds.Length; i++)
+            {
+                Dictionary<int, string> item = Items.GetItem(ququIds[i]);
+                if (item[901] != "0" && item[2007] != "0")
+                {
+                    item[2007] = "0";
+                    Items.SetItem(ququIds[i], item);
+                }
+            }
         }
 
         /// <summary>
@@ -419,7 +433,6 @@ namespace LKX_CheatMaxPeople
         /// </summary>
         public static void FoodMergeCheat()
         {
-            /*
             DateFile df = DateFile.instance;
             Dictionary<int, Dictionary<int, string>> foods = new Dictionary<int, Dictionary<int, string>>();
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
@@ -438,11 +451,14 @@ namespace LKX_CheatMaxPeople
                 if (!foodType.Contains(int.Parse(type))) continue;
                 
                 Dictionary<int, string> foodData = new Dictionary<int, string>();
+                /*
                 if (!df.itemsDate.TryGetValue(itemId, out foodData))
                 {
                     Main.logger.Log("失败itemId");
                     continue;
                 }
+                */
+                foodData = Items.GetItem(itemId);
                 
                 CompareFoodsParams(id, foodData, ref foods);
 
@@ -451,7 +467,6 @@ namespace LKX_CheatMaxPeople
             }
             Main.logger.Log("合并了" + foods.Count.ToString());
             if (foods.Count > 0) MakeFoods(foods);
-            */
         }
 
         /// <summary>
@@ -487,7 +502,6 @@ namespace LKX_CheatMaxPeople
         /// <param name="foods">合并好的食物字典</param>
         static void MakeFoods(Dictionary<int, Dictionary<int, string>> foods)
         {
-            /*
             DateFile df = DateFile.instance;
             foreach (KeyValuePair<int, Dictionary<int, string>> food in foods)
             {
@@ -495,10 +509,10 @@ namespace LKX_CheatMaxPeople
                 df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
                 foreach (KeyValuePair<int, string> pair in food.Value)
                 {
-                    df.itemsDate[makeItemId][pair.Key] = pair.Value;
+                    Items.SetItemProperty(makeItemId, pair.Key, pair.Value);
+                    //df.itemsDate[makeItemId][pair.Key] = pair.Value;
                 }
             }
-            */
         }
     }
 
