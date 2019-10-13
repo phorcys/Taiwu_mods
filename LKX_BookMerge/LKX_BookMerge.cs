@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using GameData;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
@@ -263,11 +264,13 @@ namespace LKX_BookMerge
                     {
                         items[int.Parse(id)][0] = (int.Parse(surpluses) + int.Parse(items[int.Parse(id)][0])).ToString();
                         items[int.Parse(id)][1] = (int.Parse(limit) + int.Parse(items[int.Parse(id)][1])).ToString();
-                        items[int.Parse(id)][2] = ProcessingPages(df.itemsDate[itemId][33], items[int.Parse(id)][2], int.Parse(group), int.Parse(level));
+                        items[int.Parse(id)][2] = ProcessingPages(df.GetItemDate(itemId, 33), items[int.Parse(id)][2], int.Parse(group), int.Parse(level));
+                        //items[int.Parse(id)][2] = ProcessingPages(df.itemsDate[itemId][33], items[int.Parse(id)][2], int.Parse(group), int.Parse(level));
                     }
                     else
                     {
-                        items.Add(int.Parse(id), new string[] { surpluses, limit, df.itemsDate[itemId][33] });
+                        //items.Add(int.Parse(id), new string[] { surpluses, limit, df.itemsDate[itemId][33] });
+                        items.Add(int.Parse(id), new string[] { surpluses, limit, df.GetItemDate(itemId, 33) });
                     }
 
                     df.LoseItem(df.mianActorId, itemId, itemsId[itemId], true);
@@ -278,9 +281,12 @@ namespace LKX_BookMerge
                 {
                     int makeItemId = df.MakeNewItem(item.Key);
                     df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
-                    df.itemsDate[makeItemId][901] = item.Value[0];
-                    df.itemsDate[makeItemId][902] = item.Value[1];
-                    df.itemsDate[makeItemId][33] = item.Value[2];
+                    Items.SetItemProperty(makeItemId, 901, item.Value[0]);
+                    Items.SetItemProperty(makeItemId, 902, item.Value[1]);
+                    Items.SetItemProperty(makeItemId, 33, item.Value[2]);
+                    //df.itemsDate[makeItemId][901] = item.Value[0];
+                    //df.itemsDate[makeItemId][902] = item.Value[1];
+                    //df.itemsDate[makeItemId][33] = item.Value[2];
                 }
             }
         }
@@ -391,8 +397,10 @@ namespace LKX_BookMerge
             else
             {
                 //先天属性
-                zhiZhi = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][Main.booksToActorMap[group]]);
-                wuXing = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][65]);
+                //zhiZhi = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][Main.booksToActorMap[group]]);
+                //wuXing = int.Parse(DateFile.instance.actorsDate[DateFile.instance.mianActorId][65]);
+                zhiZhi = int.Parse(Characters.GetCharProperty(DateFile.instance.mianActorId, Main.booksToActorMap[group]));
+                wuXing = int.Parse(Characters.GetCharProperty(DateFile.instance.mianActorId, 65));
             }
 
             double x = level, y = multipleCount;

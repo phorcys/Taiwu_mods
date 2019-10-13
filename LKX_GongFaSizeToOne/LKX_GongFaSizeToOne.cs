@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Collections.Generic;
+using GameData;
 using Harmony12;
 using UnityModManagerNet;
 using UnityEngine;
@@ -74,6 +75,11 @@ namespace LKX_GongFaSizeToOne
         public bool yueqiActive;
 
         /// <summary>
+        /// 是否开启全内功9格
+        /// </summary>
+        public bool neigongOk;
+
+        /// <summary>
         /// 保存设置
         /// </summary>
         /// <param name="modEntry"></param>
@@ -99,6 +105,11 @@ namespace LKX_GongFaSizeToOne
         /// 是否开启mod
         /// </summary>
         public static bool enabled;
+
+        /// <summary>
+        /// 开启全内功9格
+        /// </summary>
+        public static bool neigongOk;
 
         /// <summary>
         /// 初始全功法类型
@@ -160,6 +171,8 @@ namespace LKX_GongFaSizeToOne
             }
             GUILayout.Label(messageLabel);
 
+            Main.settings.neigongOk = GUILayout.Toggle(Main.settings.neigongOk, "开启全内功9格");
+
             Main.settings.gongFaGuiType = GUILayout.SelectionGrid(Main.settings.gongFaGuiType, new string[] { "全功法1格", "自定义功法1格" }, 2);
 
             if (Main.settings.gongFaGuiType == 1)
@@ -209,6 +222,10 @@ namespace LKX_GongFaSizeToOne
             foreach (Dictionary<int, string> item in DateFile.instance.gongFaDate.Values)
             {
                 if (Main.gongFaKey.Contains(item[61])) item[7] = "1";
+                if (Main.settings.neigongOk && item[61] == "101")
+                {
+                    item[921] = item[922] = item[923] = item[924] = "9";
+                }
             }
         }
 
