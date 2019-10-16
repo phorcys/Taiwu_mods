@@ -346,18 +346,49 @@ namespace ReduceMechanicalLabor
 
     /// <summary>
     /// 难度 50% 及以下, 且耐心和悟性满足需求时, 自动读书
+    /// 已读的情况下也会自动读书
     /// </summary>
     [HarmonyPatch(typeof(ReadBook), "UpdateRead")]
     public static class ReadBook_UpdateRead_Patch
     {
+        /// <summary>
+        /// 直接成功阅读当前书页
+        /// </summary>
+        /// <param name="currPage"></param>
+        /// <param name="costIntelligence"></param>
+        /// <param name="costPatience"></param>
+        private static void ReadCurrentPage(int currPage, int costIntelligence, int costPatience)
+        {
+            // 加上阅读完此页获得的悟性值
+            Traverse.Create(ReadBook.instance).Method("UpdateCanUseInt", 20).GetValue();
+
+            Traverse.Create(ReadBook.instance).Method("ChangeReadLevel", 100, true).GetValue();
+
+            Main.Logger.Log($"第 {currPage + 1} 页: 消耗悟性 {costIntelligence}, 消耗耐心 {costPatience}");
+        }
+
+
         private static bool Prefix()
         {
             if (!Main.enabled) return true;
 
             int mainActorId = DateFile.instance.MianActorID();
             int skillId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32));
-            int qualificationAndAttainment;
+            int currPage = Traverse.Create(ReadBook.instance).Field("readPageIndex").GetValue<int>();
 
+            // 已通过读书或战斗研读完此页, 则直接无消耗阅读完
+            if (DateFile.instance.gongFaBookPages.ContainsKey(skillId))
+            {
+                var pageState = DateFile.instance.gongFaBookPages[skillId][currPage];
+                if (pageState == 1 || pageState <= -100)
+                {
+                    ReadCurrentPage(currPage, 0, 0);
+                    return false;
+                }
+            }
+
+            // 获取主角的资质加造诣
+            int qualificationAndAttainment;
             if (BuildingWindow.instance.studySkillTyp == 17)
             {
                 int bookType = int.Parse(DateFile.instance.gongFaDate[skillId][1]);
@@ -372,9 +403,7 @@ namespace ReduceMechanicalLabor
             int difficulty = BuildingWindow.instance.GetNeedInt(qualificationAndAttainment, skillId);
             if (difficulty > 50) return true;
 
-            int currPage = Traverse.Create(ReadBook.instance).Field("readPageIndex").GetValue<int>();
             int[] pagesInfo = DateFile.instance.GetBookPage(BuildingWindow.instance.readBookId);
-
             int costIntelligence = 0;
             int costPatience = 0;
 
@@ -410,13 +439,7 @@ namespace ReduceMechanicalLabor
                 Traverse.Create(ReadBook.instance).Method("ChangePatience", -costPatience).GetValue();
             }
 
-            // 加上阅读完此页获得的悟性值
-            Traverse.Create(ReadBook.instance).Method("UpdateCanUseInt", 20).GetValue();
-
-            Traverse.Create(ReadBook.instance).Method("ChangeReadLevel", 100, true).GetValue();
-
-            Main.Logger.Log($"第 {currPage + 1} 页: 消耗悟性 {costIntelligence}, 消耗耐心 {costPatience}");
-
+            ReadCurrentPage(currPage, costIntelligence, costPatience);
             return false;
         }
     }
