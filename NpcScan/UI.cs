@@ -447,8 +447,8 @@ namespace NpcScan
         {
             mWindowRect = new Rect(ScreenWidth() * 0.05f, 40f, WindowWidth() + 60f, 0);
             // 按照1600*(WindowWidth() + 60f)/(1600*0.8+60)的乘法形式
-            widthRatio = (float)Math.Max(1, (WindowWidth() + 60f) * reciproBaseScreenWidth);
-            heightRatio = (float)Math.Max(1, Screen.height * reciproBaseScrrenHeight);
+            widthRatio = (float)((WindowWidth() + 60f) * reciproBaseScreenWidth);
+            heightRatio = (float)(Screen.height * reciproBaseScrrenHeight);
             CalculateColWidth();
         }
 
@@ -703,8 +703,7 @@ namespace NpcScan
             scrollPosition[0] = GUILayout.BeginScrollView(scrollPosition[0], emptyStyle, emptyStyle,
                                                           // 以12pt字体为基准，对应 16 pixels, 两行文字则加倍32pixel, 若字体乘以ratio转成int后并没有实际增大则不增加宽度
                                                           // 先碱法后“除法”(虽然转换成乘法了)，减少浮点型运算积累误差
-                                                          GUILayout.Height(70 + ((int)(widthRatio * baseFontSize) - baseFontSize) * reciprocalFontSize * 32),
-                                                          GUILayout.Width(WindowWidth() + 60f));
+                                                          GUILayout.Height(70 + ((int)(widthRatio * baseFontSize) - baseFontSize) * reciprocalFontSize * 32));
             // 获取滚动视图优化类实例
             var optInstance1 = OptimizeScrollView.GetInstance("TitleName", OptimizeScrollView.OptType.ColOnly);
             var optInstance2 = OptimizeScrollView.GetInstance("TitleBtn", OptimizeScrollView.OptType.ColOnly);
@@ -821,7 +820,8 @@ namespace NpcScan
             float horizonThumbHeight = GUI.skin.horizontalScrollbarThumb.fixedHeight;
             GUI.skin.verticalScrollbarThumb.fixedWidth = verticalThumbWidth * widthRatio;
             GUI.skin.horizontalScrollbarThumb.fixedHeight = horizonThumbHeight * heightRatio;
-            scrollPosition[1] = GUILayout.BeginScrollView(scrollPosition[1], false, false, horizontalScrollbarStyle, verticalScrollbarStyle, GUILayout.ExpandHeight(false), GUILayout.Width(WindowWidth() + 60f));
+            scrollPosition[1] = GUILayout.BeginScrollView(scrollPosition[1], false, false, horizontalScrollbarStyle,
+                                                          verticalScrollbarStyle, GUILayout.ExpandHeight(false));
             scrollPosition[0].x = scrollPosition[1].x; // 标题栏列随着结果的列一起移动
             scrollPosition[0].y = 0; // 冻结标题栏
             // 获取滚动视图优化类实例
@@ -1272,13 +1272,13 @@ namespace NpcScan
                     if (npcId == DateFile.instance.MianActorID())
                     {
                         UIManager.Instance.StackState();
-                        ActorMenu.cantChanageTeam = true;
+                        ActorMenu.cantChangeTeam = true;
                         ActorMenu.instance.ShowActorMenu(false);
                     }
                     else
                     {
                         UIManager.Instance.StackState();
-                        ActorMenu.cantChanageTeam = true;
+                        ActorMenu.cantChangeTeam = true;
                         ui_NpcSearch.npcSearchActorID = npcId;
                         ActorMenu.instance.ShowActorMenu(true);
                     }
