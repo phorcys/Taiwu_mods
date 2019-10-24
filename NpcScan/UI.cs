@@ -1262,12 +1262,16 @@ namespace NpcScan
                 {
                     // TextAssets/SoundTrackInfos.txt
                     AudioManager.instance.PlaySE("SE_BUTTONDEFAULT");
-                    GEvent.AddOneShot(eEvents.ActorMenuOpened, args => ToggleWindow());
+
+                    if (ActorMenu.Exists)
+                        ActorMenu.instance.CloseActorMenu();
+
+                    GEvent.AddOneShot(eEvents.ActorMenuOpened, args => ToggleWindow(false));
                     GEvent.AddOneShot(eEvents.ActorMenuClosed, args =>
                     {
                         if (npcId != DateFile.instance.MianActorID())
                             ui_NpcSearch.npcSearchActorID = -1;
-                        ToggleWindow();
+                        ToggleWindow(true);
                     });
                     if (npcId == DateFile.instance.MianActorID())
                     {
@@ -1474,6 +1478,9 @@ namespace NpcScan
         /// <param name="open">是否打开</param>
         public void ToggleWindow(bool open)
         {
+            if (opened == open)
+                return;
+
             opened = open;
             BlockGameUI(open);
             if (open)
