@@ -11,6 +11,12 @@ namespace ReduceMechanicalLabor
 {
     public class Settings : UnityModManager.ModSettings
     {
+        public bool autoRead = true; // 自动读书
+        public bool autoBreakThrough = true; // 自动突破
+        public bool quickKill = true; // 快速杀敌
+        public bool autoSearchSamsara = true; // 自动搜寻轮回台合适人选
+
+
         public override void Save(UnityModManager.ModEntry modEntry)
         {
             Save(this, modEntry);
@@ -55,27 +61,30 @@ namespace ReduceMechanicalLabor
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("－自动读书 (需难度 50% 及以下, 且耐心和悟性满足需求. 在进入读书界面后自动进行.)");
+            Main.settings.autoRead = GUILayout.Toggle(Main.settings.autoRead,
+                "自动读书 (需难度 50% 及以下, 且耐心和悟性满足需求. 在进入读书界面后自动进行.)");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("－自动突破 (需难度 100% 及以下. 在关闭突破窗口时自动进行.)");
+            Main.settings.autoBreakThrough = GUILayout.Toggle(Main.settings.autoBreakThrough,
+                "自动突破 (需难度 100% 及以下. 在关闭突破窗口时自动进行.)");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("－快速杀敌 (精纯高于敌方时, 可按 K 键秒杀. 可能会导致 NPC 战后不治身亡.)");
+            Main.settings.quickKill = GUILayout.Toggle(Main.settings.quickKill,
+                "快速杀敌 (精纯高于敌方时, 可按 K 键秒杀. 可能会导致 NPC 战后不治身亡.)");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("－自动搜寻轮回台合适人选 (在进入轮回台界面后自动进行. 信息将显示在 UMM 的日志页面.)");
+            Main.settings.autoSearchSamsara = GUILayout.Toggle(Main.settings.autoSearchSamsara,
+                "自动搜寻轮回台合适人选 (在进入轮回台界面后自动进行. 信息将显示在 UMM 的日志页面.)");
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("－");
             if (GUILayout.Button("人口统计")) PopulationStats.Show();
             GUILayout.Label("(点击按钮后, 统计信息将显示在 UMM 的日志页面. 请在存档载入后再进行统计.)");
             GUILayout.FlexibleSpace();
@@ -184,7 +193,7 @@ namespace ReduceMechanicalLabor
 
         private static void Postfix(ui_SamsaraPlatform __instance)
         {
-            if (!Main.enabled) return;
+            if (!Main.enabled || !Main.settings.autoSearchSamsara) return;
 
             var candidates = GetBestCandidates(__instance);
 
@@ -370,7 +379,7 @@ namespace ReduceMechanicalLabor
 
         private static bool Prefix()
         {
-            if (!Main.enabled) return true;
+            if (!Main.enabled || !Main.settings.autoRead) return true;
 
             int mainActorId = DateFile.instance.MianActorID();
             int skillId = int.Parse(DateFile.instance.GetItemDate(BuildingWindow.instance.readBookId, 32));
@@ -490,7 +499,7 @@ namespace ReduceMechanicalLabor
 
         private static bool Prefix()
         {
-            if (!Main.enabled) return true;
+            if (!Main.enabled || !Main.settings.autoBreakThrough) return true;
 
             if (IsEasyToBreakThrough())
             {
@@ -511,7 +520,7 @@ namespace ReduceMechanicalLabor
     {
         private static void Postfix(ref int __result)
         {
-            if (!Main.enabled) return;
+            if (!Main.enabled || !Main.settings.autoBreakThrough) return;
 
             if (StudyWindow_CloseStudyWindowButton_Patch.IsEasyToBreakThrough() &&
                 __result < StudyWindow_CloseStudyWindowButton_Patch.MinBreakThroughPoints)
@@ -530,7 +539,7 @@ namespace ReduceMechanicalLabor
     {
         private static void Postfix()
         {
-            if (!Main.enabled) return;
+            if (!Main.enabled || !Main.settings.quickKill) return;
 
             if (Input.GetKeyDown(KeyCode.K))
             {
