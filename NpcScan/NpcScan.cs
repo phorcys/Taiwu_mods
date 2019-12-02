@@ -88,6 +88,9 @@ namespace NpcScan
 
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
+            if (modEntry == null)
+                throw new ArgumentNullException(nameof(modEntry));
+
             Logger = modEntry.Logger;
             try
             {
@@ -108,11 +111,11 @@ namespace NpcScan
                 }
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logger.Log(ex.ToString());
                 var inner = ex.InnerException;
-                while(inner != null)
+                while (inner != null)
                 {
                     Logger.Log(inner.ToString());
                     inner = inner.InnerException;
