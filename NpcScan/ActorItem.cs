@@ -790,7 +790,7 @@ namespace NpcScan
             foreach (int key in ActorFeatures)
             {
                 Features f = Main.featuresList[key];
-                if(Main.multinameFeatureGroupIdSet.Contains(f.Group))
+                if (Main.multinameFeatureGroupIdSet.Contains(f.Group))
                 {
                     actorFeatureRule.Add(f.Group);
                 }
@@ -808,7 +808,7 @@ namespace NpcScan
                     }
                     //精确查找记录特性
                     actorFeatureRule.Add(key);
-                }                
+                }
             }
 
             if (!tarFeatureOr)   //与查找
