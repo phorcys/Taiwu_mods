@@ -1,6 +1,7 @@
-﻿using Harmony12;
+﻿﻿using Harmony12;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,35 +12,75 @@ namespace MoveBuilding
 {
     public class Settings : UnityModManager.ModSettings
     {
-        public override void Save(UnityModManager.ModEntry modEntry) => Save(this, modEntry);
-
         public int button = 1;
+        public int language_index = 0;
+        
+        public readonly Dictionary<string, string>[] language_map_list = new Dictionary<string, string>[]
+        {
+            new Dictionary<string, string>()
+            {
+                {"right", "右键"},
+                {"middle", "中键"},
+                {"button_select_setting_text", "选择拖动使用的鼠标按键:"},
+                {"english", "英语 (EN)"},
+                {"chinese", "中文 (CH)"},
+                {"language_select_setting_text", "选择语言:"}
+            },
+            new Dictionary<string, string>()
+            {
+                {"right", "Right"},
+                {"middle", "Middle"},
+                {"button_select_setting_text", "Building Drag Selection Button:"},
+                {"english", "EN (英语)"},
+                {"chinese", "CH (中文)"},
+                {"language_select_setting_text", "Choose Language:"}
+            }
+        };
+
+        public override void Save(UnityModManager.ModEntry modEntry)
+        {
+            Save(this, modEntry);
+        }
     }
     public static class Main
     {
         public static bool enabled;
 
-        public static readonly string[] buttons = new string[] { "右键", "中键" };
         public static Settings Settings { get; private set; }
         public static UnityModManager.ModEntry.ModLogger Logger;
+        public const string MOD_ID = "MoveBuildings";
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
-            Logger = modEntry.Logger;
+            Main.Logger = modEntry.Logger;
 
-            modEntry.OnToggle = OnToggle;
-            modEntry.OnGUI = OnGUI;
-            modEntry.OnSaveGUI = OnSaveGUI;
+            var harmony = HarmonyInstance.Create(modEntry.Info.Id);
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            Settings = Settings.Load<Settings>(modEntry);
-            HarmonyInstance.Create(modEntry.Info.Id).PatchAll(Assembly.GetExecutingAssembly());
+            Main.Settings = Settings.Load<Settings>(modEntry);
+
+            modEntry.OnToggle = Main.OnToggle;
+            modEntry.OnGUI = Main.OnGUI;
+            modEntry.OnSaveGUI = Main.OnSaveGUI;
+
             return true;
         }
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
+            var language_dicitonary = Settings.language_map_list[Settings.language_index];
+            var button_select_setting_text = language_dicitonary["button_select_setting_text"];
+            var button_select_list = new string[] { language_dicitonary["right"], language_dicitonary["middle"] };
+            var language_select_setting_text = language_dicitonary["language_select_setting_text"];
+            var language_select_list = new string[] { language_dicitonary["chinese"], language_dicitonary["english"] };
+                
             GUILayout.BeginHorizontal("box");
-            GUILayout.Label("选择拖动使用的鼠标按键:");
-            Settings.button = GUILayout.SelectionGrid(Settings.button - 1, buttons, 2) + 1;
+            GUILayout.Label(button_select_setting_text);
+            Settings.button = GUILayout.SelectionGrid(Settings.button - 1, button_select_list, 2) + 1;
+            GUILayout.EndHorizontal();
+                
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label(language_select_setting_text);
+            Settings.language_index = GUILayout.SelectionGrid(Settings.language_index, language_select_list, 2);
             GUILayout.EndHorizontal();
         }
 
@@ -96,6 +137,9 @@ namespace MoveBuilding
         }
         public GameObject draggingObject = null;
         public GameObject dropablePlace = null;
+        public Sprite placeBackSprite = null;
+        public Sprite droppablePlaceSprite = null;
+        public Image droppablePlaceImage = null;
         public bool isDragging = false;
     }
 
@@ -104,40 +148,28 @@ namespace MoveBuilding
         private Vector3 startPosition;
         private Transform originalParent;
         private Vector2 originalPosition;
-        private GameObject buildingDummy;
         private Image placeBack;
 
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (Input.GetMouseButton(Main.Settings.button) && !DraggingBuilding.Instance.isDragging)
             {
-
-                DraggingBuilding.Instance.draggingObject = gameObject;
-                DraggingBuilding.Instance.isDragging = true;
                 startPosition = transform.position;
                 originalPosition = gameObject.GetComponent<RectTransform>().anchoredPosition;
                 originalParent = transform.parent;
 
                 placeBack = transform.parent.Find("PlaceImage").GetComponent<Image>();
                 placeBack.color = new Color(1.000f, 1.000f, 1.000f, 0.500f);
-                Transform HomeViewport = HomeSystem.instance.homeMapHolder;
 
-                buildingDummy = Instantiate(placeBack.gameObject, Vector3.zero, Quaternion.identity);
-                buildingDummy.name = "buildingDummy";
-                buildingDummy.GetComponent<Image>().color = new Color(1.000f, 1.000f, 1.000f, 0.500f);
-                transform.SetParent(HomeViewport);
-                buildingDummy.transform.SetParent(HomeViewport);
-                buildingDummy.transform.localScale = transform.parent.parent.parent.localScale;
-                buildingDummy.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                buildingDummy.transform.SetAsLastSibling();
-
+                DraggingBuilding.Instance.draggingObject = gameObject;
+                DraggingBuilding.Instance.placeBackSprite = placeBack.sprite;
+                DraggingBuilding.Instance.isDragging = true;
             }
         }
 
         public void OnDrag(PointerEventData eventData)
         {
             if (!DraggingBuilding.Instance.isDragging) return;
-            buildingDummy.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             //Delete By InpayH Start
             //transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             //Delete By InpayH End
@@ -150,7 +182,6 @@ namespace MoveBuilding
             transform.SetParent(originalParent);
             transform.position = startPosition;
             gameObject.GetComponent<RectTransform>().anchoredPosition = originalPosition;
-            DestroyImmediate(buildingDummy);
 
             if (DraggingBuilding.Instance.dropablePlace != null && DraggingBuilding.Instance.dropablePlace != DraggingBuilding.Instance.draggingObject)
             {
@@ -183,14 +214,15 @@ namespace MoveBuilding
                 }
 
                 Main.Logger.Log("Update Buildings");
+                DraggingBuilding.Instance.droppablePlaceImage.color = new Color(1.000f, 1.000f, 1.000f, 1.000f);
                 DestroyImmediate(DraggingBuilding.Instance.draggingObject.GetComponent<DraggingObject>());
                 DestroyImmediate(DraggingBuilding.Instance.dropablePlace.GetComponent<DropablePlace>());
-                HomeSystem.instance.allHomeBulding[buildingIndex].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex);
+                HomeSystemWindow.Instance.allHomeBulding[buildingIndex].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex);
                 //HomeSystem.instance.allHomeBulding[buildingIndex].UpdateBack();
-                HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex);
-                HomeSystem.instance.allHomeBulding[buildingIndex2].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex2);
+                HomeSystemWindow.Instance.UpdateHomePlace(partId, placeId, buildingIndex);
+                HomeSystemWindow.Instance.allHomeBulding[buildingIndex2].name = string.Format("HomeMapPlace,{0},{1},{2}", partId, placeId, buildingIndex2);
                 //HomeSystem.instance.allHomeBulding[buildingIndex2].UpdateBack();
-                HomeSystem.instance.UpdateHomePlace(partId, placeId, buildingIndex2);
+                HomeSystemWindow.Instance.UpdateHomePlace(partId, placeId, buildingIndex2);
 
                 //Helper.Functions.LogAllChild(HomeSystem.instance.homeMapHolder.gameObject);
                 //Helper.Functions.LogProperties(DraggingBuilding.Instance.draggingObject);
@@ -212,6 +244,7 @@ namespace MoveBuilding
     public class DropablePlace : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         bool isEntered = false;
+
         public void OnPointerEnter(PointerEventData eventData)
         {
             // Helper.Functions.LogProperties(gameObject);
@@ -219,6 +252,10 @@ namespace MoveBuilding
             {
                 Main.Logger.Log("Enter dropablePlace: " + gameObject.transform.parent.gameObject.name);
                 DraggingBuilding.Instance.dropablePlace = gameObject;
+                DraggingBuilding.Instance.droppablePlaceImage = transform.parent.Find("PlaceImage").GetComponent<Image>();
+                DraggingBuilding.Instance.droppablePlaceSprite = DraggingBuilding.Instance.droppablePlaceImage.sprite;
+                DraggingBuilding.Instance.droppablePlaceImage.sprite = DraggingBuilding.Instance.placeBackSprite;
+                DraggingBuilding.Instance.droppablePlaceImage.color = new Color(1.000f, 1.000f, 1.000f, 0.500f);
                 isEntered = true;
             }
         }
@@ -228,6 +265,8 @@ namespace MoveBuilding
             {
                 DraggingBuilding.Instance.dropablePlace = null;
                 Main.Logger.Log("Leave dropablePlace : " + gameObject.transform.parent.gameObject.name);
+                transform.parent.Find("PlaceImage").GetComponent<Image>().sprite = DraggingBuilding.Instance.droppablePlaceSprite;
+                transform.parent.Find("PlaceImage").GetComponent<Image>().color = new Color(1.000f, 1.000f, 1.000f, 1.000f);
                 isEntered = false;
             }
         }
