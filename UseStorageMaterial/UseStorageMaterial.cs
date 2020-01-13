@@ -110,7 +110,7 @@ namespace UseStorageMaterial
             List<int> list = new List<int>(DateFile.instance.GetActorItems(num, 0, false).Keys);
             for (int i = 0; i < 12; i++)
             {
-                int num2 = int.Parse(DateFile.instance.GetActorDate(num, 301 + i, addValue: false));
+                int num2 = int.Parse(DateFile.instance.GetActorDate(num, 301 + i, false));
                 if (num2 > 0)
                 {
                     list.Add(num2);

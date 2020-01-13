@@ -37,7 +37,7 @@ namespace NpcScan
         /// <summary>
         /// 使<see cref="DateFile.GetActorFeature(int key)"/>线程安全，并显示儿童隐藏特性
         /// </summary>
-        [HarmonyPatch(typeof(DateFile), "GetActorFeature", typeof(int))]
+        [HarmonyPatch(typeof(DateFile), "GetActorFeature", new Type[] { typeof(int), typeof(bool) })]
         internal static class DateFile_GetActorFeature_Patch
         {
             public static bool Prefix(int key, ref List<int> __result)

@@ -476,7 +476,7 @@ namespace NpcScan
                 return;
 
             /// <see cref="Patch.DateFile_GetActorFeature_Patch"/>中已经将该方法修改为线程安全
-            ActorFeatures = DateFile.instance.GetActorFeature(npcId);
+            ActorFeatures = DateFile.instance.GetActorFeature(npcId, true);
 
             if (_ui.ActorFeatureText != "" && !ScanFeature(_ui.featureSearchSet, _ui.TarFeature, _ui.TarFeatureOr))
                 return;
