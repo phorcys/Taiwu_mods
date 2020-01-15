@@ -1017,7 +1017,7 @@ namespace CharacterFloatInfo
                         break;
                     case 9308: // 玉镜沉思
                         int canDeductCount = 0, canEnchanceCount = 0;
-                        foreach (int featureID in DateFile.instance.GetActorFeature(id))
+                        foreach (int featureID in DateFile.instance.GetActorFeature(id, true))
                         {
                             if (int.Parse(DateFile.instance.actorFeaturesDate[featureID][8]) == 3
                                 && int.Parse(DateFile.instance.actorFeaturesDate[featureID][4]) < 3)
@@ -1041,8 +1041,8 @@ namespace CharacterFloatInfo
                     case 9305: // 石牢静坐
                     case 9315: // 血池秘法
                         int[] specialFeatures = { 9997, 9998, 9999 };
-                        List<int> actorFeatures = DateFile.instance.GetActorFeature(id);
-                        if (DateFile.instance.GetActorFeature(id).Count > 0)
+                        List<int> actorFeatures = DateFile.instance.GetActorFeature(id, true);
+                        if (DateFile.instance.GetActorFeature(id, true).Count > 0)
                         {
                             foreach (int featureID in specialFeatures)
                             {
@@ -1073,7 +1073,7 @@ namespace CharacterFloatInfo
             ClearActorFeatureHolder();
             if (Main.settings.showCharacteristic && !smallerWindow)
             {
-                List<int> features = DateFile.instance.GetActorFeature(id);
+                List<int> features = DateFile.instance.GetActorFeature(id, true);
                 if (features.Count() == 0)
                     return;
 
