@@ -166,7 +166,7 @@ namespace BuriedTreasureDetector
                 int probability_0 = nowResource * 100 / maxResource - 25;
 
                 //基础地形
-                int key = DateFile.instance.ParseInt(DateFile.instance.GetNewMapDate(partId, placeId, 13));
+                int key = DateFile.instance.ParseIntWithDefaultValue(DateFile.instance.GetNewMapDate(partId, placeId, 13), 0);
                 //可得的基础物品集合
                 string[] array = DateFile.instance.timeWorkBootyDate[key][workTyp + 1].Split('|');
 
@@ -178,22 +178,22 @@ namespace BuriedTreasureDetector
 
                 int probability_1 = 100;
                 //地形类型
-                int mapType = DateFile.instance.ParseInt(DateFile.instance.GetNewMapDate(partId, placeId, 83));
+                int mapType = DateFile.instance.ParseIntWithDefaultValue(DateFile.instance.GetNewMapDate(partId, placeId, 83), 0);
                 //相邻
                 List<int> worldMapNeighbor = DateFile.instance.GetWorldMapNeighbor(partId, placeId);
                 for (int i = 0; i < worldMapNeighbor.Count; i++)
                 {
                     //判断相邻地块是否和本地块一致
-                    if (DateFile.instance.ParseInt(DateFile.instance.GetNewMapDate(partId, worldMapNeighbor[i], 83)) == mapType)
+                    if (DateFile.instance.ParseIntWithDefaultValue(DateFile.instance.GetNewMapDate(partId, worldMapNeighbor[i], 83), 0) == mapType)
                     {
                         probability_1 += 200;
                     }
                 }
                 //升品概率
-                Decimal probability_2 = DateFile.instance.ParseInt(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001]) + Mathf.Max(maxResource - 100, 0) / 10 * probability_1 / 100;
+                Decimal probability_2 = DateFile.instance.ParseIntWithDefaultValue(DateFile.instance.timeWorkBootyDate[key][workTyp + 1001], 0) + Mathf.Max(maxResource - 100, 0) / 10 * probability_1 / 100;
 
                 //提升品级
-                int upLevel = DateFile.instance.ParseInt(DateFile.instance.timeWorkBootyDate[key][workTyp + 101]);
+                int upLevel = DateFile.instance.ParseIntWithDefaultValue(DateFile.instance.timeWorkBootyDate[key][workTyp + 101], 0);
                 Decimal probability_3 = probability_2 * (nowResource * 100 / maxResource) / 100;
 
                 //num6/100  乘  (num8/100 的 num7 次方)

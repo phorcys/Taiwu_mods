@@ -81,7 +81,7 @@ namespace BuriedTreasureDetector
             int num = DateFile.instance.GetPlaceResource(choosePartId, choosePlaceId)[chooseWorkTyp];
             int num2 = (num >= 100) ? (num * 60 / 100) : (num * 40 / 100);
             num2 += UnityEngine.Random.Range(-num2 * 20 / 100, num2 * 20 / 100 + 1);
-            int getItemId = WorldMapSystem.instance.GetTimeWorkItem(DateFile.instance.MianActorID(), choosePartId, choosePlaceId, chooseWorkTyp, -1, getItem: false, actorWork: true);
+            int getItemId = ChoosePlaceWindow.Instance.GetTimeWorkItem(DateFile.instance.MianActorID(), choosePartId, choosePlaceId, chooseWorkTyp, -1, getItem: false, actorWork: true);
             int addResource = Mathf.Max(num2, 0);
             TimeWorkEnd(addResource, getItemId, choosePartId, choosePlaceId, chooseWorkTyp);
         }
