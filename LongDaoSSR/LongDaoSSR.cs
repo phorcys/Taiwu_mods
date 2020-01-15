@@ -136,7 +136,7 @@ namespace LongDaoSSR
             
             if (hasNewFeature)
             {
-                //DateFile.instance.actorsFeatureCache.Remove(id);
+                //DateFile.instance.ActorFeaturesCacheReset(id);
                 Characters.SetCharProperty(id, 101, featureStr);
                 DateFile.instance.ActorFeaturesCacheReset();
             }
@@ -179,7 +179,7 @@ namespace LongDaoSSR
                 }
                 //logger.Log("新的NPC生成了！id:" + __result);
                 lastNPCid = __result;
-                //DateFile.instance.actorsFeatureCache.Remove(__result); //刷新特性
+                //DateFile.instance.ActorFeaturesCacheReset(__result); //刷新特性
                 DateFile.instance.ActorFeaturesCacheReset(); //刷新特性缓存
                 return;
             }
@@ -342,7 +342,7 @@ namespace LongDaoSSR
                                                                                                                            //npc[101] += "|" + (3420 + wuID).ToString(); //添加资质
 
 
-            //DateFile.instance.actorsFeatureCache.Remove(id); //刷新特性
+            //DateFile.instance.ActorFeaturesCacheReset(id); //刷新特性
             DateFile.instance.ActorFeaturesCacheReset(); //刷新特性
 
             //工作服 73703 劲衣 工作车 83503 下泽车

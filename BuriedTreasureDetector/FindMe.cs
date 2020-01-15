@@ -112,7 +112,7 @@ namespace BuriedTreasureDetector
 
         public static Dictionary<int, Dictionary<int, List<int>>> aowu = new Dictionary<int, Dictionary<int, List<int>>>();
 
-        private static FieldInfo disastersStorys = typeof(PeopleLifeAI).GetField("disastersStorys", BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic);
+        private static FieldInfo disastersStorys = typeof(PeopleLifeAI).GetField("_disasterStoriesInfo", BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.NonPublic);
 
         private static Dictionary<int, int[]> type = (Dictionary<int, int[]>)FindMe.disastersStorys.GetValue(PeopleLifeAI.instance);
     }
