@@ -1149,7 +1149,7 @@ namespace Sth4nothing.SLManager
                 if (Main.settings.regenerateRandomSeedAfterLoad)
                 {
                     UnityEngine.Random.InitState(Environment.TickCount);
-                    DateFile.instance.SetRandSeed(true);
+                    DateFile.instance.ResetRandSeed(0);
 #if DEBUG
                     Main.Logger.Log($"重置亂數種子");
 #endif
