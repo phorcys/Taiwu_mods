@@ -47,6 +47,11 @@ namespace AutoRepair
         public static Settings settings;
         public static UnityModManager.ModEntry.ModLogger Logger;
 
+        public static bool ExistMianActor()
+        {
+            return DateFile.instance != null && GameData.Characters.HasChar(DateFile.instance.MianActorID());
+        }
+
         public static bool Load(UnityModManager.ModEntry modEntry)
         {
             var harmony = HarmonyInstance.Create(modEntry.Info.Id);
@@ -75,11 +80,8 @@ namespace AutoRepair
 
         static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            bool flag = DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId);
-            if (flag)
-            {
+            if(!ExistMianActor())
                 GUILayout.Label("存档未载入!", new GUILayoutOption[0]);
-            }
             else
             {
                 settings.open = GUILayout.Toggle(settings.open, "开启自动修理业务", new GUILayoutOption[0]);
@@ -199,7 +201,7 @@ namespace AutoRepair
         {
             int taiu = DateFile.instance.MianActorID();
             int type = index == 3 ? index + 2 : index + 1;
-            int num0 = ActorMenu.instance.ActorResource(taiu)[type];
+            int num0 = DateFile.instance.ActorResource(taiu)[type];
             if (num0 < num) return false;
             else
             {
@@ -263,13 +265,13 @@ namespace AutoRepair
                                     int num0 = Getpoint(index);
                                     if (num0 >= charge)
                                     {
-                                        DateFile.instance.itemsDate[partid][901] = maxhp;
+                                        GameData.Items.SetItemProperty(partid, 901, maxhp);
                                         DateFile.instance.actorLife[10001][79][index] = num0 - charge;
                                         
                                     }
                                     else if (Getpoint(3) >= (charge + charge / 2))
                                     {
-                                        DateFile.instance.itemsDate[partid][901] = maxhp;
+                                        GameData.Items.SetItemProperty(partid, 901, maxhp);
                                         DateFile.instance.actorLife[10001][79][3] = Getpoint(3) - charge - charge / 2;
                                     }
 
@@ -281,10 +283,10 @@ namespace AutoRepair
                                     { index = 3; charge = charge + charge / 2; }
 
                                     int type2 = index == 3 ? index + 2 : index + 1;
-                                    int num0 = ActorMenu.instance.ActorResource(taiu)[type2];
+                                    int num0 = DateFile.instance.ActorResource(taiu)[type2];
                                     if (num0 >= charge)
                                     {
-                                        DateFile.instance.itemsDate[partid][901] = maxhp;
+                                        GameData.Items.SetItemProperty(partid, 901, maxhp);
                                         UIDate.instance.ChangeResource(taiu, type2, -charge, false);
 
                                     }
@@ -299,8 +301,9 @@ namespace AutoRepair
         }
     }
 
-    [HarmonyPatch(typeof(BattleSystem), "BattleEndShowOver")]
-    public static class BattleSystem_BattleEndShowOver_Patch
+    [HarmonyPatch(typeof(BattleEndWindow), "ShowBattleEndWindow")]
+    // public static class BattleSystem_BattleEndShowOver_Patch
+    public static class BattleEndWindow_ShowBattleEndWindow_Patch
     {
 
         private static void Postfix()
