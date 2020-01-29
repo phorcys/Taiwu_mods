@@ -17,11 +17,11 @@ namespace AutoRepair
         public bool open = false;
 
         public bool familiy = false;
-        public bool weapon = false;
-        public bool hat = false;
-        public bool armor = false;
-        public bool shouse = false;
-        public bool pearl = false;
+        public bool 是否修理武器 = false;
+        public bool 是否修理头部装备 = false; // 头盔
+        public bool 是否修理护甲 = false;
+        public bool 是否修理鞋子 = false;
+        public bool 是否修理其他 = false;
 
         public bool bymoney = false;
         public int number = 0;
@@ -90,11 +90,11 @@ namespace AutoRepair
                     GUILayout.BeginVertical("Box", new GUILayoutOption[0]);
                     GUILayout.Label("选择修理部位", new GUIStyle { normal = { textColor = new Color(0.999999f, 0.537255f, 0.537255f) } }, new GUILayoutOption[0]);
                     GUILayout.BeginHorizontal();
-                    settings.weapon = GUILayout.Toggle(settings.weapon, "武器", new GUILayoutOption[0]);
-                    settings.hat = GUILayout.Toggle(settings.hat, "头盔", new GUILayoutOption[0]);
-                    settings.armor = GUILayout.Toggle(settings.armor, "护甲", new GUILayoutOption[0]);
-                    settings.shouse = GUILayout.Toggle(settings.shouse, "鞋子", new GUILayoutOption[0]);
-                    settings.pearl = GUILayout.Toggle(settings.pearl, "其他", new GUILayoutOption[0]);
+                    settings.是否修理武器 = GUILayout.Toggle(settings.是否修理武器, "武器", new GUILayoutOption[0]);
+                    settings.是否修理头部装备 = GUILayout.Toggle(settings.是否修理头部装备, "头盔", new GUILayoutOption[0]);
+                    settings.是否修理护甲 = GUILayout.Toggle(settings.是否修理护甲, "护甲", new GUILayoutOption[0]);
+                    settings.是否修理鞋子 = GUILayout.Toggle(settings.是否修理鞋子, "鞋子", new GUILayoutOption[0]);
+                    settings.是否修理其他 = GUILayout.Toggle(settings.是否修理其他, "其他", new GUILayoutOption[0]);
                     GUILayout.EndHorizontal();
                     settings.familiy = GUILayout.Toggle(settings.familiy, "也修理队友的装备", new GUILayoutOption[0]);
                     GUILayout.EndVertical();
@@ -317,11 +317,11 @@ namespace AutoRepair
                 return; 
             }
             List<int> part = new List<int>();
-            if (Main.settings.weapon) part=new List<int> { 0, 1, 2 };
-            if (Main.settings.hat) part.Add(3);
-            if (Main.settings.armor) part.Add(5);
-           if (Main.settings.shouse) part.Add(6);
-            if (Main.settings.pearl) part.AddRange (new List<int> { 4 ,7, 8, 9 ,10});
+            if (Main.settings.是否修理武器) part=new List<int> { 0, 1, 2 };
+            if (Main.settings.是否修理头部装备) part.Add(3);
+            if (Main.settings.是否修理护甲) part.Add(5);
+           if (Main.settings.是否修理鞋子) part.Add(6);
+            if (Main.settings.是否修理其他) part.AddRange (new List<int> { 4 ,7, 8, 9 ,10});
             if (part.Count == 0) return;
             List<int> people = new List<int> { DateFile.instance.MianActorID() };
             if (Main.settings.familiy) people.AddRange(DateFile.instance.GetFamily(false, false));
