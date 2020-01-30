@@ -1,0 +1,9 @@
+﻿{
+  "Id": "CosmeticHospital",
+  "DisplayName": "太吾美容院",
+  "Description":"给太吾和同道们美个容呗~",
+  "Author": "皮皮山上的咕咕⑨",
+  "Version": "1.0.1",
+  "AssemblyName": "CosmeticHospital.dll",
+  "EntryMethod": "CosmeticHospital.Main.Load"
+}
