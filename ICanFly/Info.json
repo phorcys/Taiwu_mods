@@ -1,0 +1,10 @@
+﻿{
+  "Id": "ICanFly",
+  "DisplayName": "丝滑移动",
+  "Author": "paleneutron",
+  "Version": "0.2",
+  "AssemblyName": "ICanFly.dll",
+  "EntryMethod": "ICanFly.Main.Load",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=20061461",
+  "Repository": "https://raw.githubusercontent.com/phorcys/Taiwu_mods/master/Repository.json"
+}
