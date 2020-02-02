@@ -1,0 +1,10 @@
+﻿{
+  "Id": "ViolateAntiope",
+  "DisplayName": "情难自已",
+  "Author": "RedContritio",
+  "Version": "1.0.0",
+  "AssemblyName": "ViolateAntiope.dll",
+  "EntryMethod": "ViolateAntiope.Main.Load",
+  "ManagerVersion": "0.12.2",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=20221567"
+}
