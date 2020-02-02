@@ -8,6 +8,7 @@ using UnityModManagerNet;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Xml.Serialization;
 
 namespace DreamLover
 {
@@ -24,19 +25,24 @@ namespace DreamLover
         public bool 即使太吾出家也要求婚 = false;
 
         public bool 男的可以来 = false, 女的可以来 = true;
+        public bool 全世界都喜欢太吾 = false;
 
-        public Dictionary<int, bool> 可接受的好感度等级 = new Dictionary<int, bool> {
+        public SerializableDictionary<int, bool> 可接受的好感度等级 = new SerializableDictionary<int, bool> {
             { 0, false}, { 1, false}, { 2, false},
             { 3, false}, { 4, true}, {5, true },
             { 6, true}, {-1, false } };
 
-        public Dictionary<int, bool> 可接受的立场等级 = new Dictionary<int, bool> {
+        public SerializableDictionary<int, bool> 可接受的立场等级 = new SerializableDictionary<int, bool> {
             { 0, true}, { 1, true}, { 2, false},
             { 3, false}, { 4, false}};
 
-        public Dictionary<int, bool> 可接受的魅力等级 = new Dictionary<int, bool> {
+        public SerializableDictionary<int, bool> 可接受的魅力等级 = new SerializableDictionary<int, bool> {
             { 0, false}, { 1, false}, { 2, false}, { 3, true}, { 4, true},
             { 5, true}, { 6, true}, { 7, true}, { 8, true}, { 9, true}};
+
+        public SerializableDictionary<int, bool> 可接受的阶层等级 = new SerializableDictionary<int, bool> {
+            { 1, true}, { 2, true}, { 3, true}, { 4, true}, { 5, true},
+            { 6, true}, { 7, true}, { 8, true}, { 9, true}};
 
         public int 入魔程度 = 0;
 
@@ -70,7 +76,7 @@ namespace DreamLover
     }
 
     /// <summary>
-    ///  建立人物时拦截并修改结果
+    ///  人物AI更新时拦截并修改结果
     /// </summary>
     [HarmonyPatch(typeof(PeopleLifeAI), "DoTrunAIChange")]
     public static class PeopleLifeAI_DoTrunAIChange_Patch
@@ -80,7 +86,7 @@ namespace DreamLover
         {
             if (!Main.enabled) return true;
 
-            if (!isTaiwuAtThisTile) return true;
+            if (!Main.settings.全世界都喜欢太吾 && !isTaiwuAtThisTile) return true;
 
             // 无性太吾禁止恋爱
             if (Main.TaiwuSex < 0) return true;
@@ -107,6 +113,18 @@ namespace DreamLover
             }
             else
                 Debug.Log(DateFile.instance.GetActorName(actorId) + "魅力为: " + actorCharm + "\n");
+
+
+            if(int.TryParse(DateFile.instance.GetActorDate(actorId, 20, applyBonus: false), out int 里阶层))
+            {
+                int 表阶层 = Mathf.Abs(里阶层);
+                if (Main.settings.可接受的阶层等级.TryGetValue(表阶层, out bool 阶层可以接受))
+                {
+                    if (!阶层可以接受) return true;
+                }
+                else
+                    Debug.Log(DateFile.instance.GetActorName(actorId) + "里阶层为: " + 里阶层 + ", 表阶层: " + 表阶层 + "\n");
+            }
 
             // 性别
             int actorSex = int.Parse(DateFile.instance.GetActorDate(actorId, 997, applyBonus: false));
@@ -150,7 +168,8 @@ namespace DreamLover
             if (!Main.settings.母系血统 && DateFile.instance.GetActorSocial(actorId, 602).Contains(mainActorId)) return true;
 
             // 如果两情相悦就结婚
-            if (Main.settings.主动求婚 && DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId)
+            if (isTaiwuAtThisTile && Main.settings.主动求婚
+                && DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId)
                 && !DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) && !DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId)
                 && (Main.settings.已婚人士想和太吾结婚 || DateFile.instance.GetActorSocial(actorId, 309).Count <= 0)
                 && (Main.settings.即使太吾已婚别人也想求婚 || DateFile.instance.GetActorSocial(mainActorId, 309).Count <= 0)
@@ -162,7 +181,7 @@ namespace DreamLover
             }
 
             // 如果爱慕就表白
-            if (Main.settings.主动表白 && DateFile.instance != null
+            if (isTaiwuAtThisTile && Main.settings.主动表白 && DateFile.instance != null
             && DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId)
             && (Main.settings.太吾不爱的人也表白太吾 || DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId)) // 互相倾心爱慕
             && !DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && !DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId) // 没有互相两情相悦
@@ -212,6 +231,26 @@ namespace DreamLover
             Type type = instance.GetType();
             MethodInfo method = type.GetMethod(name, flag);
             return (T)method.Invoke(instance, param);
+        }
+    }
+
+    public static class ExpandUtils
+    {
+        public static bool RemoveAllLove()
+        {
+            if (DateFile.instance == null || !GameData.Characters.HasChar(DateFile.instance.MianActorID()))
+                return false;
+            int mainActorId = DateFile.instance.MianActorID();
+            int[] actorsID = GameData.Characters.GetAllCharIds();
+            foreach(int actorId in actorsID)
+            {
+                if(DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId)
+                && !DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId))
+                {
+                    DateFile.instance.RemoveActorSocial(actorId, mainActorId, 312);
+                }
+            }
+            return true;
         }
     }
 
@@ -271,6 +310,7 @@ namespace DreamLover
                 GUILayout.BeginHorizontal("Box");
                 settings.男的可以来 = GUILayout.Toggle(settings.男的可以来, "接受男性");
                 settings.女的可以来 = GUILayout.Toggle(settings.女的可以来, "接受女性");
+                settings.全世界都喜欢太吾 = GUILayout.Toggle(settings.全世界都喜欢太吾, "爱慕不受地理限制");
                 GUILayout.EndHorizontal();
             }
 
@@ -349,6 +389,19 @@ namespace DreamLover
                 settings.可接受的魅力等级[8] = GUILayout.Toggle(settings.可接受的魅力等级[8], "绝世/出尘");
                 settings.可接受的魅力等级[9] = GUILayout.Toggle(settings.可接受的魅力等级[9], "天人");
                 GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("阶层等级范围：");
+                settings.可接受的阶层等级[1] = GUILayout.Toggle(settings.可接受的阶层等级[1], "<color=#E4504DFF>一品</color>");
+                settings.可接受的阶层等级[2] = GUILayout.Toggle(settings.可接受的阶层等级[2], "<color=#F28234FF>二品</color>");
+                settings.可接受的阶层等级[3] = GUILayout.Toggle(settings.可接受的阶层等级[3], "<color=#E3C66DFF>三品</color>");
+                settings.可接受的阶层等级[4] = GUILayout.Toggle(settings.可接受的阶层等级[4], "<color=#AE5AC8FF>四品</color>");
+                settings.可接受的阶层等级[5] = GUILayout.Toggle(settings.可接受的阶层等级[5], "<color=#63CED0FF>五品</color>");
+                settings.可接受的阶层等级[6] = GUILayout.Toggle(settings.可接受的阶层等级[6], "<color=#8FBAE7FF>六品</color>");
+                settings.可接受的阶层等级[7] = GUILayout.Toggle(settings.可接受的阶层等级[7], "<color=#6DB75FFF>七品</color>");
+                settings.可接受的阶层等级[8] = GUILayout.Toggle(settings.可接受的阶层等级[8], "<color=#FBFBFBFF>八品</color>");
+                settings.可接受的阶层等级[9] = GUILayout.Toggle(settings.可接受的阶层等级[9], "<color=#8E8E8EFF>九品</color>");
+                GUILayout.EndHorizontal();
             }
             if (settings.主动表白)
             {
@@ -372,7 +425,139 @@ namespace DreamLover
                 settings.即使太吾出家也要求婚 = GUILayout.Toggle(settings.即使太吾出家也要求婚, "太吾出家也要求婚");
                 GUILayout.EndHorizontal();
             }
+            if (!settings.主动爱慕)
+            {
+                GUILayout.BeginHorizontal("Box");
+                GUILayout.Label("天涯何处无芳草,何必单恋一枝花");
+                if (GUILayout.Button("单向爱慕太吾的人忘记这份感情", GUILayout.ExpandWidth(false)))
+                {
+                    ExpandUtils.RemoveAllLove();
+                }
+                GUILayout.EndHorizontal();
+            }
             GUILayout.EndVertical();
         }
+    }
+
+    [XmlRoot("dictionary")]
+    public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IXmlSerializable
+    {
+        #region IXmlSerializable Members
+        public System.Xml.Schema.XmlSchema GetSchema()
+
+        {
+
+            return null;
+
+        }
+
+
+
+        public void ReadXml(System.Xml.XmlReader reader)
+
+        {
+
+            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
+
+            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+
+
+
+            bool wasEmpty = reader.IsEmptyElement;
+
+            reader.Read();
+
+
+
+            if (wasEmpty)
+
+                return;
+
+
+
+            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+
+            {
+
+                reader.ReadStartElement("item");
+
+
+
+                reader.ReadStartElement("key");
+
+                TKey key = (TKey)keySerializer.Deserialize(reader);
+
+                reader.ReadEndElement();
+
+
+
+                reader.ReadStartElement("value");
+
+                TValue value = (TValue)valueSerializer.Deserialize(reader);
+
+                reader.ReadEndElement();
+
+
+
+                this.Add(key, value);
+
+
+
+                reader.ReadEndElement();
+
+                reader.MoveToContent();
+
+            }
+
+            reader.ReadEndElement();
+
+        }
+
+
+
+        public void WriteXml(System.Xml.XmlWriter writer)
+
+        {
+
+            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
+
+            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+
+
+
+            foreach (TKey key in this.Keys)
+
+            {
+
+                writer.WriteStartElement("item");
+
+
+
+                writer.WriteStartElement("key");
+
+                keySerializer.Serialize(writer, key);
+
+                writer.WriteEndElement();
+
+
+
+                writer.WriteStartElement("value");
+
+                TValue value = this[key];
+
+                valueSerializer.Serialize(writer, value);
+
+                writer.WriteEndElement();
+
+
+
+                writer.WriteEndElement();
+
+            }
+
+        }
+
+        #endregion
+
     }
 }
