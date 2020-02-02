@@ -1,0 +1,10 @@
+﻿{
+  "Id": "PrecisionShooting",
+  "DisplayName": "一发入魂",
+  "Author": "RedContritio",
+  "Version": "1.0.0",
+  "AssemblyName": "PrecisionShooting.dll",
+  "EntryMethod": "PrecisionShooting.Main.Load",
+  "ManagerVersion": "0.12.2",
+  "HomePage": "https://bbs.nga.cn/read.php?tid=20223722"
+}
