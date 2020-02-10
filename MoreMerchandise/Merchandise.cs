@@ -27,7 +27,7 @@ namespace MoreMerchandise
             // 如果有角色 ID，那么在角色数据表里取商队 ID，再根据商队 ID 获得商店类型
             if (___actorShopId != 0)
             {
-                shopTyp = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(___actorShopId, 9, addValue: false)), 16));
+                shopTyp = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(___actorShopId, 9, false)), 16));
             }
             __instance.shopItems.Clear();
             ___shopSystemTyp = shopTyp;
