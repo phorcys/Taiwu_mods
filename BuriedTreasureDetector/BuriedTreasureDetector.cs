@@ -163,7 +163,7 @@ namespace BuriedTreasureDetector
                     if (Main.settings.isShowStory)
                     {
                         array = tips.name.Split(',');
-                        if (((array.Length > 1) ? DateFile.instance.ParseInt(array[1]) : 0) != 256)
+                        if (((array.Length > 1) ? DateFile.instance.ParseIntWithDefaultValue(array[1], 0) : 0) != 256)
                         {
                             break;
                         }
@@ -279,8 +279,8 @@ namespace BuriedTreasureDetector
     /// <summary>
     /// Patch: 展示过月事件
     /// </summary>
-    [HarmonyPatch(typeof(UIDate), "SetTrunChangeWindow")]
-    public static class UIDate_SetTrunChangeWindow_OnChangeTurn
+    [HarmonyPatch(typeof(UIDate), "SaveTurnChangeEvent")]
+    public static class UIDate_SaveTurnChangeEvent_OnChangeTurn
     {
         public static void Prefix()
         {
@@ -302,14 +302,14 @@ namespace BuriedTreasureDetector
     /// <summary>
     /// Patch: 推恩释义
     /// </summary>
-    [HarmonyPatch(typeof(MassageWindow), "EndEvent9013_1")]
-    public static class MassageWindow_EndEvent9013_1_patch
+    [HarmonyPatch(typeof(MessageEventManager), "EndEvent9013_1")]
+    public static class MessageEventManager_EndEvent9013_1_patch
     {
         private static void Prefix()
         {
-            if (!Main.enabled || MassageWindow.instance.eventValue == null || MassageWindow.instance.eventValue.Count < 2) return;
+            if (!Main.enabled || MessageEventManager.Instance.EventValue == null || MessageEventManager.Instance.EventValue.Count < 2) return;
 
-            switch (MassageWindow.instance.eventValue[1])
+            switch (MessageEventManager.Instance.EventValue[1])
             {
                 case 1:
                     FindAll.Instance.Clear();

@@ -201,7 +201,7 @@ IF(WIN32)
 
 
 #下载编译用dlls zip包
-set(DLLPACK_VERSION "190930")
+set(DLLPACK_VERSION "200210")
 set(DLLPACK_NAME "dlls")
 set(DLLPACK_DIR "${CMAKE_CURRENT_BINARY_DIR}\\${DLLPACK_NAME}")
 set(DLLPACK_URL "https://github.com/phorcys/Taiwu_mods/releases/download/dll${DLLPACK_VERSION}/dlls-${DLLPACK_VERSION}.zip")
@@ -384,7 +384,7 @@ using System.Runtime.Versioning\;
 	ADD_CUSTOM_COMMAND(TARGET ${moddir}
 		POST_BUILD
 		COMMAND if not exist "\"${STEAMDIR}\\Mods\\${moddir}\\\"" echo not copy file & goto END
-		COMMAND copy "$(TargetPATH) \"${STEAMDIR}\\Mods\\${moddir}\""
+		COMMAND copy "\"$(TargetPATH)\" \"${STEAMDIR}\\Mods\\${moddir}\""
 		COMMAND "..\\..\\CopyMod.exe" ${moddir} "\"${STEAMDIR}\\Mods\""
 		COMMAND echo "copy dll file ${moddir}.dll ok"
 		COMMENT "copy dll file to steam game"

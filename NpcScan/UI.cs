@@ -1,3 +1,4 @@
+using GameData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using GameData;
 
 
 namespace NpcScan
@@ -1082,7 +1082,9 @@ namespace NpcScan
                             Main.featureNameList[featureName] = feature.Group;
                     }
                     else
+                    {
                         Main.featureNameList.Add(featureName, pair.Key);
+                    }
                 }
             }
 

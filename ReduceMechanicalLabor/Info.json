@@ -2,7 +2,7 @@
   "Id": "ReduceMechanicalLabor",
   "DisplayName": "减少机械性劳动",
   "Author": "fenghou",
-  "Version": "1.0.2",
+  "Version": "1.0.4",
   "AssemblyName": "ReduceMechanicalLabor.dll",
   "EntryMethod": "ReduceMechanicalLabor.Main.Load",
   "HomePage": "https://bbs.nga.cn/read.php?tid=18904664"

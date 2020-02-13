@@ -1,8 +1,8 @@
 ﻿{
     "Id": "SLManager",
     "DisplayName": "Save / Load",
-    "Author": "Sth4nothing/ciwei100000/litfal",
-    "Version": "1.5.5",
+    "Author": "Sth4nothing/ciwei100000/litfal/皮皮山上的咕咕9",
+    "Version": "1.5.6",
     "AssemblyName": "SLManager.dll",
     "EntryMethod": "Sth4nothing.SLManager.Main.Load",
     "HomePage": "https://bbs.nga.cn/read.php?tid=15734945"

@@ -1,4 +1,6 @@
-﻿using Harmony12;
+﻿using GameData;
+using Harmony12;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -35,7 +37,7 @@ namespace NpcScan
         /// <summary>
         /// 使<see cref="DateFile.GetActorFeature(int key)"/>线程安全，并显示儿童隐藏特性
         /// </summary>
-        [HarmonyPatch(typeof(DateFile), "GetActorFeature", typeof(int))]
+        [HarmonyPatch(typeof(DateFile), "GetActorFeature", new Type[] { typeof(int), typeof(bool) })]
         internal static class DateFile_GetActorFeature_Patch
         {
             public static bool Prefix(int key, ref List<int> __result)
@@ -46,18 +48,18 @@ namespace NpcScan
                 if (actorsFeatureCache.TryGetValue(key, out __result))
                     return false;
 
-                var list = new List<int>();
-                string actorData = DateFile.instance.GetActorDate(key, 101, false);
-                string[] actorFeatures = actorData.IsNullOrEmpty() ? new string[0] : actorData.Split('|');
+                var features = new List<int>();
+                string charProperty = Characters.GetCharProperty(key, 101);
+                string[] actorFeatures = charProperty.IsNullOrEmpty() ? Array.Empty<string>() : charProperty.Split('|');
 
                 for (int j = 0; j < actorFeatures.Length; j++)
                 {
                     int fetureKey = int.Parse(actorFeatures[j]);
                     if (fetureKey != 0 && DateFile.instance.actorFeaturesDate.ContainsKey(fetureKey))
-                        list.Add(fetureKey);
+                        features.Add(fetureKey);
                 }
-                actorsFeatureCache.TryAdd(key, list);
-                __result = list;
+                actorsFeatureCache.TryAdd(key, features);
+                __result = features;
                 return false;
             }
         }

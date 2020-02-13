@@ -77,8 +77,8 @@ namespace TreasureDetector
         }
     }
 
-    [HarmonyPatch(typeof(WorldMapSystem), "GetTimeWorkItem")]
-    public static class WorldMapSystem_GetTimeWorkItem_Patch
+    [HarmonyPatch(typeof(ChoosePlaceWindow), "GetTimeWorkItem")]
+    public static class ChoosePlaceWindow_GetTimeWorkItem_Patch
     {
         public static void Prefix(int actorId, int partId, int placeId, int workTyp, int showGetTyp, bool getItem = true, bool actorWork = false)
         {
