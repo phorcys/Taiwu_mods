@@ -124,7 +124,7 @@ namespace ModsCollection
         }
     }
 
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
+    [HarmonyPatch(typeof(ui_Loading), "LoadBaseDate")]
     public static class Loading_LoadBaseDate_Patch
     {
         public static void Postfix()

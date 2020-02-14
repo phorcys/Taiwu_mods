@@ -444,8 +444,8 @@ namespace Rejuvenation
         }
     }
 
-    [HarmonyPatch(typeof(AgeChanage), "AllActorAgeChanage")]
-    public static class AgeChanage_AllActorAgeChanage_Patch
+    [HarmonyPatch(typeof(AI.CharacterAge), "UpdateAges")]
+    public static class AI_CharacterAge_UpdateAges_Patch
     {
         static void Prefix()
         {
@@ -466,12 +466,12 @@ namespace Rejuvenation
 
             Main.teammateAge.Clear();
             for (int i = 1; i != 5; i++) {
-                if (DateFile.instance.actorsDate.ContainsKey(DateFile.instance.acotrTeamDate[i]) && Main.setting.keepAgeTeammate[i]) {
-                    Main.teammateAge.Add(DateFile.instance.acotrTeamDate[i], DateFile.instance.actorsDate[DateFile.instance.acotrTeamDate[i]][11]);
+                if (GameData.Characters.HasChar(DateFile.instance.acotrTeamDate[i]) && Main.setting.keepAgeTeammate[i]) {
+                    Main.teammateAge.Add(DateFile.instance.acotrTeamDate[i], GameData.Characters.GetCharProperty(DateFile.instance.acotrTeamDate[i], 11));
                 }
             }
             foreach (var i in Main.teammateAge) {
-                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + DateFile.instance.actorsDate[i.Key][11]);
+                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + GameData.Characters.GetCharProperty(i.Key, 11));
             }
         }
     }
@@ -492,7 +492,7 @@ namespace Rejuvenation
             Main.Logger.Log("年龄变化结束");
 
             foreach (var i in Main.teammateAge) {
-                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + DateFile.instance.actorsDate[i.Key][11]);
+                Main.Logger.Log(i.Key.ToString() + "  " + DateFile.instance.GetActorName(i.Key) + "  " + GameData.Characters.GetCharProperty(i.Key, 11));
             }
 
             if (DateFile.instance.actorGongFas[DateFile.instance.mianActorId].ContainsKey(150369)) {

@@ -109,7 +109,13 @@ namespace AutoWalk
         {
             if (Main.Place.Count > 0)
             {
-                if(!(YesOrNoWindow.instance.MaskShow()||WorldMapSystem.instance.partWorldMapWindow.activeInHierarchy||SystemSetting.instance.SystemSettingWindow.activeInHierarchy || StorySystem.instance.storySystem.activeInHierarchy|| DateFile.instance.battleStart || UIDate.instance.trunChangeImage[0].gameObject.activeSelf || HomeSystem.instance.homeSystem.activeInHierarchy))
+                if(!(YesOrNoWindow.instance.MaskShow() || 
+                    WorldMapSystem.instance.partWorldMapWindow.activeInHierarchy ||
+                    SystemSetting.instance.SystemSettingWindow.activeInHierarchy ||
+                    StorySystem.instance.storySystem.activeInHierarchy ||
+                    DateFile.instance.battleStart ||
+                    UIDate.instance.trunChangeImage[0].gameObject.activeSelf ||
+                    HomeSystem.instance.homeSystem.activeInHierarchy))
                 {
                     if (!DateFile.instance.playerMoveing)
                     {

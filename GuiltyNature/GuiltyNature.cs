@@ -616,7 +616,7 @@ namespace GuiltyNature
         }
     }
     //加载图片
-    [HarmonyPatch(typeof(Loading), "LoadScene")]
+    [HarmonyPatch(typeof(ui_Loading), "LoadScene")]
     [HarmonyPriority(Priority.Last)]
     public static class Loading_LoadScene_DynamicallyLoadResources
     {
@@ -642,7 +642,7 @@ namespace GuiltyNature
         }
     }
     //加载eventDate
-    [HarmonyPatch(typeof(Loading), "LoadBaseDate")]
+    [HarmonyPatch(typeof(ui_Loading), "LoadBaseDate")]
     [HarmonyPriority(Priority.Last)]
     public static class Loading_LoadBaseDate_Patch
     {

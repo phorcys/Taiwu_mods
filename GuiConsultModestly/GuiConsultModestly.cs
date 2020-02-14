@@ -329,7 +329,7 @@ namespace GuiConsultModestly
 
                     if (value > 0)
                     {
-                        var seven = ActorMenu.instance.GetActorResources(_actorId)[0]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
+                        var seven = DateFile.instance.GetActorResources(_actorId)[0]; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
                         var rand = UnityEngine.Random.Range(0, 100);
                         var need = (value + seven + Main.settings.AddWind);
                         result[1] += "\n<color=#8E8E8EFF>【细腻影响领悟成功率】粗心点数越小越好" + rand + "/" + need+ "</color>";
@@ -337,7 +337,7 @@ namespace GuiConsultModestly
 
                         if (value > 0)
                         {
-                            seven = ActorMenu.instance.GetActorResources(_actorId)[1];
+                            seven = DateFile.instance.GetActorResources(_actorId)[1];
                             rand = UnityEngine.Random.Range(0, 95) + seven + Main.settings.AddWind; // 七元赋性: 0 = 细腻  1 = 聪颖  2 = 水性  3 = 勇壮  4 = 坚毅  5 = 冷静  6 = 机缘
                             need = (stage * 10);
                             result[1] += "\n<color=#8E8E8EFF>【聪颖影响研读成功率】研读点数越大越好" + rand + "/" + need + "</color>";
@@ -590,9 +590,9 @@ namespace GuiConsultModestly
                 int item = DateFile.instance.GetItem(DateFile.instance.MianActorID(), itemId, 1, true);
                 if (item > 0)
                 {
-                    DateFile.instance.itemsDate[item][33] = "0|0|0|0|0|0|0|0|0|0";
-                    DateFile.instance.itemsDate[item][901] = "3";
-                    DateFile.instance.itemsDate[item][902] = "3";
+                    GameData.Items.SetItemProperty(item, 33, "0|0|0|0|0|0|0|0|0|0");
+                    GameData.Items.SetItemProperty(item, 901, "3");
+                    GameData.Items.SetItemProperty(item, 902, "3");
                 }
             }
         }

@@ -321,7 +321,7 @@ namespace GuiMartialArts
             {
                 getGongFaId = GongfaIds[Random.Range(0, GongfaIds.Count)];
                 isNiLian = Random.Range(0, BattleGongfaWeitht[getGongFaId][0] + BattleGongfaWeitht[getGongFaId][1]) < BattleGongfaWeitht[getGongFaId][1] ? 1 : 0; // ÅÐ¶ÏÑ§Ï°µ½µÄÊÇÕýÁ·»¹ÊÇÄæÁ·
-                var seven = ActorMenu.instance.GetActorResources(DateFile.instance.MianActorID())[5]; // ÆßÔª¸³ÐÔ: 0 = Ï¸Äå  1 = ´ÏÓ±  2 = Ë®ÐÔ  3 = ÓÂ×³  4 = ¼áÒã  5 = Àä¾²  6 = »úÔµ
+                var seven = DateFile.instance.GetActorResources(DateFile.instance.MianActorID())[5]; // ÆßÔª¸³ÐÔ: 0 = Ï¸Äå  1 = ´ÏÓ±  2 = Ë®ÐÔ  3 = ÓÂ×³  4 = ¼áÒã  5 = Àä¾²  6 = »úÔµ
                 var stage = int.Parse(DateFile.instance.gongFaDate[getGongFaId][2]);
                 gongFaPower = stage * 10;
                 rand = (Random.Range(5, 105) + seven + Main.settings.AddWind);
@@ -388,7 +388,7 @@ namespace GuiMartialArts
 
         private void CalculationData()
         {
-            var seven = ActorMenu.instance.GetActorResources(DateFile.instance.MianActorID())[6]; // ÆßÔª¸³ÐÔ: 0 = Ï¸Äå  1 = ´ÏÓ±  2 = Ë®ÐÔ  3 = ÓÂ×³  4 = ¼áÒã  5 = Àä¾²  6 = »úÔµ
+            var seven = DateFile.instance.GetActorResources(DateFile.instance.MianActorID())[6]; // ÆßÔª¸³ÐÔ: 0 = Ï¸Äå  1 = ´ÏÓ±  2 = Ë®ÐÔ  3 = ÓÂ×³  4 = ¼áÒã  5 = Àä¾²  6 = »úÔµ
             var newSeven = (int)((Random.Range(75, 125) / 100f) * seven);
             addGongFaLevel = (1 * Random.Range(10, 10 + newSeven) / 30 + 1) * Main.settings.ReadLevel;
             int newAddLevel = GongfaUpLevel(getGongFaId, addGongFaLevel, isNiLian);
@@ -475,9 +475,9 @@ namespace GuiMartialArts
                 int item = DateFile.instance.GetItem(DateFile.instance.MianActorID(), itemId, 1, true);
                 if (item > 0)
                 {
-                    DateFile.instance.itemsDate[item][33] = "0|0|0|0|0|0|0|0|0|0";
-                    DateFile.instance.itemsDate[item][901] = "3";
-                    DateFile.instance.itemsDate[item][902] = "3";
+                    GameData.Items.SetItemProperty(item, 33, "0|0|0|0|0|0|0|0|0|0");
+                    GameData.Items.SetItemProperty(item, 901, "3");
+                    GameData.Items.SetItemProperty(item, 902, "3");
                 }
             }
         }

@@ -59,8 +59,8 @@ namespace TrainingRoom
     //    }
     //}
 
-    [HarmonyPatch(typeof(MassageWindow), "SetMassageWindow")]
-    public static class MassageWindow_SetMassageWindow_Patch
+    [HarmonyPatch(typeof(ui_MessageWindow), "SetMassageWindow")]
+    public static class ui_MessageWindow_SetMassageWindow_Patch
     {
         public static void Prefix(int[] baseEventDate, int chooseId)
         {

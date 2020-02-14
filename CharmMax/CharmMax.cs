@@ -57,9 +57,9 @@ namespace CharmMax
             }
 
             Dictionary<int, string> actor;
-            if (DateFile.instance.actorsDate.TryGetValue(10001, out actor)) 
+            if (GameData.Characters.HasChar(10001)) 
             {
-                actor[15] = "960";
+                GameData.Characters.SetCharProperty(10001, 15, "960");
             }
 
             return;
