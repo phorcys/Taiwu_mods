@@ -90,7 +90,7 @@ namespace ShowBiographyOfTheDead
             foreach (var id in actorId)
                 if (id >= 0)//负的为临时对象
                 {
-                    if (DateFile.instance.actorsDate.ContainsKey(id))
+                    if (GameData.Characters.HasChar(id))
                         if (GetGangLevelText(id) == "村民")
                             deadFollower.Add(id);
                 }
@@ -172,17 +172,17 @@ namespace ShowBiographyOfTheDead
         {
             actorMessages.Clear();
             int mianActorId = DateFile.instance.MianActorID();
-            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n", DateFile.instance.massageDate[8010][1].Split('|')[0], DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[DateFile.instance.ParseInt(DateFile.instance.GetActorDate(id, 25, addValue: false))][102]), DateFile.instance.massageDate[8010][1].Split('|')[1], DateFile.instance.GetActorName(id, realName: false, baseName: true), DateFile.instance.massageDate[8010][1].Split('|')[2]));
-            if (DateFile.instance.actorLifeMassage.ContainsKey(id))
+            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n", DateFile.instance.massageDate[8010][1].Split('|')[0], DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(id, 25, applyBonus: false))][102]), DateFile.instance.massageDate[8010][1].Split('|')[1], DateFile.instance.GetActorName(id, realName: false, baseName: true), DateFile.instance.massageDate[8010][1].Split('|')[2]));
+            if (DateFile.instance.actorLife.ContainsKey(id))
             {
                 int num2 = Mathf.Max(DateFile.instance.GetActorFavor(false, mianActorId, id), 0);
-                for (int i = 0; i < DateFile.instance.actorLifeMassage[id].Count; i++)
+                for (int i = 0; i < DateFile.instance.actorLife[id].Count; i++)
                 {
-                    int[] array = DateFile.instance.actorLifeMassage[id][i];
+                    int[] array = DateFile.instance.actorLife[id][i].ToArray();
                     int key2 = array[0];
                     if (DateFile.instance.actorMassageDate.ContainsKey(key2))
                     {
-                        if (id != mianActorId && num2 < 30000 * DateFile.instance.ParseInt(DateFile.instance.actorMassageDate[key2][4]) / 100)
+                        if (id != mianActorId && num2 < 30000 * int.Parse(DateFile.instance.actorMassageDate[key2][4]) / 100)
                         {
                             actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n", DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString()) + DateFile.instance.massageDate[16][3], DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0]), DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
                         }
@@ -190,7 +190,8 @@ namespace ShowBiographyOfTheDead
                         {
                             List<string> list = actorMessages;
                             string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：" + DateFile.instance.actorMassageDate[key2][1] + "\n";
-                            object[] args = ActorMenu.instance.SetMassageText(id, array).ToArray();
+                            int massageId = array[0];
+                            object[] args = SetMassageText(id, array).ToArray();
                             list.Add(string.Format(format, args));
                         }
                     }
@@ -207,6 +208,54 @@ namespace ShowBiographyOfTheDead
                 {
                 '|'
                 })[1]));
+            }
+
+            // 哈哈，把非静态函数直接挪进来搞成内置的模块，我真是个天才！！
+            List<string> SetMassageText(int actorId, int[] massageDate)
+            {
+                int num = DateFile.instance.MianActorID();
+                int key = massageDate[0];
+                string[] array = DateFile.instance.actorMassageDate[key][2].Split('|');
+                string[] array2 = DateFile.instance.actorMassageDate[key][99].Split('|');
+                List<string> list = new List<string>
+                {
+                    DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, massageDate[1].ToString()) + DateFile.instance.massageDate[16][3],
+                    DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[massageDate[2]][0])
+                };
+                list.Add(DateFile.instance.SetColoer(10001, DateFile.instance.GetNewMapDate(massageDate[3], massageDate[4], 98) + DateFile.instance.GetNewMapDate(massageDate[3], massageDate[4], 0)));
+                for (int i = 0; i < array2.Length; i++)
+                {
+                    list.Add(array2[i]);
+                }
+                for (int j = 5; j < massageDate.Length; j++)
+                {
+                    int num2 = massageDate[j];
+                    switch (int.Parse(array[j - 5]))
+                    {
+                        case 0:
+                            list.Add(DateFile.instance.SetColoer((int.Parse(DateFile.instance.GetActorDate(num2, 26, applyBonus: false)) > 0) ? 20010 : 10002, DateFile.instance.GetActorName(num2)));
+                            break;
+                        case 1:
+                            list.Add(DateFile.instance.massageDate[10][0].Split('|')[0] + DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num2, 8)), DateFile.instance.GetItemDate(num2, 0, otherMassage: false)) + DateFile.instance.massageDate[10][0].Split('|')[1]);
+                            break;
+                        case 2:
+                            list.Add(DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.gongFaDate[num2][2]), DateFile.instance.massageDate[10][0].Split('|')[0] + DateFile.instance.gongFaDate[num2][0] + DateFile.instance.massageDate[10][0].Split('|')[1]));
+                            break;
+                        case 3:
+                            list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.resourceDate[num2][0]));
+                            break;
+                        case 4:
+                            list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.GetGangDate(num2, 0)));
+                            break;
+                        case 5:
+                            {
+                                int key2 = Mathf.Abs(num2);
+                                list.Add(DateFile.instance.SetColoer(20011 - int.Parse(DateFile.instance.presetGangGroupDateValue[key2][2]), DateFile.instance.presetGangGroupDateValue[key2][(num2 > 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(actorId, 14, applyBonus: false)))]));
+                                break;
+                            }
+                    }
+                }
+                return list;
             }
         }
 

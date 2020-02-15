@@ -4,7 +4,7 @@ namespace DreamLover
 {
 	public class Setting : UnityModManager.ModSettings
 	{
-		public bool[] 菜单打开情况 = new bool[3];
+		public int 菜单打开情况 = 0;
 
 		public bool 主动爱慕 = true;
 
@@ -32,146 +32,25 @@ namespace DreamLover
 
 		public SerializableDictionary<int, bool> 可接受的好感度等级 = new SerializableDictionary<int, bool>
 		{
-			{
-				0,
-				false
-			},
-			{
-				1,
-				false
-			},
-			{
-				2,
-				false
-			},
-			{
-				3,
-				false
-			},
-			{
-				4,
-				true
-			},
-			{
-				5,
-				true
-			},
-			{
-				6,
-				true
-			},
-			{
-				-1,
-				false
-			}
+			{ 0, false}, { 1, false}, { 2, false}, { 3, false},
+            { 4, true}, { 5, true}, { 6, true}, { -1, false}
 		};
 
 		public SerializableDictionary<int, bool> 可接受的立场等级 = new SerializableDictionary<int, bool>
-		{
-			{
-				0,
-				true
-			},
-			{
-				1,
-				true
-			},
-			{
-				2,
-				false
-			},
-			{
-				3,
-				false
-			},
-			{
-				4,
-				false
-			}
+        {
+            { 0, true}, { 1, true}, { 2, false}, { 3, false}, { 4, false}
 		};
 
 		public SerializableDictionary<int, bool> 可接受的魅力等级 = new SerializableDictionary<int, bool>
 		{
-			{
-				0,
-				false
-			},
-			{
-				1,
-				false
-			},
-			{
-				2,
-				false
-			},
-			{
-				3,
-				true
-			},
-			{
-				4,
-				true
-			},
-			{
-				5,
-				true
-			},
-			{
-				6,
-				true
-			},
-			{
-				7,
-				true
-			},
-			{
-				8,
-				true
-			},
-			{
-				9,
-				true
-			}
+			{ 0, false}, { 1, false}, { 2, false}, { 3, true}, { 4, true},
+            { 5, true}, { 6, true}, { 7, true}, { 8, true}, { 9, true}
 		};
 
 		public SerializableDictionary<int, bool> 可接受的阶层等级 = new SerializableDictionary<int, bool>
 		{
-			{
-				1,
-				true
-			},
-			{
-				2,
-				true
-			},
-			{
-				3,
-				true
-			},
-			{
-				4,
-				true
-			},
-			{
-				5,
-				true
-			},
-			{
-				6,
-				true
-			},
-			{
-				7,
-				true
-			},
-			{
-				8,
-				true
-			},
-			{
-				9,
-				true
-			}
+            { 1, false}, { 2, false}, { 3, true}, { 4, true},
+            { 5, true}, { 6, true}, { 7, true}, { 8, true}, { 9, true}
 		};
 
 		public int 入魔程度 = 0;
@@ -228,7 +107,7 @@ namespace DreamLover
 
 		public bool 启用指定怀孕功能 = false;
 
-		public bool 指定生育可能性 = false;
+        public bool 指定生育可能性 = false;
 
 		public int 生育可能性 = 7500;
 
@@ -240,7 +119,22 @@ namespace DreamLover
 
 		public int 蛐蛐概率 = 10;
 
-		public override void Save(UnityModManager.ModEntry modEntry)
+        public bool 启用防绿功能 = true;
+
+        public bool 太吾爱慕的人不能与他人发生关系 = true;
+
+        public bool 爱慕太吾的人不能与他人发生关系 = false;
+
+        public bool 和太吾之外的人都不能发生关系 = false;
+
+		public bool debugmode = false;
+
+        public SerializableDictionary<int, bool> 爱慕关系 = new SerializableDictionary<int, bool>
+        {
+            { 312, true}, { 306, true}, { 309, true}
+        };
+
+        public override void Save(UnityModManager.ModEntry modEntry)
 		{
 			UnityModManager.ModSettings.Save(this, modEntry);
 		}

@@ -94,7 +94,7 @@ namespace SelectBattleReward
         public void OnPointerClick(PointerEventData eventData)
         {
             //删掉不要的物品
-            DateFile.instance.LoseItem(DateFile.instance.MianActorID(), _itemid, _count, true, true);
+            DateFile.instance.LoseItem(DateFile.instance.MianActorID(), _itemid, _count, true);
             //销毁图标
             GameObject.Destroy(_icon);
         }
@@ -110,67 +110,53 @@ namespace SelectBattleReward
     /// <summary>
     ///  选择战利品，战利品展示界面注入鼠标响应事件
     /// </summary>
-    [HarmonyPatch(typeof(BattleSystem), "ShowBattleBooty")]
+    [HarmonyPatch(typeof(BattleEndWindow), "UpdateGet")]
     public static class BattleSystem_ShowBattleBooty_Patch
     {
-
         private static void Postfix(BattleSystem __instance, ref List<int[]> ___battleBooty, ref Transform ___battleBootyHolder)
         {
             if (!Main.enabled)
             {
                 return;
             }
-
             //遍历所有战利品
             for (int i = 0; i < ___battleBootyHolder.childCount; i++)
             {
                 var gameobj = ___battleBootyHolder.GetChild(i);
                 var iconobj = gameobj.Find(gameobj.name).gameObject;
-
-                int itemid = int.Parse(iconobj.name.Split(',')[1]);
+                int itemId = int.Parse(iconobj.name.Split(',')[1]);
                 int count = -1;
+                string maincate = DateFile.instance.GetItemDate(itemId, 4, true);
 
                 //大分类为6的物品 为任务物品，不可丢弃
-                string maincate = DateFile.instance.GetItemDate(itemid, 4, true);
-                if ( maincate == null || maincate == "" || maincate == "6")
+                if (maincate == null || maincate == "" || maincate == "6")
                 {
-                    Main.Logger.Log(" Ignore Quest Items " + itemid);
                     continue;
                 }
 
                 // 稀有度超过设定等级的物品，不可丢弃
-                string grade = DateFile.instance.GetItemDate(itemid, 8, true);
-                if (maincate == null || maincate == "" ||  int.Parse(grade) >= Main.settings.destroy_grade)
+                string grade = DateFile.instance.GetItemDate(itemId, 8, true);
+                if (maincate != null && !(maincate == "") && int.Parse(grade) < Main.settings.destroy_grade)
                 {
-                    Main.Logger.Log(" Ignore Rare Items" + itemid  + " grade:" +grade);
-                    continue;
-                }
-
-                //便利战利品信息列表
-                foreach (var val in ___battleBooty)
-                {
-                    if (val[0] == itemid)
+                    // 遍历战利品信息列表
+                    foreach (int[] item in ___battleBooty)
                     {
-                        count = val[1];
+                        if (item[0] == itemId)
+                        {
+                            count = item[1];
+                        }
                     }
-                    
-                }
-                
-                if(count == -1)
-                {
                     //错误不处理
-                    Main.Logger.Log("count == -1 " + itemid);
-                    return;
+                    if (count == -1)
+                    {
+                        break;
+                    }
+
+                    //添加相应处理Component,注入参数
+                    ClickAction clickAction = iconobj.AddComponent<ClickAction>();
+                    clickAction.setParam(itemId, count, gameobj.gameObject);
                 }
-
-                //添加相应处理Component,注入参数
-                var actionstub = iconobj.AddComponent<ClickAction>();
-                actionstub.setParam(itemid, count, gameobj.gameObject);
-
-                Main.Logger.Log("Finish add actionstub " + itemid);
-
             }
-            return;
         }
     }
 }

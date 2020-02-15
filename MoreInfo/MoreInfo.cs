@@ -796,7 +796,7 @@ namespace MoreInfo
                 return;
             for (int i = 0; i < ___equipIcons.Length; i++)
             {
-                int equipId = int.Parse(DateFile.instance.GetActorDate(key, 301 + i, addValue: false));
+                int equipId = int.Parse(DateFile.instance.GetActorDate(key, 301 + i, applyBonus: false));
                 Changer.ChangeItemName(___equipHpText[i], equipId);
             }
         }
@@ -927,7 +927,7 @@ namespace MoreInfo
                                              DateFile.instance.massageDate[8010][1].Split('|')[0],
                                              DateFile.instance.SetColoer(
                                                  10002,
-                                                 DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(key, 25, addValue: false))][102]),
+                                                 DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(key, 25, applyBonus: false))][102]),
                                              DateFile.instance.massageDate[8010][1].Split('|')[1],
                                              DateFile.instance.GetActorName(key, realName: false, baseName: true),
                                              DateFile.instance.massageDate[8010][1].Split('|')[2]));

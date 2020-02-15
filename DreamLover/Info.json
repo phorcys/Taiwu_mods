@@ -1,8 +1,8 @@
 ﻿{
   "Id": "DreamLover",
   "DisplayName": "梦中情人",
-  "Author": "RedContritio",
-  "Version": "1.0.3",
+  "Author": "炽翼幻灵",
+  "Version": "1.0.4",
   "AssemblyName": "DreamLover.dll",
   "EntryMethod": "DreamLover.Main.Load",
   "ManagerVersion": "0.12.2",

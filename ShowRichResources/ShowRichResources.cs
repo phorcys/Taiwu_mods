@@ -97,7 +97,7 @@ namespace ShowRichResources
         public static bool isInGame()
         {
             DateFile tbl = DateFile.instance;
-            if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
+            if (tbl == null || GameData.Characters.HasChar(tbl.MianActorID()))
             {
                 return false;
             }

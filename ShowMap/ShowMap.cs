@@ -31,7 +31,7 @@ namespace ShowMap
                 return;
             }
             DateFile tbl = DateFile.instance;
-            if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
+            if (tbl == null || !GameData.Characters.HasChar(tbl.MianActorID()))
             {
                 GUILayout.Label("存档未载入!");
             }

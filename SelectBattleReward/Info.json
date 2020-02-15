@@ -2,7 +2,7 @@
   "Id": "SelectBattleReward",
   "DisplayName": "选择战利品",
   "Author": "phorcys",
-  "Version": "1.0.3",
+  "Version": "1.0.6",
   "AssemblyName": "SelectBattleReward.dll",
   "EntryMethod": "SelectBattleReward.Main.Load"
 }

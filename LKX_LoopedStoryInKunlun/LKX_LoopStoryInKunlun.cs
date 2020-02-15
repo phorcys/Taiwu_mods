@@ -295,7 +295,7 @@ namespace LKX_LoopedStoryInKunlun
 
             if (eventDate[2] == 16781)
             {
-                LKX_LoopedStoryInKunlun_MassageWindow_EndEvent147_1.RunActorData();
+                LKX_LoopedStoryInKunlun_MessageEventManager_EndEvent147_1.RunActorData();
             }
         }
     }
@@ -303,17 +303,17 @@ namespace LKX_LoopedStoryInKunlun
     /// <summary>
     /// 结束事件检查是否进入16785的对话事件
     /// </summary>
-    [HarmonyPatch(typeof(MassageWindow), "EndEvent")]
-    public class LKX_LoopedStoryInKunlun_For_MassageWindow_EndEvent
+    [HarmonyPatch(typeof(MessageEventManager), "EndEvent")]
+    public class LKX_LoopedStoryInKunlun_For_MessageEventManager_EndEvent
     {
         static void Prefix()
         {
             if (!Main.enabled || !Main.settings.activeMod) return;
-
-            if (MassageWindow.instance.eventValue.Count > 0 && MassageWindow.instance.eventValue[0] != 0)
+            
+            if (MessageEventManager.Instance.EventValue.Count > 0 && MessageEventManager.Instance.EventValue[0] != 0)
             {
                 //判断事件id是不是16785
-                if (MassageWindow.instance.eventValue[0] == 16785)
+                if (MessageEventManager.Instance.EventValue[0] == 16785)
                 {
                     Main.SetStoryForKunLun();
                 }
@@ -343,8 +343,8 @@ namespace LKX_LoopedStoryInKunlun
     /// <summary>
     /// 打Boss开始的事件，包括替换Boss人物模板等。
     /// </summary>
-    [HarmonyPatch(typeof(MassageWindow), "EndEvent147_1")]
-    public class LKX_LoopedStoryInKunlun_MassageWindow_EndEvent147_1
+    [HarmonyPatch(typeof(MessageEventManager), "EndEvent147_1")]
+    public class LKX_LoopedStoryInKunlun_MessageEventManager_EndEvent147_1
     {
         /// <summary>
         /// 检查事件的数组1是不是符合对战人物模板的id，是的话拦截，否则放行。
@@ -353,7 +353,7 @@ namespace LKX_LoopedStoryInKunlun
         static bool Prefix()
         {
             //长度2，index{0:事件id  1:对战人物id}
-            int eventIndex = MassageWindow.instance.eventValue[1];
+            int eventIndex = MessageEventManager.Instance.EventValue[1];
             if (eventIndex == 18628 && Main.enabled && Main.settings.activeMod)
             {
                 Event_StartBattleWindow();
@@ -370,7 +370,7 @@ namespace LKX_LoopedStoryInKunlun
         {
             int teamId = 200001;
 
-            StartBattle.instance.ShowStartBattleWindow(teamId, 0, 18, new List<int> { MassageWindow.instance.eventValue[1] });
+            StartBattle.instance.ShowStartBattleWindow(teamId, 0, 18, new List<int> { MessageEventManager.Instance.EventValue[1] });
         }
 
         /// <summary>
@@ -380,8 +380,8 @@ namespace LKX_LoopedStoryInKunlun
         {
             int id = DateFile.instance.MianActorID();
             Dictionary<int, string> pactor = new Dictionary<int, string>();
-            Dictionary<int, string> mianactor = new Dictionary<int, string>();
-            if (DateFile.instance.presetActorDate.TryGetValue(18628, out pactor) && DateFile.instance.actorsDate.TryGetValue(DateFile.instance.mianActorId, out mianactor))
+            int mainActorId = DateFile.instance.MianActorID();
+            if (DateFile.instance.presetActorDate.TryGetValue(18628, out pactor) && GameData.Characters.HasChar(mainActorId))
             {
                 List<int> buffer = pactor.Keys.ToList();
                 SortedDictionary<int, int[]> mianGongFa = new SortedDictionary<int, int[]>();
@@ -415,7 +415,7 @@ namespace LKX_LoopedStoryInKunlun
                 {
                     if (equip.Contains(key))
                     {
-                        pactor[key] = DateFile.instance.GetItemDate(int.Parse(mianactor[key]), 999);
+                        pactor[key] = DateFile.instance.GetItemDate(int.Parse(GameData.Characters.GetCharProperty(mainActorId, key)), 999);
                     }
                     
                     
@@ -428,12 +428,15 @@ namespace LKX_LoopedStoryInKunlun
                             break;
                         case 5:
                             pactor[0] = "昆仑镜·" + DateFile.instance.GetActorDate(id, key);
-                            if (mianactor[0] != "NoSurname" || mianactor[0] != "无名" || mianactor[0] != "") pactor[0] = pactor[0] + DateFile.instance.GetActorDate(id, 0);
+                            if (GameData.Characters.GetCharProperty(mainActorId, 0) != "NoSurname" ||
+                                GameData.Characters.GetCharProperty(mainActorId, 0) != "无名" ||
+                                GameData.Characters.GetCharProperty(mainActorId, key) != "")
+                                pactor[0] = pactor[0] + DateFile.instance.GetActorDate(id, 0);
                             break;
                         case 71:
                         case 72:
                         case 73:
-                            pactor[key] = (int.Parse(DateFile.instance.GetActorDate(DateFile.instance.mianActorId, key)) / 2).ToString();
+                            pactor[key] = (int.Parse(DateFile.instance.GetActorDate(mainActorId, key)) / 2).ToString();
                             break;
                         default:
                             pactor[key] = DateFile.instance.GetActorDate(DateFile.instance.mianActorId, key);

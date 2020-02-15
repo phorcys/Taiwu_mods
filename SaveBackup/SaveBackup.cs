@@ -237,7 +237,7 @@ namespace SaveBackup
     /// <summary>
     ///  成功读档后自动备份游戏存档
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadingScene")]
+    [HarmonyPatch(typeof(ui_Loading), "LoadingScene")]
     public static class Loading_LoadingScene_Patch
     {
 
@@ -250,7 +250,7 @@ namespace SaveBackup
 
     }
 
-    [HarmonyPatch(typeof(Loading), "Update")]
+    [HarmonyPatch(typeof(ui_Loading), "Update")]
     public static class Loading_Update_Patch
     {
         private static void Prefix(bool ___loadingEnd)

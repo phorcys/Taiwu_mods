@@ -90,7 +90,7 @@ namespace SamsaraLock
             GUILayout.BeginVertical();
 
             //加入手动寻找太吾按钮
-            bool flag = DateFile.instance == null || DateFile.instance.actorsDate == null || !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId);
+            bool flag = DateFile.instance == null || !GameData.Characters.HasChar(DateFile.instance.MianActorID());
             if (flag)
             {
                 GUILayout.Label("存档未载入!", new GUILayoutOption[0]);
@@ -169,8 +169,7 @@ namespace SamsaraLock
                 int gangValueId = DateFile.instance.GetGangValueId(num2, num3);
                 if (gangValueId == 99)
                 {
-                    DateFile.instance.actorsDate[id][CharDataIndex.LOVE] = DEAD_TAIWU_LOVE.ToString();
-
+                    GameData.Characters.SetCharProperty(id, CharDataIndex.LOVE, DEAD_TAIWU_LOVE.ToString());
                 }
 
             }
@@ -220,7 +219,7 @@ namespace SamsaraLock
         // 把charId对应人物标记为死太吾，并且放进Cache
         public void setAsDeadTaiwu(CharId charId)
         {
-            DateFile.instance.actorsDate[charId][CharDataIndex.LOVE] = DEAD_TAIWU_LOVE.ToString();
+            GameData.Characters.SetCharProperty(charId, CharDataIndex.LOVE, DEAD_TAIWU_LOVE.ToString());
             if(!deadTaiwuList.Contains(charId))deadTaiwuList.Add(charId);
         }
 
@@ -237,7 +236,7 @@ namespace SamsaraLock
     /// <summary>
     ///  开新游戏，读取进度时，重置死太吾管理器
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "LoadingScene")]
+    [HarmonyPatch(typeof(ui_Loading), "LoadingScene")]
     public static class Loading_LoadingScene_Patch
     {
 
@@ -256,7 +255,7 @@ namespace SamsaraLock
     ///  Loading完成，数据准备完毕后初始化死太吾管理器。
     ///  DeadTaiwuManager.initialize() 内部会处理重复initialize的情况。
     /// </summary>
-    [HarmonyPatch(typeof(Loading), "Update")]
+    [HarmonyPatch(typeof(ui_Loading), "Update")]
     public static class Loading_Update_Patch
     {
         private static void Prefix(bool ___loadingEnd)
@@ -363,21 +362,21 @@ namespace SamsaraLock
                 if (Main.settings.lockFaceAll || (Main.settings.lockFaceTaiwu && istaiwu))
                 {
                    
-                    string face_components = DateFile.instance.actorsDate[preactor][CharDataIndex.FACE_COMPONENTS];
-                    string face_colors = DateFile.instance.actorsDate[preactor][CharDataIndex.FACE_COLORS];
+                    string face_components = GameData.Characters.GetCharProperty(preactor, CharDataIndex.FACE_COMPONENTS);
+                    string face_colors = GameData.Characters.GetCharProperty(preactor, CharDataIndex.FACE_COLORS);
                     string futa = DateFile.instance.GetActorDate(preactor, CharDataIndex.FUTA, false);
                   
                     int charm = DateFile. instance.GetFaceCharm(gender, Array.ConvertAll(face_components.Split(new char[] { '|' }), int.Parse));
 
-                    DateFile.instance.actorsDate[actorId][CharDataIndex.FACE_COMPONENTS] = face_components;
-                    DateFile.instance.actorsDate[actorId][CharDataIndex.FACE_COLORS] = face_colors;
-                    DateFile.instance.actorsDate[actorId][CharDataIndex.CHARM] = charm.ToString();
-                    DateFile.instance.actorsDate[actorId][CharDataIndex.FUTA] = futa;
+                    GameData.Characters.SetCharProperty(actorId, CharDataIndex.FACE_COMPONENTS, face_components);
+                    GameData.Characters.SetCharProperty(actorId, CharDataIndex.FACE_COLORS, face_colors);
+                    GameData.Characters.SetCharProperty(actorId, CharDataIndex.CHARM, charm.ToString());
+                    GameData.Characters.SetCharProperty(actorId, CharDataIndex.FUTA, futa);
                    
 
                 }
 
-                int baseactor = int.Parse(DateFile.instance.actorsDate[actorId][997]);
+                int baseactor = int.Parse(GameData.Characters.GetCharProperty(actorId, 997));
                 int gender2 = int.Parse(DateFile.instance.presetActorDate[baseactor][14]);
                 int brithpart = (baseactor - 1) / 2;
 
@@ -385,7 +384,7 @@ namespace SamsaraLock
                 {
 
                     //改写BUG之源997
-                    DateFile.instance.actorsDate[actorId][997] = (brithpart * 2 + gender).ToString();
+                    GameData.Characters.SetCharProperty(actorId, 997, (brithpart * 2 + gender).ToString());
 
                     //重命名
                     DateFile.instance.MakeActorName(actorId, int.Parse(DateFile.instance.GetActorDate(actorId, 29, false)), DateFile.instance.GetActorDate(actorId, 5, false), true);

@@ -62,8 +62,7 @@ namespace Evolution
 
         public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            bool cond = (DateFile.instance == null || DateFile.instance.actorsDate == null ||
-                         !DateFile.instance.actorsDate.ContainsKey(DateFile.instance.mianActorId));
+            bool cond = (DateFile.instance == null || !GameData.Characters.HasChar(DateFile.instance.MianActorID()));
             if (cond)
             {
                 GUILayout.Label("未加载存档！");
@@ -168,25 +167,21 @@ namespace Evolution
                         var actor_id = DateFile.instance.acotrTeamDate[k];
                         for (int i = 0; i < 6; i++)
                         {
-
-                            DateFile.instance.actorsDate[actor_id][61 + i] =
-                                (int.Parse(DateFile.instance.actorsDate[actor_id][61 + i]) + 1)
-                                .ToString();
+                            GameData.Characters.SetCharProperty(actor_id, 61 + i,
+                                int.Parse(GameData.Characters.GetCharProperty(actor_id, 61 + i) + 1).ToString());
 
                         }
 
                         for (int i = 0; i < 16; i++)
                         {
-                            DateFile.instance.actorsDate[actor_id][501 + i] =
-                                (int.Parse(DateFile.instance.actorsDate[actor_id][501 + i]) + 1)
-                                .ToString();
+                            GameData.Characters.SetCharProperty(actor_id, 501 + i,
+                                int.Parse(GameData.Characters.GetCharProperty(actor_id, 501 + i) + 1).ToString());
                         }
 
                         for (int i = 0; i < 14; i++)
                         {
-                            DateFile.instance.actorsDate[actor_id][601 + i] =
-                                (int.Parse(DateFile.instance.actorsDate[actor_id][601 + i]) + 1)
-                                .ToString();
+                            GameData.Characters.SetCharProperty(actor_id, 601 + i,
+                                int.Parse(GameData.Characters.GetCharProperty(actor_id, 601 + i) + 1).ToString());
                         }
                     }
 
@@ -227,7 +222,9 @@ namespace Evolution
                                 DateFile.instance.actorGongFas[key].Remove(150370);
                             }
 
-                            DateFile.instance.SetActorEquipGongFa(key, true, true);
+                            // DateFile.instance.SetActorEquipGongFa(key, true, true);
+                            // 刷新功法 ？
+                            DateFile.instance.SetMianActorEquipGongFa();
                         }
                     }
 
@@ -289,7 +286,7 @@ namespace Evolution
                     {
                         Main.setting.growCount = Main.setting.growCount - 10;
                         Main.Logger.Log("开始加特质");
-                        Dictionary<int, string> actor, array = new Dictionary<int, string>();
+                        Dictionary<int, string> array = new Dictionary<int, string>();
                         //Main.Logger.Log("获取特性中");
 
                         foreach (KeyValuePair<int, Dictionary<int, string>> item in DateFile.instance.actorFeaturesDate)
@@ -301,12 +298,11 @@ namespace Evolution
                         }
 
 
-                        if (DateFile.instance.actorsDate.TryGetValue(actorId, out actor))
+                        if (GameData.Characters.HasChar(actorId))
                         {
-                            string[] features = actor[101].Split('|');
-                            foreach (string feature in features)
+                            var features = DateFile.instance.GetActorFeature(actorId);
+                            foreach (int key in features)
                             {
-                                int key = int.Parse(feature.Trim());
                                 if (array.ContainsKey(key)) array.Remove(key);
                             }
                         }
@@ -317,16 +313,17 @@ namespace Evolution
                             // 增加特性
                             List<int> keyList = new List<int>(array.Keys);
                             int index = Random.Range(0, keyList.Count - 1);
-                            actor[101] += "|" + keyList[index];
+                            GameData.Characters.SetCharProperty(actorId, 101,
+                                GameData.Characters.GetCharProperty(actorId, 101) + "|" + keyList[index]);
 
                             // 刷新特性缓存，要不然游戏不生效
-                            DateFile.instance.actorsFeatureCache.Remove(DateFile.instance.mianActorId);
+                            DateFile.instance.ActorFeaturesCacheReset(DateFile.instance.MianActorID());
 
                             if (DateFile.instance.actorGongFas[actorId][150370][0] >
-                                actor[101].Split('|').Length)
+                                DateFile.instance.GetActorFeature(actorId).Count)
                             {
                                 DateFile.instance.actorGongFas[actorId][150370][0] -=
-                                    actor[101].Split('|').Length;
+                                    DateFile.instance.GetActorFeature(actorId).Count;
                             }
                             else
                             {
@@ -374,7 +371,7 @@ namespace Evolution
                         min_grow++;
                     }
 
-                    var tar = DateFile.instance.actorsDate[actorId][attrKey];
+                    var tar = GameData.Characters.GetCharProperty(actorId, attrKey);
                     Main.Logger.Log("成长前属性值为" + tar);
                     int p = int.Parse(tar);
 
@@ -400,7 +397,7 @@ namespace Evolution
 
                     p = p + grow_num;
                     tar = p.ToString();
-                    DateFile.instance.actorsDate[actorId][attrKey] = tar;
+                    GameData.Characters.SetCharProperty( actorId, attrKey, tar);
                     Main.Logger.Log("成长后属性值为" + tar);
                 }
 

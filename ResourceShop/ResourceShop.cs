@@ -54,7 +54,7 @@ namespace ResourceShop
             Main.settings.resourceType = GUILayout.Toolbar(Main.settings.resourceType, toolBarText);
             int.TryParse(GUILayout.TextField(Main.settings.resourceCount.ToString(), 5, GUILayout.Width(90)), out Main.settings.resourceCount);
             DateFile tbl = DateFile.instance;
-            if (tbl == null || tbl.actorsDate == null || !tbl.actorsDate.ContainsKey(tbl.mianActorId))
+            if (tbl == null || !GameData.Characters.HasChar(tbl.MianActorID()))
             {
                 GUILayout.Label("  存档未载入!");
             }
@@ -79,7 +79,8 @@ namespace ResourceShop
             if (count < 0)
                 count = 0;
             int cost =(int) Math.Ceiling(price * count);
-            int current_money=ActorMenu.instance.ActorResource(id)[MoneyIndex];
+            //int current_money= ActorMenu.instance.ActorResource(id)[MoneyIndex];
+            int current_money = int.Parse(GameData.Characters.GetCharProperty(id, 406));
             if(cost>current_money)
             {
                 cost = current_money;
