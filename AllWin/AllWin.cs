@@ -63,7 +63,7 @@ namespace AllWin
     /// <summary>
     ///   // , new Type[] { typeof(bool), typeof(int) }
     /// </summary>
-    [HarmonyPatch(typeof(BattleSystem), "BattleEnd")]
+    [HarmonyPatch(typeof(BattleEndWindow), "BattleEnd")]
     public static class The_Patch
     {
 
