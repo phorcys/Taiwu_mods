@@ -1280,7 +1280,7 @@ namespace GayMax
                     if (!isgay) FireForFun++;
                 }
             }
-            
+
             if (GF > 0)
             {
                 //bool flag1 = baseActorslist.Contains(GF);
@@ -1315,6 +1315,7 @@ namespace GayMax
             {
                 rate2 += int.Parse(DateFile.instance.goodnessDate[actorGoodness][24]);
             }
+
             //异端审判
             rate -= (FireForFun * 15);
             rate2 -= (FireForFun * 20);
@@ -1402,6 +1403,7 @@ namespace GayMax
                     StarFall.BondByLove(lovertonight, actorId, 1, 1, mapId, tileId);
                 }
             }
+
             return;
         }
     }
@@ -1947,11 +1949,10 @@ namespace GayMax
                             if (dotime > 1)
                             {
                                 string fea = StarFall.JadeMirror(childId, dotime, motherId, fatherId, extra);
-                                if (DateFile.instance.ActorFeaturesGetCache(childId, out __result))
+                                /*if (DateFile.instance.ActorFeaturesGetCache(childId, out __result))
                                 {
                                     DateFile.instance.ActorFeaturesCacheReset(childId);
-                                }
-
+                                }*/
                                 Characters.SetCharProperty(childId, 101, fea);
                             }
                         }
@@ -1997,10 +1998,13 @@ namespace GayMax
                     Characters.SetCharProperty(actorId, 21, Memo.Homo);
                 }
             }
-            else if (Main.settings.PriceOFSalt && DateFile.instance.GetActorDate(actorId, 21, false) == Memo.Bi &&
-                     UnityEngine.Random.Range(0, 100) < 15)
+            else if (Main.settings.PriceOFSalt && DateFile.instance.GetActorDate(actorId, 21, false) == Memo.Bi)
             {
-                Characters.SetCharProperty(actorId, 21, Memo.Homo);
+                var random = new System.Random();
+                if (random.Next(0, 100) < 15)
+                {
+                    Characters.SetCharProperty(actorId, 21, Memo.Homo);
+                }
             }
 
             var sex1 = DateFile.instance.presetActorDate[baseActorId][14];
