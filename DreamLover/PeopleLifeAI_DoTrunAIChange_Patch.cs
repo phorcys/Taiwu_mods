@@ -18,156 +18,157 @@ namespace DreamLover
 			{
 				return true;
 			}
-			if (!Main.settings.主动爱慕 && !Main.settings.主动表白 && !Main.settings.主动求婚)
+
+			do
+			{
+				if (!Main.settings.belove.ForgetMe)
+					break;
+				// 如果没有任何一种爱慕之情则结束
+				if (!DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && !DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId))
+					break;
+				Debug(actorId.ToString() + " " + DateFile.instance.GetActorName(actorId) + "开始进入雨恨云愁判定");
+				// 如果已经结婚，则无法通过
+				if (DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+					break;
+				// 如果太吾对对方两情相悦，则无法通过
+				if (DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId))
+					break;
+				// 如果太吾爱慕对方，则无法通过
+				if (DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId))
+					break;
+				// 对方对太吾有某种爱慕（倾心爱慕 或 两情相悦
+
+				Debug(actorId.ToString() + " " + DateFile.instance.GetActorName(actorId) + "雨恨云愁判定通过");
+
+				DateFile.instance.RemoveActorSocial(actorId, mainActorId, 306);
+				DateFile.instance.RemoveActorSocial(actorId, mainActorId, 312);
+				PeopleLifeAIHelper.AiMoodChange(actorId, -20);
+				PeopleLifeAIHelper.AISetMassage(42, actorId, mapId, tileId, new int[1], mainActorId);
+				PeopleLifeAI.instance.aiTrunEvents.Add(new int[4]
+				{
+					229,
+					mapId,
+					tileId,
+					actorId
+				});
+
+			} while (false);
+
+			if (!Main.settings.belove.Enabled)
 			{
 				return true;
 			}
-			if (!Main.settings.全世界都喜欢太吾 && !isTaiwuAtThisTile)
+			if (!Main.settings.belove.IgnoreDistance && !isTaiwuAtThisTile)
 			{
 				return true;
 			}
 
-			string name = DateFile.instance.GetActorName(actorId);
-			Debug(name + "通过位置判定");
+			
+
+			int sex = int.Parse(DateFile.instance.GetActorDate(actorId, 14, applyBonus: false)) % 2;
+			if (!Main.settings.belove.SexFilter[sex])
+			{
+				return true;
+			}
+
+			Debug(actorId.ToString() + " " + DateFile.instance.GetActorName(actorId) + "开始进入判定过程");
 
 			int actorFavor = DateFile.instance.GetActorFavor(false, mainActorId, actorId, getLevel: true);
-			if (Main.settings.可接受的好感度等级.TryGetValue(actorFavor, out bool value))
+			if (TextConvertHelper.LikabilityKey.TryGetIndex(actorFavor, out int index) && !Main.settings.belove.AcceptedLikability[index])
 			{
-				if (!value)
-				{
-					return true;
-				}
-			}
-
-			Debug(name + "通过好感判定 ：" + DateFile.instance.GetActorName(actorId) + "好感度为: " + actorFavor);
-
-			int num = int.Parse(DateFile.instance.GetActorDate(actorId, 11, applyBonus: false));
-			if (num < Main.settings.年龄下限 || num > Main.settings.年龄上限)
-			{
+				Debug(string.Format("好感判定失败，好感度为：{0} {1}", actorFavor, TextConvertHelper.LikabilityText[index]));
 				return true;
 			}
 
-			Debug(name + "通过年龄判定");
 
-			int num2 = int.Parse(DateFile.instance.GetActorDate(actorId, 15));
-			int key = num2 / 100;
-			if (Main.settings.可接受的魅力等级.TryGetValue(key, out bool value2))
+			int AgeValue = int.Parse(DateFile.instance.GetActorDate(actorId, 11, applyBonus: false));
+			if (AgeValue < Main.settings.belove.AcceptedAge.start || AgeValue > Main.settings.belove.AcceptedAge.end)
 			{
-				if (!value2)
-				{
-					return true;
-				}
-			}
-
-			Debug(name + "通过魅力判定：" + DateFile.instance.GetActorName(actorId) + "魅力为: " + num2);
-
-			if (int.TryParse(DateFile.instance.GetActorDate(actorId, 20, applyBonus: false), out int result))
-			{
-				int num3 = Mathf.Abs(result);
-				if (Main.settings.可接受的阶层等级.TryGetValue(num3, out bool value3))
-				{
-					if (!value3)
-					{
-						return true;
-					}
-				}
-
-				Debug(name + "通过阶层判定：" + DateFile.instance.GetActorName(actorId) + "阶层为: " + result + ": " + num3);
-			}
-
-			int num4 = int.Parse(DateFile.instance.GetActorDate(actorId, 997, applyBonus: false));
-			if (!Main.settings.男的可以来 && num4 % 2 == 1)
-			{
-				return true;
-			}
-			if (!Main.settings.女的可以来 && num4 % 2 == 0)
-			{
+				Debug(string.Format("年龄判定失败，年龄为：{0}", AgeValue));
 				return true;
 			}
 
-			Debug(name + "通过性别判定");
+			int charmLevel = DateFile.instance.GetActorCharm(actorId);
+			if (TextConvertHelper.CharmKey.TryGetIndex(charmLevel, out index) && !Main.settings.belove.AcceptedCharm[index])
+			{
+				Debug(string.Format("魅力判定失败，魅力级别为：{0} {1}", charmLevel, TextConvertHelper.CharmText[index]));
+				return true;
+			}
+
+			int rankLevel = DateFile.instance.GetActorRank(actorId);
+			if (TextConvertHelper.RankKey.TryGetIndex(rankLevel, out index) && !Main.settings.belove.AcceptedRank[index])
+			{
+				Debug(string.Format("阶层判定失败，阶层为：{0} {1}", rankLevel, TextConvertHelper.RankText[index]));
+				return true;
+			}
 
 			int gangId = int.Parse(DateFile.instance.GetActorDate(actorId, 19, applyBonus: false));
 			int gangLevel = int.Parse(DateFile.instance.GetActorDate(actorId, 20, applyBonus: false));
 			int gangValueId = DateFile.instance.GetGangValueId(gangId, gangLevel);
-			if (!Main.settings.不顾门派爱太吾 && int.Parse(DateFile.instance.presetGangGroupDateValue[gangValueId][803]) == 0)
+			if (!Main.settings.belove.IgnoreGang && int.Parse(DateFile.instance.presetGangGroupDateValue[gangValueId][803]) == 0)
 			{
+				Debug(string.Format("门派判定失败，门派数据：{0} {1} {2}", gangId, gangLevel, gangValueId));
 				return true;
 			}
-
-			Debug(name + "通过门派判定");
 
 			int actorGoodness = DateFile.instance.GetActorGoodness(actorId);
-			if (Main.settings.可接受的立场等级.TryGetValue(actorGoodness, out bool value4))
+			if (TextConvertHelper.GoodnessKey.TryGetIndex(actorGoodness, out index))
 			{
-				if (!value4)
+				if (!Main.settings.belove.AcceptedGoodness[index])
 				{
+					Debug(string.Format("立场判定失败，立场为 {0} {1}", actorGoodness, TextConvertHelper.GoodnessText[index]));
 					return true;
 				}
 			}
 
-			Debug(name + "通过立场判定：" + DateFile.instance.GetActorName(actorId) + "立场为: " + actorGoodness);
 
-			if (int.TryParse(DateFile.instance.GetActorDate(actorId, 6, applyBonus: false), out int result2))
+			if (int.TryParse(DateFile.instance.GetActorDate(actorId, 6, applyBonus: false), out int xiangShuValue))
 			{
-				if (result2 > Main.settings.入魔程度)
+				if (TextConvertHelper.XiangShuKey.TryGetIndex(xiangShuValue, out index) && !Main.settings.belove.AcceptedXiangShu[index])
 				{
+					Debug(string.Format("相枢化判定失败，值为 {0} {1}", xiangShuValue, TextConvertHelper.XiangShuText[index]));
 					return true;
 				}
 			}
 
-			Debug(name + "通过入魔判定");
-
-			if (!Main.settings.兄弟姐妹 && DateFile.instance.GetActorSocial(actorId, 302).Contains(mainActorId))
+			for(int i=0; i<TextConvertHelper.RelationCount; ++i)
 			{
-				return true;
-			}
-			if (!Main.settings.亲生父母 && DateFile.instance.GetActorSocial(actorId, 303).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.义父义母 && DateFile.instance.GetActorSocial(actorId, 304).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.授业恩师 && DateFile.instance.GetActorSocial(actorId, 305).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.义结金兰 && DateFile.instance.GetActorSocial(actorId, 308).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.儿女子嗣 && DateFile.instance.GetActorSocial(actorId, 310).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.嫡系传人 && DateFile.instance.GetActorSocial(actorId, 311).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.势不两立 && DateFile.instance.GetActorSocial(actorId, 401).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.血海深仇 && DateFile.instance.GetActorSocial(actorId, 402).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.父系血统 && DateFile.instance.GetActorSocial(actorId, 601).Contains(mainActorId))
-			{
-				return true;
-			}
-			if (!Main.settings.母系血统 && DateFile.instance.GetActorSocial(actorId, 602).Contains(mainActorId))
-			{
-				return true;
+				if(!Main.settings.belove.AcceptedRelation[i] && DateFile.instance.GetActorSocial(actorId, TextConvertHelper.RelationKey[i]).Contains(mainActorId))
+				{
+					Debug(string.Format("关系判定失败，太吾是对方的 {0} {1}", TextConvertHelper.RelationKey[i], TextConvertHelper.XiangShuText[index]));
+					return true;
+				}
 			}
 
-			Debug(name + "通过关系判定");
+			Debug("通用筛选判定通过");
 
-			if (isTaiwuAtThisTile && Main.settings.主动求婚 && DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId) && !DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) && !DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId) && (Main.settings.已婚人士想和太吾结婚 || DateFile.instance.GetActorSocial(actorId, 309).Count <= 0) && (Main.settings.即使太吾已婚别人也想求婚 || DateFile.instance.GetActorSocial(mainActorId, 309).Count <= 0) && (Main.settings.即使出家也要求婚太吾 || int.Parse(DateFile.instance.GetActorDate(actorId, 2, applyBonus: false)) == 0) && (Main.settings.即使太吾出家也要求婚 || int.Parse(DateFile.instance.GetActorDate(mainActorId, 2, applyBonus: false)) == 0))
+			do
 			{
-				PeopleLifeAI_Utils.AISetEvent(8, new int[4]
+				if (!isTaiwuAtThisTile)
+					break;
+				if(!Main.settings.belove.marry.Enabled)
+					break;
+				// 如果没有双向 两情相悦，则无法通过
+				if(!(DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId)))
+					break;
+				// 如果已经结婚，则无法通过
+				if(DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+					break;
+				// 如果不是已婚杀手，且对方已婚，则无法通过
+				if(!Main.settings.belove.marry.MarriedKiller && DateFile.instance.GetActorSocial(actorId, 309).Count > 0)
+					break;
+				// 如果太吾不能多配偶制，且太吾已婚，则跳过
+				if (!Main.settings.belove.marry.Polygynous && DateFile.instance.GetActorSocial(mainActorId, 309).Count > 0)
+					break;
+				// 如果太吾不是僧侣杀手，且对方出家，则跳过
+				if (!Main.settings.belove.marry.MonkKiller && int.Parse(DateFile.instance.GetActorDate(actorId, 2, applyBonus: false)) != 0)
+					break;
+				// 如果太吾不是迷人和尚，且太吾出家，则跳过
+				if (!Main.settings.belove.marry.CharmingBonze && int.Parse(DateFile.instance.GetActorDate(mainActorId, 2, applyBonus: false)) != 0)
+					break;
+
+				// 历经万难，开始求婚
+				PeopleLifeAIHelper.AISetEvent(8, new int[4]
 				{
 					0,
 					actorId,
@@ -175,26 +176,52 @@ namespace DreamLover
 					actorId
 				});
 
-				Debug("进入求婚事件：" + name + " 试图求婚 太吾传人");
-			}
+				Debug("求婚事件判定成功");
+			} while(false);
 
-			if (isTaiwuAtThisTile && Main.settings.主动表白 && DateFile.instance != null && DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId) && (Main.settings.太吾不爱的人也表白太吾 || DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId)) && !DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && !DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId) && !DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) && !DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+			do
 			{
-				PeopleLifeAI_Utils.AISetEvent(8, new int[4]
+				if (!isTaiwuAtThisTile)
+					break;
+				if (!Main.settings.belove.pursued.Enabled)
+					break;
+				// 如果对方不爱慕太吾，则跳过
+				if (!DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId))
+					break;
+				// 如果需要互相爱慕，但是太吾不爱慕对方，则跳过
+				if (Main.settings.belove.pursued.LoveEach && !DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId))
+					break;
+				// 如果任何一方已有两情相悦，则跳过
+				if (DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId))
+					break;
+				// 如果任何一方与对方已婚，则跳过
+				if (DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) ||DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+					break;
+				
+				// 进入表白事件
+				PeopleLifeAIHelper.AISetEvent(8, new int[4]
 				{
 					0,
 					actorId,
 					231,
 					actorId
 				});
-				Debug("进入表白事件：" + name + " 试图表白 太吾传人");
-			}
-			if (Main.settings.主动爱慕 && !DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId))
-			{
-				PeopleLifeAI_Utils.AISetOtherLove(mainActorId, actorId, mainActorId, mapId, tileId);
+				Debug("表白事件判定成功");
+			} while(false);
 
-				Debug("进入爱慕事件：" + name + " 喜欢上了 太吾传人");
-			}
+			do
+			{
+				if(!Main.settings.belove.enamor.Enabled)
+					break;
+				// 如果对方已经爱慕，则跳过
+				if(DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId))
+					break;
+
+				PeopleLifeAIHelper.AISetOtherLove(mainActorId, actorId, mainActorId, mapId, tileId);
+
+				Debug("爱慕事件判定成功");
+			} while(false);
+			
 			return true;
 		}
 	}
