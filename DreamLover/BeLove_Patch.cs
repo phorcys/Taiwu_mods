@@ -5,8 +5,11 @@ using UnityEngine;
 namespace DreamLover
 {
 	[HarmonyPatch(typeof(PeopleLifeAI), "DoTrunAIChange")]
-	public static class PeopleLifeAI_DoTrunAIChange_Patch
+	public static class BeLove_Patch
 	{
+		public static PatchModuleInfo patchModuleInfo = new PatchModuleInfo(
+			typeof(PeopleLifeAI), "DoTrunAIChange",
+			typeof(BeLove_Patch));
 		private static void Debug(string str)
 		{
 			Main.Debug("<主动追求> " + str);

@@ -1,16 +1,21 @@
 ﻿using GameData;
 using Harmony12;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace DreamLover
 {
-    [HarmonyPatch(typeof(MessageEventManager), "EndEvent9001_1")]
-    public static class MessageEventManager_EndEvent9001_1_Patch
+    //[HarmonyPatch(typeof(MessageEventManager), "EndEvent9001_1")]
+    public static class EndEvent_Rape_Patch
     {
+        public static PatchModuleInfo patchModuleInfo = new PatchModuleInfo(
+            typeof(MessageEventManager), "EndEvent9001_1",
+            typeof(EndEvent_Rape_Patch));
         public static bool Prefix()
         {
             if (!Main.enabled) return true;
+
             int mainActorId = DateFile.instance.MianActorID();
             int targetId = MessageEventManager.Instance.MainEventData[1];
             int mapId = 0, tileId = 0;

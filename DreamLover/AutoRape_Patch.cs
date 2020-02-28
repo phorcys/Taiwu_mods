@@ -7,8 +7,11 @@ using UnityEngine;
 namespace DreamLover
 {
 	[HarmonyPatch(typeof(PeopleLifeAI), "UpdateTileCharsBehavior")]
-	public static class PeopleLifeAI_UpdateTileCharsBehavior_Patch
+	public static class AutoRape_Patch
 	{
+		public static PatchModuleInfo patchModuleInfo = new PatchModuleInfo(
+			typeof(PeopleLifeAI), "UpdateTileCharsBehavior",
+			typeof(AutoRape_Patch));
 		private static void Debug(string str)
 		{
 			Main.Debug("<主动欺辱> " + str);
@@ -41,7 +44,16 @@ namespace DreamLover
 			}
 			if (Main.settings.rape.autorape.FilterName)
 			{
-				list = list.Where((int id) => DateFile.instance.GetActorName(id).IndexOf(Main.settings.rape.autorape.Name) != -1).ToList();
+				try
+				{
+					list = list.Where((int id) => DateFile.instance.GetActorName(id).IndexOf(Main.settings.rape.autorape.Name) != -1).ToList();
+				}
+				catch (Exception e)
+				{
+					Debug("地块有角色姓名获取失败，无法使用姓名过滤，主动欺辱判定强行终止。");
+					Debug(e.ToString());
+					return true;
+				}
 			}
 			if (Main.settings.rape.autorape.DifferentSex)
 			{
@@ -49,16 +61,36 @@ namespace DreamLover
 			}
 
 			string names = "";
-			foreach(int kid in list) 
-				names += DateFile.instance.GetActorName(kid) + " ";
+			foreach(int kid in list)
+			{
+				try
+				{
+					names += DateFile.instance.GetActorName(kid) + " ";
+				}
+				catch (Exception)
+				{
+					list.Remove(kid);
+					Debug(string.Format("{0} 无法获取姓名，将从列表中移除", kid));
+				}
+			}
 
-			Debug("欺辱目标名单" + ((list.Count == 0) ? "为空" : (": " + names)));
+			if(list.Count == 0)
+			{
+				Debug("无可欺辱目标");
+				return true;
+			}
+			else
+			{
+				Debug("欺辱目标名单: " + names);
+			}
 
 			if (Main.settings.rape.autorape.SpecifiedPossibility)
 			{
 				欺辱概率 = Main.settings.rape.autorape.Possibility;
 			}
+
 			int var1 = UnityEngine.Random.Range(0, 100);
+
 			if (list.Count > 0 && var1 < 欺辱概率)
 			{
 				Debug("欺辱概率判定通过，需求 " + var1 + "，结果 " + 欺辱概率);

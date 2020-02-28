@@ -17,16 +17,22 @@ namespace DreamLover
 
         public static List<int> NoNtrSocialTypList = new List<int>();
 
+		public static HarmonyInstance GetInstance(UnityModManager.ModEntry modEntry) => HarmonyInstance.Create(modEntry.Info.Id);
+
 		public static bool Load(UnityModManager.ModEntry modEntry)
 		{
-			HarmonyInstance val = HarmonyInstance.Create(modEntry.Info.Id);
-			val.PatchAll(Assembly.GetExecutingAssembly());
+			var instance = GetInstance(modEntry);
+			//val.PatchAll(Assembly.GetExecutingAssembly());
+
 			settings = UnityModManager.ModSettings.Load<Setting>(modEntry);
 			Logger = modEntry.Logger;
 			modEntry.OnToggle = OnToggle;
 			modEntry.OnGUI = OnGUI;
 			modEntry.OnSaveGUI = OnSaveGUI;
-			
+
+
+			AdjustPatch(modEntry);
+
 			return true;
 		}
 
@@ -41,9 +47,9 @@ namespace DreamLover
 			settings.Save(modEntry);
 		}
 
-		public static void Debug(String str)
+		public static void Debug(string str)
 		{
-			if(Main.settings.DebugMode)
+			if(settings.DebugMode)
 				Logger.Log("[梦中情人] " + str);
 		}
 
@@ -168,12 +174,17 @@ namespace DreamLover
 							settings.belove.marry.CharmingBonze = GUILayout.Toggle(settings.belove.marry.CharmingBonze, "太吾出家也要求婚");
 							GUILayout.EndHorizontal();
 						}
+
 						if (!settings.belove.enamor.Enabled && !settings.belove.pursued.Enabled)
 						{
 							GUILayout.BeginHorizontal("Box");
 							settings.belove.ForgetMe = GUILayout.Toggle(settings.belove.ForgetMe, TextConvertHelper.MakeColor("雨恨云愁", 0));
 							GUILayout.Label("单恋太吾的人会忘却太吾");
 							GUILayout.EndHorizontal();
+						}
+						else
+						{
+							settings.belove.ForgetMe = false;
 						}
 						break;
 					}
@@ -302,6 +313,58 @@ namespace DreamLover
 					}
 			}
             GUILayout.EndVertical();
+			AdjustPatch(modEntry);
+		}
+
+		public static void Patch(this HarmonyInstance instance, PatchModuleInfo patchMod)
+		{
+			if(patchMod.Patch(instance))
+			{
+				Debug(string.Format("Succeeded in Patching Module {0}.", patchMod.Name));
+			}
+			else
+			{
+			}
+		}
+		public static void Unpatch(this HarmonyInstance instance, PatchModuleInfo patchMod)
+		{
+			if (patchMod.Unpatch(instance))
+			{
+				Debug(string.Format("Succeeded in Unpatching Module {0}.", patchMod.Name));
+			}
+			else
+			{
+			}
+		}
+
+		/// <summary>
+		/// 假设 EndEvent_Rape_Patch 不需要考虑
+		/// 遍历所有项来调整装载情况
+		/// </summary>
+		/// <param name="modEntry"></param>
+		public static void AdjustPatch(UnityModManager.ModEntry modEntry)
+		{
+			var instance = GetInstance(modEntry);
+
+			if (enabled && settings.belove.Enabled)
+				instance.Patch(BeLove_Patch.patchModuleInfo);
+			else
+				instance.Unpatch(BeLove_Patch.patchModuleInfo);
+
+			if (enabled && settings.rape.autorape.Enabled)
+				instance.Patch(AutoRape_Patch.patchModuleInfo);
+			else
+				instance.Unpatch(AutoRape_Patch.patchModuleInfo);
+
+			if (enabled && settings.pregnant.Enabled || settings.nontr.Enabled)
+				instance.Patch(SetChildren_Patch.patchModuleInfo);
+			else
+				instance.Unpatch(SetChildren_Patch.patchModuleInfo);
+
+			if(enabled)
+				instance.Patch(EndEvent_Rape_Patch.patchModuleInfo);
+			else
+				instance.Unpatch(EndEvent_Rape_Patch.patchModuleInfo);
 		}
 	}
 }

@@ -6,8 +6,11 @@ using UnityEngine;
 namespace DreamLover
 {
 	[HarmonyPatch(typeof(PeopleLifeAI), "AISetChildren")]
-	public static class PeopleLifeAI_AISetChildren_Patch
-	{
+	public static class SetChildren_Patch
+    {
+        public static PatchModuleInfo patchModuleInfo = new PatchModuleInfo(
+            typeof(PeopleLifeAI), "AISetChildren",
+            typeof(SetChildren_Patch));
         private static void DebugPregnant(string str) 
         {
             Main.Debug("<造孩子> " + str);

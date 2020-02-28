@@ -56,7 +56,7 @@ namespace DreamLover
 			}
 			public bool Enabled
 			{
-				get { return enamor.Enabled || pursued.Enabled;}
+				get { return enamor.Enabled || pursued.Enabled || marry.Enabled || ForgetMe;}
 			}
 
 			public bool IgnoreGang = false;
