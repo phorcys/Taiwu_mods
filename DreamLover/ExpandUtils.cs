@@ -1,27 +1,19 @@
 using GameData;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace DreamLover
 {
-	public static class ExpandUtils
+	public static class DateFileHelper
 	{
-		public static bool RemoveAllLove()
+		public static bool HasSocial(int actorId, int socialTyp, int targetId, bool getDieActor = false, bool getNpc = false) => DateFile.instance.GetActorSocial(actorId, socialTyp, getDieActor, getNpc).Contains(targetId);
+
+		public static bool HasAnySocial(int actorId, IEnumerable<int> socialTypList, int targetId, bool getDieActor = false, bool getNpc = false)
 		{
-			if ((Object)(object)DateFile.instance == (Object)null || !Characters.HasChar(DateFile.instance.MianActorID()))
-			{
-				return false;
-			}
-			int num = DateFile.instance.MianActorID();
-			int[] allCharIds = Characters.GetAllCharIds();
-			int[] array = allCharIds;
-			foreach (int num2 in array)
-			{
-				if (DateFile.instance.GetActorSocial(num2, 312).Contains(num) && !DateFile.instance.GetActorSocial(num, 312).Contains(num2))
-				{
-					DateFile.instance.RemoveActorSocial(num2, num, 312);
-				}
-			}
-			return true;
+			foreach(int t in socialTypList)
+				if(HasSocial(actorId, t, targetId, getDieActor, getNpc))
+					return true;
+			return false;
 		}
 	}
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace DreamLover
 {
-	public static class PeopleLifeAI_Utils
+	public static class PeopleLifeAIHelper
 	{
 		public static void AiMoodChange(int actorId, int value)
 		{
