@@ -1,0 +1,8 @@
+﻿{
+  "Id": "AutoResource",
+  "DisplayName": "自动资源采集",
+  "Author": "EveningTwilight",
+  "Version": "0.1.1",
+  "AssemblyName": "AutoResource.dll",
+  "EntryMethod": "AutoResource.Main.Load"
+}

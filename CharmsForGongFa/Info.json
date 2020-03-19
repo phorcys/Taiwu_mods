@@ -1,0 +1,8 @@
+﻿{
+  "Id": "CharmsForGongFa",
+  "DisplayName": "美色换取功法",
+  "Author": "EveningTwilight",
+  "Version": "0.1.4",
+  "AssemblyName": "CharmsForGongFa.dll",
+  "EntryMethod": "CharmsForGongFa.Main.Load"
+}
