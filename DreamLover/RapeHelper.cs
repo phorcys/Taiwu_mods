@@ -8,14 +8,16 @@ namespace DreamLover
 {
     public static class RapeHelper
     {
-        public static bool Rape(int raperId, int victimId, int mapId, int tileId, bool skipBattle = false, bool moodChange = true, bool beHated = true, bool oneParent = true)
+        public static bool Rape(int raperId, int victimId, int mapId, int tileId, bool skipBattle = false, bool moodChange = true, bool beHated = true, bool oneParent = true, bool noLog = false)
         {
 			int BattleAbility = int.Parse(DateFile.instance.GetActorDate(raperId, 993, applyBonus: false));
 			if (!skipBattle && BattleAbility < int.Parse(DateFile.instance.GetActorDate(victimId, 993, applyBonus: false)) + 10000)
 			{
 				if(beHated) DateFile.instance.AddSocial(victimId, raperId, 401);
 				if(moodChange) PeopleLifeAIHelper.AiMoodChange(raperId, int.Parse(DateFile.instance.goodnessDate[DateFile.instance.GetActorGoodness(raperId)][102]));
-				PeopleLifeAIHelper.AISetMassage(99, raperId, mapId, tileId, new int[1], victimId);
+
+				if(!noLog)
+					PeopleLifeAIHelper.AISetMassage(99, raperId, mapId, tileId, new int[1], victimId);
 				return false;
 			}
 
@@ -28,13 +30,17 @@ namespace DreamLover
 				{
 					if (beHated) DateFile.instance.AddSocial(victimId, raperId, 402);
 				}
-				PeopleLifeAIHelper.AISetMassage(97, victimId, mapId, tileId, new int[1], raperId);
+
+                if (!noLog)
+                    PeopleLifeAIHelper.AISetMassage(97, victimId, mapId, tileId, new int[1], raperId);
 			}
 			else
 			{
 				if (moodChange) PeopleLifeAIHelper.AiMoodChange(victimId, -50);
 				if (beHated) DateFile.instance.AddSocial(victimId, raperId, 402);
-				PeopleLifeAIHelper.AISetMassage(96, victimId, mapId, tileId, new int[1], raperId);
+
+                if (!noLog)
+                    PeopleLifeAIHelper.AISetMassage(96, victimId, mapId, tileId, new int[1], raperId);
 			}
 
 			int RaperSex = int.Parse(DateFile.instance.GetActorDate(raperId, 14, applyBonus: false));
