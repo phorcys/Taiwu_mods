@@ -95,7 +95,8 @@ namespace DreamLover
 			{
 				Debug("欺辱概率判定通过，需求 " + var1 + "，结果 " + 欺辱概率);
 				int targetID = list[UnityEngine.Random.Range(0, list.Count)];
-				bool r = RapeHelper.Rape(mainActorId, targetID, mapId, tileId, Main.settings.rape.skipBattle, Main.settings.rape.moodChange, Main.settings.rape.beHated, Main.settings.rape.oneParent);
+				Debug(string.Format("你打算欺辱的人是 {0} {1}", targetID, DateFile.instance.GetActorName(targetID)));
+				bool r = RapeHelper.Rape(mainActorId, targetID, mapId, tileId, Main.settings.rape.skipBattle, Main.settings.rape.moodChange, Main.settings.rape.beHated, Main.settings.rape.oneParent, Main.settings.rape.noLog);
 			}
 			else
 			{

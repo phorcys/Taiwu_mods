@@ -97,6 +97,8 @@ namespace DreamLover
 
 			public RangeInt AcceptedAge = new RangeInt(16, 44);
 
+			public bool AddToFirst = false;
+
 			public Enamor enamor = new Enamor();
 			public Pursued pursued = new Pursued();
 			public Marry marry = new Marry();
@@ -131,6 +133,8 @@ namespace DreamLover
 
 			public bool oneParent = true;
 
+			public bool noLog = false;
+
 			public bool overwriteArg = false;
 		}
 
@@ -141,9 +145,17 @@ namespace DreamLover
 			/// <summary>
 			/// 指定生育能力（与年龄、性别相关）
 			/// </summary>
-			public bool SpecifiedFecundity = false;
+			public class Fecundity
+			{
+				public bool setAll = false;
+				public int valueAll = 7500;
+				public bool setFather = false;
+				public int valueFather = 100;
+				public bool setMother = false;
+				public int valueMother = 100;
+			};
 
-			public int Fecundity = 7500;
+			public Fecundity fecundity = new Fecundity();
 
 			public bool SpecifiedPossibility = false;
 

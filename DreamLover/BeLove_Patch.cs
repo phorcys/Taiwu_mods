@@ -153,22 +153,40 @@ namespace DreamLover
 					break;
 				// 如果没有双向 两情相悦，则无法通过
 				if(!(DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) && DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId)))
+				{
+					Debug("由于你们并未互相两情相悦，对方无法求婚");
 					break;
+				}
 				// 如果已经结婚，则无法通过
-				if(DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+				if (DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+				{
+					Debug("由于你们双方已经结婚，对方无法求婚");
 					break;
+				}
 				// 如果不是已婚杀手，且对方已婚，则无法通过
-				if(!Main.settings.belove.marry.MarriedKiller && DateFile.instance.GetActorSocial(actorId, 309).Count > 0)
+				if (!Main.settings.belove.marry.MarriedKiller && DateFile.instance.GetActorSocial(actorId, 309).Count > 0)
+				{
+					Debug("由于对方已经结婚，无法求婚");
 					break;
+				}
 				// 如果太吾不能多配偶制，且太吾已婚，则跳过
 				if (!Main.settings.belove.marry.Polygynous && DateFile.instance.GetActorSocial(mainActorId, 309).Count > 0)
+				{
+					Debug("由于你已经结婚，对方无法求婚");
 					break;
+				}
 				// 如果太吾不是僧侣杀手，且对方出家，则跳过
 				if (!Main.settings.belove.marry.MonkKiller && int.Parse(DateFile.instance.GetActorDate(actorId, 2, applyBonus: false)) != 0)
+				{
+					Debug("由于对方已经出家，无法求婚");
 					break;
+				}
 				// 如果太吾不是迷人和尚，且太吾出家，则跳过
 				if (!Main.settings.belove.marry.CharmingBonze && int.Parse(DateFile.instance.GetActorDate(mainActorId, 2, applyBonus: false)) != 0)
+				{
+					Debug("由于你已经出家，对方无法求婚");
 					break;
+				}
 
 				// 历经万难，开始求婚
 				PeopleLifeAIHelper.AISetEvent(8, new int[4]
@@ -177,9 +195,16 @@ namespace DreamLover
 					actorId,
 					232,
 					actorId
-				});
+				}, Main.settings.belove.AddToFirst);
+
+				if (Main.settings.belove.AddToFirst)
+				{
+					Debug("求婚事件尝试强制最先发生");
+					Main.settings.belove.AddToFirst = false;
+				}
 
 				Debug("求婚事件判定成功");
+				return true;
 			} while(false);
 
 			do
@@ -190,17 +215,28 @@ namespace DreamLover
 					break;
 				// 如果对方不爱慕太吾，则跳过
 				if (!DateFile.instance.GetActorSocial(actorId, 312).Contains(mainActorId))
+				{
 					break;
+				}
 				// 如果需要互相爱慕，但是太吾不爱慕对方，则跳过
 				if (Main.settings.belove.pursued.LoveEach && !DateFile.instance.GetActorSocial(mainActorId, 312).Contains(actorId))
+				{
+					Debug("由于你不爱慕对方，对方不能表白");
 					break;
+				}
 				// 如果任何一方已有两情相悦，则跳过
 				if (DateFile.instance.GetActorSocial(actorId, 306).Contains(mainActorId) || DateFile.instance.GetActorSocial(mainActorId, 306).Contains(actorId))
+				{
+					Debug("由于你们已有（单方面）两情相悦，对方不能表白");
 					break;
+				}
 				// 如果任何一方与对方已婚，则跳过
 				if (DateFile.instance.GetActorSocial(actorId, 309).Contains(mainActorId) ||DateFile.instance.GetActorSocial(mainActorId, 309).Contains(actorId))
+				{
+					Debug("由于你们已有（单方面）婚姻关系，对方不能表白");
 					break;
-				
+				}
+
 				// 进入表白事件
 				PeopleLifeAIHelper.AISetEvent(8, new int[4]
 				{
@@ -208,8 +244,16 @@ namespace DreamLover
 					actorId,
 					231,
 					actorId
-				});
-				Debug("表白事件判定成功");
+				}, Main.settings.belove.AddToFirst);
+
+				if (Main.settings.belove.AddToFirst)
+				{ 
+					Debug("表白事件尝试强制最先发生");
+					Main.settings.belove.AddToFirst = false;
+				}
+
+				Debug("对方想要表白");
+				return true;
 			} while(false);
 
 			do
@@ -223,6 +267,7 @@ namespace DreamLover
 				PeopleLifeAIHelper.AISetOtherLove(mainActorId, actorId, mainActorId, mapId, tileId);
 
 				Debug("爱慕事件判定成功");
+				return true;
 			} while(false);
 			
 			return true;

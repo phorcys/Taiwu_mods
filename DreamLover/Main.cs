@@ -50,7 +50,7 @@ namespace DreamLover
 		public static void Debug(string str)
 		{
 			if(settings.DebugMode)
-				Logger.Log("[梦中情人] " + str);
+				Logger.Log("[梦中情人]" + str);
 		}
 
 		public static void OnGUI(UnityModManager.ModEntry modEntry)
@@ -154,7 +154,12 @@ namespace DreamLover
 								settings.belove.AcceptedRank[i] = GUILayout.Toggle(settings.belove.AcceptedRank[i], TextConvertHelper.MakeColor(TextConvertHelper.RankText[i], i));
 							}
 							GUILayout.EndHorizontal();
-						}
+
+                            GUILayout.BeginHorizontal("Box");
+                            GUILayout.Label("试验功能：");
+							settings.belove.AddToFirst = GUILayout.Toggle(settings.belove.AddToFirst, "主动表白、求婚事件强制最先发生（生效后会自动关闭）");
+                            GUILayout.EndHorizontal();
+                        }
 						if (settings.belove.pursued.Enabled)
 						{
 							GUILayout.Label("主动表白相关配置");
@@ -196,11 +201,13 @@ namespace DreamLover
 						settings.rape.moodChange = GUILayout.Toggle(settings.rape.moodChange, "影响情绪");
 						settings.rape.beHated = GUILayout.Toggle(settings.rape.beHated, "导致仇恨");
 						settings.rape.oneParent = GUILayout.Toggle(settings.rape.oneParent, "单亲孩子");
+						settings.rape.noLog = GUILayout.Toggle(settings.rape.noLog, "不留记录");
 						GUILayout.EndHorizontal();
 
 						GUILayout.Label("发生关系配置");
 						GUILayout.BeginHorizontal("Box");
 						settings.rape.overwriteArg = GUILayout.Toggle(settings.rape.overwriteArg, "是否覆盖 EndEvent 的传入参数");
+						GUILayout.Label("表示是否使用通用配置覆盖txtmod的参数");
 						GUILayout.EndHorizontal();
 
 						GUILayout.Label("过月时欺辱配置");
@@ -230,15 +237,16 @@ namespace DreamLover
 						GUILayout.Label("怀孕设置页");
 						GUILayout.BeginHorizontal("Box");
 						settings.pregnant.Enabled = GUILayout.Toggle(settings.pregnant.Enabled, "启用指定怀孕功能");
-						settings.pregnant.SpecifiedFecundity = GUILayout.Toggle(settings.pregnant.SpecifiedFecundity, "指定生育能力");
-						if (settings.pregnant.SpecifiedFecundity)
+						settings.pregnant.fecundity.setAll = GUILayout.Toggle(settings.pregnant.fecundity.setAll, "指定总生育能力");
+						if (settings.pregnant.fecundity.setAll)
 						{
-							string s4 = GUILayout.TextField(settings.pregnant.Fecundity.ToString(), 5);
-							if (GUI.changed && !int.TryParse(s4, out settings.pregnant.Fecundity))
+							string s4 = GUILayout.TextField(settings.pregnant.fecundity.valueAll.ToString(), 5);
+							if (GUI.changed && !int.TryParse(s4, out settings.pregnant.fecundity.valueAll))
 							{
-								settings.pregnant.Fecundity = 7500;
+								settings.pregnant.fecundity.valueAll = 7500;
 							}
 							GUILayout.Label("/15000");
+							settings.pregnant.fecundity.setFather = settings.pregnant.fecundity.setMother = false;
 						}
 						settings.pregnant.SpecifiedPossibility = GUILayout.Toggle(settings.pregnant.SpecifiedPossibility, "指定怀孕概率");
 						if (settings.pregnant.SpecifiedPossibility)
@@ -261,6 +269,30 @@ namespace DreamLover
 							GUILayout.Label("%");
 						}
 						GUILayout.EndHorizontal();
+						if (!settings.pregnant.fecundity.setAll)
+                        {
+                            GUILayout.BeginHorizontal("Box");
+							GUILayout.Label("单独设置生育能力");
+							settings.pregnant.fecundity.setFather = GUILayout.Toggle(settings.pregnant.fecundity.setFather, "父方生育能力");
+                            if (settings.pregnant.fecundity.setFather)
+                            {
+                                string s4 = GUILayout.TextField(settings.pregnant.fecundity.valueFather.ToString(), 4);
+                                if (GUI.changed && !int.TryParse(s4, out settings.pregnant.fecundity.valueFather))
+                                {
+                                    settings.pregnant.fecundity.valueFather = 100;
+                                }
+                            }
+                            settings.pregnant.fecundity.setMother = GUILayout.Toggle(settings.pregnant.fecundity.setMother, "母方生育能力");
+                            if (settings.pregnant.fecundity.setMother)
+                            {
+                                string s4 = GUILayout.TextField(settings.pregnant.fecundity.valueMother.ToString(), 4);
+                                if (GUI.changed && !int.TryParse(s4, out settings.pregnant.fecundity.valueMother))
+                                {
+                                    settings.pregnant.fecundity.valueMother = 100;
+                                }
+                            }
+                            GUILayout.EndHorizontal();
+                        }
 						break;
 					}
 				case 3:
@@ -356,12 +388,17 @@ namespace DreamLover
 			else
 				instance.Unpatch(AutoRape_Patch.patchModuleInfo);
 
-			if (enabled && settings.pregnant.Enabled || settings.nontr.Enabled)
+			if (enabled && settings.pregnant.Enabled)
 				instance.Patch(SetChildren_Patch.patchModuleInfo);
 			else
 				instance.Unpatch(SetChildren_Patch.patchModuleInfo);
 
-			if(enabled)
+			if (enabled && settings.nontr.Enabled)
+				instance.Patch(Nontr_Patch.patchModuleInfo);
+			else
+				instance.Unpatch(Nontr_Patch.patchModuleInfo);
+
+			if (enabled)
 				instance.Patch(EndEvent_Rape_Patch.patchModuleInfo);
 			else
 				instance.Unpatch(EndEvent_Rape_Patch.patchModuleInfo);

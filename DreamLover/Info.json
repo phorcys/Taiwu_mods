@@ -2,7 +2,7 @@
   "Id": "DreamLover",
   "DisplayName": "梦中情人",
   "Author": "炽翼幻灵",
-  "Version": "1.0.6",
+  "Version": "1.0.7",
   "AssemblyName": "DreamLover.dll",
   "EntryMethod": "DreamLover.Main.Load",
   "ManagerVersion": "0.12.2",

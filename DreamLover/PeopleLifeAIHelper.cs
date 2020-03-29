@@ -37,13 +37,18 @@ namespace DreamLover
 			});
 		}
 
-		public static void AISetEvent(int typ, int[] aiEventDate)
+		public static void AISetEvent(int typ, int[] aiEventDate, bool addToFirst = false)
 		{
-			PeopleLifeAI.instance.CallPrivateMethod<PeopleLifeAI>("AISetEvent", new object[2]
+			if (addToFirst)
+				DateFile.instance.SetEvent(aiEventDate, true);
+			else
 			{
+				PeopleLifeAI.instance.CallPrivateMethod<PeopleLifeAI>("AISetEvent", new object[2]
+				{
 				typ,
 				aiEventDate
-			});
+				});
+			}
 		}
 
 		public static void AISetMassage(int massageId, int actorId, int partId, int placeId, int[] paramValues = null, int otherActorId = -1)
@@ -76,12 +81,12 @@ namespace DreamLover
 
 		public static T CallPrivateMethod<T>(this object instance, string name, params object[] param)
 		{
-			Debug.Log((object)(((instance == null) ? "null" : instance.ToString()) + " -> " + ((name == null) ? "null" : name) + " -> " + ((param == null) ? "null" : param.ToString())));
+			//Debug.Log((object)(((instance == null) ? "null" : instance.ToString()) + " -> " + ((name == null) ? "null" : name) + " -> " + ((param == null) ? "null" : param.ToString())));
 			BindingFlags bindingAttr = BindingFlags.Instance | BindingFlags.NonPublic;
 			Type type = instance.GetType();
-			Debug.Log((object)((type == null) ? "null type" : type.ToString()));
+			//Debug.Log((object)((type == null) ? "null type" : type.ToString()));
 			MethodInfo method = type.GetMethod(name, bindingAttr);
-			Debug.Log((object)((method == null) ? "null method" : method.ToString()));
+			//Debug.Log((object)((method == null) ? "null method" : method.ToString()));
 			return (T)method.Invoke(instance, param);
 		}
 	}

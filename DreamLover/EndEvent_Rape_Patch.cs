@@ -36,6 +36,7 @@ namespace DreamLover
                         bool 影响双方情绪 = Main.settings.rape.moodChange;
                         bool 结仇 = Main.settings.rape.beHated;
                         bool 单亲 = Main.settings.rape.oneParent;
+                        bool 无记录 = Main.settings.rape.noLog;
 
                         if(!Main.settings.rape.overwriteArg)
                         {
@@ -43,9 +44,10 @@ namespace DreamLover
                             if (Values.Count > 3) 影响双方情绪 = (Values[3] != 0);
                             if (Values.Count > 4) 结仇 = (Values[4] != 0);
                             if (Values.Count > 5) 单亲 = (Values[5] != 0);
+                            if (Values.Count > 6) 无记录 = (Values[6] != 0);
                         }
 
-                        RapeHelper.Rape(mainActorId, targetId, mapId, tileId, 跳过战力检定, 影响双方情绪, 结仇, 单亲);
+                        RapeHelper.Rape(mainActorId, targetId, mapId, tileId, 跳过战力检定, 影响双方情绪, 结仇, 单亲, 无记录);
                         break;
                     }
                 default:
