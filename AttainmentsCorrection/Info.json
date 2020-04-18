@@ -1,0 +1,8 @@
+﻿{
+  "Id": "AttainmentsCorrection",
+  "DisplayName": "学海无涯",
+  "Author": "Yan",
+  "Version": "0.0.4",
+  "AssemblyName": "AttainmentsCorrection.dll",
+  "EntryMethod": "AttainmentsCorrection.Main.Load"
+}
