@@ -32,29 +32,7 @@ namespace BaseResourceMod
             // 统计新增多少条信息
             int counter = 0;
             // 转换为Unix风格的换行符
-            string ns = text.Replace("\r", "");
-            // 替换可变的key（用 [] 括起来的数字）
-
-            try
-            {
-                RenumberBeforeInject(dataList.Keys, ref ns);
-            }
-            catch (Exception)
-            {
-#if debug
-                Main.Logger.Log("Failed to renumber file " + path);
-#endif
-            }
-
-            // 添加字体颜色格式，<color=AABBCCFF>文字</color>
-            ns = ns.Replace("C_D", "</color>");
-            ns = Regex.Replace(ns, @"C_(\d{5})", delegate (Match match)
-            {
-                string v = match.Groups[0].Value;
-                int colorkey = int.Parse(match.Groups[1].Value);
-                return Main.textcolor.TryGetValue(colorkey, out var colorTag) ? colorTag : v;
-            });
-            ns = "index" + ns.Substring(1);
+            string ns = TextPreprocess(dataList, text, path);
 
             // 解析csv
             using (var csv = new CsvReader(new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(ns))), true))
@@ -479,6 +457,40 @@ namespace BaseResourceMod
                     isDumped = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// 导入csv之前预处理文本
+        /// </summary>
+        /// <param name="dataList">待插入的表</param>
+        /// <param name="text">csv文本</param>
+        /// <returns></returns>
+        private static string TextPreprocess(Dictionary<int, Dictionary<int, string>> dataList, string text, string path="")
+        {
+            string ns = text.Replace("\r", "");
+            // 替换可变的key（用 [] 括起来的数字）
+
+            try
+            {
+                RenumberBeforeInject(dataList.Keys, ref ns);
+            }
+            catch (Exception)
+            {
+#if debug
+                Main.Logger.Log("Failed to renumber file " + path);
+#endif
+            }
+
+            // 添加字体颜色格式，<color=AABBCCFF>文字</color>
+            ns = ns.Replace("C_D", "</color>");
+            ns = Regex.Replace(ns, @"C_(\d{5})", delegate (Match match)
+            {
+                string v = match.Groups[0].Value;
+                int colorkey = int.Parse(match.Groups[1].Value);
+                return Main.textcolor.TryGetValue(colorkey, out var colorTag) ? colorTag : v;
+            });
+            ns = "index" + ns.Substring(1);
+            return ns;
         }
 
         /// <summary>
