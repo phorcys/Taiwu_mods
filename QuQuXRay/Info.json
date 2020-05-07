@@ -1,0 +1,9 @@
+﻿{
+  "Id": "snakeCase.ququXRay",
+  "DisplayName": "促织透视",
+  "Description":"促织透视",
+  "Author": "snakeCase",
+  "Version": "0.0.1",
+  "AssemblyName": "QuQuXRay.dll",
+  "EntryMethod": "QuQuXRay.Main.Load"
+}
