@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityModManagerNet;
+using GameData;
 
 namespace ShowBiographyOfTheDead
 {
@@ -72,6 +73,9 @@ namespace ShowBiographyOfTheDead
     public static class DateFile_RemoveActor_Patch
     {
         public static int index = 0;
+        /// <summary>
+        /// 这个变量用来临时保存接收到的过月讯息（左下小字
+        /// </summary>
         public static List<string> actorMessages = new List<string>();//Qu式传参法:设成静态成员
         public const string outputDir = ".\\Revenge\\";
         public const int minBlurLength = 3;
@@ -165,38 +169,52 @@ namespace ShowBiographyOfTheDead
         }
 
         /// <summary>
-        /// copy from ActorMenu.ShowActorMassage(int key)
+        /// 框架来自 ActorMenu.ShowActorMassage(int key)
         /// </summary>
-        /// <param name="id">npcId</param>
+        /// <param name="id">npcId, 在 AC 中叫做 key</param>
         private static void GetAllMessage(int id)
         {
             actorMessages.Clear();
             int mianActorId = DateFile.instance.MianActorID();
             actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}{2}{3}{4}\n", DateFile.instance.massageDate[8010][1].Split('|')[0], DateFile.instance.SetColoer(10002, DateFile.instance.solarTermsDate[int.Parse(DateFile.instance.GetActorDate(id, 25, applyBonus: false))][102]), DateFile.instance.massageDate[8010][1].Split('|')[1], DateFile.instance.GetActorName(id, realName: false, baseName: true), DateFile.instance.massageDate[8010][1].Split('|')[2]));
-            if (DateFile.instance.actorLife.ContainsKey(id))
+
+            LifeRecords.LifeRecord[] allRecords = LifeRecords.GetAllRecords(id);
+
+            if (allRecords != null)
             {
                 int num2 = Mathf.Max(DateFile.instance.GetActorFavor(false, mianActorId, id), 0);
-                for (int i = 0; i < DateFile.instance.actorLife[id].Count; i++)
+
+                LifeRecords.LifeRecord[] array = allRecords;
+
+                for (int i = 0; i < array.Length; i++)
                 {
-                    int[] array = DateFile.instance.actorLife[id][i].ToArray();
-                    int key2 = array[0];
-                    if (DateFile.instance.actorMassageDate.ContainsKey(key2))
+                    LifeRecords.LifeRecord record = array[i];
+                    if (DateFile.instance.actorMassageDate.ContainsKey(record.messageId))
                     {
-                        if (id != mianActorId && num2 < 30000 * int.Parse(DateFile.instance.actorMassageDate[key2][4]) / 100)
+                        // 一个不知道作用的值，但是姑且这么用
+                        // 原作者应该知道，但是可惜联系不上
+                        int unknown_key = int.Parse(DateFile.instance.actorMassageDate[record.messageId][4]);
+                        unknown_key = 30000 * unknown_key / 100;
+                        
+                        // num2 也不知道，直接抄过来的嘛
+                        if (id != mianActorId && num2 < unknown_key)
                         {
-                            actorMessages.Add(string.Format(DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n", DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, array[1].ToString()) + DateFile.instance.massageDate[16][3], DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[array[2]][0]), DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
+                            string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：{2}\n";
+                            string str = DateFile.instance.massageDate[16][1];
+                            DateFile instance = DateFile.instance;
+                            short year = record.year;
+                            actorMessages.Add(string.Format(format, str + instance.SetColoer(10002, year.ToString()) + DateFile.instance.massageDate[16][3], DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[record.solarTerm][0]), DateFile.instance.SetColoer(10001, DateFile.instance.massageDate[12][2])));
                         }
                         else
                         {
-                            List<string> list = actorMessages;
-                            string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：" + DateFile.instance.actorMassageDate[key2][1] + "\n";
-                            int massageId = array[0];
-                            object[] args = SetMassageText(id, array).ToArray();
-                            list.Add(string.Format(format, args));
+                            string format = DateFile.instance.SetColoer(20002, "·") + " {0}{1}：" + DateFile.instance.actorMassageDate[record.messageId][1] + "\n";
+                            object[] args = DateFile.instance.GetLifeRecordMassageElements(id, record).ToArray();
+                            actorMessages.Add(string.Format(format, args));
                         }
                     }
                 }
             }
+
             //死亡
             int num3 = int.Parse(DateFile.instance.GetActorDate(id, 26, false));
             if (num3 > 0)
@@ -208,54 +226,6 @@ namespace ShowBiographyOfTheDead
                 {
                 '|'
                 })[1]));
-            }
-
-            // 哈哈，把非静态函数直接挪进来搞成内置的模块，我真是个天才！！
-            List<string> SetMassageText(int actorId, int[] massageDate)
-            {
-                int num = DateFile.instance.MianActorID();
-                int key = massageDate[0];
-                string[] array = DateFile.instance.actorMassageDate[key][2].Split('|');
-                string[] array2 = DateFile.instance.actorMassageDate[key][99].Split('|');
-                List<string> list = new List<string>
-                {
-                    DateFile.instance.massageDate[16][1] + DateFile.instance.SetColoer(10002, massageDate[1].ToString()) + DateFile.instance.massageDate[16][3],
-                    DateFile.instance.SetColoer(20002, DateFile.instance.solarTermsDate[massageDate[2]][0])
-                };
-                list.Add(DateFile.instance.SetColoer(10001, DateFile.instance.GetNewMapDate(massageDate[3], massageDate[4], 98) + DateFile.instance.GetNewMapDate(massageDate[3], massageDate[4], 0)));
-                for (int i = 0; i < array2.Length; i++)
-                {
-                    list.Add(array2[i]);
-                }
-                for (int j = 5; j < massageDate.Length; j++)
-                {
-                    int num2 = massageDate[j];
-                    switch (int.Parse(array[j - 5]))
-                    {
-                        case 0:
-                            list.Add(DateFile.instance.SetColoer((int.Parse(DateFile.instance.GetActorDate(num2, 26, applyBonus: false)) > 0) ? 20010 : 10002, DateFile.instance.GetActorName(num2)));
-                            break;
-                        case 1:
-                            list.Add(DateFile.instance.massageDate[10][0].Split('|')[0] + DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.GetItemDate(num2, 8)), DateFile.instance.GetItemDate(num2, 0, otherMassage: false)) + DateFile.instance.massageDate[10][0].Split('|')[1]);
-                            break;
-                        case 2:
-                            list.Add(DateFile.instance.SetColoer(20001 + int.Parse(DateFile.instance.gongFaDate[num2][2]), DateFile.instance.massageDate[10][0].Split('|')[0] + DateFile.instance.gongFaDate[num2][0] + DateFile.instance.massageDate[10][0].Split('|')[1]));
-                            break;
-                        case 3:
-                            list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.resourceDate[num2][0]));
-                            break;
-                        case 4:
-                            list.Add(DateFile.instance.SetColoer(20008, DateFile.instance.GetGangDate(num2, 0)));
-                            break;
-                        case 5:
-                            {
-                                int key2 = Mathf.Abs(num2);
-                                list.Add(DateFile.instance.SetColoer(20011 - int.Parse(DateFile.instance.presetGangGroupDateValue[key2][2]), DateFile.instance.presetGangGroupDateValue[key2][(num2 > 0) ? 1001 : (1001 + int.Parse(DateFile.instance.GetActorDate(actorId, 14, applyBonus: false)))]));
-                                break;
-                            }
-                    }
-                }
-                return list;
             }
         }
 
