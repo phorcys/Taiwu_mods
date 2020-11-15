@@ -14,9 +14,14 @@ namespace LKX_ItemsMerge
     public class Settings : UnityModManager.ModSettings
     {
         /// <summary>
-        /// 自动时节结束合并道具
+        /// 自动时节结束合并背包道具
         /// </summary>
         public bool autoMerge;
+
+        /// <summary>
+        /// 自动时节结束合并仓库道具
+        /// </summary>
+        public bool autoStoreMerge;
 
         /// <summary>
         /// 是否开启指定合并大小
@@ -121,7 +126,8 @@ namespace LKX_ItemsMerge
             GUIStyle redLabelStyle = new GUIStyle();
             redLabelStyle.normal.textColor = new Color(159f / 256f, 20f / 256f, 29f / 256f);
             GUILayout.Label("如果status亮红灯代表mod失效！", redLabelStyle);
-            Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启结束时节时自动合并道具");
+            Main.settings.autoMerge = GUILayout.Toggle(Main.settings.autoMerge, "开启结束时节时自动合并背包");
+            Main.settings.autoStoreMerge = GUILayout.Toggle(Main.settings.autoStoreMerge, "开启结束时节时自动合并仓库");
             Main.settings.enabledSize = GUILayout.Toggle(Main.settings.enabledSize, "开启指定合并大小限制");
 
             if (Main.settings.enabledSize)
@@ -131,9 +137,13 @@ namespace LKX_ItemsMerge
                 if (GUI.changed) Main.settings.itemsSize = uint.Parse(itemSize);
             }
 
-            if (GUILayout.Button("手动点击合并"))
+            if (GUILayout.Button("手动合并背包"))
             {
-                Main.RunningMergeItems();
+                Main.RunningMergeItems(DateFile.instance.mianActorId);
+            }
+            if (GUILayout.Button("手动合并仓库"))
+            {
+                Main.RunningMergeItems(-999);
             }
 
             GUILayout.BeginHorizontal("Box", new GUILayoutOption[0]);
@@ -164,7 +174,7 @@ namespace LKX_ItemsMerge
             GUILayout.Label("一个例子：有2个100耐久药品，拆分大小为5，拆分数量为40。此时拆解会失败。");
             if (GUILayout.Button("手动拆分药品"))
             {
-                Main.ResolveMergeDrugs();
+                Main.ResolveMergeDrugs(DateFile.instance.mianActorId);
             }
 
             GUILayout.Label("选择拆分的大小。");
@@ -185,7 +195,8 @@ namespace LKX_ItemsMerge
             string drugsItemCount = GUILayout.TextField(Main.settings.drugsCount.ToString());
             if (drugsItemCount == "" || drugsItemCount == null) drugsItemCount = "0";
             if (GUI.changed) Main.settings.drugsCount = uint.Parse(drugsItemCount);
-            
+
+
         }
 
         /// <summary>
@@ -221,14 +232,14 @@ namespace LKX_ItemsMerge
         /// <summary>
         /// 拆分药品
         /// </summary>
-        public static void ResolveMergeDrugs()
+        public static void ResolveMergeDrugs(int actorId)
         {
             if (!Main.enabled || Main.settings.drugsCount <= 0) return;
 
             DateFile df = DateFile.instance;
             Dictionary<int, int> items = new Dictionary<int, int>();
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
-            if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
+            if (df.actorItemsDate.TryGetValue(actorId, out itemsId))
             {
                 //层层过滤，符合条件的就加入字典。
                 List<int> buffer = itemsId.Keys.ToList();
@@ -266,7 +277,7 @@ namespace LKX_ItemsMerge
                             if (int.Parse(df.GetItemDate(item.Value, 901)) == size || int.Parse(df.GetItemDate(item.Value, 901)) < size) break;
 
                             int makeItemId = df.MakeNewItem(item.Key);
-                            df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                            df.GetItem(actorId, makeItemId, 1, false, -1, 0);
                             Items.SetItemProperty(makeItemId, 901, size.ToString());
                             Items.SetItemProperty(makeItemId, 902, size.ToString());
                             string itemString = (int.Parse(df.GetItemDate(item.Value, 901)) - size).ToString();
@@ -290,7 +301,7 @@ namespace LKX_ItemsMerge
         /// <summary>
         /// 执行合并道具
         /// </summary>
-        public static void RunningMergeItems()
+        public static void RunningMergeItems(int actorId)
         {
             if (!Main.enabled || Main.settings.mergeType.Count <= 0) return;
 
@@ -300,7 +311,7 @@ namespace LKX_ItemsMerge
             Dictionary<int, int[]> items = new Dictionary<int, int[]>();
             
             Dictionary<int, int> itemsId = new Dictionary<int, int>();
-            if (df.actorItemsDate.TryGetValue(df.mianActorId, out itemsId))
+            if (df.actorItemsDate.TryGetValue(actorId, out itemsId))
             {
                 List<int> buffer = itemsId.Keys.ToList();
                 foreach (int itemId in buffer)
@@ -326,11 +337,11 @@ namespace LKX_ItemsMerge
                         }
 
                         //删掉这个道具
-                        df.LoseItem(df.mianActorId, itemId, -1, true);
+                        df.LoseItem(actorId, itemId, -1, true);
                     }
                 }
                 
-                Main.MakeMergeItem(items);
+                Main.MakeMergeItem(items, actorId);
             }
         }
 
@@ -338,7 +349,7 @@ namespace LKX_ItemsMerge
         /// 新建道具
         /// </summary>
         /// <param name="items">道具字典</param>
-        public static void MakeMergeItem(Dictionary<int, int[]> items)
+        public static void MakeMergeItem(Dictionary<int, int[]> items, int actorId)
         {
             if (items.Count <= 0) return;
 
@@ -357,7 +368,7 @@ namespace LKX_ItemsMerge
                     for (int i = 0; i <= sizeCount; i++)
                     {
                         int makeItemId = df.MakeNewItem(item.Key);
-                        df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                        df.GetItem(actorId, makeItemId, 1, false, -1, 0);
 
                         //耐久小于或等于0就创建为0的道具吧，然后结束循环。
                         //耐久大于合并大小才会继续拆，继续循环。
@@ -393,7 +404,7 @@ namespace LKX_ItemsMerge
                 {
                     //不拆直接创建。
                     int makeItemId = df.MakeNewItem(item.Key);
-                    df.GetItem(df.mianActorId, makeItemId, 1, false, -1, 0);
+                    df.GetItem(actorId, makeItemId, 1, false, -1, 0);
                     Items.SetItemProperty(makeItemId, 901, item.Value[0].ToString());
                     Items.SetItemProperty(makeItemId, 902, item.Value[1].ToString());
                     //df.itemsDate[makeItemId][901] = item.Value[0].ToString();
@@ -401,6 +412,7 @@ namespace LKX_ItemsMerge
                 }
             }
         }
+
     }
 
     /// <summary>
@@ -411,7 +423,7 @@ namespace LKX_ItemsMerge
     {
         static void Prefix()
         {
-            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems();
+            if (Main.enabled && Main.settings.autoMerge) Main.RunningMergeItems(DateFile.instance.mianActorId);
         }
     }
 }
