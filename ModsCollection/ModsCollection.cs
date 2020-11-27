@@ -6,7 +6,7 @@ using UnityModManagerNet;
 
 namespace ModsCollection
 {
-    public class Settings : UnityModManager.ModSettings
+    public class Settings : UnityModManager.ModSettings 
     {
         public override void Save(UnityModManager.ModEntry modEntry) { Save(this, modEntry); }
         public int patch1 = 1;
@@ -124,7 +124,7 @@ namespace ModsCollection
         }
     }
 
-    [HarmonyPatch(typeof(ui_Loading), "LoadBaseDate")]
+    [HarmonyPatch(typeof(ui_Loading), "OnShow")]
     public static class Loading_LoadBaseDate_Patch
     {
         public static void Postfix()

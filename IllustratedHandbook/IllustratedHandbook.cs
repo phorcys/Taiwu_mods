@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace IllustratedHandbook
 {
 
-    public class Main : MonoBehaviour
+    public class Main
     {
         public static bool isEnabled;
         public static UnityModManager.ModEntry.ModLogger Logger;
@@ -20,40 +20,32 @@ namespace IllustratedHandbook
             Logger = modEntry.Logger;
 
             modEntry.OnToggle = OnToggle;
+            modEntry.OnGUI = OnGUI;
 
             return true;
         }
 
         public static bool OnToggle(UnityModManager.ModEntry modEntry, bool value)
         {
-            if (!value)
-                return false;
-
             isEnabled = value;
-
-            if (isEnabled)
-            {
-                try
-                {
-                    // Create GameObject in the sence for handling actions
-                    new GameObject(typeof(Main).FullName, typeof(Main));
-                    mWindow = (IllustratedHandbookUI)new GameObject((typeof(IllustratedHandbookUI).FullName), typeof(IllustratedHandbookUI)).GetComponent(typeof(IllustratedHandbookUI));
-                }
-                catch (Exception e)
-                {
-                    Logger.Log(e.ToString());
-                    return false;
-                }
-
-            }
-
             return true;
         }
 
-        private void Awake()
+        public static void OnGUI(UnityModManager.ModEntry modEntry)
         {
-            // Do not destroy this object across sences
-            DontDestroyOnLoad(this);
+            GUILayout.Label("请在正式游戏场景使用。第一次使用需点击下面的打开窗口按钮，之后可以用Crtl+F11来快速关闭打开");
+            if (GUILayout.Button("打开窗口"))
+            {
+                Logger.Log("打开窗口");
+                if (mWindow == null)
+                {
+                    mWindow = (IllustratedHandbookUI)new GameObject((typeof(IllustratedHandbookUI).FullName), typeof(IllustratedHandbookUI)).GetComponent(typeof(IllustratedHandbookUI));
+                }
+                mWindow.Show();
+                //关闭manager窗口
+                UnityModManager.UI.Instance.ToggleWindow(false);
+            }
         }
     }
+
 }

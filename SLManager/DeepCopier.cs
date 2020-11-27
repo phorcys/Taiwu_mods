@@ -39,8 +39,8 @@ namespace DeepCopier
         internal Action<T, T> CompileAllDeepCopyFieldAction()
             => GetAllDeepCopyFieldLambda().Compile();
 
-        internal Task<Action<T, T>> StartCompileAllDeepCopyFieldAction()
-            => Task.Run(CompileAllDeepCopyFieldAction);
+        //internal Task<Action<T, T>> StartCompileAllDeepCopyFieldAction()
+        //    => Task.Run(CompileAllDeepCopyFieldAction);
 
         public Expression GetDeepCopyFieldExpression(string fieldName)
             => GetDeepCopyFieldExpression(typeof(T).GetField(fieldName));
@@ -87,8 +87,10 @@ namespace DeepCopier
         internal Action<T, T> CompileAllShallowCopyFieldAction()
             => GetShallowCopyCopyFieldLambda().Compile();
 
-        internal Task<Action<T, T>> StartCompileAllShallowCopyFieldAction()
-            => Task.Run(CompileAllShallowCopyFieldAction);
+        //internal Task<Action<T, T>> StartCompileAllShallowCopyFieldAction()
+        //{
+        //    return Task.Run(CompileAllShallowCopyFieldAction);
+        //}
 
         public Expression GetShallowCopyFieldExpression(System.Reflection.FieldInfo field)
         {
