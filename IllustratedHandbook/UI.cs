@@ -71,30 +71,33 @@ namespace IllustratedHandbook
             SceneManager.sceneLoaded += OnSceneLoaded;
 
             DontDestroyOnLoad(this);
-            InitUI();
+            //InitUI();
         }
 
         void Update()
         {
-
+            if (mainCanvas == null) return;
             if (!gameLoaded)
             {
                 if (DateFile.instance != null && ActorMenu.instance != null)
                 {
                     gameLoaded = true;
-                    OnGameLoaded();
+                    //OnGameLoaded();
                 }
             }
 
-            // 记录点击位置偏移值
-            if (Input.GetMouseButtonDown(0))
+            if (mainCavasActive)
             {
-                // 如果游戏未加载 那么UI渲染模式为ScreenSpaceOverlay, 此时直接使用屏幕位置即可
-                // 如果游戏已加载 那么UI将通过MainCamera渲染, 此时需要将屏幕位置换算成世界位置
-                if (gameLoaded && !gameExited)
-                    offsetPostion = mainPanel.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z));
-                else
-                    offsetPostionLoding = mainPanel.transform.position - Input.mousePosition;
+                // 记录点击位置偏移值
+                if (Input.GetMouseButtonDown(0))
+                {
+                    // 如果游戏未加载 那么UI渲染模式为ScreenSpaceOverlay, 此时直接使用屏幕位置即可
+                    // 如果游戏已加载 那么UI将通过MainCamera渲染, 此时需要将屏幕位置换算成世界位置
+                    if (gameLoaded && !gameExited)
+                        offsetPostion = mainPanel.transform.position - Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainPanel.transform.position.z));
+                    else
+                        offsetPostionLoding = mainPanel.transform.position - Input.mousePosition;
+                }
             }
 
             if (Input.GetKey(KeyCode.RightControl) || Input.GetKey(KeyCode.LeftControl))
@@ -118,6 +121,8 @@ namespace IllustratedHandbook
         // 用来判断是否返回了主菜单
         public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            Main.Logger.Log("scene  "+scene.name);
+            return;
             if (scene.name == "1_StartMenu")
             {
                 if (gameLoaded)
@@ -146,17 +151,18 @@ namespace IllustratedHandbook
         {
             dataInstance = DateFile.instance;
             itemType = DateFile.instance.massageDate[301][0];
-            itemIcon = GetSprites.instance.itemSprites;
-            itemBack = GetSprites.instance.itemBackSprites;
+            //itemIcon = GetSprites.instance.itemSprites;
+            //itemBack = GetSprites.instance.itemBackSprites;
 
             itemList = dataInstance.presetitemDate;
 
             // 游戏加载后将渲染模式改为ScreenSpaceCamera并附加MainCamera
-            mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
-            mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
-            mainCanvas.GetComponent<Canvas>().sortingLayerName = "GUI";
-            mainCanvas.GetComponent<Canvas>().sortingOrder = 601;  // ShowTips 的 sortingorder 为1000
-            mainCanvas.transform.position = new Vector3(0, 0, 10);
+            //fixme camera问题
+            //mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+            //mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
+            //mainCanvas.GetComponent<Canvas>().sortingLayerName = "GUI";
+            //mainCanvas.GetComponent<Canvas>().sortingOrder = 601;  // ShowTips 的 sortingorder 为1000
+            //mainCanvas.transform.position = new Vector3(0, 0, 10);
             loadingPanel.gameObject.SetActive(false);
 
             // 在过滤面板创建物品类别按钮
@@ -208,15 +214,17 @@ namespace IllustratedHandbook
 
         void InitUI()
         {
+            Main.Logger.Log("InitUI");
             // 主Canvs 开关
             #region MainCanvas
             mainCanvas = UICreator.CreateCanvas(name: "IllustratedHandbookCanvas");
-#if UNITY_EDITOR
-        mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
-        mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
-#else
-            mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-#endif
+            //fixme camera问题
+            //#if UNITY_EDITOR
+            //        mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+            //        mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("Main Camera").GetComponent<Camera>();
+            //#else
+            //            mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+            //#endif
             mainCanvas.GetComponent<Canvas>().sortingLayerName = "GUI";
             mainCanvas.GetComponent<Canvas>().sortingOrder = 998;  // ShowTips 的 sortingorder 为1000
             DontDestroyOnLoad(mainCanvas);
@@ -270,7 +278,7 @@ namespace IllustratedHandbook
               new Color32(0, 255, 213, 255), 28, v2(0.5f), v2(0.5f), v2(600, 400), v2(0)
             );
 
-            aboutText = CreateText("AboutText", loadingPanel.gameObject, "By: yyuueexxiinngg", Color.white, 14, v2(0), v2(0), v2(160, 30), v2(128.8f, 13.9f));
+            aboutText = CreateText("AboutText", loadingPanel.gameObject, "By: yyuueexxiinngg/WingGao", Color.white, 14, v2(0), v2(0), v2(160, 30), v2(128.8f, 13.9f));
             aboutText.GetComponent<Text>().alignment = TextAnchor.UpperLeft;
 
             NGAButton = CreateButton("NGAButton", loadingPanel.gameObject, "点此打开本MOD NGA发布地址", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 100));
@@ -282,7 +290,7 @@ namespace IllustratedHandbook
             GithubButton = CreateButton("GithubBotton", loadingPanel.gameObject, "点此打开MOD开源项目Github地址", Color.white, "Graphics/BaseUI/GUI_Base", Color.black, v2(0.5f, 0), v2(0.5f, 0), v2(500, 31), v2(0, 55));
             GithubButton.GetComponent<Button>().onClick.AddListener(() =>
             {
-                Application.OpenURL("https://github.com/yyuueexxiinngg/Taiwu_mods");
+                Application.OpenURL("https://github.com/WingGao/Taiwu_mods");
             });
             #endregion
 
@@ -430,9 +438,9 @@ namespace IllustratedHandbook
                     {
                         if (itemSlot.name.Split('|')[1] != "10000")
                         {
-                            if (DateFile.instance.GetItem(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.acotrId : DateFile.instance.MianActorID(), int.Parse(itemSlot.name.Split('|')[1]), 1, true) > 0)
+                            if (DateFile.instance.GetItem(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.actorId : DateFile.instance.MianActorID(), int.Parse(itemSlot.name.Split('|')[1]), 1, true) > 0)
                             {
-                                TipsWindow.instance.SetTips(5007, new string[] { dataInstance.GetActorName(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.acotrId : DateFile.instance.MianActorID()), itemList[int.Parse(itemSlot.name.Split('|')[1])][0], "" }, 100);
+                                TipsWindow.instance.SetTips(5007, new string[] { dataInstance.GetActorName(ActorMenu.instance.actorMenu.activeInHierarchy ? ActorMenu.instance.actorId : DateFile.instance.MianActorID()), itemList[int.Parse(itemSlot.name.Split('|')[1])][0], "" }, 100);
                             }
                             else
                             {
@@ -570,6 +578,35 @@ namespace IllustratedHandbook
 
         }
 
+        /// <summary>
+        /// 显示界面
+        /// </summary>
+        public void Show()
+        {
+            if(DateFile.instance == null || DateFile.instance.MianActorID() <= 0)
+            {
+                Main.Logger.Log("游戏未开始");
+                return;
+            }
+            Main.Logger.Log("Show");
+            if(mainCanvas == null)
+            {
+                //初始化界面
+                InitUI();
+                //打开界面
+                //mainCanvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceCamera;
+                //mainCanvas.GetComponent<Canvas>().worldCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
+                loadedPanel.gameObject.SetActive(true);
+                filterPanel.gameObject.SetActive(false);
+                loadingPanel.gameObject.SetActive(false);
+
+                OnGameLoaded();
+            }
+            else
+            {
+                loadedPanel.gameObject.SetActive(true);
+            }
+        }
         private void DrawItems()
         {
             // 初始化页标
@@ -630,9 +667,9 @@ namespace IllustratedHandbook
             GameObject tips = new GameObject();
             // 临时新建一个Item获取ID以显示信息
             tips.name = "ActorItem," + DateFile.instance.MakeNewItem(int.Parse(OnHover.name.Split('|')[1]), -5713);
+            Main.Logger.Log($"Name: {tips.name}");
             tips.tag = "ActorItem";
             WindowManage.instance.WindowSwitch(true, tips);
-
         }
         public void OnMouseExitDelegate(PointerEventData data)
         {

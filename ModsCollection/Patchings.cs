@@ -59,7 +59,7 @@ namespace ModsCollection
         // 人口数量控制
         public void Patch2()
         {
-            if (Main.settings.patch2 == 1)
+            if (Main.settings.patch2 >= 1)
             {
                 switch (Main.settings.patch2)
                 {
