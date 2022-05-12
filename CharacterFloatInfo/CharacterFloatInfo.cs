@@ -1629,8 +1629,7 @@ namespace CharacterFloatInfo
                 /// 品鉴等级 <seealso cref="ShopSystem.SetShopItems(int, int, int, int, int)"/>
                 int addlevel = DateFile.instance.GetActorValue(id, 506, true) * 3;
                 //商队
-                int typ = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(id, 9, false)), 16));
-                int shopTyp = int.Parse(DateFile.instance.GetGangDate(typ, 16));
+                int shopTyp = int.Parse(DateFile.instance.GetGangDate(int.Parse(DateFile.instance.GetActorDate(id, 9, false)), 16));
                 //商品等级Plus
                 int newShopLevel = DateFile.instance.storyShopLevel[shopTyp] + addlevel;
                 //好感等级
