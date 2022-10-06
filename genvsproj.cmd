@@ -25,8 +25,7 @@ for /f "skip=2 eol=} delims=" %%i in ('type "%SteamInstallPath%\steamapps\librar
             SET key=%%a
             SET key=!key:~1,-1%!
 
-            SET /a integer=!key!+0
-            IF NOT !integer!==0 (
+            IF !key!==path (
                 REM Strip quotes from start/end of value and replace \\ with \ in library path values
                 SET libraryPath=%%b
                 SET libraryPath=!libraryPath:~1%!
@@ -65,7 +64,10 @@ if not exist "%_VSCOMNTOOLS%" goto :MissingVersion
 call "%_VSCOMNTOOLS%\VsDevCmd.bat" > nul
 
 :RunVCVars
-if "%VisualStudioVersion%"=="16.0" (
+if "%VisualStudioVersion%"=="17.0" (
+    echo Visual Studio 2022
+    cmake .. -G "Visual Studio 17 2022" -DSTEAMDIR=!TAIWUDIR!
+) else if "%VisualStudioVersion%"=="16.0" (
     echo Visual Studio 2019
     cmake .. -G "Visual Studio 16 2019" -DSTEAMDIR=!TAIWUDIR!
 ) else if "%VisualStudioVersion%"=="15.0" (
