@@ -28,7 +28,7 @@ namespace Sth4nothing.SLManager
             if (!Main.Enabled || codepage != 437)
                 return true;
 
-            __result = new I18N.West.CP437();
+            __result = new System.Text.ASCIIEncoding();// I18N.West.CP437();
             return false;
         }
     }
@@ -326,7 +326,7 @@ namespace Sth4nothing.SLManager
         public const int MaxArchiveIndex = 99999999;
 
 
-        public static string GetSearchPattern(int dateId) 
+        public static string GetSearchPattern(int dateId)
             => string.Format(_archiveFileNameSearchPattern, dateId);
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace Sth4nothing.SLManager
                    let m = _archiveFileNameRegex.Match(file)
                    where m.Success
                    let index = int.Parse(m.Groups["index"].Value)
-                   orderby index 
+                   orderby index
                    select new SaveArchive()
                    {
                        Path = file,
@@ -770,7 +770,7 @@ namespace Sth4nothing.SLManager
             backupCount++;
             int deleteIndex = 0;
             // 若数量超过上限，将最早的一个删掉
-            while(backupCount > Main.settings.maxBackupsToKeep)
+            while (backupCount > Main.settings.maxBackupsToKeep)
             {
                 try
                 {
@@ -973,7 +973,7 @@ namespace Sth4nothing.SLManager
                 // 故寫入描述移動到 SaveManager.Backup 去做
                 // 写入date.json
                 // WriteSaveSummary();
-                
+
             }
             // 存檔由原始函數處裡, 改攔截 SaveDateBackuper.DoBackup (Prefix)
             return true;
@@ -1003,6 +1003,9 @@ namespace Sth4nothing.SLManager
         private static bool Prefix(SaveDateBackuper __instance, ref BackupItem item, ref string __result)
         {
             if (!Main.Enabled || item == null) return true;
+            if (!UI.IsModLoaded)
+                return true;
+
             var saveDateFile = SaveDateFile.instance;
             var dir = Path.Combine(
                 saveDateFile.datePath,
@@ -1025,6 +1028,7 @@ namespace Sth4nothing.SLManager
                     zip.ExtractAll(dir, ExtractExistingFileAction.OverwriteSilently);
                 }
             }
+            UI.IsModLoaded = false;
             return false;
         }
     }
@@ -1045,7 +1049,7 @@ namespace Sth4nothing.SLManager
             //return false;
         }
 
-        
+
         private static bool DoDefaultBackup(SaveDateBackuper __instance, int dataId, string savingSubId, string file)
         {
             if (!SaveManager.Backuper.IsOn)
@@ -1143,7 +1147,7 @@ namespace Sth4nothing.SLManager
     {
         private static void Prefix(Enum _em, object[] args)
         {
-            if(eEvents.LoadingProgress.Equals(_em) &&
+            if (eEvents.LoadingProgress.Equals(_em) &&
                100 == (int)args[0])
             {
                 if (Main.settings.regenerateRandomSeedAfterLoad)
