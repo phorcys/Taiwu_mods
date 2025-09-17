@@ -74,7 +74,7 @@ namespace UIStreamliner
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
-            settings.IsBattleTips = GUILayout.Toggle(settings.IsBattleTips, "战斗时按Shift才显示提示");
+            settings.IsBattleTips = GUILayout.Toggle(settings.IsBattleTips, "战斗时按Shift隐藏提示");
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical("box");
@@ -146,7 +146,7 @@ namespace UIStreamliner
             yield return new WaitForSeconds(delay);
             but.interactable = interactable;
         }
-    
+
         private static void Postfix(BuildingWindow __instance, ref int ___useMenpower2, ref int ___needManpower2, ref int ___buildingId, ref int ___buildingTime2)
         {
             if (!Main.enabled || !Main.settings.IsUpdateBuildingUp)
@@ -172,7 +172,7 @@ namespace UIStreamliner
             ___buildingTime2 = num;
             __instance.buildingUpUseMenpowerText.text = ___useMenpower2.ToString();
             __instance.buildingUpNeedTimeText.text = num.ToString();
-            __instance.buildingUpUseMenpowerUpButton.interactable = num > 1;
+            __instance.StartCoroutine(DelayedAction(__instance.buildingUpUseMenpowerUpButton, ___useMenpower2 < 20 && ___useMenpower2 < useManPower && num > 1, 0.1f));
             __instance.StartCoroutine(DelayedAction(__instance.buildingUpUseMenpowerDownButton, ___needManpower2 < ___useMenpower2, 0.1f));
         }
     }
@@ -205,8 +205,11 @@ namespace UIStreamliner
                 return true;
 
             // 非战斗状态下正常执行原方法
-            if (!BattleSystem.Exists || !BattleSystem.instance.battleWindow.activeInHierarchy
-                || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            if (!BattleSystem.Exists || !BattleSystem.instance.battleWindow.activeInHierarchy)
+                return true;
+
+            // 非战斗状态下正常执行原方法
+            if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
                 return true;
             on = false;
             tips = null;
@@ -331,6 +334,9 @@ namespace UIStreamliner
             //额外增加修习程度达到50%的判断
             bool isStudyLow = false;
 
+            //判断是否已经全部学习
+            bool isStudy = false;
+
             //检查技艺前置等级
             for (int i = 0; i < 9; i++)
             {
@@ -341,6 +347,12 @@ namespace UIStreamliner
                 bool isLevel = DateFile.instance.GetSkillLevel(zhiEnoughID) > 49;
                 if (isSkill && !isLevel)
                     isStudyLow = true;
+                if (isSkill && i == 8)
+                {
+                    isStudy = true;
+                    break;
+                }
+
                 if (i > favorLevelLimit && i > teachLevelLimit)
                     break;
 
@@ -357,11 +369,13 @@ namespace UIStreamliner
                     zhiEnough = true;
                 break;
             }
+            teachLevelLimit = Mathf.Min(teachLevelLimit, 9);
 
             string note = $"（好感{SetColoer(20001 + favorLevelLimit, Grade[favorLevelLimit] + "品")}，" +
                 $"资质{SetColoer(20001 + teachLevelLimit, Grade[teachLevelLimit] + "品")}；";
-
-            if (zhiEnough && favorEnough && !isStudyLow)
+            if (isStudy)
+                note += SetColoer(20004, "已学完");
+            else if (zhiEnough && favorEnough && !isStudyLow)
                 note += SetColoer(20004, "可请教");
             else
             {

@@ -1,8 +1,8 @@
-﻿{
+{
   "Id": "UIStreamliner",
   "DisplayName": "交互增强",
   "Author": "OxygenNI",
-  "Version": "1.1.0",
+  "Version": "1.2.0",
   "AssemblyName": "UIStreamliner.dll",
   "EntryMethod": "UIStreamliner.Main.Load"
 }

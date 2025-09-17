@@ -1,6 +1,6 @@
-﻿{
+{
   "Id": "QuickSwap",
-  "DisplayName": "装备切换，批量移动物品",
+  "DisplayName": "增加装备切换，批量移动物品",
   "Author": "OxygenNI",
   "Version": "1.1.0",
   "AssemblyName": "QuickSwap.dll",
