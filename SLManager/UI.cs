@@ -22,6 +22,10 @@ namespace Sth4nothing.SLManager
         private Vector2 scrollPosition;
         private GUIStyle h1, itemStyle, btnStyle;
         private Dictionary<string, bool> state;
+        /// <summary>
+        /// 判断是否用MOD加载压缩的存档
+        /// </summary>
+        public static bool IsModLoaded { get; set; } = false;
 
         public static bool Load()
         {
@@ -116,9 +120,7 @@ namespace Sth4nothing.SLManager
         private void WindowFunc(int windowId)
         {
             GUILayout.Label("读取存档", h1);
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true,
-                GUILayout.MaxWidth(windowRect.width),
-                GUILayout.MaxHeight(windowRect.height - h1.fixedHeight - btnStyle.fixedHeight));
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, true, GUILayout.MaxWidth(windowRect.width), GUILayout.MaxHeight(windowRect.height - h1.fixedHeight - btnStyle.fixedHeight));
             GUILayout.BeginVertical();
 
 
@@ -145,6 +147,7 @@ namespace Sth4nothing.SLManager
             {
                 ToggleWindow(false);
 
+                IsModLoaded = true;
                 var file = state.First((pair) => pair.Value).Key;
                 StartCoroutine(LoadFile.Load(file));
             }
